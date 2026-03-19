@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Faculty Evaluation System - Admin Panel</title>
+  <link rel="stylesheet" href="FacultyAdmin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<!-- Navbar ========================================================================================================================================-->
+<div class="navbar">
+  <div style="display:flex;align-items:center;">
+    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+    <div class="brand"><i class="fas fa-graduation-cap"></i><span class="main-title">FaculRate</span></div>
+  </div>
+  <div class="user"><img class="logo-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Admin Logo"><span>Administrator</span></div>
+</div>
+
+<!-- Sidebar ========================================================================================================================================-->
+
+<div class="sidebar" id="sidebar">
+  <a href="#" data-section="dashboard-section" onclick="showSection('dashboard-section')"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+  <a href="#" data-section="programs-section" onclick="showSection('programs-section')"><i class="fas fa-book"></i><span>Programs</span></a>
+  <a href="#" data-section="faculties-section" onclick="showSection('faculties-section')"><i class="fas fa-user-tie"></i><span>Faculties</span></a>
+  <a href="#" data-section="students-section" onclick="showSection('students-section')"><i class="fas fa-user-graduate"></i><span>Students</span></a>
+  <a href="#" data-section="criteria-section"><i class="fas fa-list"></i><span>Evaluation Criteria</span></a>
+  <a href="#" data-section="report-section"><i class="fas fa-chart-bar"></i><span>Evaluation Report</span></a>
+</div>
+
+<main>
+<!-- Dashboard Section ============================================================================================================================== -->
+<div id="dashboard-section" class="section">
+  <div class="dashboard-wrapper">
+    <div class="dashboard-box"><h1>Welcome, Administrator</h1><p>This dashboard provides an overview of faculty evaluations.</p><div class="warning"><i class="fas fa-exclamation-triangle"></i> All actions are logged.</div></div>
+
+    <div class="dashboard">
+      <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p class="dashboard-value">45</p><span>Across 14 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
+      <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p class="dashboard-value">1,250</p><span>Registered Users</span></div><div class="icon-box"><i class="fas fa-user-graduate"></i></div></div></div>
+      <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p class="dashboard-value">890</p><span>Current Period</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Programs Section ============================================================================================================================== -->
+<div id="programs-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="section-header"><h2>Academic Programs</h2>
+      <div class="header-actions">
+        <div class="search-wrapper"><button class="search-btn"><i class="fas fa-search"></i></button><input type="text" id="program-search" placeholder="Search program..."/></div>
+        <button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Program</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="programs-table">
+        <thead><tr><th>Program Code</th><th>Program Name</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>BSA</td>
+            <td>Bachelor of Information Technology</td>
+            <td class="action-cell">
+              <div class="action-buttons">
+                <button class="manage-btn" title="Manage"><i class="fas fa-sliders-h"></i></button>
+                <button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button>
+                <button class="delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- Add Program -->
+<div id="addProgramModal" class="addProgram">
+  <div class="addProgram-content">
+    <div class="addProgram-header"><h3>ADD PROGRAM</h3><span class="close-btn">&times;</span></div>
+    <div class="addProgram-body">
+      <label for="program-code">Program Code</label><input type="text" id="program-code" placeholder="eg. BSIT">
+      <label for="program-name">Program Name</label><input type="text" id="program-name" placeholder="eg. Bachelor of Information Technology">
+      <button class="submit-btn">SAVE PROGRAM</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Section ==============================================================================================================================-->
+<div id="manage-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="section-header"><h2 id="manageTitle">Manage Program</h2>
+      <div class="header-actions">
+        <div class="search-wrapper"><input type="text" placeholder="Search records..."><button class="search-btn"><i class="fas fa-search"></i></button></div>
+        <button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add</button>
+        <button class="back-btn"> Back</button>
+      </div>
+    </div>
+    <div class="top-buttons"><button class="subject-btn active" onclick="showTable('subjects')">Subjects</button><button class="classes-btn" onclick="showTable('classes')">Classes</button></div>
+
+    <div class="manage-body">
+      <div id="subjects" class="table-wrapper"><table><thead><tr><th>Subject Code</th><th>Description</th><th>Year</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+      <div id="classes" class="table-wrapper" style="display:none;"><table><thead><tr><th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Subject  -->
+<div id="addSubjectModal" class="addProgram">
+  <div class="addProgram-content">
+    <div class="addProgram-header"><h3>ADD SUBJECT</h3><span class="close-btn">&times;</span></div>
+    <div class="addProgram-body">
+      <label for="subject-code">Subject Code</label><input type="text" id="subject-code" placeholder="eg. MATH101">
+      <label for="subject-desc">Description</label><input type="text" id="subject-desc" placeholder="eg. College Algebra">
+      <label for="subject-year">Year</label><input type="text" id="subject-year" placeholder="eg. 1st Year">
+      <button id="save-subject-btn" class="submit-btn">SAVE SUBJECT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Faculties Section ==============================================================================================================================-->
+<div id="faculties-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="section-header"><h2>Faculties</h2>
+      <div class="header-actions">
+        <div class="search-wrapper"><button class="search-btn"><i class="fas fa-search"></i></button><input type="text" id="faculty-search" placeholder="Search faculty..."/></div>
+        <button class="add-faculty-btn button-gradient"><i class="fas fa-plus"></i> Add Faculty</button>
+      </div>
+    </div>
+    <div class="table-wrapper"><table><thead><tr><th>Faculty Code</th><th>Info</th><th>Subjects</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- Students Section ==============================================================================================================================-->
+<div id="students-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="section-header"><h2>Students</h2>
+      <div class="header-actions">
+        <div class="search-wrapper"><button class="search-btn"><i class="fas fa-search"></i></button><input type="text" id="student-search" placeholder="Search student..."/></div>
+        <button class="add-student-btn button-gradient"><i class="fas fa-plus"></i> Add Student</button>
+      </div>
+    </div>
+    <div class="table-wrapper"><table><thead><tr><th>Student Code</th><th>Name</th><th>Section</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- Evaluation Criteria  ========================================================================================================================= -->
+<div id="criteria-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="section-header"><h2>Evaluation Criteria</h2><div class="header-actions"><button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Category</button></div></div>
+    <div class="subtitle"><p>Manage evaluation questions grouped by category.</p></div>
+  </div>
+
+  <div class="criteria-layout">
+    <div class="criteria-category">
+      <div class="category-header"><h3>SECTION 1: Instructional Competence</h3>
+        <div class="action-buttons">
+          <button class="add-btn" title="Add"><i class="fa-solid fa-plus"></i></button>
+          <button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button>
+          <button class="delete-btn" title="Delete"><i class="fas fa-trash-can"></i></button>
+        </div>
+      </div>
+
+      <div class="questions-list"><div class="question-item"><span class="question-text">Demonstrates mastery of the subject.</span><button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button></div></div>
+    </div>
+<div class="summary-panel">
+  <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
+  <p><strong>Categories:</strong> 2</p>
+  <p><strong>Total Questions:</strong> 10</p>
+  <div class="legend">
+    <h5><i class="fas fa-list-ul"></i> LEGEND</h5>
+    <ul>
+      <li data-value="5"><span class="badge">5</span> Strongly Agree — Excellent</li>
+      <li data-value="4"><span class="badge">4</span> Agree — Very Good</li>
+      <li data-value="3"><span class="badge">3</span> Neutral — Satisfactory</li>
+      <li data-value="2"><span class="badge">2</span> Disagree — Fair</li>
+      <li data-value="1"><span class="badge">1</span> Strongly Disagree — Poor</li>
+    </ul>
+  </div>
+</div>
+
+
+  </div>
+</div>
+
+</main>
+<script src="FacultyAdmin.js"></script>
+</body>
+</html>
