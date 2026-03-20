@@ -30,7 +30,7 @@
 </div>
 
 <main>
-  
+
 <!-- Dashboard Section ============================================================================================================================== -->
 <div id="dashboard-section" class="section">
   <div class="dashboard-wrapper">
@@ -108,50 +108,62 @@
   </div>
 </div>
 
-<!-- Faculties Section ==============================================================================================================================-->
+<!-- Faculties Section -============================================================================================================================-->
 <div id="faculties-section" class="section" style="display:none;">
   <div class="box">
-    <div class="section-header"><h2>Faculties</h2>
+    <div class="section-header">
+      <h2>Faculties</h2>
       <div class="header-actions">
-        <div class="search-wrapper"><button class="search-btn"><i class="fas fa-search"></i></button><input type="text" id="faculty-search" placeholder="Search faculty..."/></div>
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <input type="text" id="faculty-search" placeholder="Search faculty..."/>
+        </div>
         <button class="add-faculty-btn button-gradient"><i class="fas fa-plus"></i> Add Faculty</button>
       </div>
     </div>
-    <div class="table-wrapper"><table><thead><tr><th>Faculty Code</th><th>Info</th><th>Subjects</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Faculty</th><th>Faculty ID</th><th>Info</th><th>Subjects</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
+<!-- Add Faculty  -->
 <div id="addFacultyModal" class="addProgram" style="display:none;">
   <div class="addProgram-content" style="max-width:600px;">
-    <div class="addProgram-header">
-      <h3>ADD FACULTY</h3><span class="close-btn">&times;</span>
-    </div>
+    <div class="addProgram-header"><h3>ADD FACULTY</h3><span class="close-btn">&times;</span></div>
     <div class="addProgram-body">
-
-      <!-- Profile Upload (center) -->
-      <div class="profile-upload" style="text-align:center;margin-bottom:20px;">
-        <label for="faculty-photo">Profile</label><br>
-        <input type="file" id="faculty-photo" accept="image/*">
+      <div class="profile-upload">
+        <div class="profile-circle">
+          <img id="faculty-photo-preview" src="" alt="" hidden>
+          <label for="faculty-photo" class="upload-badge">
+            <svg viewBox="0 0 16 16">
+              <path d="M8 3v10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M3 8h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </label>
+        </div>
+        <input type="file" id="faculty-photo" accept="image/*" hidden>
       </div>
 
-      <!-- Faculty Info -->
       <div class="form-row">
         <div><label for="faculty-number">Faculty #</label><input type="text" id="faculty-number" placeholder="eg. FC-"></div>
         <div><label for="faculty-email">Email</label><input type="email" id="faculty-email" placeholder="eg. faculty@email.com"></div>
       </div>
 
       <div class="form-row">
-        <div><label for="faculty-firstname">First Name</label><input type="text" id="faculty-firstname" placeholder="eg. Maria"></div>
-        <div><label for="faculty-lastname">Last Name</label><input type="text" id="faculty-lastname" placeholder="eg. Santos"></div>
-        <div class="suffix-field"><label for="faculty-suffix">Suffix</label><input type="text" id="faculty-suffix" placeholder="eg. Jr., III"></div>
+        <div><label for="faculty-firstname">First Name</label><input type="text" id="faculty-firstname" placeholder="eg. Juan"></div>
+        <div><label for="faculty-lastname">Last Name</label><input type="text" id="faculty-lastname" placeholder="eg. Dela Cruz"></div>
+        <div class="suffix-field"><label for="faculty-suffix">Suffix</label><input type="text" id="faculty-suffix" placeholder="Jr., III"></div>
       </div>
-
-      <!-- Subjects Box -->
       <div class="section-box">
         <h4><i class="fas fa-book"></i> Subjects</h4>
-        <div class="subjects-list">
-          <!-- dynamically added subjects will appear here -->
-        </div>
+        <div class="subjects-list"></div>
       </div>
 
       <button class="submit-btn">SAVE FACULTY</button>
@@ -169,7 +181,7 @@
         <button class="add-student-btn button-gradient"><i class="fas fa-plus"></i> Add Student</button>
       </div>
     </div>
-    <div class="table-wrapper"><table><thead><tr><th>Student Code</th><th>Name</th><th>Section</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-wrapper"><table><thead><tr><th>Student ID</th><th>Name</th><th>Section</th><th>Action</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 

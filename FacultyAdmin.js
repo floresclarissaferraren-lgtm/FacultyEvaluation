@@ -184,54 +184,123 @@ window.addEventListener("resize", () => {
     modal.style.display = "none";
   };
 
-  // ================= FACULTY =================
-  const addFacultyModal = document.getElementById("addFacultyModal"),
-        facultyTbody = document.querySelector("#faculties-section tbody");
+  
+// ================= FACULTY =================
+const addFacultyModal = document.getElementById("addFacultyModal"),
+      facultyTbody = document.querySelector("#faculties-section tbody");
 
-  document.querySelector(".add-faculty-btn").addEventListener("click", () => openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY"));
-  addFacultyModal.querySelector(".close-btn").addEventListener("click", () => closeModal(addFacultyModal));
-  window.addEventListener("click", e => { if(e.target === addFacultyModal) closeModal(addFacultyModal); });
+document.querySelector(".add-faculty-btn").addEventListener("click", () => 
+  openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY")
+);
 
-  addFacultyModal.querySelector(".submit-btn").addEventListener("click", () => {
-    const n = document.getElementById("faculty-number").value.trim(),
-          e = document.getElementById("faculty-email").value.trim(),
-          f = document.getElementById("faculty-firstname").value.trim(),
-          l = document.getElementById("faculty-lastname").value.trim(),
-          s = document.getElementById("faculty-suffix").value.trim();
-    if(!n || !e || !f || !l) return alert("Please fill in all required fields.");
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${n}</td><td><div>${f} ${l} ${s}</div><small>${e}</small></td><td>No subjects yet</td>
-      <td><button class="edit-btn">Edit</button> <button class="delete-btn">Delete</button></td>`;
-    facultyTbody.appendChild(row);
-    row.querySelector(".edit-btn").addEventListener("click", () => openModal(addFacultyModal, "EDIT FACULTY", "UPDATE FACULTY"));
-    row.querySelector(".delete-btn").addEventListener("click", () => { if(confirm("Delete?")) row.remove(); });
-    closeModal(addFacultyModal);
+addFacultyModal.querySelector(".close-btn").addEventListener("click", () => closeModal(addFacultyModal));
+window.addEventListener("click", e => { if(e.target === addFacultyModal) closeModal(addFacultyModal); });
+
+// Profile upload preview logic
+document.getElementById("faculty-photo").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const preview = document.getElementById("faculty-photo-preview");
+      preview.src = ev.target.result;
+      preview.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+addFacultyModal.querySelector(".submit-btn").addEventListener("click", () => {
+  const n = document.getElementById("faculty-number").value.trim(),
+        e = document.getElementById("faculty-email").value.trim(),
+        f = document.getElementById("faculty-firstname").value.trim(),
+        l = document.getElementById("faculty-lastname").value.trim(),
+        s = document.getElementById("faculty-suffix").value.trim(),
+        photoSrc = document.getElementById("faculty-photo-preview").src;
+
+  if(!n || !e || !f || !l) return alert("Please fill in all required fields.");
+
+  const row = document.createElement("tr");
+ row.innerHTML = `
+  <td>
+    ${photoSrc ? `<img src="${photoSrc}" alt="Faculty Photo" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : ``}
+  </td>
+  <td>${n}</td>
+  <td>
+    <div>${f} ${l} ${s}</div>
+    <small style="color:#6b7280;">${e}</small>
+  </td>
+  <td><div class="faculty-subjects">No subjects yet</div></td>
+  <td class="action-cell">
+    <div class="action-buttons">
+      <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+      <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+    </div>
+  </td>
+`;
+
+  facultyTbody.appendChild(row);
+
+  // Edit/Delete actions
+  row.querySelector(".edit-btn").addEventListener("click", () => 
+    openModal(addFacultyModal, "EDIT FACULTY", "UPDATE FACULTY")
+  );
+  row.querySelector(".delete-btn").addEventListener("click", () => { 
+    if(confirm("Delete?")) row.remove(); 
   });
 
-  // ================= STUDENT =================
-  const addStudentModal = document.getElementById("addStudentModal"),
-        studentTbody = document.querySelector("#students-section tbody");
+  closeModal(addFacultyModal);
+});
 
-  document.querySelector(".add-student-btn").addEventListener("click", () => openModal(addStudentModal, "ADD STUDENT", "SAVE STUDENT"));
-  addStudentModal.querySelector(".close-btn").addEventListener("click", () => closeModal(addStudentModal));
-  window.addEventListener("click", e => { if(e.target === addStudentModal) closeModal(addStudentModal); });
+ // ================= STUDENT =================
+const addStudentModal = document.getElementById("addStudentModal"),
+      studentTbody = document.querySelector("#students-section tbody");
 
-  addStudentModal.querySelector(".submit-btn").addEventListener("click", () => {
-    const n = document.getElementById("student-number").value.trim(),
-          e = document.getElementById("student-email").value.trim(),
-          f = document.getElementById("student-firstname").value.trim(),
-          l = document.getElementById("student-lastname").value.trim(),
-          s = document.getElementById("student-suffix").value.trim(),
-          y = document.getElementById("student-yearlevel").value,
-          sec = document.getElementById("student-yearsection").value,
-          p = document.getElementById("student-program").value;
-    if(!n||!e||!f||!l||!y||!sec||!p) return alert("Please fill all required fields.");
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${n}</td><td>${f} ${l} ${s}</td><td>${y} ${sec}<br>${p}</td>
-      <td><button class="edit-btn">Edit</button> <button class="delete-btn">Delete</button></td>`;
-    studentTbody.appendChild(row);
-    row.querySelector(".edit-btn").addEventListener("click", () => openModal(addStudentModal, "EDIT STUDENT", "UPDATE STUDENT"));
-    row.querySelector(".delete-btn").addEventListener("click", () => { if(confirm("Delete?")) row.remove(); });
-    closeModal(addStudentModal);
+document.querySelector(".add-student-btn").addEventListener("click", () => 
+  openModal(addStudentModal, "ADD STUDENT", "SAVE STUDENT")
+);
+
+addStudentModal.querySelector(".close-btn").addEventListener("click", () => closeModal(addStudentModal));
+window.addEventListener("click", e => { if(e.target === addStudentModal) closeModal(addStudentModal); });
+
+addStudentModal.querySelector(".submit-btn").addEventListener("click", () => {
+  const n   = document.getElementById("student-number").value.trim(),
+        e   = document.getElementById("student-email").value.trim(),
+        f   = document.getElementById("student-firstname").value.trim(),
+        l   = document.getElementById("student-lastname").value.trim(),
+        s   = document.getElementById("student-suffix").value.trim(),
+        y   = document.getElementById("student-yearlevel").value,
+        sec = document.getElementById("student-yearsection").value,
+        p   = document.getElementById("student-program").value;
+
+  if(!n||!e||!f||!l||!y||!sec||!p) return alert("Please fill all required fields.");
+
+  const row = document.createElement("tr");
+row.innerHTML = `
+    <td>${n}</td>
+    <td>
+      <div>${f} ${l} ${s}</div>
+      <small style="color:#6b7280;">${e}</small>
+    </td>
+    <td>${p}-${y.replace(" Year","")}${sec}</td>
+    <td class="action-cell">
+      <div class="action-buttons">
+        <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+        <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    </td>
+  `;
+  studentTbody.appendChild(row);
+
+  // Edit/Delete actions
+  row.querySelector(".edit-btn").addEventListener("click", () => 
+    openModal(addStudentModal, "EDIT STUDENT", "UPDATE STUDENT")
+  );
+  row.querySelector(".delete-btn").addEventListener("click", () => { 
+    if(confirm("Delete?")) row.remove(); 
   });
+
+  closeModal(addStudentModal);
+});
+
 });
