@@ -75,9 +75,9 @@ window.addEventListener("resize", () => {
       const row = document.createElement("tr");
       row.innerHTML = `<td>${code}</td><td>${name}</td><td class="action-cell">
         <div class="action-buttons">
-          <button class="manage-btn"><i class="fas fa-gear"></i></button>
-          <button class="edit-btn"><i class="fas fa-pen"></i></button>
-          <button class="delete-btn"><i class="fas fa-trash"></i></button>
+          <button class="manage-btn"><i class="fas fa-sliders-h"></i></button>
+          <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+          <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
         </div></td>`;
       document.querySelector(".programs-table tbody").appendChild(row);
       attachProgramRowEvents(row);
@@ -136,8 +136,8 @@ window.addEventListener("resize", () => {
     row.innerHTML = `<td>${code}</td><td>${desc}</td><td>${year}</td>
       <td class="action-cell">
         <div class="action-buttons">
-          <button class="edit-btn"><i class="fas fa-pen"></i></button>
-          <button class="delete-btn"><i class="fas fa-trash"></i></button>
+          <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+          <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
         </div>
       </td>`;
     document.querySelector("#subjects tbody").appendChild(row);
@@ -169,4 +169,69 @@ window.addEventListener("resize", () => {
 
   // ========================= Initialize =========================
   showSection("dashboard-section"); showTable('subjects');
+
+  // ========================= Add student =========================
+  const openModal = (modal, header, btnText) => {
+    modal.querySelector("h3").innerText = header;
+    modal.querySelector(".submit-btn").innerText = btnText;
+    modal.querySelectorAll("input, select").forEach(i => i.value = "");
+    if(modal.querySelector(".subjects-list")) modal.querySelector(".subjects-list").innerHTML = "";
+    modal.style.display = "flex";
+  };
+
+  // Utility: close modal
+  const closeModal = modal => {
+    modal.style.display = "none";
+  };
+
+  // ================= FACULTY =================
+  const addFacultyModal = document.getElementById("addFacultyModal"),
+        facultyTbody = document.querySelector("#faculties-section tbody");
+
+  document.querySelector(".add-faculty-btn").addEventListener("click", () => openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY"));
+  addFacultyModal.querySelector(".close-btn").addEventListener("click", () => closeModal(addFacultyModal));
+  window.addEventListener("click", e => { if(e.target === addFacultyModal) closeModal(addFacultyModal); });
+
+  addFacultyModal.querySelector(".submit-btn").addEventListener("click", () => {
+    const n = document.getElementById("faculty-number").value.trim(),
+          e = document.getElementById("faculty-email").value.trim(),
+          f = document.getElementById("faculty-firstname").value.trim(),
+          l = document.getElementById("faculty-lastname").value.trim(),
+          s = document.getElementById("faculty-suffix").value.trim();
+    if(!n || !e || !f || !l) return alert("Please fill in all required fields.");
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${n}</td><td><div>${f} ${l} ${s}</div><small>${e}</small></td><td>No subjects yet</td>
+      <td><button class="edit-btn">Edit</button> <button class="delete-btn">Delete</button></td>`;
+    facultyTbody.appendChild(row);
+    row.querySelector(".edit-btn").addEventListener("click", () => openModal(addFacultyModal, "EDIT FACULTY", "UPDATE FACULTY"));
+    row.querySelector(".delete-btn").addEventListener("click", () => { if(confirm("Delete?")) row.remove(); });
+    closeModal(addFacultyModal);
+  });
+
+  // ================= STUDENT =================
+  const addStudentModal = document.getElementById("addStudentModal"),
+        studentTbody = document.querySelector("#students-section tbody");
+
+  document.querySelector(".add-student-btn").addEventListener("click", () => openModal(addStudentModal, "ADD STUDENT", "SAVE STUDENT"));
+  addStudentModal.querySelector(".close-btn").addEventListener("click", () => closeModal(addStudentModal));
+  window.addEventListener("click", e => { if(e.target === addStudentModal) closeModal(addStudentModal); });
+
+  addStudentModal.querySelector(".submit-btn").addEventListener("click", () => {
+    const n = document.getElementById("student-number").value.trim(),
+          e = document.getElementById("student-email").value.trim(),
+          f = document.getElementById("student-firstname").value.trim(),
+          l = document.getElementById("student-lastname").value.trim(),
+          s = document.getElementById("student-suffix").value.trim(),
+          y = document.getElementById("student-yearlevel").value,
+          sec = document.getElementById("student-yearsection").value,
+          p = document.getElementById("student-program").value;
+    if(!n||!e||!f||!l||!y||!sec||!p) return alert("Please fill all required fields.");
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${n}</td><td>${f} ${l} ${s}</td><td>${y} ${sec}<br>${p}</td>
+      <td><button class="edit-btn">Edit</button> <button class="delete-btn">Delete</button></td>`;
+    studentTbody.appendChild(row);
+    row.querySelector(".edit-btn").addEventListener("click", () => openModal(addStudentModal, "EDIT STUDENT", "UPDATE STUDENT"));
+    row.querySelector(".delete-btn").addEventListener("click", () => { if(confirm("Delete?")) row.remove(); });
+    closeModal(addStudentModal);
+  });
 });

@@ -30,6 +30,7 @@
 </div>
 
 <main>
+  
 <!-- Dashboard Section ============================================================================================================================== -->
 <div id="dashboard-section" class="section">
   <div class="dashboard-wrapper">
@@ -52,27 +53,17 @@
         <button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Program</button>
       </div>
     </div>
-
-    <div class="table-wrapper">
+    <div class="table-wrapper"> 
       <table class="programs-table">
         <thead><tr><th>Program Code</th><th>Program Name</th><th>Action</th></tr></thead>
         <tbody>
-          <tr>
-            <td>BSA</td>
-            <td>Bachelor of Information Technology</td>
-            <td class="action-cell">
-              <div class="action-buttons">
-                <button class="manage-btn" title="Manage"><i class="fas fa-sliders-h"></i></button>
-                <button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button>
-                <button class="delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
-              </div>
-            </td>
-          </tr>
+         
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
 <!-- Add Program -->
 <div id="addProgramModal" class="addProgram">
   <div class="addProgram-content">
@@ -130,6 +121,45 @@
   </div>
 </div>
 
+<div id="addFacultyModal" class="addProgram" style="display:none;">
+  <div class="addProgram-content" style="max-width:600px;">
+    <div class="addProgram-header">
+      <h3>ADD FACULTY</h3><span class="close-btn">&times;</span>
+    </div>
+    <div class="addProgram-body">
+
+      <!-- Profile Upload (center) -->
+      <div class="profile-upload" style="text-align:center;margin-bottom:20px;">
+        <label for="faculty-photo">Profile</label><br>
+        <input type="file" id="faculty-photo" accept="image/*">
+      </div>
+
+      <!-- Faculty Info -->
+      <div class="form-row">
+        <div><label for="faculty-number">Faculty #</label><input type="text" id="faculty-number" placeholder="eg. FC-"></div>
+        <div><label for="faculty-email">Email</label><input type="email" id="faculty-email" placeholder="eg. faculty@email.com"></div>
+      </div>
+
+      <div class="form-row">
+        <div><label for="faculty-firstname">First Name</label><input type="text" id="faculty-firstname" placeholder="eg. Maria"></div>
+        <div><label for="faculty-lastname">Last Name</label><input type="text" id="faculty-lastname" placeholder="eg. Santos"></div>
+        <div class="suffix-field"><label for="faculty-suffix">Suffix</label><input type="text" id="faculty-suffix" placeholder="eg. Jr., III"></div>
+      </div>
+
+      <!-- Subjects Box -->
+      <div class="section-box">
+        <h4><i class="fas fa-book"></i> Subjects</h4>
+        <div class="subjects-list">
+          <!-- dynamically added subjects will appear here -->
+        </div>
+      </div>
+
+      <button class="submit-btn">SAVE FACULTY</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Students Section ==============================================================================================================================-->
 <div id="students-section" class="section" style="display:none;">
   <div class="box">
@@ -143,45 +173,92 @@
   </div>
 </div>
 
+<!-- Add Subject  -->
+<div id="addStudentModal" class="addProgram">
+  <div class="addProgram-content" style="max-width:600px;">
+    <div class="addProgram-header"><h3>ADD STUDENT</h3><span class="close-btn">&times;</span></div>
+    <div class="addProgram-body">
+      
+      <div class="form-row">
+        <div><label for="student-number">Student #</label><input type="text" id="student-number" placeholder="eg. GC-"></div>
+        <div><label for="student-email">Email</label><input type="email" id="student-email" placeholder="eg. student@email.com"></div>
+      </div>
+      <div class="form-row">
+        <div><label for="student-firstname">First Name</label><input type="text" id="student-firstname" placeholder="eg. Juan"></div>
+        <div><label for="student-lastname">Last Name</label><input type="text" id="student-lastname" placeholder="eg. Dela Cruz"></div>
+        <div class="suffix-field"><label for="student-suffix">Suffix</label><input type="text" id="student-suffix" placeholder="Jr., III"></div>
+      </div>
+      <div class="section-box">
+        <h4><i class="fas fa-graduation-cap"></i> Academic Details</h4>
+        <div class="form-row">
+          <div><label for="student-program">Program</label>
+            <select id="student-program" required>
+              <option value="" disabled selected>-- Select Program --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div><label for="student-yearlevel">Year Level</label>
+            <select id="student-yearlevel" required>
+              <option value="" disabled selected>-- Select Year Level --</option>
+              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+            </select>
+          </div>
+          <div><label for="student-yearsection">Section</label>
+            <select id="student-yearsection" required>
+              <option value="" disabled selected>-- Select Section --</option>
+              <option>A</option><option>B</option><option>C</option><option>D</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="submit-btn">SAVE STUDENT</button>
+    </div>
+  </div>
+</div>
+
 <!-- Evaluation Criteria  ========================================================================================================================= -->
-<div id="criteria-section" class="section" style="display:none;">
+ <div id="criteria-section" class="section" style="display:none;">
   <div class="box">
-    <div class="section-header"><h2>Evaluation Criteria</h2><div class="header-actions"><button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Category</button></div></div>
+    <div class="section-header">
+      <h2>Evaluation Criteria</h2>
+      <div class="header-actions"><button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Category</button></div>
+    </div>
     <div class="subtitle"><p>Manage evaluation questions grouped by category.</p></div>
   </div>
 
   <div class="criteria-layout">
     <div class="criteria-category">
-      <div class="category-header"><h3>SECTION 1: Instructional Competence</h3>
+      <div class="category-header">
+        <h3>SECTION 1: Instructional Competence</h3>
         <div class="action-buttons">
           <button class="add-btn" title="Add"><i class="fa-solid fa-plus"></i></button>
           <button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button>
           <button class="delete-btn" title="Delete"><i class="fas fa-trash-can"></i></button>
         </div>
       </div>
-
-      <div class="questions-list"><div class="question-item"><span class="question-text">Demonstrates mastery of the subject.</span><button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button></div></div>
+      <div class="questions-list">
+        <div class="question-item"><span class="question-text">Demonstrates mastery of the subject.</span><button class="edit-btn" 
+          title="Edit"><i class="fas fa-pen-to-square"></i></button></div>
+      </div>
     </div>
-<div class="summary-panel">
-  <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
-  <p><strong>Categories:</strong> 2</p>
-  <p><strong>Total Questions:</strong> 10</p>
-  <div class="legend">
-    <h5><i class="fas fa-list-ul"></i> LEGEND</h5>
-    <ul>
-      <li data-value="5"><span class="badge">5</span> Strongly Agree — Excellent</li>
-      <li data-value="4"><span class="badge">4</span> Agree — Very Good</li>
-      <li data-value="3"><span class="badge">3</span> Neutral — Satisfactory</li>
-      <li data-value="2"><span class="badge">2</span> Disagree — Fair</li>
-      <li data-value="1"><span class="badge">1</span> Strongly Disagree — Poor</li>
-    </ul>
+
+    <div class="summary-panel">
+      <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
+      <p><strong>Categories:</strong> 2</p><p><strong>Total Questions:</strong> 10</p>
+      <div class="legend">
+        <h5><i class="fas fa-list-ul"></i> LEGEND</h5>
+        <ul>
+          <li data-value="5"><span class="badge">5</span> Strongly Agree — Excellent</li>
+          <li data-value="4"><span class="badge">4</span> Agree — Very Good</li>
+          <li data-value="3"><span class="badge">3</span> Neutral — Satisfactory</li>
+          <li data-value="2"><span class="badge">2</span> Disagree — Fair</li>
+          <li data-value="1"><span class="badge">1</span> Strongly Disagree — Poor</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
-
-
-  </div>
-</div>
-
 </main>
 <script src="FacultyAdmin.js"></script>
 </body>

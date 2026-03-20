@@ -89,7 +89,8 @@ main {
 
 /* Responsive */
 @media(max-width:1200px){main{margin-left:70px;width:calc(100% - 70px)} .sidebar.collapsed{width:60px}}
-@media(max-width:992px){.navbar{padding:0 16px} .dashboard{gap:15px} .dashboard-card{min-width:180px;padding:16px} .dashboard-value{font-size:22px} .dashboard-card h3{font-size:13px}}
+@media(max-width:992px){.navbar{padding:0 16px} .dashboard{gap:15px} .dashboard-card{min-width:180px;padding:16px} .dashboard-value{font-size:22px} 
+.dashboard-card h3{font-size:13px}}
 @media(max-width:768px){
   .sidebar{position:fixed;top:60px;left:-180px;width:180px;transition:left .35s;z-index:1001}
   .sidebar.active{left:0}
@@ -107,14 +108,18 @@ main {
   .dashboard-card h3{font-size:12px}
 }
 /* ========================= Program Section ========================== */
-.section .box{background:#fff;margin:20px auto;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.08);overflow:hidden;width:95%;padding:24px;position:relative;border-top:4px solid #2563eb}
+
+.section .box{background:#fff;margin:20px auto;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.08);overflow:hidden;width:95%;
+  padding:24px;position:relative;border-top:4px solid #2563eb}
 .section .box::before{content:"";position:absolute;top:0;left:0;width:100%;height:4px;background:linear-gradient(90deg,#2563eb,#10b981)}
-.section-header{display:flex;justify-content:space-between;align-items:center;padding:20px;background:linear-gradient(90deg,#f9fafb,#f3f4f6);border-bottom:1px solid #e5e7eb}
+.section-header{display:flex;justify-content:space-between;align-items:center;padding:20px;background:linear-gradient(90deg,#f9fafb,#f3f4f6);
+  border-bottom:1px solid #e5e7eb}
 .section-header h2{margin:0;font-size:1.5rem;font-weight:700;color:#1e3a8a;text-transform:uppercase;letter-spacing:1px}
 .section .header-actions{display:flex;align-items:center;gap:12px}
 
 /* Search Box */
-.search-wrapper{display:flex;align-items:center;background:#f9fafb;border:1px solid #d1d5db;border-radius:50px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.05);transition:all .3s ease}
+.search-wrapper{display:flex;align-items:center;background:#f9fafb;border:1px solid #d1d5db;border-radius:50px;
+  overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.05);transition:all .3s ease}
 .search-wrapper:focus-within{border-color:#1e3a8a;box-shadow:0 0 10px rgba(30,58,138,.3);transform:scale(1.02)}
 .search-wrapper input{border:none;outline:none;padding:10px 14px;background:transparent;flex:1;min-width:180px;font-size:.95rem;transition:all .3s ease}
 .search-wrapper input::placeholder{color:#9ca3af;font-style:normal}
@@ -123,10 +128,11 @@ main {
 .search-btn:hover{color:#3b82f6;transform:scale(1.1)}
 
 /* Action Buttons */
-.button-gradient{display:flex;align-items:center;gap:6px;border:none;border-radius:12px;padding:10px 18px;font-weight:600;cursor:pointer;transition:background .3s ease,transform .2s ease,box-shadow .2s ease}
+.button-gradient{display:flex;align-items:center;gap:6px;border:none;border-radius:12px;padding:10px 18px;
+  font-weight:600;cursor:pointer;transition:background .3s ease,transform .2s ease,box-shadow .2s ease}
 .button-gradient i{margin-right:6px}
-.add-program-btn,.add-faculty-btn,.add-student-btn{background:#203159;color:#fff;display:flex;align-items:center}
-.add-program-btn:hover,.add-faculty-btn:hover,.add-student-btn:hover{background:linear-gradient(90deg,#dc2626,#b91c1c);}
+.add-program-btn,.add-faculty-btn,.add-student-btn{background:linear-gradient(90deg,#0f2657,#3b82f6); color:#fff;display:flex;align-items:center}
+.add-program-btn:hover,.add-faculty-btn:hover,.add-student-btn:hover{background:linear-gradient(90deg,#2563eb,#3b82f6);}
 
 .addProgram{display:none;position:fixed;z-index:999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center}
 .addProgram-content{background:#fff;color:#333;border-radius:12px;width:90%;max-width:450px;box-shadow:0 4px 12px rgba(0,0,0,.3);overflow:hidden}
@@ -135,7 +141,8 @@ main {
 .close-btn{cursor:pointer;font-size:1.5rem;font-weight:bold;color:#fff}
 .addProgram-body{padding:20px;display:flex;flex-direction:column;gap:20px}
 .addProgram-body label{display:block;font-weight:500;color:#6b7280;font-size:.8rem}
-.addProgram-body input{margin-top:-2px;padding:10px;border:1px solid #d1d5db;border-radius:6px;outline:none;font-size:.95rem;transition:border-color .3s ease,box-shadow .3s ease}
+.addProgram-body input{margin-top:-2px;padding:10px;border:1px solid #d1d5db;border-radius:6px;outline:none;
+  font-size:.95rem;transition:border-color .3s ease,box-shadow .3s ease}
 .addProgram-body input:focus{border-color:#1e3a8a;box-shadow:0 0 6px rgba(30,58,138,.3)}
 .addProgram-body input::placeholder{color:#9ca3af;font-size:.85rem;font-weight:400}
 .submit-btn{background:#1e3a8a;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;text-align:center}
@@ -143,7 +150,8 @@ main {
 
 /* ====Manage Section =========================================================================================================*/
 .top-buttons{display:flex;gap:10px;padding:12px 20px}
-.top-buttons button{border:none;padding:8px 14px;border-radius:12px;font-weight:600;cursor:pointer;transition:background .3s ease,transform .2s ease;background:#f3f4f6;color:#374151}
+.top-buttons button{border:none;padding:8px 14px;border-radius:12px;font-weight:600;cursor:pointer;transition:background .3s ease,transform .2s ease;
+  background:#f3f4f6;color:#374151}
 .subject-btn.active,.classes-btn.active{background:#203159;color:#fff}
 .top-buttons button:hover:not(.active){background:#e5e7eb;transform:translateY(-2px)}
 
@@ -163,16 +171,45 @@ td:first-child{font-weight:700;color:#1e3a8a}
   display:flex;align-items:center;justify-content:center;font-size:.9rem;border-radius:50%;padding:6px;transition:color .2s ease}
 .action-cell .manage-btn i{color:#1e3a8a}.action-cell .edit-btn i{color:#b45309}.action-cell .delete-btn i{color:#7f1d1d}
 .action-cell .manage-btn:hover i{color:#2563eb}.action-cell .edit-btn:hover i{color:#f59e0b}.action-cell .delete-btn:hover i{color:#dc2626}
-@media screen and (max-width:768px){.section-header{flex-direction:column;align-items:flex-start;gap:12px}.header-actions{flex-wrap:wrap;width:100%;gap:10px;justify-content:flex-start}
-.search-wrapper,.add-program-btn,.add-faculty-btn,.add-student-btn,.back-btn{width:100%;justify-content:center}table{font-size:.9rem}.top-buttons{flex-wrap:wrap}.top-buttons button{flex:1;text-align:center}}
+@media screen and (max-width:768px){.section-header{flex-direction:column;align-items:flex-start;gap:12px}
+.header-actions{flex-wrap:wrap;width:100%;gap:10px;justify-content:flex-start}
+.search-wrapper,.add-program-btn,.add-faculty-btn,.add-student-btn,.back-btn{width:100%;justify-content:center}table{font-size:.9rem}
+.top-buttons{flex-wrap:wrap}.top-buttons button{flex:1;text-align:center}}
 
 .category-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#2563eb;color:#fff;border-radius:6px}
 .category-header h3{margin:0;font-size:1rem;font-weight:700;text-transform:uppercase}
 
+/* ==== Add Faculty Section ====================================================================================================*/
+#faculty-number,#faculty-email,#faculty-firstname,#faculty-lastname,#faculty-suffix {
+  margin-top:4px;padding:12px 14px;border:1px solid #d1d5db;border-radius:8px;
+  outline:none;font-size:.9rem;width:100%;box-sizing:border-box;background:#f9fafb;transition:.3s;}
+#faculty-number:focus,#faculty-email:focus,#faculty-firstname:focus,#faculty-lastname:focus,#faculty-suffix:focus {
+  border-color:#2563eb;box-shadow:0 0 6px rgba(37,99,235,.25);background:#fff;}
+  
+/* ==== Add Students  =========================================================================================================*/
+.addProgram-body .form-row {display:flex;gap:12px;width:100%;margin-bottom:10px}
+.addProgram-body .form-row>div {flex:1}
+.addProgram-body .form-row .suffix-field {flex:.35}
+.addProgram-body input,
+.addProgram-body select {
+  margin-top:4px;padding:12px 14px;border:1px solid #d1d5db;border-radius:8px;
+  outline:none;font-size:.9rem;transition:.3s;width:100%;box-sizing:border-box;background:#f9fafb}
+.addProgram-body input:focus,
+.addProgram-body select:focus {
+  border-color:#2563eb;box-shadow:0 0 6px rgba(37,99,235,.25);background:#fff}
+.section-box {background:#f3f7ff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.06);padding:14px;margin-top:12px;border:1.5px solid #f3f4f6}
+.section-box h4 {margin:0 0 10px;font-size:.95rem;font-weight:600;color:#1e3a8a;display:flex;align-items:center;gap:6px}
+
+#student-program,#student-yearlevel,#student-yearsection {margin-top:4px;padding:12px 14px;border:1px solid #d1d5db;border-radius:8px;
+  outline:none;font-size:.9rem;width:100%;box-sizing:border-box;background:#f9fafb;transition:.3s;}
+#student-program:focus,#student-yearlevel:focus,#student-yearsection:focus {border-color:#2563eb;box-shadow:0 0 6px rgba(37,99,235,.25);background:#fff;}
+select:invalid {color:#9ca3af;}
+select option {color:#000;}
+
 
 /*  Evalution Criteria ================================================================================================================== */
-
-.action-buttons button{border:none;background:#1e40af;cursor:pointer;font-size:1rem;color:#fff;padding:6px 10px;border-radius:4px;transition:background-color .25s ease}
+.action-buttons button{border:none;background:#1e40af;cursor:pointer;font-size:1rem;
+  color:#fff;padding:6px 10px;border-radius:4px;transition:background-color .25s ease}
 .action-buttons button:hover{background:#1d4ed8}
 .action-buttons i{color:#fff;font-size:.85rem;margin:0 3px;transition:color .25s ease}
 .add-btn:hover i{color:#a9f743}
