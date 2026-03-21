@@ -19,7 +19,6 @@
 </div>
 
 <!-- Sidebar ========================================================================================================================================-->
-
 <div class="sidebar" id="sidebar">
   <a href="#" data-section="dashboard-section" onclick="showSection('dashboard-section')"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
   <a href="#" data-section="programs-section" onclick="showSection('programs-section')"><i class="fas fa-book"></i><span>Programs</span></a>
@@ -30,19 +29,22 @@
 </div>
 
 <main>
-
-<!-- Dashboard Section ============================================================================================================================== -->
+<!-- Dashboard Section =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
   <div class="dashboard-wrapper">
-    <div class="dashboard-box"><h1>Welcome, Administrator</h1><p>This dashboard provides an overview of faculty evaluations.</p><div class="warning"><i class="fas fa-exclamation-triangle"></i> All actions are logged.</div></div>
-
+    <div class="dashboard-box">
+      <h1>Welcome, Administrator</h1>
+      <p>Overview of faculty evaluations.</p>
+      <div class="warning"><i class="fas fa-exclamation-triangle"></i> All actions are logged.</div>
+    </div>
     <div class="dashboard">
-      <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p class="dashboard-value">45</p><span>Across 14 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
-      <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p class="dashboard-value">1,250</p><span>Registered Users</span></div><div class="icon-box"><i class="fas fa-user-graduate"></i></div></div></div>
-      <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p class="dashboard-value">890</p><span>Current Period</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
+      <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p id="totalFaculty" class="dashboard-value">0</p><span>Across 14 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
+      <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p id="totalStudents" class="dashboard-value">0</p><span>Registered Users</span></div><div class="icon-box"><i class="fas fa-user-graduate"></i></div></div></div>
+      <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p id="totalEvaluations" class="dashboard-value">0</p><span>Current Period</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
     </div>
   </div>
 </div>
+
 
 <!-- Programs Section ============================================================================================================================== -->
 <div id="programs-section" class="section" style="display:none;">
@@ -171,7 +173,6 @@
   </div>
 </div>
 
-
 <!-- Students Section ==============================================================================================================================-->
 <div id="students-section" class="section" style="display:none;">
   <div class="box">
@@ -229,35 +230,41 @@
   </div>
 </div>
 
-<!-- Evaluation Criteria  ========================================================================================================================= -->
- <div id="criteria-section" class="section" style="display:none;">
+<!-- Evaluation Criteria ==============================================================================================================================-->
+<div id="criteria-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
       <h2>Evaluation Criteria</h2>
-      <div class="header-actions"><button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Category</button></div>
+      <div class="header-actions">
+        <button id="addCategoryBtn" class="add-program-btn button-gradient">
+          <i class="fas fa-plus"></i> Add Category
+        </button>
+      </div>
     </div>
     <div class="subtitle"><p>Manage evaluation questions grouped by category.</p></div>
   </div>
 
-  <div class="criteria-layout">
-    <div class="criteria-category">
-      <div class="category-header">
-        <h3>SECTION 1: Instructional Competence</h3>
-        <div class="action-buttons">
-          <button class="add-btn" title="Add"><i class="fa-solid fa-plus"></i></button>
-          <button class="edit-btn" title="Edit"><i class="fas fa-pen-to-square"></i></button>
-          <button class="delete-btn" title="Delete"><i class="fas fa-trash-can"></i></button>
-        </div>
-      </div>
-      <div class="questions-list">
-        <div class="question-item"><span class="question-text">Demonstrates mastery of the subject.</span><button class="edit-btn" 
-          title="Edit"><i class="fas fa-pen-to-square"></i></button></div>
+  <!-- Add Category Form -->
+  <div id="addCategoryModal" class="addProgram" style="display:none;">
+    <div class="addProgram-content" style="max-width:500px;">
+      <div class="addProgram-header"><h3>ADD CATEGORY</h3><span class="close-btn">&times;</span></div>
+      <div class="addProgram-body">
+        <div class="form-row" style="display:flex;flex-direction:column;gap:10px;">
+          <label for="category-name">Category Name</label><input type="text" id="category-name" placeholder="eg. Instructional Competence">
+          <label for="section-number">Section #</label><input type="number" id="section-number" min="1" placeholder="eg. 1"></div>
+        <button id="saveCategoryBtn" class="submit-btn">SAVE CATEGORY</button>
       </div>
     </div>
+  </div>
 
-    <div class="summary-panel">
+  <div class="criteria-layout" style="display:flex;gap:24px;align-items:flex-start;">
+    <div class="categories-column" id="categoriesColumn" style="flex:2;"></div>
+
+    <!-- Summary Panel -->
+    <div class="summary-panel" style="flex:1;">
       <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
-      <p><strong>Categories:</strong> 2</p><p><strong>Total Questions:</strong> 10</p>
+      <p><strong>Categories:</strong> 0</p>
+      <p><strong>Total Questions:</strong> 0</p>
       <div class="legend">
         <h5><i class="fas fa-list-ul"></i> LEGEND</h5>
         <ul>
@@ -270,7 +277,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Add Question Form -->
+  <div id="addQuestionModal" class="addProgram" style="display:none;">
+    <div class="addProgram-content" style="max-width:500px;">
+      <div class="addProgram-header"><h3>ADD QUESTION</h3><span class="close-btn">&times;</span></div>
+      <div class="addProgram-body">
+        <p class="category-label"><span class="label-text">Category:</span>
+          <span class="category-name" id="questionCategoryName"></span></p>
+        <label for="question-text">Question</label><textarea id="question-text" rows="3" placeholder="Enter evaluation question..."></textarea>
+        <button id="saveQuestionBtn" class="submit-btn">SAVE QUESTION</button>
+      </div>
+    </div>
+  </div>
 </div>
+
 </main>
 <script src="FacultyAdmin.js"></script>
 </body>
