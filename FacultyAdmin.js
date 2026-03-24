@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   let currentActiveLink = null;
+  let currentRow = null; 
 
   // ================= Sidebar Toggle =================
   window.toggleSidebar = () => {
@@ -218,58 +219,126 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     addClassModal.style.display = "none";
   });
+// ========================= Forms ===================================
+const openModal = (m,h,b) => {
+  m.querySelector("h3").innerText = h;
+  m.querySelector(".submit-btn").innerText = b;
+  m.style.display = "flex";
 
-  // ========================= Forms ===================================
-  const openModal = (m,h,b) => {
-    m.querySelector("h3").innerText = h;
-    m.querySelector(".submit-btn").innerText = b;
-    m.querySelectorAll("input,select").forEach(i=>i.value="");
-    if(m.querySelector(".subjects-list")) m.querySelector(".subjects-list").innerHTML = "";
-    m.style.display = "flex";
+  const fid = m.querySelector("#faculty-number"),
+        fem = m.querySelector("#faculty-email"),
+        sid = m.querySelector("#student-number"),
+        sem = m.querySelector("#student-email");
 
-    const fid = m.querySelector("#faculty-number"),
-          fem = m.querySelector("#faculty-email"),
-          sid = m.querySelector("#student-number"),
-          sem = m.querySelector("#student-email");
-    if(fid && fem){ fid.disabled = h.includes("EDIT FACULTY"); fem.disabled = h.includes("EDIT FACULTY"); }
-    if(sid && sem){ sid.disabled = h.includes("EDIT STUDENT"); sem.disabled = h.includes("EDIT STUDENT"); }
+  if(fid && fem){ 
+    fid.disabled = h.includes("EDIT FACULTY"); 
+    fem.disabled = h.includes("EDIT FACULTY"); 
   }
-  const closeModal = m => m.style.display = "none";
+  if(sid && sem){ 
+    sid.disabled = h.includes("EDIT STUDENT"); 
+    sem.disabled = h.includes("EDIT STUDENT"); 
+  }
+}
+const closeModal = m => m.style.display = "none";
 
-  // ========================= Faculty =========================
-  const addFacultyModal = document.getElementById("addFacultyModal"),
-        facultyTbody = document.querySelector("#faculties-section tbody");
+// ========================= Faculty =========================
+const addFacultyModal = document.getElementById("addFacultyModal"),
+      facultyTbody = document.querySelector("#faculties-section tbody");
 
-  document.querySelector(".add-faculty-btn").addEventListener("click", () => openModal(addFacultyModal,"ADD FACULTY","SAVE FACULTY"));
-  addFacultyModal.querySelector(".submit-btn").addEventListener("click", () => {
-    const n = document.getElementById("faculty-number").value.trim(),
-          e = document.getElementById("faculty-email").value.trim(),
-          f = document.getElementById("faculty-firstname").value.trim(),
-          l = document.getElementById("faculty-lastname").value.trim(),
-          s = document.getElementById("faculty-suffix").value.trim(),
-          photo = document.getElementById("faculty-photo-preview").src;
-    if(!n||!e||!f||!l) return alert("Please fill in all required fields.");
+document.querySelector(".add-faculty-btn").addEventListener("click", () => {
+  // Clear form for new faculty
+  addFacultyModal.querySelectorAll("input").forEach(i=>{ i.value=""; i.disabled=false; });
+  document.getElementById("faculty-photo-preview").hidden = true;
+  openModal(addFacultyModal,"ADD FACULTY","SAVE FACULTY");
+});
+
+// Handle Save / Update
+addFacultyModal.querySelector(".submit-btn").addEventListener("click", () => {
+  const n = document.getElementById("faculty-number").value.trim(),
+        e = document.getElementById("faculty-email").value.trim(),
+        f = document.getElementById("faculty-firstname").value.trim(),
+        l = document.getElementById("faculty-lastname").value.trim(),
+        s = document.getElementById("faculty-suffix").value.trim(),
+        photo = document.getElementById("faculty-photo-preview").src;
+
+  if(!n||!e||!f||!l) return alert("Please fill in all required fields.");
+
+  // Check if updating existing row
+  if(addFacultyModal.dataset.editRow){
+    const row = document.getElementById(addFacultyModal.dataset.editRow);
+    row.querySelector("td:nth-child(1)").innerHTML = photo?`<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`:"";
+    row.querySelector("td:nth-child(3)").innerHTML = `<div>${f} ${l} ${s}</div><small style="color:#6b7280;">${e}</small>`;
+    row.dataset.firstname = f;
+    row.dataset.lastname = l;
+    row.dataset.suffix = s;
+    row.dataset.photo = photo;
+    delete addFacultyModal.dataset.editRow;
+  } else {
+    // New row
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${photo?`<img src="${photo}" alt="Faculty Photo" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`:``}</td>
-      <td>${n}</td>
-      <td><div>${f} ${l} ${s}</div><small style="color:#6b7280;">${e}</small></td>
-      <td><div class="faculty-subjects">No subjects yet</div></td>
-      <td class="action-cell"><div class="action-buttons">
-        <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-        <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
-      </div></td>`;
-    facultyTbody.appendChild(row);
-    row.querySelector(".edit-btn").addEventListener("click", () => openModal(addFacultyModal,"EDIT FACULTY","UPDATE FACULTY"));
-    row.querySelector(".delete-btn").addEventListener("click", () => row.remove());
-    closeModal(addFacultyModal);
-  });
+    row.id = "faculty-" + Date.now();
+    row.dataset.id = n;
+    row.dataset.email = e;
+    row.dataset.firstname = f;
+    row.dataset.lastname = l;
+    row.dataset.suffix = s;
+    row.dataset.photo = photo;
 
-  document.getElementById("faculty-photo").addEventListener("change", e => {
-    const f = e.target.files[0]; if(f){ const r = new FileReader();
-      r.onload = ev => { const p = document.getElementById("faculty-photo-preview"); p.src = ev.target.result; p.hidden = false; }
-      r.readAsDataURL(f);
+    row.innerHTML = `
+  <td>${photo?`<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`:``}</td>
+  <td><strong class="faculty-id">${n}</strong></td>
+  <td>
+    <div><strong class="faculty-name">${f} ${l} ${s}</strong></div>
+    <small class="faculty-email">${e}</small>
+  </td>
+  <td><div class="faculty-subjects">No subjects yet</div></td>
+  <td class="action-cell">
+    <div class="action-buttons">
+      <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+      <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+    </div>
+  </td>`;
+
+
+    facultyTbody.appendChild(row);
+
+    // Edit button
+    row.querySelector(".edit-btn").addEventListener("click", () => {
+      document.getElementById("faculty-number").value = row.dataset.id;
+      document.getElementById("faculty-email").value = row.dataset.email;
+      document.getElementById("faculty-firstname").value = row.dataset.firstname;
+      document.getElementById("faculty-lastname").value = row.dataset.lastname;
+      document.getElementById("faculty-suffix").value = row.dataset.suffix;
+      if(row.dataset.photo){ 
+        const p = document.getElementById("faculty-photo-preview"); 
+        p.src = row.dataset.photo; 
+        p.hidden = false; 
+      }
+      addFacultyModal.dataset.editRow = row.id;
+      openModal(addFacultyModal,"EDIT FACULTY","UPDATE FACULTY");
+    });
+
+    // Delete button
+    row.querySelector(".delete-btn").addEventListener("click", () => row.remove());
+  }
+
+  closeModal(addFacultyModal);
+});
+
+// Photo preview
+document.getElementById("faculty-photo").addEventListener("change", e => {
+  const f = e.target.files[0]; 
+  if(f){ 
+    const r = new FileReader();
+    r.onload = ev => { 
+      const p = document.getElementById("faculty-photo-preview"); 
+      p.src = ev.target.result; 
+      p.hidden = false; 
     }
-  });
+    r.readAsDataURL(f);
+  }
+});
+
 
   // ========================= Students =========================
   const addStudentModal = document.getElementById("addStudentModal"),
