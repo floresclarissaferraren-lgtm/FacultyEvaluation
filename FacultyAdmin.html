@@ -93,6 +93,21 @@
   </div>
 </div>
 
+<!-- Add Delete Forms ==============================================================================================================================-->
+<div id="deleteModal" class="modal">
+  <div class="modal-content delete-modal-card">
+    <div class="delete-icon-circle"><i class="fas fa-exclamation-triangle"></i></div>
+    <p id="deleteMessage" class="delete-main-text">
+      Do you want to delete <strong>category</strong>?<br><b>TEACHING SKILLS</b>
+    </p>
+    <p id="deleteWarning" class="delete-sub-text">All details about this category will be deleted.</p>
+    <div class="delete-buttons">
+      <button onclick="closeDeleteModal()" class="cancel-btn">No, Keep It</button>
+      <button onclick="confirmDelete()" class="submit-btn">Yes, Delete!</button>
+    </div>
+  </div>
+</div>
+
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
   <div class="box">
@@ -313,7 +328,6 @@
   <div class="criteria-layout" style="display:flex; gap:24px; align-items:flex-start;">
     <!-- Categories Column -->
     <div class="categories-column" id="categoriesColumn" style="flex:2;"></div>
-
     <!-- Summary Panel -->
     <div class="summary-panel" style="flex:1;">
       <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
@@ -362,13 +376,10 @@
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <p class="category-label">
-        <span class="label-text">Category:</span>
-        <span class="category-name" id="questionCategoryName"></span>
-      </p>
+      <p class="category-label"><span class="label-text">Category:</span>
+        <span class="category-name" id="questionCategoryName"></span></p>
       <div class="form-row">
-        <div>
-          <label for="question-text">Question</label>
+        <div><label for="question-text">Question</label>
           <textarea id="question-text" rows="3" placeholder="Enter evaluation question..."></textarea>
         </div>
       </div>
@@ -376,7 +387,6 @@
     </div>
   </div>
 </div>
-
 </main>
 <script src="FacultyAdmin.js"></script>
 </body>
