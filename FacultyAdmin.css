@@ -203,13 +203,11 @@ td:first-child { font-weight:700; color:#1e3a8a; }
 .upload-badge svg{position:absolute;top:50%;left:50%;width:14px;height:14px;transform:translate(-50%,-50%);}
 .upload-badge:hover{background:#0f2450;}
 
-
 #addFacultyModal .form-row{display:flex;gap:8px;width:100%;margin-bottom:8px;}
 #addFacultyModal .form-row>label{flex:1;}
 #addFacultyModal .section-box{background:#e6f0ff;border:1px solid #bcd3ff;border-radius:6px;padding:10px;margin-top:12px;}
 #addFacultyModal .section-box h4{margin:0 0 6px;font-size:.95rem;color:#1a356f;display:flex;align-items:center;gap:6px;}
 #addFacultyModal .subjects-list{min-height:20px;border-radius:6px;padding:6px;background:transparent;}
-
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -221,9 +219,6 @@ input:disabled {background-color: #f9f9f9 !important;color: #555 !important;curs
 .faculty-id {font-weight: 600;color: #1e3a8a; /* dark blue */}
 .faculty-name {font-weight: 600;color: #000;}
 .faculty-email {color: #6b7280;}
-
-
-
 /* =========================  students Section ========================== */
 #addStudentModal .section-box{background:#f3f7ff;border:1.5px solid #f3f4f6;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.06);
   padding:12px;margin-top:12px;}
