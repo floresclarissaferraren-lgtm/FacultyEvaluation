@@ -72,6 +72,42 @@ if (modals.instructor.openForgot) modals.instructor.openForgot.addEventListener(
 
 if (hamburger) hamburger.addEventListener("click", toggleHamburgerMenu);
 
+// ===================== Login form submit handlers =====================
+const logins = {
+  student: { id: 'STU001', password: 'student123', redirect: 'FacultyUser.html' },
+  admin: { id: 'ADM001', password: 'admin123', redirect: 'FacultyAdmin.html' }
+};
+
+const studentForm = modals.student.login?.querySelector('form');
+if (studentForm) {
+  studentForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const id = studentForm.querySelector('input[type=text]')?.value.trim();
+    const pw = studentForm.querySelector('input[type=password]')?.value.trim();
+    if (!id || !pw) return alert('Please enter Student ID and Password.');
+    if (id === logins.student.id && pw === logins.student.password) {
+      window.location.href = logins.student.redirect;
+    } else {
+      alert('Incorrect student credentials. Use ID: STU001, Password: student123');
+    }
+  });
+}
+
+const adminForm = modals.admin.login?.querySelector('form');
+if (adminForm) {
+  adminForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const id = adminForm.querySelector('input[type=text]')?.value.trim();
+    const pw = adminForm.querySelector('input[type=password]')?.value.trim();
+    if (!id || !pw) return alert('Please enter Admin ID and Password.');
+    if (id === logins.admin.id && pw === logins.admin.password) {
+      window.location.href = logins.admin.redirect;
+    } else {
+      alert('Incorrect admin credentials. Use ID: ADM001, Password: admin123');
+    }
+  });
+}
+
 document.addEventListener("click", e => {
   if (!navMenu || !hamburger) return;
   if (!navMenu.contains(e.target) && !hamburger.contains(e.target)) {

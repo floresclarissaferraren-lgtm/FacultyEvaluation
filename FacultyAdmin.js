@@ -50,6 +50,8 @@ modal.querySelector(".submit-btn").onclick=confirmDelete;
     menu.style.display=menu.style.display==="block"?"none":"block";
   };
   window.logout = () => {
+    // clear session/local state if needed then redirect
+    window.location.href = 'EvalMain.html';
   };
  // ========================= Programs ==========================================================================================
 const addProgramModal=document.getElementById("addProgramModal"),

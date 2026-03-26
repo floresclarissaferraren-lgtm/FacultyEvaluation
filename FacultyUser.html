@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Faculty Evaluation System - Student Dashboard</title>
+  <link rel="stylesheet" href="FacultyAdmin.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; }
+    .navbar, .sidebar { background: #1f2937; color: white; }
+    .sidebar a.active { background: #374151; }
+    .section { padding: 20px; }
+    .dashboard-card { min-height: 130px; }
+    .table-wrapper { margin-top: 16px; }
+    .action-buttons button { margin-left: 4px; }
+    .rating-stars i{cursor:pointer;color:#d1d5db;font-size:1.2rem;margin-right:4px;}
+    .rating-stars .active{color:#fbbf24;}
+    .modal .modal-content { max-width: 500px; }
+  </style>
+</head>
+<body>
+<div class="navbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+    <div class="brand"><i class="fas fa-graduation-cap"></i><span class="main-title">FaculRate Student</span></div>
+  </div>
+  <div class="user">
+    <span>Student</span>
+    <div class="user-menu">
+      <img class="logo-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Student Logo" onclick="toggleUserMenu()">
+      <div class="dropdown" id="userDropdown">
+         <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <a href="#" data-section="dashboard-section" class="active" onclick="showSection('dashboard-section', event)"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+  <a href="#" data-section="evaluate-section" onclick="showSection('evaluate-section', event)"><i class="fas fa-star"></i><span>Evaluate Teachers</span></a>
+  <a href="#" data-section="history-section" onclick="showSection('history-section', event)"><i class="fas fa-history"></i><span>Evaluation History</span></a>
+  <a href="#" data-section="profile-section" onclick="showSection('profile-section', event)"><i class="fas fa-user"></i><span>Profile</span></a>
+</div>
+
+<main style="margin-left:220px;transition:.3s;">
+  <div id="dashboard-section" class="section">
+    <div class="dashboard-wrapper">
+      <div class="dashboard-box">
+        <h1>Welcome, Student</h1>
+        <p>Use this landing page for quick status and evaluation activity.</p>
+      </div>
+      <div class="dashboard" style="display:flex;flex-wrap:wrap;gap:16px;">
+        <div class="dashboard-card students" style="flex:1;min-width:200px;"><div class="dashboard-content"><h3>Teachers to Evaluate</h3><p id="card-remaining" class="dashboard-value">0</p></div></div>
+        <div class="dashboard-card evaluations" style="flex:1;min-width:200px;"><div class="dashboard-content"><h3>Completed Evaluations</h3><p id="card-completed" class="dashboard-value">0</p></div></div>
+        <div class="dashboard-card programs" style="flex:1;min-width:200px;"><div class="dashboard-content"><h3>Current Program</h3><p id="card-program" class="dashboard-value">BSIT</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="evaluate-section" class="section" style="display:none;">
+    <div class="box">
+      <div class="section-header"><h2>Evaluate Teachers</h2><p>Choose a teacher and submit your evaluation.</p></div>
+      <div class="table-wrapper"><table style="width:100%;border-collapse:collapse;">
+        <thead><tr><th>Teacher</th><th>Subject</th><th>Status</th><th>Action</th></tr></thead><tbody id="teachers-table"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div id="history-section" class="section" style="display:none;">
+    <div class="box">
+      <div class="section-header"><h2>Evaluation History</h2></div>
+      <div class="table-wrapper"><table style="width:100%;border-collapse:collapse;">
+        <thead><tr><th>Date</th><th>Teacher</th><th>Subject</th><th>Score</th><th>Feedback</th></tr></thead><tbody id="history-table"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div id="profile-section" class="section" style="display:none;">
+    <div class="box"><div class="section-header"><h2>My Profile</h2></div>
+      <div class="form-row" style="display:flex;gap:16px;flex-wrap:wrap;"><div><label>ID</label><input type="text" value="STU-001" disabled></div><div><label>Name</label><input type="text" value="Juan Dela Cruz" disabled></div><div><label>Program</label><input type="text" value="BSIT" disabled></div></div>
+    </div>
+  </div>
+</main>
+
+<div id="evalModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);justify-content:center;align-items:center;">
+  <div class="modal-content" style="background:white;padding:20px;border-radius:8px;">
+    <div class="modal-header"><h3>Evaluate Teacher</h3><span class="close-btn" style="cursor:pointer;float:right;">&times;</span></div>
+    <div class="modal-body">
+      <p id="evalinfo"></p>
+      <div class="rating-stars" data-score="0">
+        <i class="fas fa-star" data-value="1"></i><i class="fas fa-star" data-value="2"></i><i class="fas fa-star" data-value="3"></i><i class="fas fa-star" data-value="4"></i><i class="fas fa-star" data-value="5"></i>
+      </div>
+      <div style="margin-top:12px;"><textarea id="eval-comment" rows="4" style="width:100%;" placeholder="Optional comments"></textarea></div>
+      <button id="submit-eval" class="submit-btn" style="margin-top:12px;">SUBMIT EVALUATION</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let teacherTarget = null;
+  const teachers = [
+    {name:'Prof. Maria Santos',subject:'Math 101',status:'Pending'},
+    {name:'Mr. Carlos Reyes',subject:'IT 201',status:'Pending'},
+    {name:'Ms. Ana Gomez',subject:'English 101',status:'Pending'}
+  ];
+  const history = [];
+
+  function toggleSidebar(){
+    const s=document.getElementById('sidebar');
+    const m=document.querySelector('main');
+    s.classList.toggle('collapsed');
+    if(s.classList.contains('collapsed')){s.style.width='70px';m.style.marginLeft='70px';document.querySelectorAll('.sidebar a span').forEach(el=>el.style.display='none');}
+    else {s.style.width='220px';m.style.marginLeft='220px';document.querySelectorAll('.sidebar a span').forEach(el=>el.style.display='inline');}
+  }
+
+  function showSection(id,e){
+    document.querySelectorAll('.section').forEach(sec=>sec.style.display='none');
+    document.getElementById(id).style.display='block';
+    document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+    (e?.currentTarget||document.querySelector(`.sidebar a[data-section="${id}"]`))?.classList.add('active');
+  }
+
+  function renderTeachers(){
+    const tbody=document.getElementById('teachers-table');
+    tbody.innerHTML='';
+    teachers.forEach((t,i)=>{
+      const row=document.createElement('tr');
+      row.innerHTML=`<td>${t.name}</td><td>${t.subject}</td><td>${t.status}</td><td><button class="submit-btn" style="padding:4px 8px;" data-index="${i}">${t.status==='Pending' ? 'Evaluate' : 'View'}</button></td>`;
+      tbody.appendChild(row);
+    });
+    document.querySelectorAll('#teachers-table button').forEach(btn=>btn.addEventListener('click', e=>openEvalModal(parseInt(e.target.dataset.index))));
+    document.getElementById('card-remaining').innerText = teachers.filter(t=>t.status==='Pending').length;
+    document.getElementById('card-completed').innerText = history.length;
+  }
+
+  function renderHistory(){
+    const tbody=document.getElementById('history-table');
+    tbody.innerHTML='';
+    history.slice().reverse().forEach(rec=>{
+      const row=document.createElement('tr');
+      row.innerHTML=`<td>${rec.date}</td><td>${rec.teacher}</td><td>${rec.subject}</td><td>${rec.score}/5</td><td>${rec.comment||'-'}</td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  // Make menu links work on all screen sizes
+  document.querySelectorAll('.sidebar a, .navbar a[data-section]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const section = link.getAttribute('data-section');
+      if (section) showSection(section, e);
+    });
+  });
+
+  window.toggleUserMenu = () => {
+    const menu = document.getElementById("userDropdown");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  };
+
+  window.logout = () => {
+    window.location.href = 'EvalMain.html';
+  };
+
+  function openEvalModal(index){
+    teacherTarget = index;
+    const t=teachers[index];
+    document.getElementById('evalinfo').innerText = `${t.name} - ${t.subject}`;
+    document.getElementById('eval-comment').value='';
+    const stars = document.querySelectorAll('.rating-stars i');
+    stars.forEach(s=>{s.classList.remove('active'); s.addEventListener('click',starClick);});
+    document.getElementById('evalModal').style.display='flex';
+    document.querySelector('.rating-stars').dataset.score='0';
+  }
+
+  function starClick(evt){
+    const score = parseInt(evt.target.dataset.value);
+    const stars = document.querySelectorAll('.rating-stars i');
+    stars.forEach((s,i)=>{s.classList.toggle('active', i < score);});
+    document.querySelector('.rating-stars').dataset.score = score;
+  }
+
+  document.querySelector('.close-btn').addEventListener('click', ()=>document.getElementById('evalModal').style.display='none');
+  document.getElementById('submit-eval').addEventListener('click', ()=>{
+    const score = parseInt(document.querySelector('.rating-stars').dataset.score);
+    if(!score){return alert('Please select a star rating.');}
+    const comment = document.getElementById('eval-comment').value.trim();
+    const t = teachers[teacherTarget];
+    t.status = 'Completed';
+    history.push({date:new Date().toLocaleString(),teacher:t.name,subject:t.subject,score,comment});
+    renderTeachers(); renderHistory();
+    document.getElementById('evalModal').style.display='none';
+    alert('Evaluation submitted successfully.');
+  });
+
+  document.addEventListener('click', e=>{ if(e.target===document.getElementById('evalModal')) document.getElementById('evalModal').style.display='none'; });
+
+  showSection('dashboard-section');
+  renderTeachers();
+  renderHistory();
+</script>
+</body>
+</html>
