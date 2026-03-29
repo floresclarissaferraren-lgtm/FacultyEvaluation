@@ -1,3 +1,6 @@
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
   let currentActiveLink = null;
   let currentRow = null; 
@@ -13,91 +16,198 @@ window.toggleSidebar=()=>{
 
 window.addEventListener("resize",()=>{
   const s=document.getElementById("sidebar"),m=document.querySelector("main");
-  if(window.innerWidth>768){s.classList.remove("active","collapsed");m.style.marginLeft="";m.style.width="";}
+  if(innerWidth>768){s.classList.remove("active","collapsed");m.style.marginLeft="";m.style.width="";}
   else{s.classList.remove("collapsed");m.classList.remove("full");}
+});
+
+document.addEventListener("click",e=>{
+  const s=document.getElementById("sidebar");
+  if(s.classList.contains("active") && !s.contains(e.target) && !e.target.closest(".hamburger")){
+    s.classList.remove("active");
+  }
+  if(e.target.closest("#sidebar a")) s.classList.remove("active");
 });
 
 
   // ================= Section Switching ==========================================================================================
   window.showSection = (id,e) => {
-    document.querySelectorAll(".section").forEach(s=>s.style.display="none");
-    const target=document.getElementById(id); if(target) target.style.display="block";
-    document.querySelectorAll(".sidebar a").forEach(l=>l.classList.remove("active"));
-    const link=e?.target.closest("a")||document.querySelector(`.sidebar a[data-section="${id}"]`);
-    if(link){link.classList.add("active");currentActiveLink=link;}
-  };
-  document.querySelectorAll(".sidebar a").forEach(l=>l.addEventListener("click",e=>showSection(l.dataset.section,e)));
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none");
 
+  const target = document.getElementById(id);
+  if(target) target.style.display = "block";
+
+  document.querySelectorAll(".sidebar a").forEach(l=>l.classList.remove("active"));
+  const link = e?.target.closest("a") || document.querySelector(`.sidebar a[data-section="${id}"]`);
+  if(link){
+    link.classList.add("active");
+    currentActiveLink = link;
+  }
+  if(id === "programs-section"){
+    loadPrograms();
+  }
+  if(id === "faculties-section"){
+  loadFaculty(); // load data from DB
+}
+};
  // ================= Delete Forms ==========================================================================================
 function openDeleteModal(type,name,el){
-  deleteTarget=el;deleteType=type;
-  document.getElementById("deleteMessage").innerHTML=`Do you want to delete <strong>${type}</strong>?<div class="delete-item-name">${name}</div>`;
-  document.getElementById("deleteWarning").innerText=`Warning: All details about this ${type} will be deleted.`;
-  document.getElementById("deleteModal").style.display="flex";
+  deleteTarget = el;
+  deleteType = type;
+  document.getElementById("deleteMessage").innerText = `Do you want to delete ${type}? \n${name}`;
+  document.getElementById("deleteWarning").innerText = `Warning: All details about this ${type} will be deleted.`;
+  document.getElementById("deleteModal").style.display = "flex";
 }
 
 const closeDeleteModal=()=>{document.getElementById("deleteModal").style.display="none";deleteTarget=null;deleteType="";};
-const confirmDelete=()=>{if(deleteTarget)deleteTarget.remove();closeDeleteModal();};
+
+const confirmDelete = () => {
+  if (!deleteTarget || !deleteType) return closeDeleteModal();
+  const cfg = { faculty:{url:"deleteFaculty.php",key:"faculty_id"}, program:{url:"deleteProgram.php",key:"program_code"} }[deleteType];
+  if (!cfg) return closeDeleteModal();
+
+  const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
+  fetch(cfg.url, {
+    method:"POST", headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+    body:`${cfg.key}=${encodeURIComponent(val)}`
+  })
+  .then(r=>r.text())
+  .then(resp=>{
+    if(resp==="success"){
+      const row = deleteTarget.closest("tr");
+      if(row) row.remove();
+      closeDeleteModal();
+      openDeleteSuccess();
+    } else {
+      alert("Error deleting: "+resp);
+      closeDeleteModal();
+    }
+  })
+  .catch(err=>{
+    console.error(err);
+    alert("Unexpected error");
+    closeDeleteModal();
+  });
+};
+
+function openDeleteSuccess(){
+  document.getElementById("deleteSuccessModal").style.display = "flex";
+}
+function closeDeleteSuccess(){
+  document.getElementById("deleteSuccessModal").style.display = "none";
+}
+document.getElementById("success-ok-btn").onclick = closeDeleteSuccess;
 
 const modal=document.getElementById("deleteModal");
 modal.querySelector(".cancel-btn").onclick=closeDeleteModal;
 modal.querySelector(".submit-btn").onclick=confirmDelete;
 
+ // ================= User Menu Toggle & Logout ==========================================================================================
+window.toggleDropdown = () => {
+  const m = document.getElementById("dropdownMenu");
+  m.style.display = m.style.display === "block" ? "none" : "block";
+};
+// Show/close form
+window.showLogoutModal = () => {
+  document.getElementById("logoutModal").style.display = "flex";
+  document.getElementById("dropdownMenu").style.display = "none";
+};
+window.closeLogoutModal = () => document.getElementById("logoutModal").style.display = "none";
 
-  // ================= User Menu Toggle ==========================================================================================
-  window.toggleUserMenu = () => {
-    const menu=document.getElementById("userDropdown");
-    menu.style.display=menu.style.display==="block"?"none":"block";
-  };
-  window.logout = () => {
-    // clear session/local state if needed then redirect
-    window.location.href = 'EvalMain.html';
-  };
+// Confirm/logout
+window.confirmLogout = () => location.href = "EvalMain.html";
+window.logout = e => { e.preventDefault(); showLogoutModal(); };
+
+// Close dropdown when clicking outside
+document.addEventListener("click", e => {
+  const m = document.getElementById("dropdownMenu"),
+        t = document.querySelector(".admin-box");
+  if (m.style.display === "block" && !t.contains(e.target) && !m.contains(e.target)) m.style.display = "none";
+});
+
+// Close form
+document.getElementById("logoutModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("logoutModal")) closeLogoutModal();
+});
+
+// ================= Logout Modal Buttons ==========================================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutModal = document.getElementById("logoutModal");
+  if (!logoutModal) return;
+
+  const cancelBtn = logoutModal.querySelector(".cancel-btn");
+  const submitBtn = logoutModal.querySelector(".submit-btn");
+
+  if (cancelBtn) cancelBtn.addEventListener("click", closeLogoutModal);
+  if (submitBtn) submitBtn.addEventListener("click", confirmLogout);
+});
  // ========================= Programs ==========================================================================================
 const addProgramModal=document.getElementById("addProgramModal"),
       programSubmitBtn=document.getElementById("save-program-btn"),
       programHeader=addProgramModal.querySelector("h3"),
       programCodeInput=document.getElementById("program-code"),
       programNameInput=document.getElementById("program-name");
+let editRowProgram=null;
 
+// OPEN ADD MODAL
 document.querySelector(".add-program-btn")?.addEventListener("click",()=>{
   programHeader.innerText="ADD PROGRAM";programSubmitBtn.innerText="SAVE PROGRAM";
-  programCodeInput.value=programNameInput.value="";editRowProgram=null;
+  programCodeInput.value="";programNameInput.value="";editRowProgram=null;
   addProgramModal.style.display="flex";
 });
 
+// SAVE / UPDATE
 programSubmitBtn.addEventListener("click",()=>{
   const code=programCodeInput.value.trim(),name=programNameInput.value.trim();
   if(!code||!name)return alert("Please fill in both Program Code and Program Name.");
-  if(editRowProgram){editRowProgram.cells[0].innerText=code;editRowProgram.cells[1].innerText=name;}
-  else{
-    const row=document.createElement("tr");
-    row.innerHTML=`<td>${code}</td><td>${name}</td><td class="action-cell"><div class="action-buttons">
-      <button class="manage-btn"><i class="fas fa-sliders-h"></i></button>
-      <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-      <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
-    </div></td>`;
-    document.querySelector(".programs-table tbody").appendChild(row);
-    attachProgramRowEvents(row);
-  }
-  programCodeInput.value=programNameInput.value="";addProgramModal.style.display="none";editRowProgram=null;
+
+  const url=editRowProgram?"edit_program.php":"add_program.php";
+  const body=editRowProgram?`id=${editRowProgram.dataset.id}&program_code=${encodeURIComponent(code)}
+  &program_name=${encodeURIComponent(name)}`:`program_code=${encodeURIComponent(code)}&program_name=${encodeURIComponent(name)}`;
+
+  fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body})
+  .then(r=>r.text()).then(t=>{try{return JSON.parse(t);}catch{return t;}})
+  .then(res=>{
+    const ok=(typeof res==="object"&&res.status==="success")||(typeof res==="string"&&res.toLowerCase().includes("success"));
+    if(ok){loadPrograms();closeProgramModal();}else alert(res.message||res||"Operation failed.");
+  }).catch(err=>{console.error("FETCH ERROR:",err);alert("Something went wrong.");});
 });
 
+// ATTACH ROW EVENTS
 function attachProgramRowEvents(row){
-  row.querySelector(".manage-btn")?.addEventListener("click",()=>{
-    showSection("manage-section");
-    document.getElementById("manageTitle").innerText=`Subjects for ${row.cells[1].innerText}`;
-    showTable("subjects");
-  });
+  row.querySelector(".manage-btn")?.addEventListener("click",()=>{showSection("manage-section");
+    
+    document.getElementById("manageTitle").innerText=row.cells[1].innerText;showTable("subjects");});
   row.querySelector(".edit-btn")?.addEventListener("click",()=>{
     programHeader.innerText="EDIT PROGRAM";programSubmitBtn.innerText="UPDATE PROGRAM";
     programCodeInput.value=row.cells[0].innerText;programNameInput.value=row.cells[1].innerText;
     editRowProgram=row;addProgramModal.style.display="flex";
   });
-  row.querySelector(".delete-btn").addEventListener("click",()=>openDeleteModal("program",row.cells[1].innerText,row));
+  row.querySelector(".delete-btn")?.addEventListener("click",()=>openDeleteModal("program",row.cells[1].innerText,row));
 }
 
-document.querySelectorAll(".programs-table tbody tr").forEach(attachProgramRowEvents);
+// LOAD PROGRAMS
+function loadPrograms(){
+  fetch("getProgram.php").then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector(".programs-table tbody");tbody.innerHTML="";
+    data.forEach(p=>{
+      const tr=document.createElement("tr");tr.dataset.id=p.id;tr.dataset.program_code=p.program_code;
+      tr.innerHTML=
+      `<td>${p.program_code}</td><td>${p.program_name}
+      </td><td class="action-cell"><div class="action-buttons"><button class="manage-btn">
+      <i class="fas fa-sliders-h"></i></button><button class="edit-btn">
+      <i class="fas fa-pen-to-square"></i></button><button class="delete-btn">
+      <i class="fas fa-trash-alt"></i></button></div></td>`;
+      tbody.appendChild(tr);attachProgramRowEvents(tr);
+    });
+  }).catch(err=>console.error("FETCH ERROR:",err));
+}
+
+// CLOSE MODAL
+function closeProgramModal(){programCodeInput.value="";programNameInput.value="";editRowProgram=null;addProgramModal.style.display="none";}
+
+// INIT
+document.addEventListener("DOMContentLoaded",loadPrograms);
+
 
 // ========================= Manage Section (Subjects & Classes) ==========================================================================================
 function showTable(tab){
@@ -111,7 +221,7 @@ document.querySelector(".back-btn").addEventListener("click",()=>showSection("pr
 document.querySelector(".subject-btn").addEventListener("click",()=>showTable("subjects"));
 document.querySelector(".classes-btn").addEventListener("click",()=>showTable("classes"));
 
-const addManageBtn=document.querySelector(".add-manage-btn"),
+const addManageBtn=document.querySelector  (".add-manage-btn"),
       addSubjectModal=document.getElementById("addSubjectModal"),
       addClassModal=document.getElementById("addClassModal"),
       saveSubjectBtn=document.getElementById("save-subject-btn"),
@@ -180,6 +290,7 @@ saveClassBtn.addEventListener("click",()=>{
   }
   addClassModal.style.display="none";
 });
+
 // ========================= Forms ==========================================================================================
 const openModal=(m,h,b)=>{
   m.querySelector("h3").innerText=h;
@@ -192,62 +303,102 @@ const openModal=(m,h,b)=>{
 };
 const closeModal=m=>m.style.display="none";
 
-// ========================= Faculty ==========================================================================================
-const addFacultyModal=document.getElementById("addFacultyModal"),
-      facultyTbody=document.querySelector("#faculties-section tbody");
+// ================= Faculty ==========================================================================================
+const addFacultyModal=document.getElementById("addFacultyModal");
+const facultyTbody=document.querySelector("#faculties-section tbody");
 
-document.querySelector(".add-faculty-btn").addEventListener("click",()=>{
-  addFacultyModal.querySelectorAll("input").forEach(i=>{i.value="";i.disabled=false;});
-  document.getElementById("faculty-photo-preview").hidden=true;
+// LOAD FACULTY
+function loadFaculty(){
+  fetch("getFaculty.php").then(r=>r.json()).then(data=>{
+    facultyTbody.innerHTML="";
+    data.forEach(f=>{
+      const row=document.createElement("tr");
+      row.id="faculty-"+f.faculty_id;
+      Object.assign(row.dataset,f);
+      row.innerHTML=`
+        <td>${f.photo?`<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`:``}</td>
+        <td><strong>${f.faculty_id}</strong></td>
+        <td><div>${f.firstname} ${f.lastname} ${f.suffix||""}</div><small>${f.email}</small></td>
+        <td>No subjects yet</td>
+        <td class="action-cell"><div class="action-buttons">
+          <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+          <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+        </div></td>`;
+      facultyTbody.appendChild(row);
+
+      // EDIT
+      row.querySelector(".edit-btn").onclick=()=>{
+        document.getElementById("faculty-number").value=f.faculty_id||"";
+        document.getElementById("faculty-email").value=f.email||"";
+        document.getElementById("faculty-firstname").value=f.firstname||"";
+        document.getElementById("faculty-lastname").value=f.lastname||"";
+        document.getElementById("faculty-suffix").value=f.suffix||"";
+        const preview=document.getElementById("faculty-photo-preview");
+        if(f.photo){preview.src=f.photo;preview.hidden=false;}else preview.hidden=true;
+        addFacultyModal.dataset.editRow=f.faculty_id;
+        openModal(addFacultyModal,"EDIT FACULTY","UPDATE FACULTY");
+      };
+
+      // DELETE
+      row.querySelector(".delete-btn").onclick=()=>{
+        if(confirm(`Delete ${f.firstname}?`)){
+          fetch("deleteFaculty.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"faculty_id="+encodeURIComponent(f.faculty_id)})
+          .then(r=>r.text()).then(()=>loadFaculty());
+        }
+      };
+    });
+  }).catch(err=>console.error("Load error:",err));
+}
+
+// ADD BUTTON
+document.querySelector(".add-faculty-btn").onclick=()=>{
+  addFacultyModal.querySelectorAll("input").forEach(i=>i.value="");
+  const preview=document.getElementById("faculty-photo-preview");
+  preview.hidden=true; preview.src="";
+  delete addFacultyModal.dataset.editRow;
   openModal(addFacultyModal,"ADD FACULTY","SAVE FACULTY");
-});
+};
 
-addFacultyModal.querySelector(".submit-btn").addEventListener("click",()=>{
+// SAVE (ADD/EDIT)
+addFacultyModal.querySelector(".submit-btn").onclick=()=>{
   const n=document.getElementById("faculty-number").value.trim(),
         e=document.getElementById("faculty-email").value.trim(),
         f=document.getElementById("faculty-firstname").value.trim(),
         l=document.getElementById("faculty-lastname").value.trim(),
         s=document.getElementById("faculty-suffix").value.trim(),
-        photo=document.getElementById("faculty-photo-preview").src;
-  if(!n||!e||!f||!l)return alert("Please fill in all required fields.");
+        photo=document.getElementById("faculty-photo-preview").hidden?"":document.getElementById("faculty-photo-preview").src;
+  if(!n||!e||!f||!l) return alert("Required fields missing!");
+  const form=new URLSearchParams({faculty_id:n,email:e,firstname:f,lastname:l,suffix:s,photo});
+  const url=addFacultyModal.dataset.editRow?"editFaculty.php":"add_faculty.php";
+  fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:form.toString()})
+  .then(r=>r.text()).then(resp=>{
+    if(resp==="success"){loadFaculty();closeModal(addFacultyModal);}
+    else if(resp==="duplicate") alert("Faculty ID already exists!");
+    else alert("Error: "+resp);
+  }).catch(err=>console.error("Save error:",err));
+};
 
-  if(addFacultyModal.dataset.editRow){
-    const row=document.getElementById(addFacultyModal.dataset.editRow);
-    row.querySelector("td:nth-child(1)").innerHTML=photo?`<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`:"";
-    row.querySelector("td:nth-child(3)").innerHTML=`<div>${f} ${l} ${s}</div><small style="color:#6b7280;">${e}</small>`;
-    Object.assign(row.dataset,{firstname:f,lastname:l,suffix:s,photo});
-    delete addFacultyModal.dataset.editRow;
-  }else{
-    const row=document.createElement("tr");
-    row.id="faculty-"+Date.now();
-    Object.assign(row.dataset,{id:n,email:e,firstname:f,lastname:l,suffix:s,photo});
-    row.innerHTML=`<td>${photo?`<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`:``}</td>
-      <td><strong class="faculty-id">${n}</strong></td>
-      <td><div><strong class="faculty-name">${f} ${l} ${s}</strong></div><small class="faculty-email">${e}</small></td>
-      <td><div class="faculty-subjects">No subjects yet</div></td>
-      <td class="action-cell"><div class="action-buttons">
-        <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-        <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
-      </div></td>`;
-    facultyTbody.appendChild(row);
-
-    row.querySelector(".edit-btn").addEventListener("click",()=>{
-      ["faculty-number","faculty-email","faculty-firstname","faculty-lastname","faculty-suffix"].forEach((id,i)=>{
-        document.getElementById(id).value=[row.dataset.id,row.dataset.email,row.dataset.firstname,row.dataset.lastname,row.dataset.suffix][i];
-      });
-      if(row.dataset.photo){const p=document.getElementById("faculty-photo-preview");p.src=row.dataset.photo;p.hidden=false;}
-      addFacultyModal.dataset.editRow=row.id;
-      openModal(addFacultyModal,"EDIT FACULTY","UPDATE FACULTY");
-    });
-    row.querySelector(".delete-btn").addEventListener("click",()=>openDeleteModal("faculty",`${row.dataset.firstname} ${row.dataset.lastname}`,row));
+// PHOTO PREVIEW
+document.getElementById("faculty-photo").onchange=e=>{
+  const file=e.target.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const p=document.getElementById("faculty-photo-preview");
+      p.src=ev.target.result; p.hidden=false;
+    };
+    reader.readAsDataURL(file);
   }
-  closeModal(addFacultyModal);
-});
+};
 
-document.getElementById("faculty-photo").addEventListener("change",e=>{
-  const f=e.target.files[0];
-  if(f){const r=new FileReader();r.onload=ev=>{const p=document.getElementById("faculty-photo-preview");p.src=ev.target.result;p.hidden=false;};r.readAsDataURL(f);}
-});
+// SEARCH
+document.getElementById("faculty-search").oninput=e=>{
+  const term=e.target.value.toLowerCase();
+  [...facultyTbody.rows].forEach(r=>r.style.display=r.textContent.toLowerCase().includes(term)?"":"none");
+};
+
+// INIT
+document.addEventListener("DOMContentLoaded",loadFaculty);
 
 
   // ========================= Students ==========================================================================================
@@ -361,3 +512,4 @@ window.addEventListener("click",e=>{
   showSection("dashboard-section");
   showTable('subjects');
 });
+

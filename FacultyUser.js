@@ -1,13 +1,37 @@
 // ================= dropdown =================
 function toggleDropdown() {
   const menu = document.getElementById("dropdownMenu");
-  menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+  menu.style.display = (menu.style.display === "block") ? "none" : "block";
 }
 
+// Show/close form
+window.showLogoutModal = () => {
+  document.getElementById("logoutModal").style.display = "flex";
+  document.getElementById("dropdownMenu").style.display = "none";
+};
+window.closeLogoutModal = () => {
+  document.getElementById("logoutModal").style.display = "none";
+};
+
+// Confirm/logout
+window.confirmLogout = () => location.href = "EvalMain.html";
+window.logout = e => { 
+  e.preventDefault(); 
+  showLogoutModal(); 
+};
+
+// Close dropdown when clicking outside
 document.addEventListener("click", e => {
-  const dropdown = document.getElementById("dropdownMenu");
-  const studentBox = document.querySelector(".student-box");
-  if (!studentBox.contains(e.target)) dropdown.style.display = "none";
+  const m = document.getElementById("dropdownMenu"),
+        t = document.querySelector(".admin-box");
+  if (m.style.display === "block" && !t.contains(e.target) && !m.contains(e.target)) {
+    m.style.display = "none";
+  }
+});
+
+// Close modal when clicking outside content
+document.getElementById("logoutModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("logoutModal")) closeLogoutModal();
 });
 
 // ================= page switch =================
@@ -23,3 +47,24 @@ function goBackToMain() {
   document.getElementById("mainPage").style.display = "flex";
 
 }
+
+
+function showPasswordForm(){
+  document.getElementById("passwordForm").style.display="flex";
+}
+function closePasswordForm(){
+  document.getElementById("passwordForm").style.display="none";
+}
+function updatePassword(){
+  const inputs=document.querySelectorAll("#passwordForm input");
+  if(inputs[1].value!==inputs[2].value){
+    alert("New passwords do not match!");
+    return;
+  }
+  alert("Password updated successfully!");
+  closePasswordForm();
+}
+// Close when clicking outside
+document.getElementById("passwordForm").addEventListener("click",e=>{
+  if(e.target.id==="passwordForm") closePasswordForm();
+});

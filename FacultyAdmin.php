@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System - Admin Panel</title>
-  <link rel="stylesheet" href="FacultyAdmin.css">
+  <link rel="stylesheet" href="FacultyAdmin.css?v=<?=time()?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -15,17 +15,27 @@
     <div class="hamburger" onclick="toggleSidebar()">☰</div>
     <div class="brand"><i class="fas fa-graduation-cap"></i><span class="main-title">FaculRate</span></div>
   </div>
-  <div class="user">
-    <span>Administrator</span>
-    <div class="user-menu">
-      <img class="logo-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Admin Logo" onclick="toggleUserMenu()">
-      <div class="dropdown" id="userDropdown">
-         <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-      </div>
+  <div class="user-menu">
+    <div class="admin-box" onclick="toggleDropdown()">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
+      <span>Administrator</span><i class="fas fa-caret-down"></i>
     </div>
+    <div class="dropdown-menu" id="dropdownMenu"><a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
   </div>
 </div>
 
+<!-- Logout Form ========================================================================================================================================-->
+
+<div id="logoutModal" class="logoutform">
+  <div class="logout-content">
+    <div class="logout-icon"><span class="icon-bg"><i class="fas fa-sign-out-alt fa-2x"></i></span></div>
+    <h3>Are you sure you want to logout?</h3>
+    <div class="logout-buttons">
+      <button class="btn logout-btn" onclick="confirmLogout()">Yes, Log me out</button>
+      <button class="btn cancel-btn" onclick="closeLogoutModal()">No, Stay Logged In</button>
+    </div>
+  </div>
+</div>
 
 <!-- Sidebar ========================================================================================================================================-->
 <div class="sidebar" id="sidebar">
@@ -107,6 +117,17 @@
     </div>
   </div>
 </div>
+
+<div id="deleteSuccessModal" class="modal" style="display:none;">
+  <div class="modal-content success-modal-card">
+    <div class="success-icon-circle"><i class="fas fa-check-circle"></i></div>
+    <p class="success-main-text">Deleted successfully!</p>
+    <div class="success-buttons">
+      <button id="success-ok-btn" class="ok-btn">OK</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
@@ -250,6 +271,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- ===================== Students Section ===================== -->
 <div id="students-section" class="section" hidden>

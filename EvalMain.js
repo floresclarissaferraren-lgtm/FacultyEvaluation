@@ -74,8 +74,7 @@ if (hamburger) hamburger.addEventListener("click", toggleHamburgerMenu);
 
 // ===================== Login form submit handlers =====================
 const logins = {
-  student: { id: 'STU001', password: 'student123', redirect: 'FacultyUser.html' },
-  admin: { id: 'ADM001', password: 'admin123', redirect: 'FacultyAdmin.html' }
+  student: { id: 'STU001', password: 'student123', redirect: 'FacultyUser.html' }
 };
 
 const studentForm = modals.student.login?.querySelector('form');
@@ -93,20 +92,34 @@ if (studentForm) {
   });
 }
 
-const adminForm = modals.admin.login?.querySelector('form');
-if (adminForm) {
-  adminForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const id = adminForm.querySelector('input[type=text]')?.value.trim();
-    const pw = adminForm.querySelector('input[type=password]')?.value.trim();
-    if (!id || !pw) return alert('Please enter Admin ID and Password.');
-    if (id === logins.admin.id && pw === logins.admin.password) {
-      window.location.href = logins.admin.redirect;
-    } else {
-      alert('Incorrect admin credentials. Use ID: ADM001, Password: admin123');
-    }
-  });
+const adminForm = document.getElementById('adminLoginForm');
+if (adminForm) adminForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  try {
+    const res = await fetch('admin_login.php', { method: 'POST', body: new FormData(adminForm) });
+    const text = (await res.text()).trim();
+    text === 'success' ? window.location.href = 'FacultyAdmin.php' : alert(text);
+  } catch (err) {
+    console.error('Login error:', err);
+    alert('An error occurred. Please try again.');
+  }
+});
+
+
+const togglePassword = document.getElementById('togglePassword');
+const passwordInput = document.getElementById('adminPassword');
+
+if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        // swap icon
+        togglePassword.classList.toggle('fa-eye');
+        togglePassword.classList.toggle('fa-eye-slash');
+    });
 }
+
 
 document.addEventListener("click", e => {
   if (!navMenu || !hamburger) return;

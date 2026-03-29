@@ -144,18 +144,31 @@
 
 <!-- ADMIN LOGIN ==============================================================================================================-->
 <div class="LoginForm" id="adminLoginModal">
-<div class="LoginForm-content">
-<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeAdminLogin">
-    Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div></div>
-<h2>Admin Login</h2>
-<p class="LoginForm-subtitle"><span></span>Enter admin credentials<span></span></p>
-<form>
-<div class="input-group"><i class="fa-solid fa-user-gear"></i><input type="text" placeholder="Admin ID" required></div>
-<div class="input-group"><i class="fa-solid fa-lock"></i><input type="password" placeholder="Password" required></div>
-<button type="submit" class="StudentLogin-btn">Login</button>
-</form>
+  <div class="LoginForm-content">
+    <div class="LoginForm-header">
+      <img src="schoollogo.png" class="logo">
+      <div class="back-btn" id="closeAdminLogin">
+        Back<i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </div>
+    </div>
+    <h2>Admin Login</h2>
+    <p class="LoginForm-subtitle"><span></span>Enter admin credentials<span></span></p>
+    <form id="adminLoginForm">
+      <div class="input-group">
+        <i class="fa-solid fa-user-gear"></i>
+        <input type="text" name="username" placeholder="Admin ID" required>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" name="password" id="adminPassword" placeholder="Password" required>
+        <!-- eye toggle -->
+        <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
+      </div>
+      <button type="submit" class="StudentLogin-btn">Login</button>
+    </form>
+  </div>
 </div>
-</div>
+
 
 <script src="EvalMain.js"></script>
 </body>

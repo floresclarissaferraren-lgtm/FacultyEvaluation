@@ -1,0 +1,29 @@
+<?php
+session_start();
+include 'connect.php';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username']; // from form
+    $password = $_POST['password']; // from form
+
+    $stmt = $conn->prepare("SELECT * FROM student_login WHERE student_username=?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['student_password'])) {
+            $_SESSION['role'] = 'student';
+            $_SESSION['id'] = $user['student_id'];
+            $_SESSION['username'] = $user['student_username'];
+            header("Location: student_dashboard.php");
+            exit();
+        } else {
+            echo "Incorrect password";
+        }
+    } else {
+        echo "Username not found";
+    }
+}
+?>

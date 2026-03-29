@@ -13,15 +13,21 @@ body{margin:0;font-family:"Segoe UI",sans-serif;background:#f9fafb;color:#1f2937
 .logo-img {height:34px; width:34px; border-radius:50%; border:2px solid #93c5fd; box-shadow:0 0 8px rgba(147,197,253,.6)}
 .hamburger {font-size:24px; cursor:pointer; margin-right:18px; transition:.25s}
 .hamburger:hover {color:#bfdbfe; transform:scale(1.1)}
-.user-menu{position:relative}
+.user {display:flex;align-items:center;gap:12px}
+.user-menu {position:relative;}
+.admin-box {display:flex;align-items:center;gap:8px;cursor:pointer;color:#fff;} /* keep text white */
+.logo-img {width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #93c5fd;}
+.admin-box i {font-size:14px;}
 
-.dropdown{ display:none;position:absolute;right:0;top:42px;background:#122f6f; border:1px solid #d1d5db;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.18);
-  min-width:160px;overflow:hidden;z-index:2000;}
-.dropdown button{ display:flex;align-items:center;justify-content:center;width:100%;padding:12px 16px;background:none;border:none;font-size:.95rem;
-  font-weight:600;color:#fff;cursor:pointer;gap:10px;transition:.25s;}
-.dropdown button i{color:#fff;font-size:1rem}
-.dropdown button:hover{background:#fff;color:#122f6f}
-.dropdown button:hover i{color:#122f6f}
+.dropdown-menu {position:absolute;top:100%;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.12);display:none;flex-direction:column;
+  min-width:160px;padding:10px;animation:fadeIn .3s ease;z-index:1000;}
+.dropdown-menu.show {display:flex;}
+.dropdown-menu a {display:flex;align-items:center;gap:8px;padding:10px;color:#13326f;
+  font:600 14px "Inter",sans-serif;text-decoration:none;border-radius:6px;transition:.25s;}
+.dropdown-menu a i {font-size:16px;color:#13326f;transition:.25s;}
+.dropdown-menu a:hover {background:#f3f4f6;color:#2563eb;transform:translateX(4px);}
+.dropdown-menu a:hover i {color:#2563eb;}
+
 
 /* Sidebar =======================================================================================================================*/
 .sidebar {
@@ -61,9 +67,7 @@ main {
 .sidebar.collapsed ~ main {margin-left:70px; width:calc(100% - 70px);}
 .sidebar.hidden ~ main {margin-left:0; width:100%;}
 
-/* Dashboard  ===================================================================================================================*/
-/* ==== Binago ==== */
-
+/* Dashboard  =================================================================================================================== */
 .dashboard-box {
   background:#fff; padding:16px; border-radius:10px; margin:15px 0 20px;
   border-left:6px solid #1e3a8a; box-shadow:0 2px 6px rgba(0,0,0,.08);}
@@ -109,7 +113,7 @@ main {
   .dashboard-value{font-size:18px}
   .dashboard-card h3{font-size:12px}
 }
-/* ========================= Program Section ========================== */
+/* ========================= Program Section ==================================================================================================== */
 .section .box {background:#fff; margin:20px auto; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.08);
   overflow:hidden; width:95%; padding:24px; position:relative; border-top:4px solid #2563eb;}
 .section .box::before {content:""; position:absolute; top:0; left:0; width:100%; height:4px;background:#2563eb;}
@@ -132,7 +136,7 @@ main {
   background:linear-gradient(90deg,#0f2657,#3b82f6); color:#fff; display:flex; align-items:center;}
 .add-program-btn:hover,.add-faculty-btn:hover,.add-student-btn:hover { background:linear-gradient(90deg,#2563eb,#3b82f6); }
 
-/* ========================= AddModal Section ========================== */
+/* ========================= AddModal Section ==================================================================================================== */
 .modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%;background:rgba(0,0,0,.5); justify-content:center; align-items:center;}
 .modal-content {background:#fff; color:#333; border-radius:12px; width:90%; max-width:550px; box-shadow:0 4px 12px rgba(0,0,0,.3);
   overflow:hidden; animation:fadeIn .3s ease;}
@@ -147,30 +151,69 @@ main {
 .submit-btn {background:#1e3a8a; color:#fff; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600; text-align:center; transition:.2s;}
 .submit-btn:hover { background:#2563eb; transform:translateY(-2px); }
 
-/* ===== DELETE MODAL CARD STYLE ===== */
-.delete-modal-card{max-width:320px;padding:25px 20px 40px;border-radius:15px;background:#fff;text-align:center;
-  box-shadow:0 10px 30px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:8px;position:relative;}
-.delete-icon-circle{width:60px;height:60px; margin: 0 auto 15px;background:#fee2e2;border-radius:50%;display:flex;
-  align-items:center;justify-content:center;color:#dc2626;font-size:28px;}
-.delete-main-text{font-size:1rem;font-weight:600;color:#111;margin:0;}
-.delete-item-name{font-size:.875rem;font-weight:400;color:#111;margin-top:6px;line-height:1.2;}
-.delete-sub-text{font-size:.85rem;color:#970b0b;margin:8px 0 20px;}
-.delete-buttons{display:flex;justify-content:center;gap:12px;margin-top:10px;}
-.delete-modal-card .submit-btn,.delete-modal-card .cancel-btn{padding:8px 18px;border-radius:8px;font-weight:600;cursor:pointer;border:none;}
-.delete-modal-card .submit-btn{background:#ef4444;color:#fff;}
-.delete-modal-card .submit-btn:hover{background:#b91c1c;}
-.delete-modal-card .cancel-btn{background:#e5e7eb;color:#111;}
-.delete-modal-card .cancel-btn:hover{background:#d1d5db;}
+/* ===== DELETE MODAL  ===== */
+.delete-modal-card {
+  width: 280px; height: 280px; /* square shape */
+  padding: 20px; border-radius: 12px;
+  background: #fff; text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  gap: 10px; position: relative;
+  border-top: 6px solid #dc2626; /* accent strip */
+}
+
+.delete-icon-circle {
+  width: 60px; height: 60px; margin: 0 auto 10px;
+  background: #fee2e2; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #dc2626; font-size: 28px;
+}
+
+.delete-main-text { font-size: 1rem; font-weight: 600; color: #111; margin: 5px 0 0; }
+.delete-item-name { font-size: .875rem; font-weight: 400; color: #333; margin-top: 4px; line-height: 1.2; }
+.delete-sub-text { font-size: .80rem; color: #970b0b; margin: 8px 0 16px; }
+
+.delete-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px; /* mas maliit para dikit sa sub-text */
+}
+
+
+.delete-modal-card .submit-btn,
+.delete-modal-card .cancel-btn {
+  padding: 8px 16px; border-radius: 8px; font-weight: 600;
+  cursor: pointer; border: none; transition: all .3s ease;
+}
+
+.delete-modal-card .submit-btn { background: #ef4444; color: #fff; }
+.delete-modal-card .submit-btn:hover { background: #b91c1c; transform: translateY(-2px); }
+
+.delete-modal-card .cancel-btn { background: #f3f4f6; color: #111; border: 1px solid #d1d5db; }
+.delete-modal-card .cancel-btn:hover { background: #e5e7eb; transform: translateY(-2px); }
+
 
 @media(max-width:360px){.delete-modal-card{max-width:90%;padding:20px 15px 35px;}
 .delete-buttons{flex-direction:column;gap:8px;}}
 
-
 @keyframes fadeIn { from {opacity:0; transform:scale(.95);} to {opacity:1; transform:scale(1);} }
 
 
+#deleteSuccessModal {display: none; position: fixed; top: 0; left: 0;width: 100%; height: 100%; background: rgba(0,0,0,0.45);
+  justify-content: center; align-items: center; z-index: 9999;}
+#deleteSuccessModal .success-modal-card {width: 280px; max-width: 80%; padding: 30px 20px;background: #fff; border-radius: 14px;text-align: c
+  enter; box-shadow: 0 8px 24px rgba(0,0,0,0.25);border-top: 6px solid #2ecc71; animation: scaleIn 0.25s ease-out;}
+@keyframes scaleIn {from { transform: scale(0.9); opacity: 0; }to   { transform: scale(1); opacity: 1; }}
+#deleteSuccessModal .success-icon-circle {width: 60px; height: 60px; margin: 0 auto 15px;background: rgba(46,204,113,0.1); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;color: #2ecc71; font-size: 32px;}
+#deleteSuccessModal .success-main-text {font-size: 18px; font-weight: 600; color: #2c3e50;margin-bottom: 20px; letter-spacing: 0.3px;}
+#deleteSuccessModal .ok-btn {background: #2ecc71; color: #fff; border: none;padding: 10px 26px; border-radius: 8px; cursor: pointer;
+  font-size: 15px; font-weight: 500;transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;}
+#deleteSuccessModal .ok-btn:hover {background: #27ae60; transform: translateY(-2px);box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
 
-/* ========================= Manage Section ========================== */
+/* ========================= Manage Section ==================================================================================================== */
 
 .top-buttons { gap:10px; padding:12px 20px; }
 .top-buttons button { border:none; padding:8px 14px; border-radius:12px; font-weight:600; cursor:pointer; transition:.2s; background:#f3f4f6; color:#374151; }
@@ -211,7 +254,7 @@ td:first-child { font-weight:700; color:#1e3a8a; }
 
 #addProgramModal .modal-content, #addSubjectModal .modal-content, #addClassModal .modal-content {width:450px; max-width:90%;}
 
-/* ========================= Faculty Section ========================== */
+/* ========================= Faculty Section ==================================================================================================== */
 #faculty-number,#faculty-email,#faculty-firstname,#faculty-lastname,#faculty-suffix{margin-top:2px;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;
   font-size:.9rem;width:100%;background:#f9fafb;transition:.3s;box-sizing:border-box;outline:none;}
 #faculty-number:focus,#faculty-email:focus,#faculty-firstname:focus,#faculty-lastname:focus,#faculty-suffix:focus{
@@ -241,7 +284,7 @@ input:disabled {background-color: #f9f9f9 !important;color: #555 !important;curs
 .faculty-name {font-weight: 600;color: #000;}
 .faculty-email {color: #6b7280;}
 
-/* =========================  students Section ========================== */
+/* =========================  students Section ==================================================================================================== */
 #addStudentModal .section-box{background:#f3f7ff;border:1.5px solid #f3f4f6;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.06);
   padding:12px;margin-top:12px;}
 #addStudentModal .section-box h4{margin:0 0 8px;font-size:.95rem;font-weight:600;color:#1e3a8a;display:flex;align-items:center;gap:6px;}
@@ -252,7 +295,7 @@ input:disabled {background-color: #f9f9f9 !important;color: #555 !important;curs
   background:#f9fafb;transition:.3s;box-sizing:border-box;outline:none;}
 #addStudentModal input:focus,#addStudentModal select:focus{border-color:#2563eb;box-shadow:0 0 4px rgba(37,99,235,.25);background:#fff;}
 
-/* ========================= Evaluation Section ========================== */
+/* ========================= Evaluation Section ==================================================================================================== */
 #addCategoryModal .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
 #addCategoryModal .form-row label{font-size:.85rem;font-weight:600;color:#6b7280;margin:0;}
 #addCategoryModal .form-row input:focus{border-color:#1d4ed8;box-shadow:0 0 6px rgba(21,128,61,.25);background:#fff;}
@@ -338,3 +381,23 @@ input:disabled {background-color: #f9f9f9 !important;color: #555 !important;curs
 #addQuestionModal .category-label,
 #addQuestionModal .category-label .label-text{font-size:.85rem; font-weight:600; color:#b1b8c4; margin:0;}
 .category-label .category-name{font-size:.9rem; font-weight:600; color:#e46b0d;}
+
+/* =========================  Logout Section ==================================================================================================== */
+
+.logoutform {
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;}
+.logout-content {background:#fff;padding:30px;border-radius:8px;text-align:center;min-width:250px;}
+.logout-buttons {display:flex;flex-direction:column;gap:10px;align-items:stretch;}
+.logout-buttons .btn {padding:10px 0;border-radius:8px;font-size:14px;cursor:pointer;transition:.3s;width:80%;margin:0 auto;}
+.logout-icon {margin-top:15px;}
+.icon-bg {display:inline-flex;justify-content:center;align-items:center;background:#fdecea;border-radius:50%;padding:12px;}
+.icon-bg i {color:#f44336;}
+.logout-content h3 {margin-bottom:18px;font-weight:600;color:#333;font-size: 16px;}
+.cancel-btn {background:#ffffff;color:#d31b1b; border: 1px solid #a81c1c;}
+.cancel-btn:hover {background:#eb9898;color:#a81c1c;}
+.logout-btn {background:#f44336;color:#fff; border: 1px solid #a81c1c;}
+.logout-btn:hover {background:#a81c1c;}
+@keyframes fadeInScale {
+  0%{transform:scale(.9);opacity:0;}
+  100%{transform:scale(1);opacity:1;}
+}
