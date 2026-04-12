@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Faculty Evaluation System - Admin Panel</title>
+  <title>Faculty Evaluation System</title>
   <link rel="stylesheet" href="FacultyAdmin.css?v=<?=time()?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -13,42 +13,85 @@
 <div class="navbar">
   <div style="display:flex;align-items:center;">
     <div class="hamburger" onclick="toggleSidebar()">☰</div>
-    <div class="brand"><i class="fas fa-graduation-cap"></i><span class="main-title">FaculRate</span></div>
-  </div>
-  <div class="user-menu">
-    <div class="admin-box" onclick="toggleDropdown()">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
-      <span>Administrator</span><i class="fas fa-caret-down"></i>
+    <div class="brand">
+      <i class="fas fa-graduation-cap"></i>
+      <span class="main-title">FaculRate</span>
     </div>
-    <div class="dropdown-menu" id="dropdownMenu"><a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+  </div>
+  
+  <!-- Logout Binago --------->
+  <div class="user-menu">
+    <div class="admin-box" id="dropdownToggle">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
+      <span>Administrator</span>
+      <i class="fas fa-caret-down"></i>
+    </div>
+
+    <div class="dropdown-menu" id="dropdownMenu">
+      <a href="#" id="logoutLink">
+    <i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
   </div>
 </div>
-
-<!-- Logout Form ========================================================================================================================================-->
-
 <div id="logoutModal" class="logoutform">
   <div class="logout-content">
-    <div class="logout-icon"><span class="icon-bg"><i class="fas fa-sign-out-alt fa-2x"></i></span></div>
+    <div class="logout-icon">
+      <span class="icon-bg">
+        <i class="fas fa-sign-out-alt fa-2x"></i>
+      </span>
+    </div>
     <h3>Are you sure you want to logout?</h3>
     <div class="logout-buttons">
-      <button class="btn logout-btn" onclick="confirmLogout()">Yes, Log me out</button>
-      <button class="btn cancel-btn" onclick="closeLogoutModal()">No, Stay Logged In</button>
+      <button type="button" class="btn logout-btn" onclick="confirmLogout()">Yes, Log me out</button>
+      <button type="button" class="btn cancel-btn" onclick="closeLogoutModal()">No, Stay Logged In</button>
     </div>
   </div>
 </div>
 
 <!-- Sidebar ========================================================================================================================================-->
 <div class="sidebar" id="sidebar">
-  <a href="#" data-section="dashboard-section" onclick="showSection('dashboard-section')"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-  <a href="#" data-section="programs-section" onclick="showSection('programs-section')"><i class="fas fa-book"></i><span>Programs</span></a>
-  <a href="#" data-section="faculties-section" onclick="showSection('faculties-section')"><i class="fas fa-user-tie"></i><span>Faculties</span></a>
-  <a href="#" data-section="students-section" onclick="showSection('students-section')"><i class="fas fa-user-graduate"></i><span>Students</span></a>
-  <a href="#" data-section="criteria-section"><i class="fas fa-list"></i><span>Evaluation Criteria</span></a>
-  <a href="#" data-section="report-section"><i class="fas fa-chart-bar"></i><span>Evaluation Report</span></a>
+
+  <div class="sidebar-header">
+    <h1>Admin Panel</h1>
+  </div>
+
+  <nav class="sidebar-menu">
+
+    <a href="#" data-section="dashboard-section" onclick="showSection('dashboard-section', event)">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+
+    <a href="#" data-section="programs-section" onclick="showSection('programs-section', event)">
+      <i class="fas fa-book"></i>
+      <span>Program</span>
+    </a>
+
+    <a href="#" data-section="faculties-section" onclick="showSection('faculties-section', event)">
+      <i class="fas fa-user-tie"></i>
+      <span>Faculty</span>
+    </a>
+
+    <a href="#" data-section="students-section" onclick="showSection('students-section', event)">
+      <i class="fas fa-user-graduate"></i>
+      <span>Students</span>
+    </a>
+
+    <a href="#" data-section="criteria-section" onclick="showSection('criteria-section', event)">
+      <i class="fas fa-list"></i>
+      <span>Evaluation Criteria</span>
+    </a>
+
+    <a href="#" data-section="report-section" onclick="showSection('report-section', event)">
+  <i class="fas fa-chart-bar"></i>
+  <span>Evaluation Report</span>
+</a>
+  </nav>
+
 </div>
 
 <main>
-<!-- Dashboard Section =====================================================================================================================================-->
+<!-- Dashboard Section May nabago =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
   <div class="dashboard-wrapper">
     <div class="dashboard-box">
@@ -58,12 +101,35 @@
     </div>
     <div class="dashboard">
       <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p id="totalFaculty" class="dashboard-value">0</p>
-        <span>Across 14 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
+        <span>Across 9 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
       <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p id="totalStudents" class="dashboard-value">0</p>
         <span>Registered Users</span></div><div class="icon-box"><i class="fas fa-user-graduate"></i></div></div></div>
       <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p id="totalEvaluations" class="dashboard-value">0</p>
-        <span>Current Period</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
+        <span>Overall</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
     </div>
+  </div>
+</div>
+
+<div id="dashboard-details">
+  <div class="ratings-box">
+    <h4><i class="fas fa-star"></i> Faculty Ratings</h4>
+    <table>
+      <thead><tr><th>Faculty Name</th><th>Rating</th></tr></thead>
+      <tbody id="ratings-body"></tbody>
+    </table>
+  </div>
+
+  <div class="ranking-box">
+    <h4><i class="fas fa-trophy"></i> Faculty Ranking</h4>
+    <table>
+      <thead><tr><th>Rank</th><th>Faculty</th><th>Ratings</th></tr></thead>
+      <tbody id="ranking-body"></tbody>
+    </table>
+  </div>
+
+  <div class="graph-box">
+    <h4><i class="fas fa-chart-bar"></i> Responded per Department</h4>
+    <canvas id="departmentGraph"></canvas>
   </div>
 </div>
 
@@ -88,7 +154,6 @@
     </div>
   </div>
 </div>
-
 <!-- Add Program Modal -->
 <div id="addProgramModal" class="modal" style="display:none;">
   <div class="modal-content">
@@ -159,7 +224,7 @@
       <!-- Classes Table -->
       <div id="classes" class="table-wrapper" style="display:none;">
         <table><thead> <tr>
-          <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
+          <th>Section Name</th><th>Year Level</th><th>Action</th>
             </tr></thead>
           <tbody></tbody>
         </table>
@@ -187,27 +252,41 @@
   </div>
 </div>
 
-<!-- Add/Edit Class Form -->
 <div id="addClassModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
       <h3>ADD CLASS</h3>
       <span class="close-btn">&times;</span>
     </div>
+
     <div class="modal-body">
-      <label for="class-name">Section Name</label>
-      <input type="text" id="class-name" placeholder="eg. BSIT-1A">
       <label for="class-year">Year Level</label>
-      <input type="text" id="class-year" placeholder="eg. 1st Year">
-      <label for="class-status">Status</label>
-      <input type="text" id="class-status" placeholder="eg. Active">
+      <select id="class-year">
+        <option value="">Select Year Level</option>
+        <option value="1st Year">1st Year</option>
+        <option value="2nd Year">2nd Year</option>
+        <option value="3rd Year">3rd Year</option>
+        <option value="4th Year">4th Year</option>
+      </select>
+
+      <label for="class-name">Section:</label>
+      <input type="text" id="class-name" placeholder="eg. 1">
+
+      
+
+      <!-- 🔥 SUBJECT BOX -->
+      <div class="subject-box">
+  <label><b>Select Subjects</b></label>
+  <div id="subject-checkbox-list" class="checkbox-list"></div>
+</div>
+
       <button id="save-class-btn" class="submit-btn">SAVE CLASS</button>
     </div>
   </div>
 </div>
 
 <!-- ===================== Faculties Section ===================== -->
-<div id="faculties-section" class="section" hidden>
+<div id="faculties-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
       <h2>Faculties</h2>
@@ -274,7 +353,7 @@
 
 
 <!-- ===================== Students Section ===================== -->
-<div id="students-section" class="section" hidden>
+<div id="students-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
       <h2>Students</h2>
@@ -297,60 +376,101 @@
   </div>
 </div>
 
-<!-- Add Students Form -->
+<!-- Add Student Modal binago-->
 <div id="addStudentModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:600px;">
     <div class="modal-header">
-      <h3>ADD STUDENT</h3><span class="close-btn">&times;</span></div>
+      <h3>ADD STUDENT</h3>
+      <span class="close-btn">&times;</span>
+    </div>
     <div class="modal-body">
       <!-- Student Info -->
-      <div class="form-row"><div><label for="student-number">Student ID</label><input type="text" id="student-number" placeholder="eg. GC-"></div>
-        <div><label for="student-email">Email</label><input type="email" id="student-email" placeholder="eg. student@email.com"></div>
+      <div class="form-row">
+        <div>
+          <label for="student-number">Student ID</label>
+          <input type="text" id="student-number" placeholder="eg. GC-">
+          <!-- Inline error message for GC- validation -->
+          <div id="student-number-error" style="color:red; font-size:0.9em; margin-top:2px;"></div>
+        </div>
+        <div>
+          <label for="student-email">Email</label>
+          <input type="email" id="student-email" placeholder="eg. student@email.com">
+        </div>
       </div>
 
       <div class="form-row">
-        <div><label for="student-firstname">First Name</label><input type="text" id="student-firstname" placeholder="eg. Juan"></div>
-        <div><label for="student-lastname">Last Name</label><input type="text" id="student-lastname" placeholder="eg. Dela Cruz"></div>
-        <div class="suffix-field"><label for="student-suffix">Suffix</label><input type="text" id="student-suffix" placeholder="Jr., III"></div>
+        <div>
+          <label for="student-firstname">First Name</label>
+          <input type="text" id="student-firstname" placeholder="eg. Juan">
+        </div>
+        <div>
+          <label for="student-lastname">Last Name</label>
+          <input type="text" id="student-lastname" placeholder="eg. Dela Cruz">
+        </div>
+        <div class="suffix-field">
+          <label for="student-suffix">Suffix</label>
+          <input type="text" id="student-suffix" placeholder="Jr., III">
+        </div>
       </div>
 
       <div class="section-box">
         <h4><i class="fas fa-graduation-cap"></i> Academic Details</h4>
-        <div class="form-row"><div>
-            <label for="student-program">Program</label> <select id="student-program" required>
-              <option value="" disabled selected>-- Select Program --</option></select></div>
+        <div class="form-row">
+          <div>
+            <label for="student-program">Program</label>
+            <select id="student-program" required>
+              <option value="" disabled selected>-- Select Program --</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-row"><div>
-          <label for="student-yearlevel">Year Level</label><select id="student-yearlevel" required>
+        <div class="form-row">
+          <div>
+            <label for="student-yearlevel">Year Level</label>
+            <select id="student-yearlevel" required>
               <option value="" disabled selected>-- Select Year Level --</option>
-              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select>
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+            </select>
           </div>
-          <div><label for="student-yearsection">Section</label><select id="student-yearsection" required>
+          <div>
+            <label for="student-yearsection">Section</label>
+            <select id="student-yearsection" required>
               <option value="" disabled selected>-- Select Section --</option>
-              <option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+              <option>A</option>
+              <option>B</option>
+              <option>C</option>
+              <option>D</option>
+            </select>
+          </div>
         </div>
       </div>
+
       <button class="submit-btn">SAVE STUDENT</button>
     </div>
   </div>
 </div>
-<!-- ===================== Evaluation Criteria Section ===================== -->
+<!-- ===================== Evaluation Criteria Section ================================================================================= -->
 <div id="criteria-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
       <h2>Evaluation Criteria</h2>
       <div class="header-actions">
-        <button id="addCategoryBtn" class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Category</button>
+        <button id="addCategoryBtn" class="add-program-btn button-gradient">
+          <i class="fas fa-plus"></i> Add Category
+        </button>
       </div>
     </div>
-    <div class="subtitle"><p>Manage evaluation questions grouped by category.</p></div>
+    <div class="subtitle">
+      <p>Manage evaluation questions grouped by category.</p>
+    </div>
   </div>
 
   <div class="criteria-layout" style="display:flex; gap:24px; align-items:flex-start;">
-    <!-- Categories Column -->
     <div class="categories-column" id="categoriesColumn" style="flex:2;"></div>
-    <!-- Summary Panel -->
+
     <div class="summary-panel" style="flex:1;">
       <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
       <p><strong>Categories:</strong> <span id="total-categories">0</span></p>
@@ -358,25 +478,26 @@
       <div class="legend">
         <h5><i class="fas fa-list-ul"></i> LEGEND</h5>
         <ul>
-          <li data-value="5"><span class="badge">5</span> Strongly Agree — Excellent</li>
-          <li data-value="4"><span class="badge">4</span> Agree — Very Good</li>
-          <li data-value="3"><span class="badge">3</span> Neutral — Satisfactory</li>
-          <li data-value="2"><span class="badge">2</span> Disagree — Fair</li>
-          <li data-value="1"><span class="badge">1</span> Strongly Disagree — Poor</li>
+          <li data-value="5"><span class="badge">5</span> Strongly Agree - Excellent</li>
+          <li data-value="4"><span class="badge">4</span> Agree - Very Good</li>
+          <li data-value="3"><span class="badge">3</span> Neutral - Satisfactory</li>
+          <li data-value="2"><span class="badge">2</span> Disagree - Fair</li>
+          <li data-value="1"><span class="badge">1</span> Strongly Disagree - Poor</li>
         </ul>
       </div>
     </div>
   </div>
+</div>
 
 <!-- Add Category Form -->
 <div id="addCategoryModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:500px;">
     <div class="modal-header">
       <h3>ADD CATEGORY</h3>
-      <span class="close-btn">&times;</span></div>
+      <span class="close-btn">&times;</span>
+    </div>
     <div class="modal-body">
       <div class="form-row">
-
         <label for="category-name">Category Name</label>
         <input type="text" id="category-name" placeholder="eg. Instructional Competence">
       </div>
@@ -398,10 +519,13 @@
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <p class="category-label"><span class="label-text">Category:</span>
-        <span class="category-name" id="questionCategoryName"></span></p>
+      <p class="category-label">
+        <span class="label-text">Category:</span>
+        <span class="category-name" id="questionCategoryName"></span>
+      </p>
       <div class="form-row">
-        <div><label for="question-text">Question</label>
+        <div>
+          <label for="question-text">Question</label>
           <textarea id="question-text" rows="3" placeholder="Enter evaluation question..."></textarea>
         </div>
       </div>
@@ -409,7 +533,90 @@
     </div>
   </div>
 </div>
+
+<!-- Report Section =========================================================================================================-->
+<div id="report-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="report-header">
+      <div class="report-title">
+        <h2>Faculty Evaluation Summary</h2>
+        <p>Evaluation Overview</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="filter-row">
+      <select id="departmentFilter">
+        <option value="">All Departments</option>
+      </select>
+      <select id="ratingFilter">
+        <option value="">All Ratings</option>
+        <option>Excellent</option>
+        <option>Very Good</option>
+        <option>Satisfactory</option>
+        <option>Fair</option>
+        <option>Poor</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="Search Faculty...">
+      <button class="button-gradient" style="padding: 8px 16px;">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </div>
+
+    <div class="table-wrapper">
+      <table class="evaluation-table">
+        <thead>
+          <tr>
+            <th>Faculty Name</th>
+            <th>Average Score</th>
+            <th>Rating</th>
+            <th>Responses</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="evaluationTableBody">
+          <tr>
+            <td><strong>Clarissa Flores</strong><br><small>FC-0001</small></td>
+            <td>4.5</td>
+            <td><span class="badge excellent">Excellent</span></td>
+            <td>120</td>
+            <td><button class="view-btn"><i class="fas fa-eye"></i> View</button></td>
+          </tr>
+          <tr>
+            <td><strong>Juan Dela Cruz</strong><br><small>FC-0002</small></td>
+            <td>4.2</td>
+            <td><span class="badge very-good">Very Good</span></td>
+            <td>95</td>
+            <td><button class="view-btn"><i class="fas fa-eye"></i> View</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
 </main>
-<script src="FacultyAdmin.js"></script>
+
+<!-- Notification for Add/Edit Success -->
+<div id="notification" style="
+    position: fixed;
+    top: 90px;                  /* distance from top */
+    left: 50%;                  /* center horizontally */
+    transform: translateX(-50%);/* adjust by half its width */
+    padding: 12px 20px;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 9999;
+    font-family: sans-serif;
+    font-size: 14px;
+"></div>
+
+<script src="/FacultyEvaluation/FacultyAdmin.js?v=<?=time()?>"></script>
 </body>
 </html>

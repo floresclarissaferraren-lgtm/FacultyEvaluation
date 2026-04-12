@@ -21,20 +21,25 @@ const modals = {
     closeForgot: document.getElementById("closeInstructorForgot")
   }
 };
+
 const hamburger = document.getElementById("hamburger");
 const navMenu = document.getElementById("navMenu");
+const navbar = document.querySelector("nav"); // added navbar reference
 
 // ===================== FUNCTIONS =====================
 function openModal(modal) {
   if (modal) {
     modal.classList.add("show");
     document.body.classList.add("modal-open");
+    if (navbar) navbar.classList.add("hidden"); // hide navbar when modal opens
   }
 }
+
 function closeModal(modal) {
   if (modal) {
     modal.classList.remove("show");
     document.body.classList.remove("modal-open");
+    if (navbar) navbar.classList.remove("hidden"); // show navbar when modal closes
   }
 }
 
@@ -53,9 +58,13 @@ function toggleHamburgerMenu() {
   const icon = hamburger.querySelector(".material-icons");
   if (icon) icon.textContent = navMenu.classList.contains("show") ? "close" : "menu";
 }
+
 // ===================== Profile Buttons =====================
 Object.values(modals).forEach(user => {
-  if (user.profileBtn) user.profileBtn.addEventListener("click", e => { e.preventDefault(); openModal(user.login); });
+  if (user.profileBtn) user.profileBtn.addEventListener("click", e => {
+    e.preventDefault();
+    openModal(user.login);
+  });
 });
 
 // ===================== Close Buttons =====================
@@ -66,31 +75,64 @@ Object.values(modals).forEach(user => {
 
 // ===================== Forgot Buttons =====================
 if (modals.student.openForgot) modals.student.openForgot.addEventListener("click", e => {
-   e.preventDefault(); switchModal(modals.student.login, modals.student.forgot); });
+   e.preventDefault(); switchModal(modals.student.login, modals.student.forgot); 
+});
 if (modals.instructor.openForgot) modals.instructor.openForgot.addEventListener("click", e => { 
-  e.preventDefault(); switchModal(modals.instructor.login, modals.instructor.forgot); });
-
+  e.preventDefault(); switchModal(modals.instructor.login, modals.instructor.forgot); 
+});
 if (hamburger) hamburger.addEventListener("click", toggleHamburgerMenu);
 
 // ===================== Login form submit handlers =====================
-const logins = {
-  student: { id: 'STU001', password: 'student123', redirect: 'FacultyUser.html' }
-};
-
 const studentForm = modals.student.login?.querySelector('form');
 if (studentForm) {
-  studentForm.addEventListener('submit', e => {
+  studentForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const id = studentForm.querySelector('input[type=text]')?.value.trim();
-    const pw = studentForm.querySelector('input[type=password]')?.value.trim();
-    if (!id || !pw) return alert('Please enter Student ID and Password.');
-    if (id === logins.student.id && pw === logins.student.password) {
-      window.location.href = logins.student.redirect;
-    } else {
-      alert('Incorrect student credentials. Use ID: STU001, Password: student123');
+    const idInput = studentForm.querySelector('#studentNumber');
+    const pwInput = studentForm.querySelector('#studentPassword');
+    const id = idInput?.value.trim();
+    const pw = pwInput?.value.trim();
+
+    // clear previous errors
+    document.getElementById('studentNumberError').textContent = '';
+    document.getElementById('studentPasswordError').textContent = '';
+
+    let hasError = false;
+
+    if (!id) {
+      document.getElementById('studentNumberError').textContent = 'Please enter Student ID.';
+      hasError = true;
+    } else if (!id.startsWith("GC-")) {
+      document.getElementById('studentNumberError').textContent = 'Student ID must start with "GC-".';
+      hasError = true;
+    }
+
+    if (!pw) {
+      document.getElementById('studentPasswordError').textContent = 'Please enter Password.';
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('student_number', id);
+      formData.append('password', pw);
+
+      const res = await fetch('student_account.php', { method: 'POST', body: formData });
+      const text = (await res.text()).trim();
+
+      if (text === 'success') {
+        window.location.href = 'FacultyUser.php';
+      } else {
+        document.getElementById('studentPasswordError').textContent = text;
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      document.getElementById('studentPasswordError').textContent = 'An error occurred. Please try again.';
     }
   });
 }
+
 
 const adminForm = document.getElementById('adminLoginForm');
 if (adminForm) adminForm.addEventListener('submit', async e => {
@@ -105,22 +147,30 @@ if (adminForm) adminForm.addEventListener('submit', async e => {
   }
 });
 
+// ===================== Password toggle =====================
+function setupPasswordToggle(inputId, toggleId) {
+  const input = document.getElementById(inputId);
+  const toggle = document.getElementById(toggleId);
 
-const togglePassword = document.getElementById('togglePassword');
-const passwordInput = document.getElementById('adminPassword');
-
-if (togglePassword && passwordInput) {
-    togglePassword.addEventListener('click', () => {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-
-        // swap icon
-        togglePassword.classList.toggle('fa-eye');
-        togglePassword.classList.toggle('fa-eye-slash');
+  if (input && toggle) {
+    toggle.addEventListener('click', () => {
+      if (input.type === 'password') {
+        input.type = 'text';
+        toggle.classList.remove('fa-eye');
+        toggle.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        toggle.classList.remove('fa-eye-slash');
+        toggle.classList.add('fa-eye');
+      }
     });
+  }
 }
+setupPasswordToggle('adminPassword','togglePassword');
+setupPasswordToggle('studentPassword','toggleStudentPassword');
+setupPasswordToggle('instructorPassword','toggleInstructorPassword');
 
-
+// ===================== Close hamburger when clicking outside =====================
 document.addEventListener("click", e => {
   if (!navMenu || !hamburger) return;
   if (!navMenu.contains(e.target) && !hamburger.contains(e.target)) {

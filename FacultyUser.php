@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System - Admin Panel</title>
-  <link rel="stylesheet" href="FacultyUser.css">
+  <link rel="stylesheet" href="FacultyUser.css?v=<?=time()?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -38,17 +38,29 @@
 <div id="passwordForm" class="passwordForm">
   <div class="password-box">
     <div class="password-icon-container">
-  <div class="password-icon-circle">
-    <i class="fas fa-user-lock password-icon"></i>
-  </div>
-  <div class="password-title">Change Password</div>
-</div>
+      <div class="password-icon-circle">
+        <i class="fas fa-user-lock password-icon"></i>
+      </div>
+      <div class="password-title">Change Password</div>
+    </div>
 
     <div class="password-body">
-      <input type="password" placeholder="Old Password">
-      <input type="password" placeholder="New Password">
-      <input type="password" placeholder="Confirm Password">
+      <div class="password-field">
+        <input id="oldPass" type="password" placeholder="Old Password">
+        <i class="fa-solid fa-eye-slash toggle" onclick="togglePassword('oldPass', this)"></i>
+      </div>
+      <div class="password-field">
+        <input id="newPass" type="password" placeholder="New Password">
+        <i class="fa-solid fa-eye-slash toggle" onclick="togglePassword('newPass', this)"></i>
+      </div>
+      <div class="password-field">
+        <input id="confirmPass" type="password" placeholder="Confirm Password">
+        <i class="fa-solid fa-eye-slash toggle" onclick="togglePassword('confirmPass', this)"></i>
+      </div>
     </div>
+
+    <!-- Hidden field to store student ID -->
+<input type="hidden" id="studentId" value="<?php echo $row['student_number']; ?>">
 
     <div class="password-actions">
       <button class="cancel-btn" onclick="closePasswordForm()">Cancel</button>
@@ -56,6 +68,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Main Page ======================================================================================-->
 
@@ -93,14 +106,38 @@
 <div class="rating-legends" id="ratingLegends" style="display:none;">
   <h2>Rating Legends</h2>
   <ul>
-    <li><span class="dot dot5"></span> 5 - Outstanding</li>
-    <li><span class="dot dot4"></span> 4 - Very Satisfactory</li>
-    <li><span class="dot dot3"></span> 3 - Satisfactory</li>
-    <li><span class="dot dot2"></span> 2 - Fair</li>
-    <li><span class="dot dot1"></span> 1 - Poor</li>
+    <li><span class="dot dot5"></span> 5 - Strongly Agree</li>
+    <li><span class="dot dot4"></span> 4 - Agree</li>
+    <li><span class="dot dot3"></span> 3 - Neutral</li>
+    <li><span class="dot dot2"></span> 2 - Disagree</li>
+    <li><span class="dot dot1"></span> 1 - Strongly Disagree</li>
   </ul>
 </div>
 
-<script src="FacultyUser.js"></script>
+<!-- Evaluation Form ======================================================================================-->
+<div id="evaluationContainer" style="display:none"></div>
+
+<div class="feedback-container">
+  <div class="feedback-box">
+    <label for="studentFeedback">OPTIONAL COMMENTS</label>
+    <textarea id="studentFeedback" placeholder="Type your feedback here..."></textarea>
+  </div>
+</div>
+
+<div class="submit-container">
+  <button id="submitEvaluation" onclick="submitEvaluation()">
+    SUBMIT EVALUATION <i class="fa-solid fa-paper-plane"></i>
+  </button>
+</div>
+
+
+
+<script src="FacultyUser.js?v=<?=time()?>"></script>
 </body>
 </html>
+
+
+
+
+
+

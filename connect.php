@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $pass = "";
-$db   = "faculty_evaluation_db"; // <-- tama dapat ito
+$db   = "faculty_evaluation_db"; 
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

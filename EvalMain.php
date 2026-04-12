@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Faculty Evaluation System</title>
-<link rel="stylesheet" href="EvalMain.css">
+<link rel="stylesheet" href="EvalMain.css?v=<?=time()?>">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -85,19 +85,32 @@
 
 <!-- STUDENT LOGIN ==============================================================================================================-->
 <div class="LoginForm" id="studentLoginModal">
-<div class="LoginForm-content">
-<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeStudentLogin">
-    Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div></div>
-<h2>Student Login</h2>
-<p class="LoginForm-subtitle"><span></span>Enter your account details<span></span></p>
-<form>
-<div class="input-group"><i class="fa-solid fa-user"></i><input type="text" placeholder="Student ID" required></div>
-<div class="input-group"><i class="fa-solid fa-lock"></i><input type="password" placeholder="Password" required></div>
-<a href="#" id="openStudentForgot" class="StudentLogin-link">Forgot Password?</a>
-<button type="submit" class="StudentLogin-btn">Login</button>
-</form>
+  <div class="LoginForm-content">
+    <div class="LoginForm-header">
+      <img src="schoollogo.png" class="logo">
+      <div class="back-btn" id="closeStudentLogin">Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+    </div>
+    <h2>Student Login</h2>
+    <p class="LoginForm-subtitle"><span></span>Enter your account details<span></span></p>
+    <form id="studentLoginForm">
+      <div class="input-group">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="studentNumber" placeholder="Student ID" required>
+        <small id="studentNumberError" class="error-message"></small>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="studentPassword" placeholder="Password" required>
+        <i class="fa-solid fa-eye-slash" id="togglePassword"></i>
+        <small id="studentPasswordError" class="error-message"></small>
+      </div>
+      <a href="#" id="openStudentForgot" class="StudentLogin-link">Forgot Password?</a>
+      <button type="submit" class="StudentLogin-btn">Login</button>
+    </form>
+  </div>
 </div>
-</div>
+
+
 
 <div class="LoginForm" id="studentForgotModal">
 <div class="LoginForm-content">
@@ -113,20 +126,28 @@
 </div>
 
 <!-- INSTRUCTOR LOGIN ==============================================================================================================-->
-
 <div class="LoginForm" id="instructorLoginModal">
-<div class="LoginForm-content">
-<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeInstructorLogin">
-    Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div></div>
-<h2>Instructor Login</h2>
-<p class="LoginForm-subtitle"><span></span>Enter your credentials<span></span></p>
-<form>
-<div class="input-group"><i class="fa-solid fa-chalkboard-user"></i><input type="text" placeholder="Instructor ID" required></div>
-<div class="input-group"><i class="fa-solid fa-lock"></i><input type="password" placeholder="Password" required></div>
-<a href="#" id="openInstructorForgot" class="StudentLogin-link">Forgot Password?</a>
-<button type="submit" class="StudentLogin-btn">Login</button>
-</form>
-</div>
+  <div class="LoginForm-content">
+    <div class="LoginForm-header">
+      <img src="schoollogo.png" class="logo">
+      <div class="back-btn" id="closeInstructorLogin">Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+    </div>
+    <h2>Instructor Login</h2>
+    <p class="LoginForm-subtitle"><span></span>Enter your credentials<span></span></p>
+    <form>
+      <div class="input-group">
+        <i class="fa-solid fa-chalkboard-user"></i>
+        <input type="text" placeholder="Instructor ID" required>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="instructorPassword" placeholder="Password" required>
+        <i class="fa-solid fa-eye-slash" id="togglePassword"></i>
+      </div>
+      <a href="#" id="openInstructorForgot" class="StudentLogin-link">Forgot Password?</a>
+      <button type="submit" class="StudentLogin-btn">Login</button>
+    </form>
+  </div>
 </div>
 
 <div class="LoginForm" id="instructorForgotModal">
@@ -161,15 +182,13 @@
       <div class="input-group">
         <i class="fa-solid fa-lock"></i>
         <input type="password" name="password" id="adminPassword" placeholder="Password" required>
-        <!-- eye toggle -->
-        <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
+        <i class="fa-solid fa-eye-slash" id="togglePassword" style="cursor:pointer;"></i>
       </div>
       <button type="submit" class="StudentLogin-btn">Login</button>
     </form>
   </div>
 </div>
 
-
-<script src="EvalMain.js"></script>
+<script src="/FacultyEvaluation/Evalmain.js?v=<?=time()?>"></script>
 </body>
 </html>
