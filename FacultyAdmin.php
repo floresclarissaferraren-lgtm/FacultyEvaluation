@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,6 +79,7 @@
       <i class="fas fa-user-graduate"></i>
       <span>Students</span>
     </a>
+
 
     <a href="#" data-section="criteria-section" onclick="showSection('criteria-section', event)">
       <i class="fas fa-list"></i>
@@ -207,9 +211,6 @@
       </div>
     </div>
 
-    <div class="top-buttons">
-      <button class="subject-btn active">Subjects</button><button class="classes-btn">Classes</button>
-    </div>
     
     <!-- Subject Table -->
     <div class="manage-body">
@@ -221,14 +222,6 @@
         </table>
       </div>
 
-      <!-- Classes Table -->
-      <div id="classes" class="table-wrapper" style="display:none;">
-        <table><thead> <tr>
-          <th>Section Name</th><th>Year Level</th><th>Action</th>
-            </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
     </div>
   </div>
 </div>
@@ -246,41 +239,93 @@
       <label for="subject-desc">Description</label>
       <input type="text" id="subject-desc" placeholder="eg. College Algebra">
       <label for="subject-year">Year</label>
-      <input type="text" id="subject-year" placeholder="eg. 1st Year">
-      <button id="save-subject-btn" class="submit-btn">SAVE SUBJECT</button>
-    </div>
-  </div>
-</div>
-
-<div id="addClassModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>ADD CLASS</h3>
-      <span class="close-btn">&times;</span>
-    </div>
-
-    <div class="modal-body">
-      <label for="class-year">Year Level</label>
-      <select id="class-year">
+      <select id="subject-year">
         <option value="">Select Year Level</option>
         <option value="1st Year">1st Year</option>
         <option value="2nd Year">2nd Year</option>
         <option value="3rd Year">3rd Year</option>
         <option value="4th Year">4th Year</option>
       </select>
-
-      <label for="class-name">Section:</label>
-      <input type="text" id="class-name" placeholder="eg. 1">
-
-      
-
-      <!-- 🔥 SUBJECT BOX -->
-      <div class="subject-box">
-  <label><b>Select Subjects</b></label>
-  <div id="subject-checkbox-list" class="checkbox-list"></div>
+      <button id="save-subject-btn" class="submit-btn">SAVE SUBJECT</button>
+    </div>
+  </div>
 </div>
 
-      <button id="save-class-btn" class="submit-btn">SAVE CLASS</button>
+
+
+<!-- ===================== Subjects Section ===================== -->
+<div id="subjects-section" class="section" style="display:none;">
+  <div class="box">
+    <div class="section-header">
+      <h2>Subjects Management</h2>
+      <div class="header-actions">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <input type="text" id="subjects-search" placeholder="Search subjects...">
+        </div>
+        <button class="add-subject-main-btn button-gradient"><i class="fas fa-plus"></i> Add Subject</button>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Subject Code</th>
+            <th>Description</th>
+            <th>Program</th>
+            <th>Year Level</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="subjects-main-tbody">
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 20px;">Loading subjects...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add Subject Main Modal -->
+<div id="addSubjectMainModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>ADD SUBJECT</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div>
+          <label for="main-subject-code">Subject Code</label>
+          <input type="text" id="main-subject-code" placeholder="eg. MATH101">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="main-subject-desc">Description</label>
+          <input type="text" id="main-subject-desc" placeholder="eg. College Algebra">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="main-program-select">Program</label>
+          <select id="main-program-select" required>
+            <option value="" disabled selected>-- Select Program --</option>
+          </select>
+        </div>
+        <div>
+          <label for="main-year-select">Year Level</label>
+          <select id="main-year-select" required>
+            <option value="" disabled selected>-- Select Year --</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+          </select>
+        </div>
+      </div>
+      <button id="save-main-subject-btn" class="submit-btn">SAVE SUBJECT</button>
     </div>
   </div>
 </div>
@@ -368,7 +413,7 @@
     <div class="table-wrapper">
       <table>
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Section</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Program</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -435,16 +480,16 @@
               <option>4</option>
             </select>
           </div>
-          <div>
-            <label for="student-yearsection">Section</label>
-            <select id="student-yearsection" required>
-              <option value="" disabled selected>-- Select Section --</option>
-              <option>A</option>
-              <option>B</option>
-              <option>C</option>
-              <option>D</option>
-            </select>
-          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <h4><i class="fas fa-book"></i> Subjects</h4>
+        <button type="button" id="add-subject-btn" class="button-gradient" style="margin-bottom: 10px;">
+          <i class="fas fa-plus"></i> Add Subject
+        </button>
+        <div id="selected-subjects" class="selected-subjects">
+          <p style="color: #6b7280; font-size: 0.9em;">No subjects selected</p>
         </div>
       </div>
 
@@ -452,6 +497,50 @@
     </div>
   </div>
 </div>
+
+<!-- Subject Selection Modal -->
+<div id="subjectSelectionModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:800px;">
+    <div class="modal-header">
+      <h3>Select Subjects</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div>
+          <label for="subject-search">Search</label>
+          <input type="text" id="subject-search" placeholder="Search subjects...">
+        </div>
+      </div>
+      
+      <div class="subjects-table-wrapper">
+        <table class="subjects-selection-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Subject Code</th>
+              <th>Description</th>
+              <th>Year Level</th>
+            </tr>
+          </thead>
+          <tbody id="subjects-selection-tbody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 20px;">
+                Loading subjects...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" id="cancel-subject-selection" class="cancel-btn">Cancel</button>
+        <button type="button" id="confirm-subject-selection" class="submit-btn">Add Selected Subjects</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== Evaluation Criteria Section ================================================================================= -->
 <div id="criteria-section" class="section" style="display:none;">
   <div class="box">
@@ -493,19 +582,14 @@
 <div id="addCategoryModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:500px;">
     <div class="modal-header">
-      <h3>ADD CATEGORY</h3>
+      <h3 id="categoryModalTitle">ADD CATEGORY</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <label for="category-name">Category Name</label>
-        <input type="text" id="category-name" placeholder="eg. Instructional Competence">
-      </div>
-
-      <div class="form-row">
-        <label for="section-number">Section #</label>
-        <input type="number" id="section-number" min="1" placeholder="eg. 1">
-      </div>
+      <label for="category-name">Category Name</label>
+      <input type="text" id="category-name" placeholder="eg. Instructional Competence">
+      <label for="section-number">Section #</label>
+      <input type="number" id="section-number" min="1" placeholder="eg. 1">
       <button id="saveCategoryBtn" class="submit-btn">SAVE CATEGORY</button>
     </div>
   </div>
@@ -515,7 +599,7 @@
 <div id="addQuestionModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:500px;">
     <div class="addProgram-header">
-      <h3>ADD QUESTION</h3>
+      <h3 id="questionModalTitle">ADD QUESTION</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -523,12 +607,8 @@
         <span class="label-text">Category:</span>
         <span class="category-name" id="questionCategoryName"></span>
       </p>
-      <div class="form-row">
-        <div>
-          <label for="question-text">Question</label>
-          <textarea id="question-text" rows="3" placeholder="Enter evaluation question..."></textarea>
-        </div>
-      </div>
+      <label for="question-text">Question</label>
+      <textarea id="question-text" rows="3" placeholder="Enter evaluation question..."></textarea>
       <button id="saveQuestionBtn" class="submit-btn">SAVE QUESTION</button>
     </div>
   </div>
@@ -597,8 +677,30 @@
   </div>
 </div>
 
-
-</main>
+<!-- View Student Subjects Modal -->
+<div id="viewStudentSubjectsModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:700px;">
+    <div class="modal-header">
+      <h3>Student Subjects</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="student-info-header">
+        <div class="student-avatar">
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="student-details">
+          <h4 id="viewStudentName">Student Name</h4>
+          <p class="student-subtitle">Enrolled Subjects</p>
+        </div>
+      </div>
+      
+      <div id="viewStudentSubjectsList" class="subjects-container">
+        <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Notification for Add/Edit Success -->
 <div id="notification" style="

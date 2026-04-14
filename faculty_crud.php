@@ -9,27 +9,24 @@ require __DIR__ . '/phpmailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
 /* =========================
-   ADD STUDENT
+   ADD FACULTY
 ========================= */
 if ($action === "add") {
 
-    $student_number = trim($data['student_number'] ?? '');
+    $faculty_id = trim($data['faculty_id'] ?? '');
     $email = trim($data['email'] ?? '');
     $firstname = trim($data['firstname'] ?? '');
     $lastname = trim($data['lastname'] ?? '');
     $suffix = $data['suffix'] ?? '';
-    $yearlevel = $data['yearlevel'] ?? '';
-    $program = $data['program'] ?? '';
     $subjects = $data['subjects'] ?? [];
 
     // Validate required fields
     if (
-        empty($student_number) || empty($email) ||
+        empty($faculty_id) || empty($email) ||
         empty($firstname) || empty($lastname)
     ) {
         echo json_encode([
@@ -48,23 +45,23 @@ if ($action === "add") {
         exit;
     }
 
-    /* CHECK DUPLICATES (student number) */
-    $check = $conn->prepare("SELECT id FROM add_students WHERE student_number=?");
-    $check->bind_param("s", $student_number);
+    /* CHECK DUPLICATES (faculty ID) */
+    $check = $conn->prepare("SELECT id FROM add_faculty WHERE faculty_id=?");
+    $check->bind_param("s", $faculty_id);
     $check->execute();
     $check->store_result();
 
     if ($check->num_rows > 0) {
         echo json_encode([
             "success" => false,
-            "message" => "Student number already exists"
+            "message" => "Faculty ID already exists"
         ]);
         exit;
     }
     $check->close();
 
     /* CHECK DUPLICATES (email) */
-    $checkEmail = $conn->prepare("SELECT id FROM add_students WHERE email=?");
+    $checkEmail = $conn->prepare("SELECT id FROM add_faculty WHERE email=?");
     $checkEmail->bind_param("s", $email);
     $checkEmail->execute();
     $checkEmail->store_result();
@@ -82,33 +79,32 @@ if ($action === "add") {
     $password = substr(str_shuffle("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"), 0, 8);
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    /* INSERT STUDENT */
+    /* INSERT FACULTY */
     $stmt = $conn->prepare("
-        INSERT INTO add_students 
-        (student_number,email,firstname,lastname,suffix,yearlevel,program,password) 
-        VALUES (?,?,?,?,?,?,?,?)
+        INSERT INTO add_faculties
+        (faculty_id,email,firstname,lastname,suffix,password) 
+        VALUES (?,?,?,?,?,?)
     ");
 
     $stmt->bind_param(
-        "ssssssss",
-        $student_number,
+        "ssssss",
+        $faculty_id,
         $email,
         $firstname,
         $lastname,
         $suffix,
-        $yearlevel,
-        $program,
         $hashedPassword
     );
 
     if ($stmt->execute()) {
-        $student_id = $stmt->insert_id;
-        
-        // Insert student subjects if any
+        $faculty_db_id = $stmt->insert_id;
+
+        /* INSERT FACULTY SUBJECTS IF ANY */
         if (!empty($subjects) && is_array($subjects)) {
-            $subjectStmt = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
+            $subjectStmt = $conn->prepare("INSERT INTO faculty_subjects (faculty_id, subject_id) VALUES (?, ?)");
+            
             foreach ($subjects as $subject_id) {
-                $subjectStmt->bind_param("ii", $student_id, $subject_id);
+                $subjectStmt->bind_param("ii", $faculty_db_id, $subject_id);
                 $subjectStmt->execute();
             }
             $subjectStmt->close();
@@ -120,39 +116,40 @@ if ($action === "add") {
         $mail = new PHPMailer(true);
 
         try {
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
 
-    $mail->Username = 'floresclarissaferraren@gmail.com';
-    $mail->Password = 'nicj elgi ruam ozca';
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port = 587;
+            $mail->Username = 'floresclarissaferraren@gmail.com';
+            $mail->Password = 'nicj elgi ruam ozca';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
 
-    $mail->SMTPAutoTLS = true;
+            $mail->SMTPAutoTLS = true;
 
-    $mail->SMTPOptions = [
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true
-        ]
-    ];
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
 
-    $mail->SMTPDebug = 0;
+            $mail->SMTPDebug = 0;
 
-    $mail->setFrom('floresclarissaferraren@gmail.com', 'Faculty Evaluation System');
-    $mail->addAddress($email, $firstname . " " . $lastname);
+            $mail->setFrom('floresclarissaferraren@gmail.com', 'Faculty Evaluation System');
+            $mail->addAddress($email, $firstname . " " . $lastname);
 
-    $mail->isHTML(true);
-    $mail->Subject = "Your Student Account Credentials";
+            $mail->isHTML(true);
+            $mail->Subject = "Your Faculty Account Credentials";
             $mail->Body = "
                 <h2>Welcome to Faculty Evaluation System</h2>
-                <p>Hello <b>$firstname</b>,</p>
+                <p>Hello <b>$firstname $lastname</b>,</p>
 
-                <p>Your student account has been created successfully.</p>
+                <p>Your faculty account has been created successfully.</p>
 
-                <p><b>Student Number:</b> $student_number</p>
+                <p><b>Faculty ID:</b> $faculty_id</p>
+                <p><b>Email:</b> $email</p>
                 <p><b>Temporary Password:</b> $password</p>
 
                 <br>
@@ -166,7 +163,7 @@ if ($action === "add") {
 
             echo json_encode([
                 "success" => true,
-                "message" => "Student added successfully. Email sent!"
+                "message" => "Faculty added successfully. Email sent!"
             ]);
 
         } catch (Exception $e) {
@@ -174,7 +171,7 @@ if ($action === "add") {
 
             echo json_encode([
                 "success" => false,
-                "message" => "Student saved but email failed: " . $mail->ErrorInfo
+                "message" => "Faculty saved but email failed: " . $mail->ErrorInfo
             ]);
         }
 
@@ -189,7 +186,7 @@ if ($action === "add") {
 }
 
 /* =========================
-   EDIT STUDENT
+   EDIT FACULTY
 ========================= */
 elseif ($action === "edit") {
 
@@ -197,8 +194,6 @@ elseif ($action === "edit") {
     $firstname = trim($data['firstname'] ?? '');
     $lastname = trim($data['lastname'] ?? '');
     $suffix = $data['suffix'] ?? '';
-    $yearlevel = $data['yearlevel'] ?? '';
-    $program = $data['program'] ?? '';
     $email = trim($data['email'] ?? '');
     $subjects = $data['subjects'] ?? [];
 
@@ -211,43 +206,43 @@ elseif ($action === "edit") {
     }
 
     $stmt = $conn->prepare("
-        UPDATE add_students 
-        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, email=? 
+        UPDATE add_faculty 
+        SET firstname=?, lastname=?, suffix=?, email=? 
         WHERE id=?
     ");
 
     $stmt->bind_param(
-        "ssssssi",
+        "ssssi",
         $firstname,
         $lastname,
         $suffix,
-        $yearlevel,
-        $program,
         $email,
         $id
     );
 
     if ($stmt->execute()) {
-        // Update student subjects if any
+        
+        /* UPDATE FACULTY SUBJECTS */
+        // Delete existing subjects
+        $deleteSubjects = $conn->prepare("DELETE FROM faculty_subjects WHERE faculty_id=?");
+        $deleteSubjects->bind_param("i", $id);
+        $deleteSubjects->execute();
+        $deleteSubjects->close();
+
+        // Insert new subjects
         if (!empty($subjects) && is_array($subjects)) {
-            // Delete existing subjects for this student
-            $deleteSubjects = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
-            $deleteSubjects->bind_param("i", $id);
-            $deleteSubjects->execute();
-            $deleteSubjects->close();
+            $subjectStmt = $conn->prepare("INSERT INTO faculty_subjects (faculty_id, subject_id) VALUES (?, ?)");
             
-            // Insert new subjects
-            $subjectStmt = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
             foreach ($subjects as $subject_id) {
                 $subjectStmt->bind_param("ii", $id, $subject_id);
                 $subjectStmt->execute();
             }
             $subjectStmt->close();
         }
-        
+
         echo json_encode([
             "success" => true,
-            "message" => "Student updated successfully"
+            "message" => "Faculty updated successfully"
         ]);
     } else {
         echo json_encode([
@@ -260,7 +255,7 @@ elseif ($action === "edit") {
 }
 
 /* =========================
-   DELETE STUDENT
+   DELETE FACULTY
 ========================= */
 elseif ($action === "delete") {
 
@@ -274,13 +269,13 @@ elseif ($action === "delete") {
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM add_students WHERE id=?");
+    $stmt = $conn->prepare("DELETE FROM add_faculty WHERE id=?");
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
         echo json_encode([
             "success" => true,
-            "message" => "Student deleted successfully"
+            "message" => "Faculty deleted successfully"
         ]);
     } else {
         echo json_encode([
