@@ -1,6 +1,4 @@
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,9 +13,9 @@
 <!-- Navbar ========================================================================================================================================-->
 <div class="navbar">
   <div style="display:flex;align-items:center;">
-    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+    <div class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
     <div class="brand">
-      <i class="fas fa-graduation-cap"></i>
+      <img src="schoollogo.png" alt="School Logo" class="brand-logo">
       <span class="main-title">FaculRate</span>
     </div>
   </div>
@@ -25,7 +23,8 @@
   <!-- Logout Binago --------->
   <div class="user-menu">
     <div class="admin-box" id="dropdownToggle">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
+    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
+
       <span>Administrator</span>
       <i class="fas fa-caret-down"></i>
     </div>
@@ -356,7 +355,7 @@
 
 <!-- Add Faculty Form -->
 <div id="addFacultyModal" class="modal" hidden>
-  <div class="modal-content" style="max-width:600px;">
+  <div class="modal-content">
     
     <div class="modal-header">
       <h3>ADD FACULTY</h3>
@@ -423,7 +422,7 @@
 
 <!-- Add Student Modal binago-->
 <div id="addStudentModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:600px;">
+  <div class="modal-content">
     <div class="modal-header">
       <h3>ADD STUDENT</h3>
       <span class="close-btn">&times;</span>
@@ -500,7 +499,7 @@
 
 <!-- Subject Selection Modal -->
 <div id="subjectSelectionModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:800px;">
+  <div class="modal-content">
     <div class="modal-header">
       <h3>Select Subjects</h3>
       <span class="close-btn">&times;</span>
@@ -617,34 +616,18 @@
 <!-- Report Section =========================================================================================================-->
 <div id="report-section" class="section" style="display:none;">
   <div class="box">
-    <div class="report-header">
-      <div class="report-title">
+    <div class="section-header">
+      <div>
         <h2>Faculty Evaluation Summary</h2>
         <p>Evaluation Overview</p>
       </div>
+      <div class="header-actions">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <input type="text" id="searchInput" placeholder="Search Faculty...">
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div class="box">
-    <div class="filter-row">
-      <select id="departmentFilter">
-        <option value="">All Departments</option>
-      </select>
-      <select id="ratingFilter">
-        <option value="">All Ratings</option>
-        <option>Excellent</option>
-        <option>Very Good</option>
-        <option>Satisfactory</option>
-        <option>Fair</option>
-        <option>Poor</option>
-      </select>
-      <input type="text" id="searchInput" placeholder="Search Faculty...">
-      <button class="button-gradient" style="padding: 8px 16px;">
-        <i class="fas fa-search"></i>
-      </button>
-    </div>
-  </div>
-
     <div class="table-wrapper">
       <table class="evaluation-table">
         <thead>
@@ -657,20 +640,7 @@
           </tr>
         </thead>
         <tbody id="evaluationTableBody">
-          <tr>
-            <td><strong>Clarissa Flores</strong><br><small>FC-0001</small></td>
-            <td>4.5</td>
-            <td><span class="badge excellent">Excellent</span></td>
-            <td>120</td>
-            <td><button class="view-btn"><i class="fas fa-eye"></i> View</button></td>
-          </tr>
-          <tr>
-            <td><strong>Juan Dela Cruz</strong><br><small>FC-0002</small></td>
-            <td>4.2</td>
-            <td><span class="badge very-good">Very Good</span></td>
-            <td>95</td>
-            <td><button class="view-btn"><i class="fas fa-eye"></i> View</button></td>
-          </tr>
+          <!-- Dynamic content will be loaded here -->
         </tbody>
       </table>
     </div>

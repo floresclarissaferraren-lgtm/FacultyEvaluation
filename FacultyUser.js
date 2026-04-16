@@ -1,3 +1,5 @@
+
+
 //walang password open ================= DROPDOWN =================
 function toggleDropdown() {
   const menu = document.getElementById("dropdownMenu");
@@ -11,7 +13,7 @@ window.closeLogoutModal = () => {
   document.getElementById("logoutModal").style.display = "none";
 };
 
-window.confirmLogout = () => location.href = "EvalMain.php";
+window.confirmLogout = () => location.href = "FacultyUser.php?logout=true";
 window.logout = e => { 
   e.preventDefault(); 
   showLogoutModal(); 
@@ -108,12 +110,6 @@ function showEvaluateSection() {
   document.getElementById("evaluateSection").style.display = "block";
   document.getElementById("ratingLegends").style.display = "block";
   document.getElementById("evaluationContainer").style.display = "block";
-  document.querySelector(".feedback-container").style.display = "block"; 
-
-  const submitBtn = document.getElementById("submitEvaluation");
-  if (submitBtn) {
-    submitBtn.style.display = "inline-flex";
-  }
 
   loadFacultyCategories(); 
 }
@@ -121,11 +117,12 @@ function goBackToMain() {
   document.getElementById("evaluateSection").style.display = "none";
   document.getElementById("ratingLegends").style.display = "none";
   document.getElementById("evaluationContainer").style.display = "none";
-  document.getElementById("submitEvaluation").style.display = "none";
   document.getElementById("mainPage").style.display = "flex";
-    document.querySelector(".feedback-container").style.display = "none"; 
 }
 // ================= LOAD CATEGORIES + QUESTIONS =================
+let currentCriteria = 0;
+let criteriaTables = [];
+
 async function loadFacultyCategories() {
   try {
     const res = await fetch("/FacultyEvaluation/get_category.php");
@@ -135,16 +132,45 @@ async function loadFacultyCategories() {
     const container = document.getElementById("evaluationContainer");
     container.innerHTML = "";
 
-    for (const c of categories) {
+    // Move evaluationContainer to content-container for equal heights
+    const contentContainer = document.querySelector(".content-container");
+    if (contentContainer && !contentContainer.contains(container)) {
+      contentContainer.appendChild(container);
+    }
+
+    // Create pagination container
+    const paginationContainer = document.createElement("div");
+    paginationContainer.className = "pagination-container";
+    paginationContainer.innerHTML = `
+      <div class="pagination-buttons">
+        <button class="pagination-btn arrow-left" onclick="previousCriteria()" id="prevBtn">
+          Previous
+        </button>
+        <button class="pagination-btn arrow-right" onclick="nextCriteria()" id="nextBtn">
+          Next
+        </button>
+      </div>
+      <div class="pagination-info" id="pageInfo">1 / ${categories.length}</div>
+    `;
+
+    criteriaTables = [];
+    
+    for (let i = 0; i < categories.length; i++) {
+      const c = categories[i];
       const table = document.createElement("table");
       table.className = "evaluationform";
+      if (i === 0) table.classList.add("active");
+      
       table.innerHTML = `
-  <thead>
-    <tr><th><i class="fa-solid fa-graduation-cap section-icon"></i> 
-  ${c.category_name.toUpperCase()}</th><th>5</th><th>4</th><th>3</th><th>2</th><th>1</th></tr>
-  </thead>
-  <tbody></tbody>
-`;
+        <thead>
+          <tr>
+            <th><i class="fa-solid fa-graduation-cap"></i> ${c.category_name.toUpperCase()}</th>
+            <th>5</th><th>4</th><th>3</th><th>2</th><th>1</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      
       const tbody = table.querySelector("tbody");
       const qRes = await fetch(`/FacultyEvaluation/get_question.php?category_id=${c.id}`);
       const questions = await qRes.json();
@@ -161,14 +187,87 @@ async function loadFacultyCategories() {
             <td><input type="radio" name="q_${q.id}" value="2"></td>
             <td><input type="radio" name="q_${q.id}" value="1"></td>
           `;
-          tbody.appendChild(tr);});
-        } else { const tr = document.createElement("tr");
+          tbody.appendChild(tr);
+        });
+      } else {
+        const tr = document.createElement("tr");
         tr.innerHTML = `<td colspan="6">No questions available</td>`;
-        tbody.appendChild(tr);}
+        tbody.appendChild(tr);
+      }
 
-      container.appendChild(table);}
+      container.appendChild(table);
+      criteriaTables.push(table);
+    }
+    
+    // Add pagination after all tables
+    container.appendChild(paginationContainer);
+    
+    // Add feedback and submit button container (hidden initially)
+    const feedbackSubmitContainer = document.createElement("div");
+    feedbackSubmitContainer.id = "feedbackSubmitContainer";
+    feedbackSubmitContainer.style.display = "none";
+    feedbackSubmitContainer.innerHTML = `
+      <div class="feedback-container">
+        <div class="feedback-box">
+          <label for="studentFeedback">OPTIONAL COMMENTS</label>
+          <textarea id="studentFeedback" placeholder="Type your feedback here..."></textarea>
+        </div>
+      </div>
+    `;
+    
+    // Add feedback container first, then pagination
+    container.appendChild(feedbackSubmitContainer);
+    container.appendChild(paginationContainer);
+    
+    updatePaginationButtons();
+    
   } catch (err) {
     console.error("Error loading faculty categories:", err);
+  }
+}
+
+function previousCriteria() {
+  if (currentCriteria > 0) {
+    criteriaTables[currentCriteria].classList.remove("active");
+    currentCriteria--;
+    criteriaTables[currentCriteria].classList.add("active");
+    updatePaginationButtons();
+  }
+}
+
+function nextCriteria() {
+  if (currentCriteria < criteriaTables.length - 1) {
+    criteriaTables[currentCriteria].classList.remove("active");
+    currentCriteria++;
+    criteriaTables[currentCriteria].classList.add("active");
+    updatePaginationButtons();
+  }
+}
+
+function updatePaginationButtons() {
+  const pageInfo = document.getElementById("pageInfo");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const feedbackSubmitContainer = document.getElementById("feedbackSubmitContainer");
+  
+  if (pageInfo) {
+    pageInfo.textContent = `${currentCriteria + 1} / ${criteriaTables.length}`;
+  }
+  
+  if (prevBtn) {
+    prevBtn.disabled = currentCriteria === 0;
+  }
+  
+  if (nextBtn) {
+    const isLastPage = currentCriteria === criteriaTables.length - 1;
+    nextBtn.disabled = isLastPage;
+    nextBtn.textContent = isLastPage ? "Submit" : "Next";
+    nextBtn.onclick = isLastPage ? submitEvaluation : nextCriteria;
+  }
+  
+  // Show feedback and submit button only on last page
+  if (feedbackSubmitContainer) {
+    feedbackSubmitContainer.style.display = currentCriteria === criteriaTables.length - 1 ? "block" : "none";
   }
 }
 

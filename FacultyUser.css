@@ -2,28 +2,31 @@
 body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradient(135deg, #f0f4f8 0%, #f9fafb 100%);color:#1f2937;min-height:100vh}
 
 .navbar{height:64px; background:linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);color:#fff;display:flex;align-items:center;
-    justify-content:space-between;padding:0 28px;box-shadow:0 8px 24px rgba(30, 58, 138, 0.25);position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:blur(10px)}
+    justify-content:space-between;padding:0 28px;box-shadow:0 4px 12px rgba(30, 58, 138, 0.15);position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:blur(10px)}
 .brand{display:flex;align-items:center;gap:12px;transition:.3s ease}
-.brand:hover{transform:scale(1.02)}
-.brand i{font-size:26px;color:#fbbf24;transition:.3s ease;text-shadow:0 2px 8px rgba(251, 191, 36, 0.3)}
+.brand:hover{transform:scale(1.05)}
+.brand i{font-size:24px;color:#fbbf24;transition:.3s ease;text-shadow:0 2px 6px rgba(251, 191, 36, 0.2)}
 .logo-text .main-title{font:700 20px/1 "Inter",sans-serif;color:#fff;letter-spacing:.6px}
 .user{display:flex;align-items:center;gap:12px}
-.logo-img{height:34px;width:34px;border-radius:50%;border:3px solid #fbbf24;box-shadow:0 0 12px rgba(251, 191, 36, 0.6);transition:.3s ease}
+.logo-img{height:28px;width:28px;border-radius:50%;border:2px solid #fbbf24;box-shadow:0 4px 8px rgba(251, 191, 36, 0.15);transition:.3s ease;object-fit:cover}
 .logo-img:hover{transform:scale(1.1)}
 
 /* Dropdown ==================================================================================================== */
 .user-menu{position:relative}
-.student-box{display:flex;align-items:center;gap:8px;cursor:pointer;transition:.25s; color:#dbeafe;font-weight:500}
-.student-box:hover{color:#fbbf24;transform:translateY(-2px)}
-.dropdown-menu{position:absolute;top:100%;right:0;background:#fff;border-radius:12px;box-shadow:0 20px 40px rgba(30, 58, 138, 0.15);
-    display:none;flex-direction:column;min-width:200px;padding:24px;animation:fadeIn .3s ease;border:1px solid #e5e7eb;backdrop-filter:blur(10px)}
+.student-box{display: flex;align-items: center;gap: 8px;cursor: pointer;color: #dbeafe;font-weight: 500;
+  padding: 8px 16px;border-radius: 20px;background: rgba(255, 255, 255, 0.1);border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);transition: all 0.2s ease;}
+.student-box:hover{background: rgba(255, 255, 255, 0.15);transform:translateY(-1px)}
+.dropdown-menu{position: absolute;top: calc(100% + 8px);right: 0;background: #ffffff;border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(30, 58, 138, 0.1);display: none;flex-direction: column;min-width: 200px;
+  padding: 20px;animation: fadeIn 0.3s ease;border: 1px solid #e5e7eb;z-index: 1000;}
 .dropdown-menu.show{display:flex}
-.dropdown-menu a{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:12px;color:#1e3a8a;font:600 15px/1.4;
+.dropdown-menu a{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:6px;color:#1e3a8a;font:600 15px/1.4;
     transition:.25s ease;text-decoration:none;border-radius:8px;border-left:3px solid transparent}
 .dropdown-menu a i{color:#3b82f6;font-size:16px;transition:.25s}
 .dropdown-menu a:last-child{margin-bottom:0}
-.dropdown-menu a:hover{background:linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);color:#1e3a8a;transform:translateX(4px);border-left-color:#fbbf24}
-.dropdown-menu a:hover i{color:#fbbf24}
+.dropdown-menu a:hover{background:linear-gradient(135deg, #f3f4f6 0%, #e0f2fe 100%);color:#1e3a8a;transform:translateX(4px);border-left-color:#3b82f6}
+.dropdown-menu a:hover i{color:#3b82f6}
 
 /* Evaluation Section ==================================================================================================== */
 .main-box{max-width:900px;margin:100px auto 0;padding:32px;background:#fff;border-radius:20px;box-shadow:0 15px 40px rgba(30, 58, 138, 0.12);
@@ -47,8 +50,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
 
 /* Evaluation Section ==================================================================================================== */
 
-.evaluate-section{max-width:900px;margin:100px auto 0;padding:32px;background:#fff;border-radius:20px;
-  box-shadow:0 15px 40px rgba(30, 58, 138, 0.12);border-left:6px solid #fbbf24;border:1px solid #e5e7eb;transition:.3s ease;overflow:hidden}
+.evaluate-section{max-width:900px;margin:100px auto 0;padding:32px;background:#ffffff;border-radius:16px;box-shadow:0 8px 24px rgba(0, 0, 0, 0.1);border-left:4px solid #3b82f6;border:1px solid #e5e7eb;transition:all .3s ease}
 .evaluate-section:hover{box-shadow:0 20px 50px rgba(30, 58, 138, 0.16)}
 .eval-box{display:flex;flex-direction:column;gap:16px}
 .eval-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
@@ -61,7 +63,6 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
   font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:.3s ease}
 .back-btn:hover{background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);color:#fff;box-shadow:0 6px 15px rgba(30, 58, 138, 0.2)}
 
-
 .faculty-select{display:flex;flex-direction:column;gap:10px}
 .faculty-select label{font:600 15px;color:#1e3a8a;display:flex;align-items:center;gap:8px;letter-spacing:.3px}
 .faculty-dropdown{padding:12px 16px;border:2px solid #e5e7eb;border-radius:10px;font:500 14px "Inter",sans-serif;color:#1f2937;
@@ -72,8 +73,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
   align-items:center;gap:8px;background:linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);color:#b45309;transition:.3s ease}
 .back-btn:hover{background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);color:#fff;box-shadow:0 8px 20px rgba(251, 191, 36, 0.3)}
 
-.rating-legends{max-width:900px;margin:8px auto 0;padding:32px;background:#fff;border-radius:20px;
-  box-shadow:0 15px 40px rgba(30, 58, 138, 0.12);border-left:6px solid #fbbf24;border:1px solid #e5e7eb;display:flex;flex-direction:column;gap:20px;transition:.3s ease;overflow:hidden}
+.rating-legends{max-width:900px;margin:8px auto 0;padding:28px;background:#ffffff;border-radius:16px;box-shadow:0 8px 24px rgba(0, 0, 0, 0.1);border-left:4px solid #3b82f6;border:1px solid #e5e7eb;display:flex;flex-direction:column;gap:20px;transition:all .3s ease}
 .rating-legends:hover{box-shadow:0 20px 50px rgba(30, 58, 138, 0.16)}
 .rating-legends ul{display:flex;flex-wrap:wrap;gap:16px;justify-content:flex-start}
 .rating-legends li{font:500 14px "Segoe UI",sans-serif;color:#374151;display:flex;align-items:center;gap:6px;transition:.3s ease}
@@ -87,17 +87,17 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
 .logoutform {
   display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;}
 .logout-content {background:#fff;padding:30px;border-radius:20px;text-align:center;min-width:250px;
-  border-top:6px solid #3b82f6;box-shadow:0 20px 50px rgba(30, 58, 138, 0.2)}
+  border-top:6px solid #dc2626;box-shadow:0 20px 50px rgba(220, 38, 38, 0.2)}
   .logout-buttons {display:flex;flex-direction:column;gap:10px;align-items:stretch;}
 .logout-buttons .btn {padding:10px 0;border-radius:8px;font-size:14px;cursor:pointer;transition:.3s ease;width:80%;margin:0 auto;}
 .logout-icon {margin-top:15px;}
-.icon-bg {display:inline-flex;justify-content:center;align-items:center;background:linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);border-radius:50%;padding:12px;box-shadow:0 4px 12px rgba(59, 130, 246, 0.15)}
-.icon-bg i {color:#3b82f6;}
+.icon-bg {display:inline-flex;justify-content:center;align-items:center;background:linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);border-radius:50%;padding:12px;box-shadow:0 4px 12px rgba(220, 38, 38, 0.15)}
+.icon-bg i {color:#dc2626;}
 .logout-content h3 {margin-bottom:18px;font-weight:600;color:#1e3a8a;font-size: 16px;}
-.no-btn {background:#ffffff;color:#3b82f6; border: 2px solid #dbeafe;}
-.no-btn:hover {background:#eff6ff;color:#1e3a8a;transform:translateY(-2px)}
-.logout-btn {background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);color:#fff;border: none;}
-.logout-btn:hover {background:linear-gradient(135deg, #2563eb 0%, #1e40af 100%);transform:translateY(-2px)}
+.no-btn {background:#ffffff;color:#dc2626; border: 2px solid #fecaca;}
+.no-btn:hover {background:#fef2f2;color:#991b1b;transform:translateY(-2px)}
+.logout-btn {background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);color:#fff;border: none;}
+.logout-btn:hover {background:linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);transform:translateY(-2px)}
 @keyframes fadeInScale {
   0%{transform:scale(.9);opacity:0;}
   100%{transform:scale(1);opacity:1;}
@@ -138,14 +138,69 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
 /* Evaluation Criteria ==================================================================================================== */
 .evaluationform {
   width: 100%; max-width: 960px; margin: 12px auto 0;
-  background: #fff; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  background: #ffffff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   border-collapse: collapse; overflow: hidden; table-layout: fixed;
-  transition: all .3s ease;
+  transition: all .3s ease; display: none;
+  border: 1px solid #e5e7eb;
+}
+
+.evaluationform.active {
+  display: table;
+}
+
+.pagination-container {
+  width: 100%; max-width: 960px; margin: 20px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 0 12px; box-sizing: border-box;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.pagination-info {
+  font: 600 14px "Inter", sans-serif; color: #1e3a8a;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
+  padding: 8px 16px; border-radius: 8px; border: 1px solid #fbbf24;
+  text-align: center;
+}
+
+.pagination-btn {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #fff;
+  border: none; padding: 12px 24px; border-radius: 12px;
+  font: 600 14px "Inter", sans-serif; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: all .3s ease; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+  position: relative; overflow: hidden;
+}
+
+.pagination-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  box-shadow: 0 6px 16px rgba(30, 58, 138, 0.3);
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  background: #9ca3af; cursor: not-allowed;
+  transform: none; box-shadow: none;
+}
+
+.arrow-left::before {
+  content: "\2039"; font-size: 18px; font-weight: bold;
+}
+
+.arrow-right::after {
+  content: "\203A"; font-size: 18px; font-weight: bold;
 }
 
 .evaluationform thead {box-shadow: 0 4px 10px rgba(0,0,0,.05); position: relative; z-index: 1;}
 .evaluationform th {
-  background: linear-gradient(135deg,#FFD700,#facc15); color: #1f2937;
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); color: #ffffff;
   padding: 22px 10px; line-height: 1.4; text-align: center;
   font: 600 14px/1.4 sans-serif; border: none; position: relative;
   transition: .2s ease;
@@ -182,19 +237,27 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
   width:100%; max-width:960px; padding:0 12px; box-sizing:border-box;
 }
 #submitEvaluation {
-  display:none; background:linear-gradient(135deg, #16208d 0%, #1e3a8a 100%); color:#fff; padding:12px 28px;
+  background:linear-gradient(135deg, #16208d 0%, #1e3a8a 100%); color:#fff; padding:12px 28px;
   border-radius:8px; border:none; font-weight:600; cursor:pointer;
-  transition:all .3s ease;
+  transition:all .3s ease; display: inline-flex;
 }
 #submitEvaluation i {margin-left:8px;}
 #submitEvaluation:hover {background:linear-gradient(135deg, #0f1660 0%, #1e3a8a 100%);box-shadow:0 8px 20px rgba(30, 58, 138, 0.3)}
 
-/* Feedback ==================================================================================================== */
+.feedback-submit-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
 .feedback-container {
-  max-width:900px; margin:8px auto 0; padding:28px;
-  background:#fff; border-left:6px solid #fbbf24; border:1px solid #f1f5f9; border-radius:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08); overflow:hidden;
-  transition:all .3s ease; display:none;
+  max-width:900px; margin:8px auto 0; padding:32px;
+  background:#ffffff; border-left:4px solid #3b82f6; border:1px solid #e5e7eb; border-radius:16px;
+  box-shadow:0 8px 24px rgba(0, 0, 0, 0.1); overflow:hidden;
+  transition:all .3s ease; display: block;
 }
 
 .feedback-box {
@@ -222,6 +285,8 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
   .main-box,.evaluate-section{margin:100px 20px 0;padding:28px}
   .rating-legends{margin:8px 20px 0;padding:28px}
   .feedback-container{margin:8px 20px 0;padding:28px}
+  .pagination-container{margin:8px 20px 0;padding:0 8px}
+  .criteria-box{margin:8px 20px 0;padding:24px}
 }
 @media(max-width:768px){
   .main-box,.evaluate-section{margin:100px 16px 0;padding:24px}
@@ -237,9 +302,14 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
   .rating-legends{margin:8px 16px 0;padding:24px}
   .rating-legends ul{justify-content:center}
   .feedback-container{margin:8px 16px 0;padding:24px}
+  .pagination-container{margin:8px 16px 0;padding:0 8px}
+  .criteria-box{margin:8px 16px 0;padding:20px}
+  .pagination-info{font-size:12px;padding:6px 12px}
+  .pagination-btn{font-size:12px;padding:8px 12px}
 }
 @media(max-width:480px){
-  .main-box,.evaluate-section,.rating-legends,.feedback-container,.evaluationform{margin:100px 12px 0;padding:20px;width:calc(100% - 24px);box-sizing:border-box}
+  .main-box,.evaluate-section,.rating-legends,.feedback-container,.evaluationform,.criteria-box{margin:100px 12px 0;padding:20px;width:calc(100% - 24px);box-sizing:border-box}
+  .pagination-container{margin:8px 12px 0;padding:0 4px}
   .main-img{width:120px;height:120px;margin-top:15px}
   .main-right{display:flex;flex-direction:column;align-items:center;gap:0}
   .main-right h1{font-size:20px;margin-top:-30px}
@@ -251,7 +321,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:linear-gradie
   .rating-legends li{font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px}
   .dot{width:10px;height:10px;margin:0 auto}
   .evaluationform{overflow-x:hidden;table-layout:auto}
-}
-@media(max-width:768px){
-  .evaluationform{max-width:calc(100% - 48px);overflow-x:hidden}
+  .pagination-container{flex-direction:column;gap:12px}
+  .pagination-info{text-align:center}
+  .pagination-btn{width:100%;justify-content:center}
 }

@@ -1,3 +1,11 @@
+// Define modal elements first to avoid undefined errors
+const addSubjectModal = document.getElementById("addSubjectModal");
+const addFacultyModal = document.getElementById("addFacultyModal");
+const addStudentModal = document.getElementById("addStudentModal");
+const addCategoryModal = document.getElementById("addCategoryModal");
+const addQuestionModal = document.getElementById("addQuestionModal");
+const subjectSelectionModal = document.getElementById("subjectSelectionModal");
+const viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsModal");
 
 document.addEventListener("DOMContentLoaded", () => {
   let currentActiveLink = null;
@@ -71,6 +79,7 @@ window.showSection = (id, e) => {
   if (id === "programs-section") loadPrograms?.();
   if (id === "faculties-section") loadFaculty?.();
   if (id === "criteria-section") loadCategories?.();
+  if (id === "report-section") loadEvaluations?.();
   if (id === "students-section") loadStudents?.();
   if (id === "subjects-section") loadAllSubjects?.();
 
@@ -82,15 +91,47 @@ window.showSection = (id, e) => {
     dashboardDetails.style.display =
       id === "dashboard-section" ? "flex" : "none";
   }
+
+  // =========================
+  // Hide evaluation table from other sections
+  // =========================
+  const evaluationTable = document.querySelector(".evaluation-table");
+  if (evaluationTable) {
+    const tableWrapper = evaluationTable.closest(".table-wrapper");
+    if (tableWrapper) {
+      tableWrapper.style.display = 
+        id === "report-section" ? "block" : "none";
+    }
+  }
 };
 
  // ================= Delete Forms Binago==========================================================================================
 function openDeleteModal(type,name,el){
+  console.log("openDeleteModal called with:", {type, name, el});
+  
   // Close any open modals first
-  [addSubjectModal,addClassModal,addFacultyModal,addStudentModal,addCategoryModal,addQuestionModal,subjectSelectionModal,viewStudentSubjectsModal].forEach(m=>m.style.display="none");
+  const modalsToClose = [
+    addSubjectModal,
+    addFacultyModal, 
+    addStudentModal,
+    addCategoryModal,
+    addQuestionModal,
+    subjectSelectionModal,
+    viewStudentSubjectsModal
+  ];
+  modalsToClose.forEach(m => { if(m) m.style.display = "none"; });
   
   deleteTarget = el;
   deleteType = type;
+  
+  const deleteModal = document.getElementById("deleteModal");
+  console.log("deleteModal element:", deleteModal);
+  
+  if (!deleteModal) {
+    console.error("deleteModal element not found!");
+    return;
+  }
+  
   document.getElementById("deleteMessage").innerText = `Do you want to delete ${type}? \n${name}`;
   document.getElementById("deleteWarning").innerText = `Warning: All details about this ${type} will be deleted.`;
   
@@ -102,7 +143,8 @@ function openDeleteModal(type,name,el){
     deleteModalCard.classList.remove("subjects-delete");
   }
   
-  document.getElementById("deleteModal").style.display = "flex";
+  deleteModal.style.display = "flex";
+  console.log("Modal display set to flex");
 }
 
 const closeDeleteModal=()=>{document.getElementById("deleteModal").style.display="none";deleteTarget=null;deleteType="";};
@@ -115,7 +157,8 @@ const cfg = {
   category: { url: "delete_category.php", key: "category_id", type: "form" },   
   question: { url: "delete_question.php", key: "question_id", type: "form" },
   student: { url: "student_crud.php", key: "id", type: "json" }, // student uses JSON
-  subject: { url: "subject_crud.php", key: "id", type: "form" } // subject uses form
+  subject: { url: "subject_crud.php", key: "id", type: "form" }, // subject uses form
+  class: { url: "classes_crud.php", key: "id", type: "form" } // class uses form
 }[deleteType];
 
 if (!cfg) return closeDeleteModal();
@@ -298,6 +341,56 @@ document.getElementById("program-search")?.addEventListener("input",e=>{
 
 document.addEventListener("DOMContentLoaded",loadPrograms);
 
+// ========================= CLICK OUTSIDE TO CLOSE MODALS =========================
+function setupModalClickOutside(modal) {
+  if (!modal) {
+    console.log("Modal not found");
+    return;
+  }
+  
+  console.log("Setting up click outside for modal:", modal.id);
+  
+  modal.addEventListener("click", (e) => {
+    console.log("Modal clicked:", e.target, e.target === modal);
+    // Check if click is on modal backdrop (outside modal content)
+    if (e.target === modal) {
+      console.log("Closing modal due to outside click");
+      modal.style.display = "none";
+    }
+  });
+}
+
+// Setup click-outside-to-close for all modals
+function setupAllModalsClickOutside() {
+  console.log("Setting up click-outside-to-close for modals");
+  
+  const modals = [
+    "addProgramModal",
+    "addSubjectModal", 
+    "addFacultyModal",
+    "addStudentModal",
+    "addCategoryModal",
+    "addQuestionModal",
+    "subjectSelectionModal",
+    "viewStudentSubjectsModal",
+    "addSubjectMainModal",
+    "deleteModal",
+    "deleteSuccessModal"
+  ];
+  
+  modals.forEach(modalId => {
+    const modal = document.getElementById(modalId);
+    console.log("Found modal:", modalId, modal);
+    setupModalClickOutside(modal);
+  });
+}
+
+// Setup immediately when DOM is ready
+document.addEventListener("DOMContentLoaded", setupAllModalsClickOutside);
+
+// Also setup immediately in case DOM is already loaded
+setupAllModalsClickOutside();
+
 // ========================= MAIN SUBJECTS SECTION =========================
 const addSubjectMainModal = document.getElementById("addSubjectMainModal"),
       saveMainSubjectBtn = document.getElementById("save-main-subject-btn"),
@@ -461,8 +554,6 @@ let editSubjectId = null;
 
 // ========================= ELEMENTS =========================
 const addManageBtn = document.querySelector(".add-manage-btn"),
-      addSubjectModal = document.getElementById("addSubjectModal"),
-      addClassModal = document.getElementById("addClassModal"),
       saveSubjectBtn = document.getElementById("save-subject-btn"),
       saveClassBtn = document.getElementById("save-class-btn"),
       subjectsTableBody = document.querySelector("#subjects tbody"),
@@ -714,6 +805,7 @@ function loadClasses() {
 
       data.forEach(c => {
         const row = document.createElement("tr");
+        row.dataset.id = c.id;
 
         row.innerHTML = `
           <td>${c.section_name}</td>
@@ -734,8 +826,8 @@ function loadClasses() {
 
         // EDIT CLASS
         row.querySelector(".edit-btn").addEventListener("click", () => {
-          // Open class modal with current data
-          addClassModal.style.display = "flex";
+          // Class modal doesn't exist, using subject modal instead
+          addSubjectModal.style.display = "flex";
           
           // Set dropdown value for section
           const sectionSelect = document.getElementById("class-name");
@@ -756,8 +848,9 @@ function loadClasses() {
           }
           
           // Store editing state
-          addClassModal.dataset.editId = c.id;
-          addClassModal.dataset.isEditing = "true";
+          // Note: addClassModal doesn't exist, storing in addSubjectModal
+          addSubjectModal.dataset.editId = c.id;
+          addSubjectModal.dataset.isEditing = "true";
           
           // Load subjects for this class's year level
           loadSubjectsByYear(c.year_level);
@@ -766,11 +859,7 @@ function loadClasses() {
         });
 
         row.querySelector(".delete-btn").addEventListener("click", () => {
-          fetch("classes_crud.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `action=delete&id=${c.id}`
-          }).then(() => loadClasses());
+          openDeleteModal("class", c.section_name, row);
         });
 
         classesTableBody.appendChild(row);
@@ -795,8 +884,8 @@ saveClassBtn?.addEventListener("click", () => {
 
   if (checked.length === 0) return alert("Select at least one subject");
 
-  const isEditing = addClassModal.dataset.isEditing === "true";
-  const editId = addClassModal.dataset.editId;
+  const isEditing = addSubjectModal.dataset.isEditing === "true";
+  const editId = addSubjectModal.dataset.editId;
 
   const action = isEditing ? "edit" : "add";
   let body = `action=${action}&program_id=${currentProgramId}&section_name=${name}&year_level=${year}&subjects=${JSON.stringify(checked)}`;
@@ -816,7 +905,7 @@ saveClassBtn?.addEventListener("click", () => {
   .then(res => {
     console.log("Class save response:", res);
     if (res.status === "success" || res === "success") {
-      addClassModal.style.display = "none";
+      addSubjectModal.style.display = "none";
       loadClasses();
       showNotification(
         isEditing ? "Class updated successfully!" : "Class added successfully!", 
@@ -824,8 +913,8 @@ saveClassBtn?.addEventListener("click", () => {
       );
       
       // Clear editing state
-      delete addClassModal.dataset.editId;
-      delete addClassModal.dataset.isEditing;
+      delete addSubjectModal.dataset.editId;
+      delete addSubjectModal.dataset.isEditing;
     } else {
       alert("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"));
     }
@@ -890,8 +979,7 @@ const openModal=(m,h,b)=>{
 const closeModal=m=>m.style.display="none";
 
 // ================= Faculty ==========================================================================================
-const addFacultyModal = document.getElementById("addFacultyModal"),
-      facultyTbody = document.querySelector("#faculties-section tbody");
+const facultyTbody = document.querySelector("#faculties-section tbody");
 
 // ------------------- Load Faculty -------------------
 function loadFaculty() {
@@ -1035,12 +1123,158 @@ document.getElementById("faculty-search").oninput = e => {
   const term = e.target.value.toLowerCase();
   [...facultyTbody.rows].forEach(r => r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none");
 };
-document.addEventListener("DOMContentLoaded", loadFaculty);
+// ========================= Report Section =========================
+function loadEvaluations() {
+  // Check if we're in the report section, if not, don't load the table
+  const currentSection = document.querySelector('.section:not([style*="display: none"])');
+  if (!currentSection || currentSection.id !== 'report-section') {
+    return; // Don't load evaluations if not in report section
+  }
+  
+  fetch("get_evaluations.php")
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const tbody = document.getElementById("evaluationTableBody");
+        tbody.innerHTML = "";
+        
+        data.data.forEach(evaluation => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>
+              <strong>${evaluation.name}</strong><br>
+              <small>${evaluation.faculty_id}</small>
+            </td>
+            <td>${evaluation.average_score}</td>
+            <td>
+              <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
+            </td>
+            <td>${evaluation.total_responses}</td>
+            <td>
+              <button class="view-btn" onclick="viewEvaluationDetails('${evaluation.id}')">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+        
+        // Add search functionality
+        document.getElementById("searchInput").oninput = e => {
+          const term = e.target.value.toLowerCase();
+          [...tbody.rows].forEach(r => 
+            r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none"
+          );
+        };
+      } else {
+        console.error("Error loading evaluations:", data.message);
+      }
+    })
+    .catch(err => console.error("Network error:", err));
+}
 
-// ========================= Students dagdag ==========================================================================================
-const addStudentModal = document.getElementById("addStudentModal"),
-      viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsModal"),
-      studentTbody   = document.querySelector("#students-section table tbody"),
+function viewEvaluationDetails(facultyId) {
+  // TODO: Implement detailed view modal
+  console.log("View details for faculty:", facultyId);
+}
+
+// ========================= Dashboard Statistics =========================
+function loadDashboardStats() {
+  fetch("get_dashboard_stats.php")
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        // Update dashboard cards
+        document.getElementById("totalFaculty").textContent = data.data.totalFaculty;
+        document.getElementById("totalStudents").textContent = data.data.totalStudents;
+        document.getElementById("totalEvaluations").textContent = data.data.totalEvaluations;
+        
+        // Update faculty ratings table
+        const ratingsBody = document.getElementById("ratings-body");
+        ratingsBody.innerHTML = "";
+        
+        data.data.ratings.forEach(rating => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${rating.name}</td>
+            <td>${rating.rating}</td>
+          `;
+          ratingsBody.appendChild(row);
+        });
+        
+        // Update faculty ranking table
+        const rankingBody = document.getElementById("ranking-body");
+        rankingBody.innerHTML = "";
+        
+        data.data.ratings.forEach((rating, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${rating.name}</td>
+            <td>${rating.rating}</td>
+          `;
+          rankingBody.appendChild(row);
+        });
+        
+        // Update department graph (if canvas exists)
+        updateDepartmentGraph(data.data.departments);
+        
+      } else {
+        console.error("Error loading dashboard stats:", data.message);
+      }
+    })
+    .catch(err => console.error("Network error:", err));
+}
+
+function updateDepartmentGraph(departments) {
+  const canvas = document.getElementById("departmentGraph");
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext("2d");
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (departments.length === 0) return;
+  
+  // Simple bar chart
+  const maxValue = Math.max(...departments.map(d => d.count));
+  const barWidth = canvas.width / (departments.length * 1.5);
+  const barSpacing = barWidth * 0.5;
+  const chartHeight = canvas.height - 40;
+  
+  departments.forEach((dept, index) => {
+    const barHeight = (dept.count / maxValue) * chartHeight;
+    const x = index * (barWidth + barSpacing) + barSpacing;
+    const y = canvas.height - barHeight - 20;
+    
+    // Draw bar
+    ctx.fillStyle = "#3b82f6";
+    ctx.fillRect(x, y, barWidth, barHeight);
+    
+    // Draw label
+    ctx.fillStyle = "#374151";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(dept.name, x + barWidth/2, canvas.height - 5);
+    
+    // Draw count
+    ctx.fillText(dept.count, x + barWidth/2, y - 5);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadFaculty();
+  loadDashboardStats();
+  // Only load evaluations if report section is initially visible
+  const currentSection = document.querySelector('.section:not([style*="display: none"])');
+  if (currentSection && currentSection.id === 'report-section') {
+    loadEvaluations();
+  }
+});
+
+// ========================= Students  ==========================================================================================
+const studentTbody   = document.querySelector("#students-section table tbody"),
       programSelect  = document.getElementById("student-program");
 
 // ------------------- Helpers -------------------
@@ -1065,7 +1299,7 @@ function addProgramToDropdown(programName){
 
 //  Load Programs -------------------
 function loadStudentPrograms(){
-  fetch("get_StudentProgram.php")
+  return fetch("get_StudentProgram.php")
     .then(r => r.json())
     .then(data => {
       programs = data.map(p => p.name); // Extract just the names for display
@@ -1073,8 +1307,12 @@ function loadStudentPrograms(){
       data.forEach(program => {
         programSelect.insertAdjacentHTML("beforeend", `<option value="${program.name}">${program.name}</option>`);
       });
+      return data; // Return data for chaining
     })
-    .catch(err => console.error("Error loading programs:", err));
+    .catch(err => {
+      console.error("Error loading programs:", err);
+      throw err; // Re-throw to maintain Promise rejection
+    });
 }
 
 //  Load Students -------------------
@@ -1128,84 +1366,107 @@ function loadStudents(){
           </td>`;
 
         // Edit button event
-        row.querySelector(".edit-btn").onclick = () => {
-          openModal(addStudentModal,"EDIT STUDENT","UPDATE STUDENT");
+        const editBtn = row.querySelector(".edit-btn");
+        if (editBtn) {
+          editBtn.onclick = () => {
+            console.log("Edit button clicked for student:", stu);
+            openModal(addStudentModal,"EDIT STUDENT","UPDATE STUDENT");
 
-          const numberInput = document.getElementById("student-number");
-          numberInput.value = stu.student_number || "";
-          numberInput.disabled = true;
+            const numberInput = document.getElementById("student-number");
+            numberInput.value = stu.student_number || "";
+            numberInput.disabled = true;
 
-          const emailInput = document.getElementById("student-email");
-          emailInput.value = stu.email || "";
-          emailInput.disabled = false; 
+            const emailInput = document.getElementById("student-email");
+            emailInput.value = stu.email || "";
+            emailInput.disabled = false; 
 
-          // Other fields
-          document.getElementById("student-firstname").value = stu.firstname || "";
-          document.getElementById("student-lastname").value = stu.lastname || "";
-          document.getElementById("student-suffix").value = stu.suffix || "";
-          document.getElementById("student-yearlevel").value = stu.yearlevel || "";
-          
-          // Load programs first, then set the program value
-          loadStudentPrograms().then(() => {
-            document.getElementById("student-program").value = stu.program || "";
-          });
-          
-          // Store student data for update
-          addStudentModal.dataset.editId = stu.id;
-          addStudentModal.dataset.studentData = JSON.stringify(stu);
+            // Other fields
+            document.getElementById("student-firstname").value = stu.firstname || "";
+            document.getElementById("student-lastname").value = stu.lastname || "";
+            document.getElementById("student-suffix").value = stu.suffix || "";
+            document.getElementById("student-yearlevel").value = stu.yearlevel || "";
+            
+            // Store student data for update
+            addStudentModal.dataset.editId = stu.id;
+            addStudentModal.dataset.studentData = JSON.stringify(stu);
 
-          // Load existing subjects for this student
-          selectedSubjects = [];
-          if (stu.subjects && Array.isArray(stu.subjects)) {
-            selectedSubjects = stu.subjects;
-          }
-          updateSelectedSubjectsDisplay();
+            // Load existing subjects for this student
+            selectedSubjects = [];
+            if (stu.subjects && Array.isArray(stu.subjects)) {
+              selectedSubjects = stu.subjects;
+              console.log("Loading subjects for edit:", selectedSubjects);
+            }
+            updateSelectedSubjectsDisplay();
 
-          let submitBtn = resetSubmitBtn("UPDATE STUDENT");
-          submitBtn.onclick = async e => {
-            e.preventDefault(); 
-            submitBtn.disabled = true;
-
-            const subjectIds = selectedSubjects.map(s => s.id);
-            const studentData = JSON.parse(addStudentModal.dataset.studentData || "{}");
-
-            const res = await fetch("student_crud.php", {
-              method:"POST",
-              headers:{ "Content-Type":"application/json" },
-              body: JSON.stringify({ 
-                action:"edit", 
-                id: studentData.id,
-                student_number: studentData.student_number,
-                email: val("email"), 
-                firstname: val("firstname"),
-                lastname: val("lastname"),
-                suffix: val("suffix"),
-                yearlevel: val("yearlevel"),
-                program: val("program"),
-                subjects: subjectIds
-              })
+            // Set program value immediately after loading programs
+            loadStudentPrograms().then(() => {
+              console.log("Programs loaded, setting program to:", stu.program);
+              programSelect.value = stu.program || "";
+              console.log("Program set to:", programSelect.value);
             });
 
-            const d = await res.json();
-            if(d.success){
-              loadStudents();
-              closeModal(addStudentModal);
-              addProgramToDropdown(val("program"));
-              showNotification("Student edited successfully!", "#4caf50");
-            } else {
-              showNotification(d.message || "Error updating student.", "#f44336");
-            }
-            submitBtn.disabled = false;
+            let submitBtn = resetSubmitBtn("UPDATE STUDENT");
+            submitBtn.onclick = async e => {
+              e.preventDefault(); 
+              submitBtn.disabled = true;
+
+              const subjectIds = selectedSubjects.map(s => s.id);
+              const studentData = JSON.parse(addStudentModal.dataset.studentData || "{}");
+
+              const res = await fetch("student_crud.php", {
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body: JSON.stringify({ 
+                  action:"edit", 
+                  id: studentData.id,
+                  student_number: studentData.student_number,
+                  email: document.getElementById("student-email").value.trim(), 
+                  firstname: document.getElementById("student-firstname").value.trim(),
+                  lastname: document.getElementById("student-lastname").value.trim(),
+                  suffix: document.getElementById("student-suffix").value.trim(),
+                  yearlevel: document.getElementById("student-yearlevel").value,
+                  program: document.getElementById("student-program").value,
+                  subjects: subjectIds
+                })
+              });
+
+              const d = await res.json();
+              if(d.success){
+                loadStudents();
+                closeModal(addStudentModal);
+                addProgramToDropdown(val("program"));
+                showNotification("Student edited successfully!", "#4caf50");
+              } else {
+                showNotification(d.message || "Error updating student.", "#f44336");
+              }
+              submitBtn.disabled = false;
+            };
           };
-        };
+        } else {
+          console.error("Edit button not found for student row:", stu);
+        }
         
         // View Subjects
-        row.querySelector(".view-subjects-btn").onclick = () => 
-          viewStudentSubjects(stu);
+        const viewBtn = row.querySelector(".view-subjects-btn");
+        if (viewBtn) {
+          viewBtn.onclick = () => {
+            console.log("View subjects button clicked for student:", stu);
+            viewStudentSubjects(stu);
+          };
+        } else {
+          console.error("View subjects button not found for student row:", stu);
+        }
         
         // Delete
-        row.querySelector(".delete-btn").onclick = () => 
-          openDeleteModal("student", `${stu.firstname} ${stu.lastname}`, row);
+        const deleteBtn = row.querySelector(".delete-btn");
+        if (deleteBtn) {
+          deleteBtn.onclick = () => {
+            console.log("Delete button clicked for student:", stu);
+            openDeleteModal("student", `${stu.firstname} ${stu.lastname}`, row);
+          };
+        } else {
+          console.error("Delete button not found for student row:", stu);
+        }
         
         studentTbody.appendChild(row);
       });
@@ -1220,76 +1481,8 @@ function loadStudents(){
     })
     .catch(err => console.error("Error loading students:", err));
 }
-// ------------------- Add Student -------------------
-document.querySelector(".add-student-btn").onclick = () => {
-  openModal(addStudentModal,"ADD STUDENT","SAVE STUDENT");
-  ["number","email","firstname","lastname","suffix","yearlevel","program"].forEach(f=>{
-    document.getElementById("student-"+f).value = "";
-  });
-  const errorDiv = document.getElementById("student-number-error");
-  errorDiv.textContent = "";
-  
-  // Load programs to ensure dropdown is populated
-  loadStudentPrograms();
-  
-  // Reset selected subjects
-  selectedSubjects = [];
-  updateSelectedSubjectsDisplay();
-
-  let submitBtn = resetSubmitBtn("SAVE STUDENT");
-  submitBtn.onclick = async e => {
-    e.preventDefault(); 
-    submitBtn.disabled = true;
-
-    // GC- validation
-    const numberVal = val("number");
-    if(!numberVal.startsWith("GC-")){
-      errorDiv.textContent = "Student ID must start with GC-";
-      submitBtn.disabled = false;
-      return;
-    } else {
-      errorDiv.textContent = "";
-    }
-
-    const n=val("number"), eMail=val("email"), fName=val("firstname"), lName=val("lastname"),
-          y=val("yearlevel"), p=val("program");
-
-    if(!n||!eMail||!fName||!lName||!y||!p){ 
-      alert("Please fill all required fields."); 
-      submitBtn.disabled = false; 
-      return; }
-
-    const subjectIds = selectedSubjects.map(s => s.id);
-
-    const res = await fetch("student_crud.php", {
-      method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ 
-        action:"add", 
-        student_number:n, 
-        email:eMail, 
-        firstname:fName, 
-        lastname:lName,
-        suffix:val("suffix"), 
-        yearlevel:y, 
-        program:p,
-        subjects: subjectIds 
-      })
-    });
-    const d = await res.json();
-    if(d.success){
-      loadStudents();
-      closeModal(addStudentModal);
-      alert(d.message || "Student added successfully. Password sent to email.");
-      addProgramToDropdown(p); // live add program
-    } else {
-      alert(d.message || "Error adding student.");
-    }
-    submitBtn.disabled = false;
-  };
-};
 
 // ========================= Subject Selection for Students =========================
-const subjectSelectionModal = document.getElementById("subjectSelectionModal");
 let selectedSubjects = [];
 let allSubjects = [];
 
@@ -1352,17 +1545,30 @@ document.getElementById("add-subject-btn")?.addEventListener("click", () => {
 });
 
 // Close modal handlers
-document.querySelector("#subjectSelectionModal .close-btn")?.addEventListener("click", () => {
-  subjectSelectionModal.style.display = "none";
-});
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelector("#subjectSelectionModal .close-btn")?.addEventListener("click", () => {
+    subjectSelectionModal.style.display = "none";
+  });
 
-document.getElementById("cancel-subject-selection")?.addEventListener("click", () => {
-  subjectSelectionModal.style.display = "none";
+  document.getElementById("cancel-subject-selection")?.addEventListener("click", () => {
+    subjectSelectionModal.style.display = "none";
+  });
+
+  // Student modal close button
+  document.querySelector("#addStudentModal .close-btn")?.addEventListener("click", () => {
+    addStudentModal.style.display = "none";
+  });
+
+  // View student subjects modal close button
+  document.querySelector("#viewStudentSubjectsModal .close-btn")?.addEventListener("click", () => {
+    viewStudentSubjectsModal.style.display = "none";
+  });
 });
 
 // Filter handlers
 document.getElementById("subject-search")?.addEventListener("input", renderSubjectsTable);
 
+// ... (rest of the code remains the same)
 // Select all checkbox
 document.getElementById("select-all-subjects")?.addEventListener("change", (e) => {
   const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
@@ -1418,10 +1624,8 @@ function updateSelectedSubjectsDisplay() {
 }
 
 // ========================= Categories & Questions dagdag========================= //
-const addCategoryModal = document.getElementById("addCategoryModal"),
-      addCategoryBtn = document.getElementById("addCategoryBtn"),
+const addCategoryBtn = document.getElementById("addCategoryBtn"),
       saveCategoryBtn = document.getElementById("saveCategoryBtn"),
-      addQuestionModal = document.getElementById("addQuestionModal"),
       questionCategoryName = document.getElementById("questionCategoryName"),
       saveQuestionBtn = document.getElementById("saveQuestionBtn");
 
@@ -1669,13 +1873,116 @@ function viewStudentSubjects(student) {
 
 // ========================= Forms Close ==========================================================================================
 document.querySelectorAll(".close-btn").forEach(b=>b.addEventListener("click",()=>{
-  [addProgramModal,addSubjectModal,addClassModal,addFacultyModal,addStudentModal,addCategoryModal,addQuestionModal,subjectSelectionModal,viewStudentSubjectsModal].forEach(m=>m.style.display="none");
+  [addProgramModal,addSubjectModal,addFacultyModal,addStudentModal,addCategoryModal,addQuestionModal,subjectSelectionModal,viewStudentSubjectsModal].forEach(m=>m.style.display="none");
 }));
-window.addEventListener("click",e=>{
-  [addProgramModal,addSubjectModal,addClassModal,addFacultyModal,addStudentModal,addCategoryModal,addQuestionModal,subjectSelectionModal,viewStudentSubjectsModal]
-  .forEach(m=>{if(e.target===m)m.style.display="none";});
-});
-  // ========================= Initialize ==========================================================================================
-  showSection("dashboard-section");
-  showTable('subjects');
+
+// ------------------- Add Student -------------------
+function initAddStudentButton() {
+  console.log("Initializing add student button...");
+  const addStudentBtn = document.querySelector(".add-student-btn");
+  console.log("Add student button found:", addStudentBtn);
+  
+  if (addStudentBtn) {
+    addStudentBtn.onclick = () => {
+      console.log("Add Student button clicked!");
+      console.log("addStudentModal:", addStudentModal);
+      openModal(addStudentModal,"ADD STUDENT","SAVE STUDENT");
+      console.log("Modal display style:", addStudentModal.style.display);
+      
+      // Force modal to be visible with higher z-index
+      addStudentModal.style.display = "flex";
+      addStudentModal.style.zIndex = "99999";
+      addStudentModal.style.position = "fixed";
+      addStudentModal.style.top = "0";
+      addStudentModal.style.left = "0";
+      addStudentModal.style.width = "100%";
+      addStudentModal.style.height = "100%";
+      addStudentModal.style.backgroundColor = "rgba(0,0,0,0.5)";
+      addStudentModal.style.alignItems = "center";
+      addStudentModal.style.justifyContent = "center";
+      
+      console.log("Modal forced display - current styles:", {
+        display: addStudentModal.style.display,
+        zIndex: addStudentModal.style.zIndex,
+        position: addStudentModal.style.position
+      });
+      ["number","email","firstname","lastname","suffix","yearlevel","program"].forEach(f=>{
+        document.getElementById("student-"+f).value = "";
+      });
+      const errorDiv = document.getElementById("student-number-error");
+      errorDiv.textContent = "";
+      
+      // Load programs to ensure dropdown is populated
+      loadStudentPrograms();
+      
+      // Reset selected subjects
+      selectedSubjects = [];
+      updateSelectedSubjectsDisplay();
+
+      let submitBtn = resetSubmitBtn("SAVE STUDENT");
+      submitBtn.onclick = async e => {
+        e.preventDefault(); 
+        submitBtn.disabled = true;
+
+        // GC- validation
+        const numberVal = val("number");
+        if(!numberVal.startsWith("GC-")){
+          errorDiv.textContent = "Student ID must start with GC-";
+          submitBtn.disabled = false;
+          return;
+        } else {
+          errorDiv.textContent = "";
+        }
+
+        const n=val("number"), eMail=val("email"), fName=val("firstname"), lName=val("lastname"),
+              y=val("yearlevel"), p=val("program");
+
+        if(!n||!eMail||!fName||!lName||!y||!p){ 
+          alert("Please fill all required fields."); 
+          submitBtn.disabled = false; 
+          return; }
+
+        const subjectIds = selectedSubjects.map(s => s.id);
+
+        const res = await fetch("student_crud.php", {
+          method:"POST", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ 
+            action:"add", 
+            student_number:n, 
+            email:eMail, 
+            firstname:fName, 
+            lastname:lName,
+            suffix:val("suffix"), 
+            yearlevel:y, 
+            program:p,
+            subjects: subjectIds 
+          })
+        });
+        const d = await res.json();
+        if(d.success){
+          loadStudents();
+          closeModal(addStudentModal);
+          alert(d.message || "Student added successfully. Password sent to email.");
+          addProgramToDropdown(p); // live add program
+        } else {
+          alert(d.message || "Error adding student.");
+        }
+        submitBtn.disabled = false;
+      };
+    };
+    console.log("Add student button event listener attached successfully!");
+  } else {
+    console.error("Add student button not found!");
+  }
+}
+
+// Initialize on DOM content loaded
+document.addEventListener("DOMContentLoaded", initAddStudentButton);
+
+// Also try to initialize immediately in case DOM is already loaded
+initAddStudentButton();
+
+// ========================= Initialize ==========================================================================================
+showSection("dashboard-section");
+showTable('subjects');
 });

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,7 +61,7 @@
     </div>
 
     <!-- Hidden field to store student ID -->
-<input type="hidden" id="studentId" value="<?php echo $row['student_number']; ?>">
+<input type="hidden" id="studentId" value="<?php echo $student_id; ?>">
 
     <div class="password-actions">
       <button class="cancel-btn" onclick="closePasswordForm()">Cancel</button>
@@ -72,64 +73,51 @@
 
 <!-- Main Page ======================================================================================-->
 
-<div class="main-box" id="mainPage">
-  <div class="main-left"><img src="schoollogo.png" alt="School Logo" class="main-img"></div>
-  <div class="main-right">
-    <h1>Welcome, Students</h1>
-    <div class="academic-year"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div>
-    <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
-      Each evaluation you complete strengthens our commitment to academic excellence.</p>
-    <button class="evaluate-btn" onclick="showEvaluateSection()"><i class="fas fa-check-circle"></i> Evaluate Now</button>
+<div class="content-container">
+  <div class="main-box" id="mainPage">
+    <div class="main-left"><img src="schoollogo.png" alt="School Logo" class="main-img"></div>
+    <div class="main-right">
+      <h1>Welcome, Students</h1>
+      <div class="academic-year"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div>
+      <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
+        Each evaluation you complete strengthens our commitment to academic excellence.</p>
+      <button class="evaluate-btn" onclick="showEvaluateSection()"><i class="fas fa-check-circle"></i> Evaluate Now</button>
+    </div>
   </div>
-</div>
 
-<!-- Evaluation Box======================================================================================-->
-<div class="evaluate-section" id="evaluateSection" style="display:none;">
-  <div class="eval-box">
-    <div class="eval-header">
-      <div class="title-subtitle">
-        <h1>Faculty Evaluation</h1>
-        <!-- Header Section 
-        <div class="academic-year-eval"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div> -->
+  <!-- Evaluation Box======================================================================================-->
+  <div class="evaluate-section" id="evaluateSection" style="display:none;">
+    <div class="eval-box">
+      <div class="eval-header">
+        <div class="title-subtitle">
+          <h1>Faculty Evaluation</h1>
+          <!-- Header Section 
+          <div class="academic-year-eval"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div> -->
+        </div>
+        <button class="back-btn" onclick="goBackToMain()"><i class="fas fa-arrow-left"></i> Back</button>
       </div>
-      <button class="back-btn" onclick="goBackToMain()"><i class="fas fa-arrow-left"></i> Back</button>
-    </div>
 
-    <div class="faculty-select">
-      <label for="facultyDropdown"><i class="fas fa-user-tie"></i> Select Faculty:</label>
-      <select id="facultyDropdown" class="faculty-dropdown"><option value="">-- No faculty available --</option></select>
+      <div class="faculty-select">
+        <label for="facultyDropdown"><i class="fas fa-user-tie"></i> Select Faculty:</label>
+        <select id="facultyDropdown" class="faculty-dropdown"><option value="">-- No faculty available --</option></select>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Rating Legends Box ======================================================================================-->
-<div class="rating-legends" id="ratingLegends" style="display:none;">
-  <h2>Rating Legends</h2>
-  <ul>
-    <li><span class="dot dot5"></span> 5 - Strongly Agree</li>
-    <li><span class="dot dot4"></span> 4 - Agree</li>
-    <li><span class="dot dot3"></span> 3 - Neutral</li>
-    <li><span class="dot dot2"></span> 2 - Disagree</li>
-    <li><span class="dot dot1"></span> 1 - Strongly Disagree</li>
-  </ul>
-</div>
-
+  <!-- Rating Legends Box ======================================================================================-->
+  <div class="rating-legends" id="ratingLegends" style="display:none;">
+    <h2>Rating Legends</h2>
+    <ul>
+      <li><span class="dot dot5"></span> 5 - Strongly Agree</li>
+      <li><span class="dot dot4"></span> 4 - Agree</li>
+      <li><span class="dot dot3"></span> 3 - Neutral</li>
+      <li><span class="dot dot2"></span> 2 - Disagree</li>
+      <li><span class="dot dot1"></span> 1 - Strongly Disagree</li>
+    </ul>
+  </div>
 <!-- Evaluation Form ======================================================================================-->
-<div id="evaluationContainer" style="display:none"></div>
-
-<div class="feedback-container">
-  <div class="feedback-box">
-    <label for="studentFeedback">OPTIONAL COMMENTS</label>
-    <textarea id="studentFeedback" placeholder="Type your feedback here..."></textarea>
-  </div>
+  <div id="evaluationContainer" style="display:none"></div>
 </div>
-
-<div class="submit-container">
-  <button id="submitEvaluation" onclick="submitEvaluation()">
-    SUBMIT EVALUATION <i class="fa-solid fa-paper-plane"></i>
-  </button>
-</div>
-
 
 
 <script src="FacultyUser.js?v=<?=time()?>"></script>
