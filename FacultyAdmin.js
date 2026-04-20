@@ -1,4 +1,3 @@
-// Define modal elements first to avoid undefined errors
 const addSubjectModal = document.getElementById("addSubjectModal");
 const addFacultyModal = document.getElementById("addFacultyModal");
 const addStudentModal = document.getElementById("addStudentModal");
@@ -12,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentRow = null; 
   let deleteTarget = null;
   let deleteType = "";
-  // ------------------- Notification Helper -------------------
+  // ------------------- Notification==========================================================================================
 function showNotification(message, color="#4caf50", duration=3000){
     const notif = document.getElementById("notification");
     notif.style.backgroundColor = color;
@@ -109,7 +108,6 @@ window.showSection = (id, e) => {
 function openDeleteModal(type,name,el){
   console.log("openDeleteModal called with:", {type, name, el});
   
-  // Close any open modals first
   const modalsToClose = [
     addSubjectModal,
     addFacultyModal, 

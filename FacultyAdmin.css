@@ -24,9 +24,9 @@ body{margin:0;font-family:var(--font-sans);font-size:.875rem;line-height:1.5;col
 /* ============================================
    Navigation Components
    ============================================ */
-.navbar{height:4rem;background:linear-gradient(135deg,var(--primary-900) 0%,var(--primary-700) 50%,var(--primary-600) 100%);
-  color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 var(--spacing-xl);box-shadow:var(--shadow-lg);
-  position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:blur(10px);border-bottom:1px solid var(--primary-800)}
+.navbar{height:4rem;background:linear-gradient(135deg,#0f2e75 0%,#1e3a8a 45%,#3b82f6 100%);
+  color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 var(--spacing-xl);box-shadow:0 8px 20px rgba(15,46,117,.22);
+  position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:blur(10px);border-bottom:1px solid rgba(219,230,255,.35)}
 .brand{display:flex;align-items:center;gap:var(--spacing-md)}
 .brand-logo{width:2rem;height:2rem;border-radius:var(--radius-full);object-fit:cover;border:2px solid rgba(255,255,255,.3);
   box-shadow:0 0 0 4px rgba(251,191,36,.1)}
@@ -57,8 +57,8 @@ body{margin:0;font-family:var(--font-sans);font-size:.875rem;line-height:1.5;col
 /* ============================================
    Sidebar Navigation
    ============================================ */
-.sidebar{width:16rem;background:linear-gradient(180deg,var(--primary-900) 0%,var(--primary-800) 40%,var(--primary-950) 100%);
-  color:#fff;position:fixed;top:4rem;bottom:0;left:0;padding:var(--spacing-xl) 0;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.1);
+.sidebar{width:16rem;background:linear-gradient(180deg,#0f2e75 0%,#1e3a8a 45%,#0f2e75 78%,#0f2e75 100%);
+  color:#fff;position:fixed;top:4rem;bottom:0;left:0;padding:var(--spacing-xl) 0;display:flex;flex-direction:column;border-right:1px solid rgba(219,230,255,.35);
   transition:width .3s cubic-bezier(.4,0,.2,1),left .3s ease;z-index:999;overflow-y:auto;backdrop-filter:blur(10px)}
 .sidebar::-webkit-scrollbar{width:6px}
 .sidebar::-webkit-scrollbar-track{background:transparent}
@@ -112,9 +112,9 @@ main{margin-left:16rem;padding:5.25rem var(--spacing-xl) 2.5rem;min-height:100vh
 .section .header-actions,.top-buttons{display:flex;align-items:center;gap:var(--spacing-md)}
 .subtitle{margin-top:-.375rem;color:var(--neutral-500);font-size:.875rem}
 
-/* ============================================
+/* ====================================================================================================================================
    Search Components
-   ============================================ */
+   ==================================================================================================================================== */
 .search-wrapper{display:flex;align-items:center;min-width:18rem;background:#fff;border-radius:var(--radius-full);overflow:hidden;
   box-shadow:0 4px 12px rgba(0,0,0,.08);transition:all .25s ease;backdrop-filter:blur(8px)}
 .search-wrapper:focus-within{box-shadow:0 0 0 4px rgba(37,99,235,.12),0 6px 14px rgba(0,0,0,.1);transform:translateY(-2px)}
@@ -125,9 +125,9 @@ main{margin-left:16rem;padding:5.25rem var(--spacing-xl) 2.5rem;min-height:100vh
 .search-btn:hover{background:linear-gradient(135deg,var(--primary-600),var(--primary-500));transform:scale(1.1)}
 
 
-/* ============================================
+/* ====================================================================================================================================
    Button Components
-   ============================================ */
+   ==================================================================================================================================== */
 .button-gradient,.add-program-btn,.add-faculty-btn,.add-student-btn,.add-manage-btn,.back-btn{display:inline-flex;align-items:center;
   justify-content:center;gap:var(--spacing-sm);border:none;border-radius:var(--radius-xl);padding:var(--spacing-md) var(--spacing-lg);
   font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);font-size:.875rem;position:relative;overflow:hidden}
@@ -138,9 +138,9 @@ main{margin-left:16rem;padding:5.25rem var(--spacing-xl) 2.5rem;min-height:100vh
   border:1px solid var(--accent-400)}
 .back-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-xl);background:linear-gradient(135deg,var(--accent-100) 0%,var(--accent-600) 100%)}
 
-/* ============================================
+/* ====================================================================================================================================
    Dashboard
-   ============================================ */
+   ==================================================================================================================================== */
 .dashboard-box{background:linear-gradient(135deg,#fff 0%,var(--primary-50) 65%,var(--accent-50) 100%);padding:var(--spacing-xl);
   border-radius:var(--radius-2xl);margin:0 0 var(--spacing-xl);border:1px solid var(--border-color);box-shadow:var(--shadow-lg);
   backdrop-filter:blur(10px);position:relative;overflow:hidden}
@@ -186,9 +186,9 @@ main{margin-left:16rem;padding:5.25rem var(--spacing-xl) 2.5rem;min-height:100vh
 .ratings-box td i,.ranking-box td i{color:var(--accent-500);margin-right:var(--spacing-xs);font-size:.875rem}
 
 
-/* ============================================
+/* ====================================================================================================================================
    Table Components
-   ============================================ */
+   ==================================================================================================================================== */
 .table-wrapper{width:100%;margin:0;overflow-x:auto;border-radius:var(--radius-2xl);box-shadow:var(--shadow-md)}
 table{width:100%;border-collapse:separate;border-spacing:0;border-radius:var(--radius-2xl);overflow:hidden;box-shadow:none;
   border:1px solid var(--border-color);background:#fff;backdrop-filter:blur(10px)}
@@ -223,9 +223,9 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 .action-cell .delete-btn:hover,.actions .delete-btn:hover{background:#fecaca!important}
 .action-cell .view-btn:hover,.action-cell .view-subjects-btn:hover{background:var(--primary-200)!important}
 
-/* ============================================
+/* ====================================================================================================================================
    Top Buttons & Filters
-   ============================================ */
+   ==================================================================================================================================== */
 .top-buttons{gap:var(--spacing-sm);padding:0 0 var(--spacing-lg)}
 .top-buttons button{border:none;padding:var(--spacing-sm) var(--spacing-md);border-radius:var(--radius-lg);font-weight:700;cursor:
   pointer;transition:all .2s cubic-bezier(.4,0,.2,1);background:var(--primary-100);color:var(--primary-900);font-size:.875rem;box-shadow:var(--shadow-sm)}
@@ -233,7 +233,7 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   text-shadow:0 1px 2px rgba(0,0,0,.1)}
 .top-buttons button:hover:not(.active){background:var(--primary-200);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 
-/* ============================================
+/* ====================================================================================================================================
    Modal Components
    ============================================ */
 .modal{display:none;position:fixed;z-index:10001;left:0;top:0;width:100%;height:100%;background:rgba(15,23,42,.6);justify-content:center;
@@ -299,9 +299,9 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   box-shadow:0 10px 15px -3px rgba(30,64,175,.3),0 4px 6px -2px rgba(30,64,175,.2);text-shadow:0 1px 2px rgba(0,0,0,.2);position:relative;overflow:hidden;box-sizing:border-box;border:1px solid rgba(255,255,255,.15)}
 .submit-btn:hover{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 50%,#1d4ed8 100%)}
 
-/* ============================================
+/* ====================================================================================================================================
    Delete Modal Components
-   ============================================ */
+   ==================================================================================================================================== */
 .delete-modal-card{width:20rem;max-width:90%;min-height:16rem;padding:var(--spacing-xl);word-wrap:break-word;overflow-wrap:break-word;
   border-radius:var(--radius-2xl);background:#fff;text-align:center;box-shadow:var(--shadow-xl);display:flex;flex-direction:column;
   justify-content:center;align-items:center;gap:var(--spacing-md);border-top:6px solid var(--error)}
@@ -332,9 +332,9 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   border-radius:var(--radius-lg);cursor:pointer;font-size:.9375rem;font-weight:700;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-md)}
 #deleteSuccessModal .ok-btn:hover{background:#059669;transform:translateY(-1px);box-shadow:var(--shadow-lg)}
 
-/* ============================================
+/* ====================================================================================================================================
    Faculty & Student Forms
-   ============================================ */
+   ==================================================================================================================================== */
 #faculty-number,#faculty-email,#faculty-firstname,#faculty-lastname,#faculty-suffix{margin-top:var(--spacing-xs);
   padding:var(--spacing-md);border:2px solid #d1d5db;border-radius:var(--radius-lg);font-size:.875rem;width:100%;background:#fff;
   transition:all .2s ease;box-sizing:border-box;outline:none;color:var(--neutral-900)}
@@ -372,6 +372,9 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 #addCategoryModal .form-row label{font-size:.85rem;font-weight:700;color:var(--slate-500);margin:0;}
 
 
+/* ====================================================================================================================================
+   Criteria
+   ==================================================================================================================================== */
 .criteria-layout{display:flex;gap:24px;margin-top:24px;align-items:flex-start;}
 .categories-column{flex:2;display:flex;flex-direction:column;gap:24px;}
 .criteria-category{background:#fff;border:1px solid var(--border);border-radius:16px;padding:0;box-shadow:var(--shadow-sm);overflow:hidden;}
@@ -422,7 +425,9 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   color:#94a3b8;margin:0;}
 .category-label .category-name{font-size:.9rem;font-weight:700;color:#d97706;}
 
-
+/* ====================================================================================================================================
+   Logout form
+   ==================================================================================================================================== */
 .logoutform {
   display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;}
 .logout-content {background:#fff;padding:30px;border-radius:20px;text-align:center;min-width:250px;
@@ -451,6 +456,9 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   font-weight:700;z-index:9999;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,0.2);opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;}
 .notification.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 
+/* ====================================================================================================================================
+   Evaluation Report
+   ==================================================================================================================================== */
 #report-section .box{width:95%;}
 .report-header{margin:-24px -24px 0;padding:28px 30px;display:flex;justify-content:space-between;align-items:center;gap:20px;
   background:radial-gradient(circle at top right, rgba(250,204,21,.30), transparent 30%),linear-gradient(135deg,#eff6ff 0%,#ffffff 50%,#fefce8 100%);
@@ -615,3 +623,217 @@ main{margin-left:0!important;width:100%!important;padding:5rem var(--spacing-md)
 .form-row label{display:block;margin-bottom:5px;font-weight:500;color:#374151}
 .form-row input,.form-row select{width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:14px}
 .form-row input:focus,.form-row select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+
+/* ============================================
+   Modern Clean Content Refresh
+   ============================================ */
+body{
+  background:#f3f6fb;
+}
+
+main{
+  background:transparent;
+}
+
+.section .box{
+  background:#ffffff;
+  border:1px solid #e5eaf4;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06);
+}
+
+.section .box::before{
+  height:4px;
+  background:linear-gradient(90deg,#1e3a8a 0%,#3b82f6 100%);
+}
+
+.section-header{
+  background:#f9fbff;
+  border-bottom:1px solid #e5eaf4;
+}
+
+.section-header h2{
+  color:#1e3a8a;
+  text-shadow:none;
+}
+
+.dashboard-box,
+.dashboard-card,
+.graph-box,
+.ratings-box,
+.ranking-box{
+  background:#ffffff;
+  border:1px solid #e5eaf4;
+  box-shadow:0 8px 24px rgba(15,23,42,.06);
+}
+
+.dashboard-box::before{
+  animation:none;
+  opacity:.35;
+}
+
+.dashboard-card,
+.icon-box,
+.subject-card,
+#viewStudentSubjectsModal .subject-card{
+  transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease;
+}
+
+.dashboard-card:hover,
+.subject-card:hover,
+#viewStudentSubjectsModal .subject-card:hover{
+  transform:none;
+  box-shadow:0 10px 24px rgba(15,23,42,.08);
+}
+
+.search-wrapper{
+  border:1px solid #dbe5f3;
+  box-shadow:none;
+}
+
+.search-wrapper:focus-within{
+  transform:none;
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+.search-btn{
+  transition:background-color .2s ease,box-shadow .2s ease;
+}
+
+.search-btn:hover{
+  transform:none;
+}
+
+.button-gradient,
+.add-program-btn,
+.add-faculty-btn,
+.add-student-btn,
+.add-manage-btn,
+.back-btn,
+.submit-btn,
+.cancel-btn,
+.top-buttons button,
+.action-cell .manage-btn,
+.action-cell .edit-btn,
+.action-cell .delete-btn,
+.action-cell .view-btn,
+.action-cell .view-subjects-btn,
+.actions .edit-btn,
+.actions .delete-btn{
+  transition:background-color .2s ease,color .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+
+.button-gradient:hover,
+.add-program-btn:hover,
+.add-faculty-btn:hover,
+.add-student-btn:hover,
+.add-manage-btn:hover,
+.back-btn:hover,
+.submit-btn:hover,
+.cancel-btn:hover,
+.top-buttons button:hover,
+.action-cell .manage-btn:hover,
+.action-cell .edit-btn:hover,
+.action-cell .delete-btn:hover,
+.action-cell .view-btn:hover,
+.action-cell .view-subjects-btn:hover,
+.actions .edit-btn:hover,
+.actions .delete-btn:hover{
+  transform:none;
+}
+
+.modal-content{
+  animation:none;
+  box-shadow:0 20px 40px rgba(15,23,42,.12);
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus,
+#subject-search:focus,
+#addFacultyModal input:focus,
+#addStudentModal input:focus,
+#addStudentModal select:focus,
+.form-row input:focus,
+.form-row select:focus{
+  transform:none;
+}
+
+table{
+  border:1px solid #e4ebf6;
+}
+
+th{
+  background:linear-gradient(90deg,#0f2e75 0%,#1e3a8a 100%);
+}
+
+tr:hover td{
+  background:#f7faff;
+}
+
+/* ============================================
+   Requested UI Overrides
+   ============================================ */
+.ratings-box h4,
+.graph-box h4,
+.ranking-box h4{
+  background:linear-gradient(90deg,#0f2e75 0%,#1e3a8a 100%) !important;
+}
+
+.button-gradient,
+.add-program-btn,
+.add-faculty-btn,
+.add-student-btn,
+.add-manage-btn{
+  background:linear-gradient(135deg,#2563eb,#3b82f6) !important;
+  color:#fff;
+}
+
+.button-gradient:hover,
+.add-program-btn:hover,
+.add-faculty-btn:hover,
+.add-student-btn:hover,
+.add-manage-btn:hover{
+  background:linear-gradient(135deg,#1d4ed8,#2563eb) !important;
+}
+
+.back-btn{
+  background:linear-gradient(135deg,#dc2626,#ef4444) !important;
+  color:#fff !important;
+  border:1px solid #b91c1c !important;
+}
+
+.back-btn:hover{
+  background:linear-gradient(135deg,#b91c1c,#dc2626) !important;
+}
+
+#addFacultyModal,
+#addStudentModal{
+  align-items:center;
+  justify-content:center;
+  overflow:auto;
+  padding:clamp(10px,2.5vw,20px);
+}
+
+#addFacultyModal .modal-content,
+#addStudentModal .modal-content{
+  width:min(600px,94vw);
+  max-width:600px;
+  margin:0 auto;
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+  transform:none !important;
+}
+
+@media (max-width:768px){
+  #addFacultyModal .form-row,
+  #addStudentModal .form-row{
+    flex-direction:row !important;
+    gap:var(--spacing-sm);
+  }
+  #addFacultyModal .modal-content,
+  #addStudentModal .modal-content{
+    width:min(600px,95vw);
+  }
+}
