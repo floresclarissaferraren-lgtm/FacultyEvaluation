@@ -260,6 +260,7 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   overflow-y:auto;max-height:calc(95vh - 120px);-webkit-overflow-scrolling:touch}#addFacultyModal .section-box,
 #addStudentModal .section-box{padding:var(--spacing-xs)}}
 #addFacultyModal .modal-body,#addStudentModal .modal-body{padding:var(--spacing-lg);gap:var(--spacing-sm)}
+#addFacultyModal .modal-body{max-height:70vh;overflow-y:auto;padding-right:8px}
 #addFacultyModal .form-row,#addStudentModal .form-row{gap:var(--spacing-xs);margin-bottom:var(--spacing-xs)}
 #addFacultyModal input,#addStudentModal input,#addFacultyModal select,#addStudentModal select{padding:var(--spacing-sm);font-size:.8125rem}
 #addFacultyModal .section-box,#addStudentModal .section-box{padding:var(--spacing-sm);margin-top:var(--spacing-sm)}
@@ -551,6 +552,13 @@ main{margin-left:0!important;width:100%!important;padding:5rem var(--spacing-md)
 .subject-item:hover{border-color:var(--primary-300);background:var(--primary-50)}
 .subject-item.selected{border-color:var(--primary-500);background:var(--primary-100)}
 .subject-checkbox{width:20px;height:20px;margin-right:16px;margin-top:2px;accent-color:var(--primary-500);flex-shrink:0}
+
+/* Faculty Subject Checkboxes */
+.faculty-subjects-checkboxes{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto}
+.subject-checkbox-item{display:flex;align-items:center;padding:8px 12px;border:1px solid var(--neutral-200);border-radius:6px;background:#fff;
+  cursor:pointer;transition:all .2s ease;font-size:14px}
+.subject-checkbox-item:hover{background:var(--primary-50);border-color:var(--primary-300)}
+.subject-checkbox-item input[type="checkbox"]{margin-right:12px;accent-color:var(--primary-500);transform:scale(1.1)}
 .subject-info{flex:1;display:flex;flex-direction:column;gap:2px}
 .subject-code{font-weight:600;color:var(--neutral-800);font-size:14px;margin-bottom:1px}
 .subject-desc{color:var(--neutral-600);font-size:12px;line-height:1.3}

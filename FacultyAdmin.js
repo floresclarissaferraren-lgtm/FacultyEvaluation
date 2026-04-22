@@ -1017,6 +1017,10 @@ function loadFaculty() {
           document.getElementById("faculty-lastname").value = f.lastname || "";
           document.getElementById("faculty-suffix").value = f.suffix || "";
 
+          // Set program and year level
+          document.getElementById("faculty-program").value = f.program || "";
+          document.getElementById("faculty-yearlevel").value = f.yearlevel || "";
+
           const preview = document.getElementById("faculty-photo-preview");
           preview.src = f.photo || "";
           preview.hidden = !f.photo;
@@ -1041,6 +1045,28 @@ document.querySelector(".add-faculty-btn").onclick = () => {
     if (i.id !== "faculty-number") i.value = "";
   });
 
+  // Reset program and year level dropdowns
+  document.getElementById("faculty-program").value = "";
+  document.getElementById("faculty-yearlevel").value = "";
+  
+  // Clear subjects list
+  document.getElementById("faculty-subjects-list").innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
+
+  // Load programs for faculty
+  loadFacultyPrograms();
+
+  // Add event listeners for dynamic subject loading
+  const facultyProgramSelect = document.getElementById("faculty-program");
+  const facultyYearSelect = document.getElementById("faculty-yearlevel");
+  
+  // Remove existing listeners to avoid duplicates
+  facultyProgramSelect.removeEventListener("change", fetchFacultySubjects);
+  facultyYearSelect.removeEventListener("change", fetchFacultySubjects);
+  
+  // Add new listeners
+  facultyProgramSelect.addEventListener("change", fetchFacultySubjects);
+  facultyYearSelect.addEventListener("change", fetchFacultySubjects);
+
   document.getElementById("faculty-photo-preview").hidden = true;
   delete addFacultyModal.dataset.editRow;
   openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY");
@@ -1053,13 +1079,15 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
         f = document.getElementById("faculty-firstname").value.trim(),
         l = document.getElementById("faculty-lastname").value.trim(),
         s = document.getElementById("faculty-suffix").value.trim(),
+        program = document.getElementById("faculty-program").value,
+        yearlevel = document.getElementById("faculty-yearlevel").value,
         photo = document.getElementById("faculty-photo-preview").hidden ? "" : document.getElementById("faculty-photo-preview").src;
 
-  if (!n || !e || !f || !l) return showNotification("Required fields missing!", "#f44336");
+  if (!n || !e || !f || !l || !program || !yearlevel) return showNotification("Required fields missing!", "#f44336");
 
   // Get selected subjects
   const selectedSubjects = [];
-  document.querySelectorAll('#addFacultyModal .subjects-list input[type="checkbox"]:checked').forEach(checkbox => {
+  document.querySelectorAll('#faculty-subjects-list input[type="checkbox"]:checked').forEach(checkbox => {
     selectedSubjects.push(parseInt(checkbox.value));
   });
 
@@ -1071,6 +1099,8 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
     firstname: f,
     lastname: l,
     suffix: s,
+    program: program,
+    yearlevel: yearlevel,
     subjects: selectedSubjects
   };
 
@@ -1080,7 +1110,7 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
   }
 
   try {
-    const response = await fetch("faculty_crud_simple.php", {
+    const response = await fetch("faculty_crud.php", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(facultyData)
@@ -1300,10 +1330,10 @@ function loadStudentPrograms(){
   return fetch("get_StudentProgram.php")
     .then(r => r.json())
     .then(data => {
-      programs = data.map(p => p.name); // Extract just the names for display
+      programs = data; // Store full program objects with id and name
       programSelect.innerHTML = `<option value="" disabled selected>-- Select Program --</option>`;
       data.forEach(program => {
-        programSelect.insertAdjacentHTML("beforeend", `<option value="${program.name}">${program.name}</option>`);
+        programSelect.insertAdjacentHTML("beforeend", `<option value="${program.id}">${program.name}</option>`);
       });
       return data; // Return data for chaining
     })
@@ -1311,6 +1341,63 @@ function loadStudentPrograms(){
       console.error("Error loading programs:", err);
       throw err; // Re-throw to maintain Promise rejection
     });
+}
+
+// Load Programs for Faculty Form -------------------
+function loadFacultyPrograms(){
+  return fetch("get_StudentProgram.php")
+    .then(r => r.json())
+    .then(data => {
+      const facultyProgramSelect = document.getElementById("faculty-program");
+      facultyProgramSelect.innerHTML = `<option value="">Select Program</option>`;
+      data.forEach(program => {
+        facultyProgramSelect.insertAdjacentHTML("beforeend", `<option value="${program.id}">${program.name}</option>`);
+      });
+      return data;
+    })
+    .catch(err => {
+      console.error("Error loading faculty programs:", err);
+      throw err;
+    });
+}
+
+// Function to fetch subjects for faculty based on program and year level
+function fetchFacultySubjects() {
+  const programId = document.getElementById("faculty-program").value;
+  const yearLevel = document.getElementById("faculty-yearlevel").value;
+  const subjectsList = document.getElementById("faculty-subjects-list");
+  
+  if (programId && yearLevel) {
+    // Convert year level number to proper format (e.g., "1" -> "1st Year")
+    const yearLevelFormatted = yearLevel + (yearLevel === "1" ? "st" : yearLevel === "2" ? "nd" : yearLevel === "3" ? "rd" : "th") + " Year";
+    
+    fetch(`subject_crud.php?action=get_by_program_and_year&program_id=${programId}&year_level=${yearLevelFormatted}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.length === 0) {
+          subjectsList.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects found for the selected program and year level</p>';
+        } else {
+          let html = '<div class="faculty-subjects-checkboxes">';
+          data.forEach(subject => {
+            html += `
+              <label class="subject-checkbox-item">
+                <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
+                <span class="checkmark"></span>
+                ${subject.subject_code} - ${subject.subject_desc}
+              </label>
+            `;
+          });
+          html += '</div>';
+          subjectsList.innerHTML = html;
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching faculty subjects:", err);
+        subjectsList.innerHTML = '<p style="color: #dc2626; font-size: 0.9em;">Error loading subjects</p>';
+      });
+  } else {
+    subjectsList.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
+  }
 }
 
 //  Load Students -------------------
@@ -1530,16 +1617,21 @@ function renderSubjectsTable() {
   });
 }
 
-// Open subject selection modal
+// Add Subject button - now just informational since subjects are auto-loaded
 document.getElementById("add-subject-btn")?.addEventListener("click", () => {
   const program = document.getElementById("student-program").value;
-  if (!program) {
-    alert("Please select a program first");
+  const yearLevel = document.getElementById("student-yearlevel").value;
+  
+  if (!program || !yearLevel) {
+    alert("Please select both program and year level to view available subjects");
     return;
   }
   
-  loadAllSubjects();
-  subjectSelectionModal.style.display = "flex";
+  // Subjects are already displayed automatically, so just scroll to the subjects section
+  const subjectsSection = document.querySelector('.section-box h4');
+  if (subjectsSection) {
+    subjectsSection.scrollIntoView({ behavior: 'smooth' });
+  }
 });
 
 // Close modal handlers
@@ -1616,6 +1708,87 @@ function updateSelectedSubjectsDisplay() {
         const subjectId = parseInt(e.currentTarget.dataset.id);
         selectedSubjects = selectedSubjects.filter(s => s.id !== subjectId);
         updateSelectedSubjectsDisplay();
+      });
+    });
+  }
+}
+
+// Function to display available subjects for selection
+function updateAvailableSubjectsDisplay(availableSubjects) {
+  const container = document.getElementById("selected-subjects");
+  
+  if (availableSubjects.length === 0) {
+    container.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
+  } else {
+    let html = '<div class="available-subjects-section">';
+    html += '<h5 style="margin-bottom: 10px; color: #374151;">Available Subjects:</h5>';
+    html += '<div class="available-subjects-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;">';
+    
+    availableSubjects.forEach(subject => {
+      const isSelected = selectedSubjects.some(s => s.id === subject.id);
+      html += `
+        <div class="available-subject-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; margin-bottom: 5px; background: ${isSelected ? '#dbeafe' : '#f9fafb'}; border-radius: 4px; border: 1px solid ${isSelected ? '#bfdbfe' : '#e5e7eb'};">
+          <div style="flex: 1;">
+            <strong>${subject.subject_code}</strong> - ${subject.subject_desc}
+          </div>
+          <button type="button" class="select-subject-btn" data-id="${subject.id}" data-code="${subject.subject_code}" data-desc="${subject.subject_desc}" data-year="${subject.year_level}" style="background: ${isSelected ? '#dc2626' : '#2563eb'}; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            ${isSelected ? 'Remove' : 'Add'}
+          </button>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    
+    if (selectedSubjects.length > 0) {
+      html += '<h5 style="margin-top: 15px; margin-bottom: 10px; color: #374151;">Selected Subjects:</h5>';
+      html += '<div class="selected-subjects-list">';
+      selectedSubjects.forEach(subject => {
+        html += `
+          <div class="selected-subject-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px; margin-bottom: 3px; background: #dbeafe; border-radius: 4px;">
+            <span>${subject.subject_code} - ${subject.subject_desc}</span>
+            <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `;
+      });
+      html += '</div>';
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Add event listeners for select/remove buttons
+    container.querySelectorAll(".select-subject-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const subjectId = parseInt(e.currentTarget.dataset.id);
+        const subjectCode = e.currentTarget.dataset.code;
+        const subjectDesc = e.currentTarget.dataset.desc;
+        const subjectYear = e.currentTarget.dataset.year;
+        
+        const subject = { id: subjectId, subject_code: subjectCode, subject_desc: subjectDesc, year_level: subjectYear };
+        
+        const existingIndex = selectedSubjects.findIndex(s => s.id === subjectId);
+        if (existingIndex >= 0) {
+          // Remove from selected
+          selectedSubjects.splice(existingIndex, 1);
+        } else {
+          // Add to selected
+          selectedSubjects.push(subject);
+        }
+        
+        // Refresh the display
+        updateAvailableSubjectsDisplay(availableSubjects);
+      });
+    });
+    
+    // Add remove handlers for selected subjects
+    container.querySelectorAll(".remove-subject").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const subjectId = parseInt(e.currentTarget.dataset.id);
+        selectedSubjects = selectedSubjects.filter(s => s.id !== subjectId);
+        updateAvailableSubjectsDisplay(availableSubjects);
       });
     });
   }
@@ -1912,6 +2085,39 @@ function initAddStudentButton() {
       
       // Load programs to ensure dropdown is populated
       loadStudentPrograms();
+      
+      // Add event listeners for automatic subject fetching
+      const studentProgramSelect = document.getElementById("student-program");
+      const studentYearSelect = document.getElementById("student-yearlevel");
+      
+      // Function to fetch subjects when both program and year are selected
+      function fetchSubjectsForStudent() {
+        const programId = studentProgramSelect.value;
+        const yearLevel = studentYearSelect.value;
+        
+        if (programId && yearLevel) {
+          // Convert year level number to proper format (e.g., "1" -> "1st Year")
+          const yearLevelFormatted = yearLevel + (yearLevel === "1" ? "st" : yearLevel === "2" ? "nd" : yearLevel === "3" ? "rd" : "th") + " Year";
+          
+          fetch(`subject_crud.php?action=get_by_program_and_year&program_id=${programId}&year_level=${yearLevelFormatted}`)
+            .then(r => r.json())
+            .then(data => {
+              // Update the selected subjects display with available subjects
+              updateAvailableSubjectsDisplay(data);
+            })
+            .catch(err => {
+              console.error("Error fetching subjects:", err);
+              updateAvailableSubjectsDisplay([]);
+            });
+        } else {
+          // Clear available subjects if not both are selected
+          updateAvailableSubjectsDisplay([]);
+        }
+      }
+      
+      // Add change event listeners
+      studentProgramSelect.addEventListener("change", fetchSubjectsForStudent);
+      studentYearSelect.addEventListener("change", fetchSubjectsForStudent);
       
       // Reset selected subjects
       selectedSubjects = [];

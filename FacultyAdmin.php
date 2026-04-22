@@ -386,9 +386,28 @@
         <label>Suffix <input id="faculty-suffix" placeholder="Jr., III"></label>
       </div>
       
+      <div class="form-row">
+        <div>
+          <label for="faculty-program">Program</label>
+          <select id="faculty-program">
+            <option value="">Select Program</option>
+          </select>
+        </div>
+        <div>
+          <label for="faculty-yearlevel">Year Level</label>
+          <select id="faculty-yearlevel">
+            <option value="">Select Year Level</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
+        </div>
+      </div>
+      
       <div class="section-box subjects-box">
         <h4><i class="fas fa-book"></i> Subjects</h4>
-        <div class="subjects-list"></div>
+        <div id="faculty-subjects-list" class="subjects-list"></div>
       </div>
       <button class="submit-btn">SAVE FACULTY</button>
     </div>

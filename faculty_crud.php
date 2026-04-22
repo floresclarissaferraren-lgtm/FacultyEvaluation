@@ -212,7 +212,7 @@ elseif ($action === "edit") {
     }
 
     $stmt = $conn->prepare("
-        UPDATE add_faculty 
+        UPDATE add_faculties 
         SET firstname=?, lastname=?, suffix=?, email=?, program=?, yearlevel=? 
         WHERE id=?
     ");
