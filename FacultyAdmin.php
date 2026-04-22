@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System</title>
-  <link rel="stylesheet" href="FacultyAdmin.css?v=<?=time()?>">
+  <link rel="stylesheet" href="FacultyAdmin.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -689,6 +689,6 @@
     font-size: 14px;
 "></div>
 
-<script src="/FacultyEvaluation/FacultyAdmin.js?v=<?=time()?>"></script>
+<script src="FacultyAdmin.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

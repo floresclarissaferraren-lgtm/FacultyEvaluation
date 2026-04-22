@@ -227,7 +227,7 @@ function showLogoutModal(e) {
 function closeLogoutModal() {
   logoutModal.style.display = "none";}
 function confirmLogout() {
-  window.location.href = "http://localhost/FacultyEvaluation/EvalMain.php";}
+  window.location.href = "EvalMain.php";}
 
 logoutContent.addEventListener("click", e => e.stopPropagation());
 logoutModal.addEventListener("click", closeLogoutModal);
