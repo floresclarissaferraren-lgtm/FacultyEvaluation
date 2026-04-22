@@ -211,6 +211,15 @@ elseif ($action === "edit") {
         exit;
     }
 
+    // Get current faculty_id for email
+    $getFacultyId = $conn->prepare("SELECT faculty_id FROM add_faculties WHERE id=?");
+    $getFacultyId->bind_param("i", $id);
+    $getFacultyId->execute();
+    $result = $getFacultyId->get_result();
+    $facultyData = $result->fetch_assoc();
+    $faculty_id = $facultyData['faculty_id'] ?? '';
+    $getFacultyId->close();
+
     $stmt = $conn->prepare("
         UPDATE add_faculties 
         SET firstname=?, lastname=?, suffix=?, email=?, program=?, yearlevel=? 
@@ -248,10 +257,71 @@ elseif ($action === "edit") {
             $subjectStmt->close();
         }
 
-        echo json_encode([
-            "success" => true,
-            "message" => "Faculty updated successfully"
-        ]);
+        /* =========================
+           SEND EMAIL NOTIFICATION
+        ========================= */
+        $mail = new PHPMailer(true);
+
+        try {
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+
+            $mail->Username = 'floresclarissaferraren@gmail.com';
+            $mail->Password = 'nicj elgi ruam ozca';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+
+            $mail->SMTPAutoTLS = true;
+
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
+
+            $mail->SMTPDebug = 0;
+
+            $mail->setFrom('floresclarissaferraren@gmail.com', 'Faculty Evaluation System');
+            $mail->addAddress($email, $firstname . " " . $lastname);
+
+            $mail->isHTML(true);
+            $mail->Subject = "Your Faculty Account Information Updated";
+            $mail->Body = "
+                <h2>Faculty Evaluation System</h2>
+                <p>Hello <b>$firstname $lastname</b>,</p>
+
+                <p>Your faculty account information has been updated.</p>
+
+                <p><b>Faculty ID:</b> $faculty_id</p>
+                <p><b>Email:</b> $email</p>
+                <p><b>Program:</b> $program</p>
+                <p><b>Year Level:</b> $yearlevel</p>
+
+                <br>
+                <p>If you have any questions, please contact the administrator.</p>
+
+                <br>
+                <p>Regards,<br>Faculty Evaluation System</p>
+            ";
+
+            $mail->send();
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Faculty updated successfully. Email sent!"
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Mailer Error: " . $mail->ErrorInfo);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Faculty updated successfully, but email failed: " . $mail->ErrorInfo
+            ]);
+        }
     } else {
         echo json_encode([
             "success" => false,
@@ -277,7 +347,7 @@ elseif ($action === "delete") {
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM add_faculty WHERE id=?");
+    $stmt = $conn->prepare("DELETE FROM add_faculties WHERE id=?");
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -293,6 +363,13 @@ elseif ($action === "delete") {
     }
 
     $stmt->close();
+}
+
+ else {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid action"
+    ]);
 }
 
 $conn->close();
