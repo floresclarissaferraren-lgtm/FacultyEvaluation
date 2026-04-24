@@ -4,7 +4,7 @@ body{background:#f4f6fb;color:#333;min-height:100%;overflow-x:hidden}
 
 /* NAVBAR =====================================================================================================================================*/
 nav{display:flex;justify-content:space-between;align-items:center;padding:16px 2% 16px 8%;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.06)
-  ;position:sticky;top:0;z-index:100}
+  ;position:sticky;top:0;z-index:100;pointer-events:auto}
 
 .logo-container{display:flex;align-items:center;gap:12px}
 .logo-img{width:42px;height:42px}
@@ -27,7 +27,7 @@ nav ul li a.active::after{width:100%;background:#2563eb}
 .dropdown-menu{position:absolute;top:48px;right:0;background:#fff;width:190px;border-radius:10px;box-shadow:0 12px 28px rgba(37,99,235,.15);
   backdrop-filter:blur(8px);border:1px solid #e2e8f0;overflow:hidden;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
 .dropdown:hover .dropdown-menu{opacity:1;transform:translateY(0);pointer-events:auto}
-.dropdown-menu a{display:flex;align-items:center;gap:10px;padding:12px 16px;text-decoration:none;color:#333;font-size:14px;transition:background .2s}
+.dropdown-menu a{display:flex;align-items:center;gap:10px;padding:12px 16px;text-decoration:none;color:#333;font-size:14px;transition:background .2s;pointer-events:auto}
 .dropdown-menu a:hover{background:#f1f5f9}
 
 .hamburger{display:none;font-size:30px;cursor:pointer;color:#333;transition:transform .3s ease}
@@ -36,7 +36,7 @@ nav ul li a.active::after{width:100%;background:#2563eb}
 @media(max-width:768px){
   nav ul{position:absolute;top:70px;right:0;width:220px;padding:0;background:#fff;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.15);
     display:none;flex-direction:column;align-items:stretch;gap:0;transform:translateX(100%);opacity:0;transition:transform .35s ease,opacity .35s ease}
-  nav ul.show{display:flex;transform:translateX(0);opacity:1}
+  nav ul.show{display:flex;transform:translateX(0);opacity:1;pointer-events:auto}
   nav ul li a{display:flex;align-items:center;gap:10px;padding:12px 20px;width:100%;color:#333;text-decoration:none;border-radius:0;
     box-sizing:border-box;transition:background .3s}
   nav ul li a:hover{background:#e0e0e0;border-radius:8px}
@@ -44,7 +44,7 @@ nav ul li a.active::after{width:100%;background:#2563eb}
 }
 
 /* HOME =====================================================================================================================================*/
-.home{display:flex;align-items:center;justify-content:space-between;padding:80px 10%;background:#f8fafc}
+.home{display:flex;align-items:center;justify-content:space-between;padding:80px 10%;background:#f8fafc;pointer-events:none}
 .home-text{max-width:560px}
 .home-text h1{font-size:48px;font-weight:700;color:#0f172a;margin-bottom:24px;line-height:1.2}
 .home-text p{line-height:1.7;color:#475569;margin-bottom:36px;font-size:18px}
@@ -55,7 +55,7 @@ nav ul li a.active::after{width:100%;background:#2563eb}
 
 
 /* ABOUT =====================================================================================================================================*/
-.about{padding:40px 5% 60px;text-align:center;background:#fff}
+.about{padding:40px 5% 60px;text-align:center;background:#fff;pointer-events:none}
 .about h2{font-size:32px;margin-bottom:18px;color:#1e293b;font-weight:700;letter-spacing:.5px;position:relative}
 .about h2::after{content:"";display:block;width:60px;height:3px;background:#3b82f6;margin:12px auto 0;border-radius:2px}
 .about-desc{max-width:700px;margin:0 auto 30px;line-height:1.7;color:#475569;font-size:16px}

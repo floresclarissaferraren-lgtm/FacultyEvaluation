@@ -204,6 +204,40 @@ if ($action === "get_all_by_program") {
     exit;
 }
 
+/* ========================= GET SUBJECTS BY PROGRAM AND YEAR LEVEL ========================= */
+if ($action === "get_by_program_and_year") {
+
+    header("Content-Type: application/json");
+
+    $program_id = $_GET['program_id'] ?? 0;
+    $year_level = $_GET['year_level'] ?? "";
+
+    if (!$program_id || !$year_level) {
+        echo json_encode(["status" => "error", "message" => "Program ID and year level are required"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("
+        SELECT id, subject_code, subject_desc, year_level
+        FROM add_subjects
+        WHERE program_id = ? AND year_level = ?
+        ORDER BY subject_code ASC
+    ");
+
+    $stmt->bind_param("is", $program_id, $year_level);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode($data);
+    exit;
+}
+
 /* ========================= DEFAULT ========================= */
 echo json_encode([
     "status" => "error",

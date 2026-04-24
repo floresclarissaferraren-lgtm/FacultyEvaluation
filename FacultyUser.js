@@ -13,7 +13,7 @@ window.closeLogoutModal = () => {
   document.getElementById("logoutModal").style.display = "none";
 };
 
-window.confirmLogout = () => location.href = "FacultyUser.php?logout=true";
+window.confirmLogout = () => location.href = "EvalMain.php?logout=true";
 window.logout = e => { 
   e.preventDefault(); 
   showLogoutModal(); 

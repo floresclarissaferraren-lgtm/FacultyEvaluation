@@ -189,6 +189,6 @@
   </div>
 </div>
 
-<script src="/FacultyEvaluation/Evalmain.js?v=<?=time()?>"></script>
+<script src="EvalMain.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
