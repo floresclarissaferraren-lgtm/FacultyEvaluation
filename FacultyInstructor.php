@@ -14,7 +14,7 @@
 <div class="navbar">
   <div class="brand">
     <i class="fas fa-graduation-cap"></i>
-    <span class="logo-text main-title">FaculRate</span>
+    <span class="logo-text main-title">Faculty Evaluation System</span>
   </div>
 
   <div class="user-menu">
