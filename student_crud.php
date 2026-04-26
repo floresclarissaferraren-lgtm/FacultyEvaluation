@@ -278,11 +278,13 @@ elseif ($action === "delete") {
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
+        error_log("Student deleted successfully, ID: " . $id);
         echo json_encode([
             "success" => true,
             "message" => "Student deleted successfully"
         ]);
     } else {
+        error_log("Student delete failed for ID: " . $id . ", Error: " . $stmt->error);
         echo json_encode([
             "success" => false,
             "message" => $stmt->error

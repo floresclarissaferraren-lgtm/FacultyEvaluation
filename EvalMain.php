@@ -14,20 +14,13 @@
 <nav>
 <div class="logo-container">
 <img class="logo-img" src="schoollogo.png">
-<div class="logo-text"><span class="main-title">FaculRate</span><span class="sub-title">Granby Colleges of Science and Technology</span></div>
+<div class="logo-text"><span class="main-title">Faculty Evaluation</span><span class="sub-title">Granby Colleges of Science and Technology</span></div>
 </div>
 <ul id="navMenu">
 <li><a href="#home"><span class="material-icons">home</span>Home</a></li>
 <li><a href="#about"><span class="material-icons">info</span>About</a></li>
 <li><a href="#contact"><span class="material-icons">mail</span>Contact</a></li>
-<li class="dropdown">
-<div class="profile-btn"><span class="material-icons">account_circle</span>My Profile<span class="material-icons">expand_more</span></div>
-<div class="dropdown-menu">
-<a href="#"><span class="material-icons">admin_panel_settings</span>Admin</a>
-<a href="#"><span class="material-icons">school</span>Instructor</a>
-<a href="#"><span class="material-icons">person</span>Student</a>
-</div>
-</li>
+<li><a href="#" id="loginBtn" class="login-btn"><span class="material-icons">login</span>Login</a></li>
 </ul>
 <div class="hamburger" id="hamburger"><span class="material-icons">menu</span></div>
 </nav>
@@ -83,110 +76,45 @@
 
 <footer>© 2026 Faculty Evaluation System | All Rights Reserved</footer>
 
-<!-- STUDENT LOGIN ==============================================================================================================-->
-<div class="LoginForm" id="studentLoginModal">
+<!-- LOGIN ==============================================================================================================-->
+<div class="LoginForm" id="loginModal">
   <div class="LoginForm-content">
     <div class="LoginForm-header">
       <img src="schoollogo.png" class="logo">
-      <div class="back-btn" id="closeStudentLogin">Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+      <div class="back-btn" id="closeLogin">Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div>
     </div>
-    <h2>Student Login</h2>
-    <p class="LoginForm-subtitle"><span></span>Enter your account details<span></span></p>
-    <form id="studentLoginForm">
+    <h2>Login</h2>
+    <p class="LoginForm-subtitle"><span></span>Enter your credentials<span></span></p>
+    <form id="loginForm">
       <div class="input-group">
         <i class="fa-solid fa-user"></i>
-        <input type="text" id="studentNumber" placeholder="Student ID" required>
-        <small id="studentNumberError" class="error-message"></small>
+        <input type="text" id="username" placeholder="Username/ID" required>
+        <small id="usernameError" class="error-message"></small>
       </div>
       <div class="input-group">
         <i class="fa-solid fa-lock"></i>
-        <input type="password" id="studentPassword" placeholder="Password" required>
+        <input type="password" id="password" placeholder="Password" required>
         <i class="fa-solid fa-eye-slash" id="togglePassword"></i>
-        <small id="studentPasswordError" class="error-message"></small>
+        <small id="passwordError" class="error-message"></small>
       </div>
-      <a href="#" id="openStudentForgot" class="StudentLogin-link">Forgot Password?</a>
+      <a href="#" id="openForgot" class="StudentLogin-link">Forgot Password?</a>
       <button type="submit" class="StudentLogin-btn">Login</button>
     </form>
   </div>
 </div>
 
-
-
-<div class="LoginForm" id="studentForgotModal">
+<!-- FORGOT PASSWORD ==============================================================================================================-->
+<div class="LoginForm" id="forgotModal">
 <div class="LoginForm-content">
-<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeStudentForgot">
+<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeForgot">
     Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div></div>
 <h2>Reset Password</h2>
 <p class="LoginForm-subtitle"><span></span>Enter your email to reset<span></span></p>
-<form>
-<div class="input-group"><i class="fa-solid fa-envelope"></i><input type="email" placeholder="Student Email" required></div>
+<form id="forgotForm">
+<div class="input-group"><i class="fa-solid fa-envelope"></i><input type="email" id="resetEmail" placeholder="Email" required></div>
 <button type="submit" class="StudentLogin-btn">Send Reset Link</button>
 </form>
 </div>
-</div>
-
-<!-- INSTRUCTOR LOGIN ==============================================================================================================-->
-<div class="LoginForm" id="instructorLoginModal">
-  <div class="LoginForm-content">
-    <div class="LoginForm-header">
-      <img src="schoollogo.png" class="logo">
-      <div class="back-btn" id="closeInstructorLogin">Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div>
-    </div>
-    <h2>Instructor Login</h2>
-    <p class="LoginForm-subtitle"><span></span>Enter your credentials<span></span></p>
-    <form>
-      <div class="input-group">
-        <i class="fa-solid fa-chalkboard-user"></i>
-        <input type="text" placeholder="Instructor ID" required>
-      </div>
-      <div class="input-group">
-        <i class="fa-solid fa-lock"></i>
-        <input type="password" id="instructorPassword" placeholder="Password" required>
-        <i class="fa-solid fa-eye-slash" id="togglePassword"></i>
-      </div>
-      <a href="#" id="openInstructorForgot" class="StudentLogin-link">Forgot Password?</a>
-      <button type="submit" class="StudentLogin-btn">Login</button>
-    </form>
-  </div>
-</div>
-
-<div class="LoginForm" id="instructorForgotModal">
-<div class="LoginForm-content">
-<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeInstructorForgot">
-    Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div></div>
-<h2>Reset Password</h2>
-<p class="LoginForm-subtitle"><span></span>Enter your email to reset<span></span></p>
-<form>
-<div class="input-group"><i class="fa-solid fa-envelope"></i><input type="email" placeholder="Instructor Email" required></div>
-<button type="submit" class="StudentLogin-btn">Send Reset Link</button>
-</form>
-</div>
-</div>
-
-<!-- ADMIN LOGIN ==============================================================================================================-->
-<div class="LoginForm" id="adminLoginModal">
-  <div class="LoginForm-content">
-    <div class="LoginForm-header">
-      <img src="schoollogo.png" class="logo">
-      <div class="back-btn" id="closeAdminLogin">
-        Back<i class="fa-solid fa-arrow-up-right-from-square"></i>
-      </div>
-    </div>
-    <h2>Admin Login</h2>
-    <p class="LoginForm-subtitle"><span></span>Enter admin credentials<span></span></p>
-    <form id="adminLoginForm">
-      <div class="input-group">
-        <i class="fa-solid fa-user-gear"></i>
-        <input type="text" name="username" placeholder="Admin ID" required>
-      </div>
-      <div class="input-group">
-        <i class="fa-solid fa-lock"></i>
-        <input type="password" name="password" id="adminPassword" placeholder="Password" required>
-        <i class="fa-solid fa-eye-slash" id="togglePassword" style="cursor:pointer;"></i>
-      </div>
-      <button type="submit" class="StudentLogin-btn">Login</button>
-    </form>
-  </div>
 </div>
 
 <script src="EvalMain.js?v=<?php echo time(); ?>"></script>

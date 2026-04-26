@@ -1,25 +1,6 @@
 const modals = {
-  student: {
-    login: document.getElementById("studentLoginModal"),
-    forgot: document.getElementById("studentForgotModal"),
-    profileBtn: document.querySelector(".dropdown-menu a:nth-child(3)"),
-    openForgot: document.getElementById("openStudentForgot"),
-    closeLogin: document.getElementById("closeStudentLogin"),
-    closeForgot: document.getElementById("closeStudentForgot")
-  },
-  admin: {
-    login: document.getElementById("adminLoginModal"),
-    profileBtn: document.querySelector(".dropdown-menu a:nth-child(1)"),
-    closeLogin: document.getElementById("closeAdminLogin")
-  },
-  instructor: {
-    login: document.getElementById("instructorLoginModal"),
-    forgot: document.getElementById("instructorForgotModal"),
-    profileBtn: document.querySelector(".dropdown-menu a:nth-child(2)"),
-    openForgot: document.getElementById("openInstructorForgot"),
-    closeLogin: document.getElementById("closeInstructorLogin"),
-    closeForgot: document.getElementById("closeInstructorForgot")
-  }
+  login: document.getElementById("loginModal"),
+  forgot: document.getElementById("forgotModal")
 };
 
 const hamburger = document.getElementById("hamburger");
@@ -59,93 +40,117 @@ function toggleHamburgerMenu() {
   if (icon) icon.textContent = navMenu.classList.contains("show") ? "close" : "menu";
 }
 
-// ===================== Profile Buttons =====================
-Object.values(modals).forEach(user => {
-  if (user.profileBtn) user.profileBtn.addEventListener("click", e => {
-    e.preventDefault();
-    openModal(user.login);
-  });
+// ===================== Login Button =====================
+const loginBtn = document.getElementById("loginBtn");
+if (loginBtn) loginBtn.addEventListener("click", e => {
+  e.preventDefault();
+  openModal(modals.login);
 });
 
 // ===================== Close Buttons =====================
-Object.values(modals).forEach(user => {
-  if (user.closeLogin) user.closeLogin.addEventListener("click", () => closeModal(user.login));
-  if (user.closeForgot) user.closeForgot.addEventListener("click", () => switchModal(user.forgot, user.login));
+const closeLogin = document.getElementById("closeLogin");
+if (closeLogin) closeLogin.addEventListener("click", () => closeModal(modals.login));
+
+const closeForgot = document.getElementById("closeForgot");
+if (closeForgot) closeForgot.addEventListener("click", () => switchModal(modals.forgot, modals.login));
+
+// ===================== Forgot Button =====================
+const openForgot = document.getElementById("openForgot");
+if (openForgot) openForgot.addEventListener("click", e => {
+  e.preventDefault();
+  switchModal(modals.login, modals.forgot);
 });
 
-// ===================== Forgot Buttons =====================
-if (modals.student.openForgot) modals.student.openForgot.addEventListener("click", e => {
-   e.preventDefault(); switchModal(modals.student.login, modals.student.forgot); 
-});
-if (modals.instructor.openForgot) modals.instructor.openForgot.addEventListener("click", e => { 
-  e.preventDefault(); switchModal(modals.instructor.login, modals.instructor.forgot); 
-});
 if (hamburger) hamburger.addEventListener("click", toggleHamburgerMenu);
 
-// ===================== Login form submit handlers =====================
-const studentForm = modals.student.login?.querySelector('form');
-if (studentForm) {
-  studentForm.addEventListener('submit', async e => {
+// ===================== Unified Login form submit handler =====================
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+  loginForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const idInput = studentForm.querySelector('#studentNumber');
-    const pwInput = studentForm.querySelector('#studentPassword');
-    const id = idInput?.value.trim();
-    const pw = pwInput?.value.trim();
+    const usernameInput = loginForm.querySelector('#username');
+    const passwordInput = loginForm.querySelector('#password');
+    const username = usernameInput?.value.trim();
+    const password = passwordInput?.value.trim();
 
     // clear previous errors
-    document.getElementById('studentNumberError').textContent = '';
-    document.getElementById('studentPasswordError').textContent = '';
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('passwordError').textContent = '';
 
     let hasError = false;
 
-    if (!id) {
-      document.getElementById('studentNumberError').textContent = 'Please enter Student ID.';
-      hasError = true;
-    } else if (!id.startsWith("GC-")) {
-      document.getElementById('studentNumberError').textContent = 'Student ID must start with "GC-".';
+    if (!username) {
+      document.getElementById('usernameError').textContent = 'Please enter Username/ID.';
       hasError = true;
     }
 
-    if (!pw) {
-      document.getElementById('studentPasswordError').textContent = 'Please enter Password.';
+    if (!password) {
+      document.getElementById('passwordError').textContent = 'Please enter Password.';
       hasError = true;
     }
 
     if (hasError) return;
 
     try {
-      const formData = new FormData();
-      formData.append('student_number', id);
-      formData.append('password', pw);
+      let formData = new FormData();
+      let endpoint = '';
 
-      const res = await fetch('student_account.php', { method: 'POST', body: formData });
+      if (username.startsWith("GC-")) {
+        // Student login
+        formData.append('student_number', username);
+        formData.append('password', password);
+        endpoint = 'student_account.php';
+      } else if (username.startsWith("FAC-")) {
+        // Instructor login (assuming similar to admin for now)
+        formData.append('username', username);
+        formData.append('password', password);
+        endpoint = 'faculty_login.php'; // Assuming this exists
+      } else {
+        // Admin login
+        formData.append('username', username);
+        formData.append('password', password);
+        endpoint = 'admin_login.php';
+      }
+
+      const res = await fetch(endpoint, { method: 'POST', body: formData });
       const text = (await res.text()).trim();
 
       if (text === 'success') {
-        window.location.href = 'FacultyUser.php';
+        if (username.startsWith("GC-")) {
+          window.location.href = 'FacultyUser.php';
+        } else if (username.startsWith("FAC-")) {
+          window.location.href = 'FacultyInstructor.php';
+        } else {
+          window.location.href = 'FacultyAdmin.php';
+        }
       } else {
-        document.getElementById('studentPasswordError').textContent = text;
+        document.getElementById('passwordError').textContent = text;
       }
     } catch (err) {
       console.error('Login error:', err);
-      document.getElementById('studentPasswordError').textContent = 'An error occurred. Please try again.';
+      document.getElementById('passwordError').textContent = 'An error occurred. Please try again.';
     }
   });
 }
 
+// ===================== Forgot form submit handler =====================
+const forgotForm = document.getElementById('forgotForm');
+if (forgotForm) {
+  forgotForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const emailInput = forgotForm.querySelector('#resetEmail');
+    const email = emailInput?.value.trim();
 
-const adminForm = document.getElementById('adminLoginForm');
-if (adminForm) adminForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  try {
-    const res = await fetch('admin_login.php', { method: 'POST', body: new FormData(adminForm) });
-    const text = (await res.text()).trim();
-    text === 'success' ? window.location.href = 'FacultyAdmin.php' : alert(text);
-  } catch (err) {
-    console.error('Login error:', err);
-    alert('An error occurred. Please try again.');
-  }
-});
+    if (!email) {
+      alert('Please enter your email.');
+      return;
+    }
+
+    // Placeholder for forgot password logic
+    alert('Reset link sent to ' + email);
+    switchModal(modals.forgot, modals.login);
+  });
+}
 
 // ===================== Password toggle =====================
 function setupPasswordToggle(inputId, toggleId) {
@@ -166,9 +171,7 @@ function setupPasswordToggle(inputId, toggleId) {
     });
   }
 }
-setupPasswordToggle('adminPassword','togglePassword');
-setupPasswordToggle('studentPassword','toggleStudentPassword');
-setupPasswordToggle('instructorPassword','toggleInstructorPassword');
+setupPasswordToggle('password','togglePassword');
 
 // ===================== Close hamburger when clicking outside =====================
 document.addEventListener("click", e => {

@@ -1,4 +1,7 @@
 
+<?php
+include 'totalstudents_dashcount.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -103,11 +106,11 @@
       <div class="warning"><i class="fas fa-exclamation-triangle"></i> Authorized Personnel Only: All actions are logged and monitored for security compliance.</div>
     </div>
     <div class="dashboard">
-      <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p id="totalFaculty" class="dashboard-value">0</p>
+      <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
         <span>Across 9 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
-      <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p id="totalStudents" class="dashboard-value">0</p>
+      <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p id="totalStudents" class="dashboard-value"><?php echo $totalStudentsCount; ?></p>
         <span>Registered Users</span></div><div class="icon-box"><i class="fas fa-user-graduate"></i></div></div></div>
-      <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p id="totalEvaluations" class="dashboard-value">0</p>
+      <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p id="totalEvaluations" class="dashboard-value"><?php echo $totalEvaluationsCount; ?></p>
         <span>Overall</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
     </div>
   </div>
@@ -480,6 +483,19 @@
         <h4><i class="fas fa-graduation-cap"></i> Academic Details</h4>
         <div class="form-row">
           <div>
+            <label>Student Type</label>
+            <div style="display: flex; gap: 20px; margin-top: 5px; justify-content: center;">
+              <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="student-type" value="regular" checked> Regular 
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="student-type" value="irregular"> Irregular 
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
             <label for="student-program">Program</label>
             <select id="student-program" required>
               <option value="" disabled selected>-- Select Program --</option>
@@ -487,7 +503,7 @@
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" id="yearlevel-row">
           <div>
             <label for="student-yearlevel">Year Level</label>
             <select id="student-yearlevel" required>

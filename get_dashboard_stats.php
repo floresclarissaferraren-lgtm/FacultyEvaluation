@@ -1,5 +1,7 @@
 <?php
 header("Content-Type: application/json");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
 include 'connect.php';
 
 try {
@@ -12,6 +14,8 @@ try {
     $student_query = "SELECT COUNT(*) as total FROM add_students";
     $student_result = $conn->query($student_query);
     $total_students = $student_result->fetch_assoc()['total'];
+    
+    error_log("Dashboard stats - Total students: " . $total_students);
     
     // Get total evaluations count
     $evaluation_query = "SELECT COUNT(*) as total FROM evaluations";
