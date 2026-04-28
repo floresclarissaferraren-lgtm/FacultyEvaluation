@@ -16,12 +16,12 @@ try {
         f.yearlevel,
         f.password,
         GROUP_CONCAT(
-            CONCAT(s.subject_code, ' - ', s.description, ' (', s.year_level, ')')
+            CONCAT(s.subject_code, ' - ', s.subject_desc, ' (', s.year_level, ')')
             SEPARATOR '|'
         ) as subjects
     FROM add_faculties f
     LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
-    LEFT JOIN subjects s ON fs.subject_id = s.id
+    LEFT JOIN add_subjects s ON fs.subject_id = s.id
     GROUP BY f.id, f.faculty_id, f.firstname, f.lastname, f.suffix, f.email, f.photo, f.program, f.yearlevel, f.password
     ORDER BY f.lastname, f.firstname";
     

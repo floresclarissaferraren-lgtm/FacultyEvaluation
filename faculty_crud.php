@@ -48,7 +48,7 @@ if ($action === "add") {
     }
 
     /* CHECK DUPLICATES (faculty ID) */
-    $check = $conn->prepare("SELECT id FROM add_faculty WHERE faculty_id=?");
+    $check = $conn->prepare("SELECT id FROM add_faculties WHERE faculty_id=?");
     $check->bind_param("s", $faculty_id);
     $check->execute();
     $check->store_result();
@@ -63,7 +63,7 @@ if ($action === "add") {
     $check->close();
 
     /* CHECK DUPLICATES (email) */
-    $checkEmail = $conn->prepare("SELECT id FROM add_faculty WHERE email=?");
+    $checkEmail = $conn->prepare("SELECT id FROM add_faculties WHERE email=?");
     $checkEmail->bind_param("s", $email);
     $checkEmail->execute();
     $checkEmail->store_result();
@@ -113,6 +113,14 @@ if ($action === "add") {
             }
             $subjectStmt->close();
         }
+
+        /* INSERT INTO FACULTY LOGIN TABLE */
+        $loginStmt = $conn->prepare("INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)");
+        $loginStmt->bind_param("sss", $faculty_id, $faculty_id, $hashedPassword);
+        if (!$loginStmt->execute()) {
+            error_log("Faculty login insert failed: " . $loginStmt->error);
+        }
+        $loginStmt->close();
 
         /* =========================
            SEND EMAIL

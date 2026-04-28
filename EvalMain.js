@@ -92,39 +92,25 @@ if (loginForm) {
     if (hasError) return;
 
     try {
-      let formData = new FormData();
-      let endpoint = '';
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
 
-      if (username.startsWith("GC-")) {
-        // Student login
-        formData.append('student_number', username);
-        formData.append('password', password);
-        endpoint = 'student_account.php';
-      } else if (username.startsWith("FAC-")) {
-        // Instructor login (assuming similar to admin for now)
-        formData.append('username', username);
-        formData.append('password', password);
-        endpoint = 'faculty_login.php'; // Assuming this exists
-      } else {
-        // Admin login
-        formData.append('username', username);
-        formData.append('password', password);
-        endpoint = 'admin_login.php';
-      }
+      const res = await fetch('multi_login.php', { method: 'POST', body: formData });
+      const data = await res.json();
 
-      const res = await fetch(endpoint, { method: 'POST', body: formData });
-      const text = (await res.text()).trim();
-
-      if (text === 'success') {
-        if (username.startsWith("GC-")) {
+      if (data.success) {
+        if (data.role === 'student') {
           window.location.href = 'FacultyUser.php';
-        } else if (username.startsWith("FAC-")) {
+        } else if (data.role === 'faculty') {
           window.location.href = 'FacultyInstructor.php';
-        } else {
+        } else if (data.role === 'admin') {
           window.location.href = 'FacultyAdmin.php';
+        } else {
+          document.getElementById('passwordError').textContent = 'Login successful, but role is unknown.';
         }
       } else {
-        document.getElementById('passwordError').textContent = text;
+        document.getElementById('passwordError').textContent = data.message || 'Login failed';
       }
     } catch (err) {
       console.error('Login error:', err);
