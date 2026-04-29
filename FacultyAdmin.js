@@ -620,18 +620,28 @@ document.querySelector(".classes-btn")?.addEventListener("click", () => {
   loadClasses();
 });
 
-
 // ========================= OPEN MODALS =========================
 addManageBtn?.addEventListener("click", () => {
-  // Always open subject modal in manage section (no class functionality here)
-  addSubjectModal.style.display = "flex";
-
-  document.getElementById("subject-code").value = "";
-  document.getElementById("subject-desc").value = "";
-  document.getElementById("subject-year").selectedIndex = 0;
-
-  isEditingSubject = false;
-  editSubjectId = null;
+  // Check which tab is active to determine which modal to open
+  const subjectsTab = document.querySelector(".subject-btn.active");
+  const classesTab = document.querySelector(".classes-btn.active");
+  
+  if (subjectsTab) {
+    // Open subject modal
+    addSubjectModal.style.display = "flex";
+    document.getElementById("subject-code").value = "";
+    document.getElementById("subject-desc").value = "";
+    document.getElementById("subject-year").selectedIndex = 0;
+    isEditingSubject = false;
+    editSubjectId = null;
+  } else if (classesTab) {
+    // Open class modal
+    const addClassModal = document.getElementById("addClassModal");
+    addClassModal.style.display = "flex";
+    document.getElementById("class-year").selectedIndex = 0;
+    document.getElementById("class-block").value = "";
+    document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
+  }
 });
 
 // ========================= LOAD SUBJECTS =========================
@@ -764,10 +774,13 @@ function loadSubjectsByYear(yearLevel) {
       box.innerHTML = "";
 
       if (!data || data.length === 0) {
-        box.innerHTML = `<small>No subjects found for year ${yearLevel}</small>`;
+        box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>No subjects found for year ${yearLevel}</small>';
         return;
       }
 
+      // Clear existing content but keep the header
+      box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4>';
+      
       data.forEach(sub => {
         const label = document.createElement("label");
         label.innerHTML = `
@@ -780,7 +793,7 @@ function loadSubjectsByYear(yearLevel) {
     })
     .catch(err => {
       console.error("Error loading subjects:", err);
-      box.innerHTML = "<small>Error loading subjects</small>";
+      box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Error loading subjects</small>';
     });
 }
 
@@ -801,13 +814,14 @@ document.getElementById("class-year")?.addEventListener("change", (e) => {
   
   if (!currentProgramId) {
     console.log("No program ID set");
-    box.innerHTML = "<small>Please select program first</small>";
+    box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Please select a program first from the programs list, then click Manage</small>';
     return;
   }
   
   console.log("Calling loadSubjectsByYear with year:", year);
   loadSubjectsByYear(year);
 });
+
 // ========================= LOAD CLASSES =========================
 function loadClasses() {
   if (!currentProgramId) return;
@@ -821,7 +835,7 @@ function loadClasses() {
       classesTableBody.innerHTML = "";
 
       if (!data || data.length === 0) {
-        classesTableBody.innerHTML = "<tr><td colspan='3'>No classes found for this program</td></tr>";
+        classesTableBody.innerHTML = "<tr><td colspan='4'>No classes found for this program</td></tr>";
         return;
       }
 
@@ -832,6 +846,7 @@ function loadClasses() {
         row.innerHTML = `
           <td>${c.section_name}</td>
           <td>${c.year_level}</td>
+          <td><span class="status-badge active">Active</span></td>
           <td class="action-cell">
             <div class="action-buttons">
               <button class="view-btn" title="View Subjects"><i class="fas fa-eye"></i></button>
@@ -889,9 +904,14 @@ function loadClasses() {
     })
     .catch(err => {
       console.error("Error loading classes:", err);
-      classesTableBody.innerHTML = "<tr><td colspan='3'>Error loading classes</td></tr>";
+      classesTableBody.innerHTML = "<tr><td colspan='4'>Error loading classes</td></tr>";
     });
 }
+
+// ========================= CLOSE CLASS MODAL =========================
+document.getElementById("addClassModal")?.querySelector(".close-btn")?.addEventListener("click", () => {
+  document.getElementById("addClassModal").style.display = "none";
+});
 
 // ========================= SAVE CLASS =========================
 saveClassBtn?.addEventListener("click", () => {
@@ -1041,10 +1061,6 @@ function loadFaculty() {
           document.getElementById("faculty-lastname").value = f.lastname || "";
           document.getElementById("faculty-suffix").value = f.suffix || "";
 
-          // Set program and year level
-          document.getElementById("faculty-program").value = f.program || "";
-          document.getElementById("faculty-yearlevel").value = f.yearlevel || "";
-
           const preview = document.getElementById("faculty-photo-preview");
           preview.src = f.photo || "";
           preview.hidden = !f.photo;
@@ -1069,27 +1085,11 @@ document.querySelector(".add-faculty-btn").onclick = () => {
     if (i.id !== "faculty-number") i.value = "";
   });
 
-  // Reset program and year level dropdowns
-  document.getElementById("faculty-program").value = "";
-  document.getElementById("faculty-yearlevel").value = "";
-  
   // Clear subjects list
-  document.getElementById("faculty-subjects-list").innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
+  document.getElementById("faculty-subjects-list").innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects available</p>';
 
-  // Load programs for faculty
-  loadFacultyPrograms();
-
-  // Add event listeners for dynamic subject loading
-  const facultyProgramSelect = document.getElementById("faculty-program");
-  const facultyYearSelect = document.getElementById("faculty-yearlevel");
-  
-  // Remove existing listeners to avoid duplicates
-  facultyProgramSelect.removeEventListener("change", fetchFacultySubjects);
-  facultyYearSelect.removeEventListener("change", fetchFacultySubjects);
-  
-  // Add new listeners
-  facultyProgramSelect.addEventListener("change", fetchFacultySubjects);
-  facultyYearSelect.addEventListener("change", fetchFacultySubjects);
+  // Load all subjects for faculty
+  loadAllFacultySubjects();
 
   document.getElementById("faculty-photo-preview").hidden = true;
   delete addFacultyModal.dataset.editRow;
@@ -1103,11 +1103,9 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
         f = document.getElementById("faculty-firstname").value.trim(),
         l = document.getElementById("faculty-lastname").value.trim(),
         s = document.getElementById("faculty-suffix").value.trim(),
-        program = document.getElementById("faculty-program").value,
-        yearlevel = document.getElementById("faculty-yearlevel").value,
         photo = document.getElementById("faculty-photo-preview").hidden ? "" : document.getElementById("faculty-photo-preview").src;
 
-  if (!n || !e || !f || !l || !program || !yearlevel) return showNotification("Required fields missing!", "#f44336");
+  if (!n || !e || !f || !l) return showNotification("Required fields missing!", "#f44336");
 
   // Get selected subjects
   const selectedSubjects = [];
@@ -1123,8 +1121,6 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
     firstname: f,
     lastname: l,
     suffix: s,
-    program: program,
-    yearlevel: yearlevel,
     subjects: selectedSubjects
   };
 
@@ -1413,60 +1409,58 @@ function loadStudentPrograms(){
     });
 }
 
-// Load Programs for Faculty Form -------------------
-function loadFacultyPrograms(){
-  return fetch("get_StudentProgram.php")
+// Load All Subjects for Faculty Form -------------------
+function loadAllFacultySubjects(){
+  return fetch("subject_crud.php?action=get_all")
     .then(r => r.json())
     .then(data => {
-      const facultyProgramSelect = document.getElementById("faculty-program");
-      facultyProgramSelect.innerHTML = `<option value="">Select Program</option>`;
-      data.forEach(program => {
-        facultyProgramSelect.insertAdjacentHTML("beforeend", `<option value="${program.id}">${program.name}</option>`);
-      });
+      const subjectsList = document.getElementById("faculty-subjects-list");
+      if (data.length === 0) {
+        subjectsList.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>No subjects available</small>';
+      } else {
+        let html = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4>';
+        data.forEach(subject => {
+          html += `
+            <label class="subject-checkbox-item">
+              <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
+              <span class="checkmark"></span>
+              ${subject.subject_code} - ${subject.subject_desc}
+            </label>
+          `;
+        });
+        subjectsList.innerHTML = html;
+      }
       return data;
     })
     .catch(err => {
-      console.error("Error loading faculty programs:", err);
+      console.error("Error loading faculty subjects:", err);
       throw err;
     });
 }
 
-function fetchFacultySubjects() {
-  const programId = document.getElementById("faculty-program").value;
-  const yearLevel = document.getElementById("faculty-yearlevel").value;
   const subjectsList = document.getElementById("faculty-subjects-list");
-  
-  if (programId && yearLevel) {
-    const yearLevelFormatted = yearLevel + (yearLevel === "1" ? "st" : yearLevel === "2" ? "nd" : yearLevel === "3" ? "rd" : "th") + " Year";
-    
-    fetch(`subject_crud.php?action=get_by_program_and_year&program_id=${programId}&year_level=${yearLevelFormatted}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.length === 0) {
-          subjectsList.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects found for the selected program and year level</p>';
-        } else {
-          let html = '<div class="faculty-subjects-checkboxes">';
-          data.forEach(subject => {
-            html += `
-              <label class="subject-checkbox-item">
-                <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
-                <span class="checkmark"></span>
-                ${subject.subject_code} - ${subject.subject_desc}
-              </label>
-            `;
-          });
-          html += '</div>';
-          subjectsList.innerHTML = html;
-        }
-      })
-      .catch(err => {
-        console.error("Error fetching faculty subjects:", err);
-        subjectsList.innerHTML = '<p style="color: #dc2626; font-size: 0.9em;">Error loading subjects</p>';
+  loadAllFacultySubjects().then(data => {
+    if (data.length === 0) {
+      subjectsList.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects found</p>';
+    } else {
+      let html = '<div class="faculty-subjects-checkboxes">';
+      data.forEach(subject => {
+        html += `
+          <label class="subject-checkbox-item">
+            <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
+            <span class="checkmark"></span>
+            ${subject.subject_code} - ${subject.subject_desc}
+          </label>
+        `;
       });
-  } else {
-    subjectsList.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
-  }
-}
+      html += '</div>';
+      subjectsList.innerHTML = html;
+    }
+  })
+  .catch(err => {
+    console.error("Error fetching faculty subjects:", err);
+    subjectsList.innerHTML = '<p style="color: #dc2626; font-size: 0.9em;">Error loading subjects</p>';
+  });
 
 //  Load Students -------------------
 function loadStudents(){
@@ -1540,6 +1534,7 @@ function loadStudents(){
             document.getElementById("student-firstname").value = stu.firstname || "";
             document.getElementById("student-lastname").value = stu.lastname || "";
             document.getElementById("student-suffix").value = stu.suffix || "";
+            document.getElementById("student-section").value = stu.section || "";
             
             // Handle student type and year level
             const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
@@ -1611,6 +1606,7 @@ function loadStudents(){
                   suffix: document.getElementById("student-suffix").value.trim(),
                   yearlevel: yearlevelValue,
                   program: document.getElementById("student-program").value,
+                  section: document.getElementById("student-section").value.trim(),
                   subjects: subjectIds
                 })
               });
@@ -1828,6 +1824,98 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#viewStudentSubjectsModal .close-btn")?.addEventListener("click", () => {
     viewStudentSubjectsModal.style.display = "none";
   });
+
+  // Add Faculty modal close button
+  const facultyCloseBtn = document.querySelector("#addFacultyModal .close-btn");
+  if (facultyCloseBtn) {
+    facultyCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("addFacultyModal").style.display = "none";
+      console.log("Faculty modal closed by X button");
+    };
+  }
+
+  // Add Program modal close button
+  const programCloseBtn = document.querySelector("#addProgramModal .close-btn");
+  if (programCloseBtn) {
+    programCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("addProgramModal").style.display = "none";
+      console.log("Program modal closed by X button");
+    };
+  }
+
+  // Add Category modal close button
+  const categoryCloseBtn = document.querySelector("#addCategoryModal .close-btn");
+  if (categoryCloseBtn) {
+    categoryCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      addCategoryModal.style.display = "none";
+      console.log("Category modal closed by X button");
+    };
+  }
+
+  // Add Question modal close button
+  const questionCloseBtn = document.querySelector("#addQuestionModal .close-btn");
+  if (questionCloseBtn) {
+    questionCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      addQuestionModal.style.display = "none";
+      console.log("Question modal closed by X button");
+    };
+  }
+
+  // Add Subject modal close button
+  const subjectCloseBtn = document.querySelector("#addSubjectModal .close-btn");
+  if (subjectCloseBtn) {
+    subjectCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      addSubjectModal.style.display = "none";
+      console.log("Subject modal closed by X button");
+    };
+  }
+
+  // Add Subject Main modal close button
+  const subjectMainCloseBtn = document.querySelector("#addSubjectMainModal .close-btn");
+  if (subjectMainCloseBtn) {
+    subjectMainCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      addSubjectMainModal.style.display = "none";
+      console.log("Subject Main modal closed by X button");
+    };
+  }
+
+  // Add Class modal close button
+  const classCloseBtn = document.querySelector("#addClassModal .close-btn");
+  if (classCloseBtn) {
+    classCloseBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("addClassModal").style.display = "none";
+      console.log("Class modal closed by X button");
+    };
+  }
+});
+
+// Global close button handler for all modals
+document.addEventListener("click", function(e) {
+  if (e.target.classList.contains("close-btn")) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Find the closest modal parent
+    let modal = e.target.closest(".modal");
+    if (modal) {
+      modal.style.display = "none";
+      console.log("Modal closed by global close handler:", modal.id);
+    }
+  }
 });
 
 // Filter handlers
@@ -2265,7 +2353,7 @@ function initAddStudentButton() {
         zIndex: addStudentModal.style.zIndex,
         position: addStudentModal.style.position
       });
-      ["number","email","firstname","lastname","suffix","yearlevel","program"].forEach(f=>{
+      ["number","email","firstname","lastname","suffix","yearlevel","program","section"].forEach(f=>{
         document.getElementById("student-"+f).value = "";
       });
       const errorDiv = document.getElementById("student-number-error");
@@ -2315,7 +2403,7 @@ function initAddStudentButton() {
         }
 
         const n=val("number"), eMail=val("email"), fName=val("firstname"), lName=val("lastname"),
-              p=val("program");
+              p=val("program"), section=val("section");
 
         const studentType = document.querySelector('input[name="student-type"]:checked').value;
         let y;
@@ -2348,6 +2436,7 @@ function initAddStudentButton() {
             suffix:val("suffix"), 
             yearlevel:y, 
             program:p,
+            section:section,
             subjects: subjectIds 
           })
         });

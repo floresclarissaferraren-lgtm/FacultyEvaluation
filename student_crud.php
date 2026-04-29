@@ -25,6 +25,7 @@ if ($action === "add") {
     $suffix = $data['suffix'] ?? '';
     $yearlevel = $data['yearlevel'] ?? '';
     $program = $data['program'] ?? '';
+    $section = $data['section'] ?? '';
     $subjects = $data['subjects'] ?? [];
 
     // Validate required fields
@@ -85,12 +86,12 @@ if ($action === "add") {
     /* INSERT STUDENT */
     $stmt = $conn->prepare("
         INSERT INTO add_students 
-        (student_number,email,firstname,lastname,suffix,yearlevel,program,password) 
-        VALUES (?,?,?,?,?,?,?,?)
+        (student_number,email,firstname,lastname,suffix,yearlevel,program,section,password) 
+        VALUES (?,?,?,?,?,?,?,?,?)
     ");
 
     $stmt->bind_param(
-        "ssssssss",
+        "sssssssss",
         $student_number,
         $email,
         $firstname,
@@ -98,6 +99,7 @@ if ($action === "add") {
         $suffix,
         $yearlevel,
         $program,
+        $section,
         $hashedPassword
     );
 
@@ -199,6 +201,7 @@ elseif ($action === "edit") {
     $suffix = $data['suffix'] ?? '';
     $yearlevel = $data['yearlevel'] ?? '';
     $program = $data['program'] ?? '';
+    $section = $data['section'] ?? '';
     $email = trim($data['email'] ?? '');
     $subjects = $data['subjects'] ?? [];
 
@@ -212,17 +215,18 @@ elseif ($action === "edit") {
 
     $stmt = $conn->prepare("
         UPDATE add_students 
-        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, email=? 
+        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, section=?, email=? 
         WHERE id=?
     ");
 
     $stmt->bind_param(
-        "ssssssi",
+        "sssssssi",
         $firstname,
         $lastname,
         $suffix,
         $yearlevel,
         $program,
+        $section,
         $email,
         $id
     );

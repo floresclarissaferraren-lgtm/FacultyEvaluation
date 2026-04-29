@@ -204,7 +204,13 @@ include 'totalstudents_dashcount.php';
 <div id="manage-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
-      <h2 id="manageTitle">Manage Program</h2>
+      <div>
+        <h2 id="manageTitle">Manage Program</h2>
+        <div class="manage-buttons">
+          <button class="subject-btn active"><i class="fas fa-book"></i> Subjects</button>
+          <button class="classes-btn"><i class="fas fa-users"></i> Classes</button>
+        </div>
+      </div>
       <div class="header-actions">
         <div class="search-wrapper">
           <input type="text" placeholder="Search records...">
@@ -219,6 +225,15 @@ include 'totalstudents_dashcount.php';
       <div id="subjects" class="table-wrapper">
         <table><thead><tr>
           <th>Subject Code</th><th>Description</th><th>Year</th><th>Action</th>
+        </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Classes Table -->
+      <div id="classes" class="table-wrapper" style="display:none;">
+        <table><thead><tr>
+          <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
@@ -249,6 +264,45 @@ include 'totalstudents_dashcount.php';
         <option value="4th Year">4th Year</option>
       </select>
       <button id="save-subject-btn" class="submit-btn">SAVE SUBJECT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Class Modal -->
+<div id="addClassModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>ADD CLASS</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div>
+          <label for="class-year">Year Level</label>
+          <select id="class-year">
+            <option value="">Select Year Level</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+          </select>
+        </div>
+        <div>
+          <label for="class-block">Block</label>
+          <input type="text" id="class-block" placeholder="eg. A, B, C">
+        </div>
+      </div>
+      <div class="section-box">
+        <div id="subject-checkbox-list" class="subjects-list">
+          <h4><i class="fas fa-book"></i> Assigned Subjects</h4>
+          <div class="subject-filters">
+            <input type="text" id="class-program-search" placeholder="Search by program..." class="subject-search-input">
+            <input type="text" id="class-year-search" placeholder="Search by year level..." class="subject-search-input">
+          </div>
+          <small>Select year level first to load subjects</small>
+        </div>
+      </div>
+      <button id="save-class-btn" class="submit-btn">SAVE CLASS</button>
     </div>
   </div>
 </div>
@@ -389,28 +443,15 @@ include 'totalstudents_dashcount.php';
         <label>Suffix <input id="faculty-suffix" placeholder="Jr., III"></label>
       </div>
       
-      <div class="form-row">
-        <div>
-          <label for="faculty-program">Program</label>
-          <select id="faculty-program">
-            <option value="">Select Program</option>
-          </select>
+            
+      <div class="section-box">
+        <div id="faculty-subjects-list" class="subjects-list">
+          <h4><i class="fas fa-book"></i> Assigned Subjects</h4>
+          <div class="subject-filters">
+            <input type="text" id="faculty-program-search" placeholder="Search by program..." class="subject-search-input">
+            <input type="text" id="faculty-year-search" placeholder="Search by year level..." class="subject-search-input">
+          </div>
         </div>
-        <div>
-          <label for="faculty-yearlevel">Year Level</label>
-          <select id="faculty-yearlevel">
-            <option value="">Select Year Level</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="section-box subjects-box">
-        <h4><i class="fas fa-book"></i> Subjects</h4>
-        <div id="faculty-subjects-list" class="subjects-list"></div>
       </div>
       <button class="submit-btn">SAVE FACULTY</button>
     </div>
@@ -513,6 +554,10 @@ include 'totalstudents_dashcount.php';
               <option>3</option>
               <option>4</option>
             </select>
+          </div>
+          <div>
+            <label for="student-section">Section</label>
+            <input type="text" id="student-section" placeholder="eg. A, B, C" required>
           </div>
         </div>
       </div>

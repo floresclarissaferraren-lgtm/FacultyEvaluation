@@ -110,6 +110,10 @@ main{margin-left:16rem;padding:5.25rem var(--spacing-xl) 2.5rem;min-height:100vh
 .section-header h2{margin:0;font-size:1.45rem;font-weight:800;color:var(--primary-900);text-transform:uppercase;letter-spacing:.05em;
   text-shadow:0 1px 2px rgba(0,0,0,.05)}
 .section .header-actions,.top-buttons{display:flex;align-items:center;gap:var(--spacing-md)}
+.manage-buttons{display:flex;gap:var(--spacing-sm);margin-top:var(--spacing-md)}
+.manage-buttons button{display:flex;align-items:center;gap:var(--spacing-xs);padding:var(--spacing-sm) var(--spacing-md);border:none;border-radius:var(--radius-lg);font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);background:var(--primary-100);color:var(--primary-900);font-size:.875rem;box-shadow:var(--shadow-sm)}
+.manage-buttons button.active{background:linear-gradient(135deg,var(--primary-900),var(--primary-700));color:#fff;box-shadow:var(--shadow-lg);text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.manage-buttons button:hover:not(.active){background:var(--primary-200);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .subtitle{margin-top:-.375rem;color:var(--neutral-500);font-size:.875rem}
 
 /* ====================================================================================================================================
@@ -222,6 +226,11 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 .action-cell .edit-btn:hover,.actions .edit-btn:hover{background:#fde68a!important}
 .action-cell .delete-btn:hover,.actions .delete-btn:hover{background:#fecaca!important}
 .action-cell .view-btn:hover,.action-cell .view-subjects-btn:hover{background:var(--primary-200)!important}
+
+/* Status Badge */
+.status-badge{display:inline-block;padding:var(--spacing-xs) var(--spacing-sm);border-radius:var(--radius-full);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.status-badge.active{background:var(--success);color:#fff}
+.status-badge.inactive{background:var(--neutral-300);color:var(--neutral-700)}
 
 /* ====================================================================================================================================
    Top Buttons & Filters
@@ -355,11 +364,24 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 
 #addFacultyModal .form-row,#addStudentModal .form-row{display:flex;gap:var(--spacing-sm);width:100%;margin-bottom:var(--spacing-sm)}
 #addFacultyModal .form-row>label,#addStudentModal .form-row>div,#addStudentModal .form-row .suffix-field{flex:1}
+#addStudentModal #yearlevel-row>div{flex:1;min-width:0}
+#addStudentModal #yearlevel-row>div:first-child{margin-right:var(--spacing-xs)}
+#addStudentModal #yearlevel-row>div:last-child{margin-left:var(--spacing-xs)}
 #addFacultyModal .section-box,#addStudentModal .section-box{background:linear-gradient(180deg,var(--primary-50) 0%,var(--primary-100) 100%);
   border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--spacing-md);margin-top:var(--spacing-md);backdrop-filter:blur(10px)}
 #addFacultyModal .section-box h4,#addStudentModal .section-box h4{margin:0 0 var(--spacing-sm);font-size:.9375rem;color:var(--primary-900);
   display:flex;align-items:center;gap:var(--spacing-sm);font-weight:700}
 #addFacultyModal .subjects-list{min-height:1.25rem;border-radius:var(--radius-sm);padding:var(--spacing-sm);background:transparent}
+.subjects-list{background:var(--primary-50);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--spacing-md);min-height:120px;max-height:200px;overflow-y:auto}
+.subjects-list::-webkit-scrollbar{width:8px}
+.subjects-list::-webkit-scrollbar-track{background:var(--primary-100);border-radius:var(--radius-full)}
+.subjects-list::-webkit-scrollbar-thumb{background:linear-gradient(135deg,var(--primary-600),var(--primary-500));border-radius:var(--radius-full);border:2px solid var(--primary-100)}
+.subjects-list::-webkit-scrollbar-thumb:hover{background:linear-gradient(135deg,var(--primary-700),var(--primary-600))}
+.subjects-list h4{margin:0 0 var(--spacing-sm) 0;font-size:.875rem;color:var(--primary-900);display:flex;align-items:center;gap:var(--spacing-xs);font-weight:700}
+.subjects-list label{display:block;padding:var(--spacing-xs) 0;font-weight:500;color:var(--neutral-700);font-size:.875rem;cursor:pointer;transition:color .2s ease}
+.subjects-list label:hover{color:var(--primary-700)}
+.subjects-list input[type="checkbox"]{margin-right:var(--spacing-sm);width:16px;height:16px;accent-color:var(--primary-600)}
+.subjects-list small{color:var(--neutral-500);font-style:italic}
 #addStudentModal select:invalid{color:var(--neutral-400)}
 #addStudentModal select option{color:var(--neutral-900)}
 #addStudentModal input,#addStudentModal select{margin-top:var(--spacing-xs);padding:var(--spacing-md);border:2px solid #d1d5db;
@@ -367,8 +389,11 @@ td:first-child{font-weight:700;color:var(--primary-900)}
   outline:none;color:var(--neutral-900)}
 #addFacultyModal input{margin-top:var(--spacing-xs);padding:var(--spacing-md);border:2px solid #d1d5db;border-radius:var(--radius-lg);
   font-size:.875rem;width:100%;background:#fff;transition:all .2s ease;box-sizing:border-box;outline:none;color:var(--neutral-900)}
+#class-year,#class-block{margin-top:var(--spacing-xs);padding:var(--spacing-md);border:2px solid #d1d5db;border-radius:var(--radius-lg);
+  font-size:.875rem;width:100%;background:#fff;transition:all .2s ease;box-sizing:border-box;outline:none;color:var(--neutral-900)}
 #addFacultyModal input:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
 #addStudentModal input:focus,#addStudentModal select:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
+#class-year:focus,#class-block:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
 #addCategoryModal .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
 #addCategoryModal .form-row label{font-size:.85rem;font-weight:700;color:var(--slate-500);margin:0;}
 
@@ -421,6 +446,7 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 #addFacultyModal .submit-btn{background:linear-gradient(135deg,var(--primary-600) 0%, var(--primary-500) 50%, var(--primary-400) 100%);color:#fff;}
 #addStudentModal .submit-btn{background:linear-gradient(135deg,var(--primary-600) 0%, var(--primary-500) 50%, var(--primary-400) 100%);color:#fff;}
 #addSubjectModal .submit-btn{background:linear-gradient(135deg,var(--primary-600) 0%, var(--primary-500) 50%, var(--primary-400) 100%);color:#fff;}
+#addClassModal .submit-btn{background:linear-gradient(135deg,var(--primary-600) 0%, var(--primary-500) 50%, var(--primary-400) 100%);color:#fff;}
 #addQuestionModal .form-row{display:flex;flex-direction:column;margin:2px 0 10px;gap:4px;}
 #addQuestionModal .form-row label,#addQuestionModal .category-label,#addQuestionModal .category-label .label-text{font-size:.85rem;font-weight:700;
   color:#94a3b8;margin:0;}
@@ -555,10 +581,20 @@ main{margin-left:0!important;width:100%!important;padding:5rem var(--spacing-md)
 
 /* Faculty Subject Checkboxes */
 .faculty-subjects-checkboxes{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto}
-.subject-checkbox-item{display:flex;align-items:center;padding:8px 12px;border:1px solid var(--neutral-200);border-radius:6px;background:#fff;
+.subjects-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto}
+.subject-filters{display:flex;gap:8px;margin-bottom:12px;width:100%}
+#faculty-subjects-list .subject-filters{display:flex;gap:8px;margin-bottom:12px;width:100%}
+.subjects-list .subject-filters{display:flex !important;gap:8px;margin-bottom:12px;width:100%;background:#f0f0f0;padding:10px;border:2px solid #333}
+.subject-search-input{flex:1;padding:8px 12px;border:1px solid var(--neutral-200);border-radius:6px;font-size:14px;
+  transition:all .2s ease;background:#fff}
+.subject-search-input:focus{outline:none;border-color:var(--primary-500);box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+.subject-checkbox-item{display:flex;align-items:center;padding:8px 8px 8px 12px;border:none;border-radius:6px;background:transparent;
   cursor:pointer;transition:all .2s ease;font-size:14px}
 .subject-checkbox-item:hover{background:var(--primary-50);border-color:var(--primary-300)}
-.subject-checkbox-item input[type="checkbox"]{margin-right:12px;accent-color:var(--primary-500);transform:scale(1.1)}
+.subject-checkbox-item input[type="checkbox"]{margin-right:12px;accent-color:var(--primary-500);width:20px;height:20px;flex-shrink:0;order:-1}
+.subjects-list .subject-checkbox-item input[type="checkbox"]{margin-right:12px;accent-color:var(--primary-500);width:20px;height:20px;flex-shrink:0;order:-1}
+#faculty-subjects-list .subject-checkbox-item input[type="checkbox"]{margin-right:12px;accent-color:var(--primary-500);width:20px;height:20px;flex-shrink:0;order:-1}
+#faculty-subjects-list .subject-checkbox-item input[type="checkbox"]:checked{background:#fff;border:1px solid var(--neutral-300)}
 .subject-info{flex:1;display:flex;flex-direction:column;gap:2px}
 .subject-code{font-weight:600;color:var(--neutral-800);font-size:14px;margin-bottom:1px}
 .subject-desc{color:var(--neutral-600);font-size:12px;line-height:1.3}
@@ -839,6 +875,14 @@ tr:hover td{
   #addStudentModal .form-row{
     flex-direction:row !important;
     gap:var(--spacing-sm);
+  }
+  #addStudentModal #yearlevel-row{
+    flex-direction:column !important;
+    gap:var(--spacing-xs);
+  }
+  #addStudentModal #yearlevel-row>div:first-child,
+  #addStudentModal #yearlevel-row>div:last-child{
+    margin:0;
   }
   #addFacultyModal .modal-content,
   #addStudentModal .modal-content{
