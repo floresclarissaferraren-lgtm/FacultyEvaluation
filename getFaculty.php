@@ -3,65 +3,99 @@ header("Content-Type: application/json");
 include 'connect.php';
 
 try {
-    // Get faculty with their assigned subjects
-    $query = "SELECT 
-        f.id,
-        f.faculty_id,
-        f.firstname,
-        f.lastname,
-        f.suffix,
-        f.email,
-        f.photo,
-        f.program,
-        f.yearlevel,
-        f.password,
-        GROUP_CONCAT(
-            CONCAT(s.subject_code, ' - ', s.subject_desc, ' (', s.year_level, ')')
-            SEPARATOR '|'
-        ) as subjects
-    FROM add_faculties f
-    LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
-    LEFT JOIN add_subjects s ON fs.subject_id = s.id
-    GROUP BY f.id, f.faculty_id, f.firstname, f.lastname, f.suffix, f.email, f.photo, f.program, f.yearlevel, f.password
-    ORDER BY f.lastname, f.firstname";
-    
+
+    $query = "
+        SELECT 
+            f.id,
+            f.faculty_id,
+            f.email,
+            f.firstname,
+            f.lastname,
+            f.suffix,
+            f.photo,
+            GROUP_CONCAT(
+                CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
+                ORDER BY s.subject_code
+                SEPARATOR '|||'
+            ) AS subjects_data
+        FROM add_faculties f
+        LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
+        LEFT JOIN add_subjects s ON fs.subject_id = s.id
+        LEFT JOIN add_programs p ON s.program_id = p.id
+        GROUP BY 
+            f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+        ORDER BY f.lastname, f.firstname
+    ";
+
     $result = $conn->query($query);
-    
+
+    if (!$result) {
+        echo json_encode([
+            "error" => "Query failed: " . $conn->error
+        ]);
+        exit;
+    }
+
+    // Debug: Show the query and number of results
+    error_log("Query: " . $query);
+    error_log("Number of rows: " . $result->num_rows);
+
     $data = [];
-    
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            // Parse subjects into array
-            $subjects = [];
-            if (!empty($row['subjects'])) {
-                $subjectList = explode('|', $row['subjects']);
-                foreach ($subjectList as $subject) {
-                    if (!empty(trim($subject))) {
-                        $subjects[] = trim($subject);
-                    }
+
+    while ($row = $result->fetch_assoc()) {
+
+        // Debug: Show the raw row data
+        error_log("Raw row data: " . json_encode($row));
+        
+        $subjects = [];
+        $subject_codes = [];
+
+        if (!empty($row['subjects_data'])) {
+            error_log("Subjects data found: " . $row['subjects_data']);
+            $subject_entries = explode('|||', $row['subjects_data']);
+            error_log("Subject entries: " . json_encode($subject_entries));
+            
+            foreach ($subject_entries as $entry) {
+                $parts = explode('|||', $entry);
+                error_log("Entry parts: " . json_encode($parts));
+                if (count($parts) >= 4) {
+                    $subjects[] = [
+                        'subject_code' => $parts[0],
+                        'subject_desc' => $parts[1],
+                        'year_level' => $parts[2],
+                        'program_name' => $parts[3]
+                    ];
+                    $subject_codes[] = $parts[0]; // For simple display in table
                 }
             }
-            
-            $data[] = [
-                'id' => $row['id'],
-                'faculty_id' => $row['faculty_id'],
-                'firstname' => $row['firstname'],
-                'lastname' => $row['lastname'],
-                'suffix' => $row['suffix'],
-                'email' => $row['email'],
-                'photo' => $row['photo'],
-                'program' => $row['program'],
-                'yearlevel' => $row['yearlevel'],
-                'subjects' => $subjects
-            ];
+        } else {
+            error_log("No subjects data found for faculty: " . $row['faculty_id']);
         }
+
+        $data[] = [
+            "id" => $row["id"],
+            "faculty_id" => $row["faculty_id"],
+            "email" => $row["email"],
+            "firstname" => $row["firstname"],
+            "lastname" => $row["lastname"],
+            "suffix" => $row["suffix"] ?? "",
+            "photo" => $row["photo"] ?? "",
+            "subjects" => $subjects,
+            "subject_codes" => $subject_codes // For simple display
+        ];
+        
+        // Debug: Show the final data structure for this faculty
+        error_log("Final faculty data: " . json_encode(end($data)));
     }
-    
+
+    // Debug: Show the complete data structure
+    error_log("Complete data being returned: " . json_encode($data));
     echo json_encode($data);
-    
+
 } catch (Exception $e) {
+
     echo json_encode([
-        'error' => 'Error fetching faculty: ' . $e->getMessage()
+        "error" => $e->getMessage()
     ]);
 }
 

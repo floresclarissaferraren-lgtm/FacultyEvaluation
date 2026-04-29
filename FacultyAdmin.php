@@ -302,6 +302,12 @@ include 'totalstudents_dashcount.php';
           <small>Select year level first to load subjects</small>
         </div>
       </div>
+      <div class="section-box">
+        <div id="faculty-list" class="subjects-list">
+          <h4><i class="fas fa-user-tie"></i> Available Faculty</h4>
+          <small>Select subjects to show available faculty</small>
+        </div>
+      </div>
       <button id="save-class-btn" class="submit-btn">SAVE CLASS</button>
     </div>
   </div>

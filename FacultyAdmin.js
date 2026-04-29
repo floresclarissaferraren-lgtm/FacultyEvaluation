@@ -5,6 +5,7 @@ const addCategoryModal = document.getElementById("addCategoryModal");
 const addQuestionModal = document.getElementById("addQuestionModal");
 const subjectSelectionModal = document.getElementById("subjectSelectionModal");
 const viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsModal");
+const viewFacultySubjectsModal = document.getElementById("viewFacultySubjectsModal");
 
 document.addEventListener("DOMContentLoaded", () => {
   let currentActiveLink = null;
@@ -105,7 +106,7 @@ window.showSection = (id, e) => {
   }
 };
 
- // ================= Delete Forms Binago==========================================================================================
+ // ================= Delete Forms ==========================================================================================
 function openDeleteModal(type,name,el){
   console.log("openDeleteModal called with:", {type, name, el});
   
@@ -116,7 +117,8 @@ function openDeleteModal(type,name,el){
     addCategoryModal,
     addQuestionModal,
     subjectSelectionModal,
-    viewStudentSubjectsModal
+    viewStudentSubjectsModal,
+    viewFacultySubjectsModal
   ];
   modalsToClose.forEach(m => { if(m) m.style.display = "none"; });
   
@@ -326,6 +328,12 @@ function loadPrograms(){
     .then(data => {
       const tbody = document.querySelector(".programs-table tbody");
       tbody.innerHTML = "";
+
+      // Check if no data or empty array
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;">No programs found</td></tr>';
+        return;
+      }
 
       // Sort data alphabetically by program_code
       data.sort((a, b) => a.program_code.localeCompare(b.program_code));
@@ -653,6 +661,12 @@ function loadSubjects() {
     .then(data => {
       subjectsTableBody.innerHTML = "";
 
+      // Check if no data or empty array
+      if (!data || data.length === 0) {
+        subjectsTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No Subject found for this program</td></tr>';
+        return;
+      }
+
       data.forEach(s => {
         const row = document.createElement("tr");
 
@@ -763,7 +777,7 @@ function loadSubjectsByYear(yearLevel) {
 
   console.log(`Fetching subjects for program_id: ${currentProgramId}, year_level: ${yearLevel}`);
 
-  fetch(`subject_crud.php?action=get_by_year&program_id=${currentProgramId}&year_level=${yearLevel}`)
+  fetch(`classes_crud.php?action=get_subjects_by_program_year&program_id=${currentProgramId}&year_level=${yearLevel}`)
     .then(res => {
       console.log("Response status:", res.status);
       return res.json();
@@ -822,16 +836,139 @@ document.getElementById("class-year")?.addEventListener("change", (e) => {
   loadSubjectsByYear(year);
 });
 
+// ========================= WATCH FOR SUBJECT SELECTION CHANGES =========================
+document.addEventListener("change", (e) => {
+  if (e.target.matches("#subject-checkbox-list input[type='checkbox']")) {
+    const subjectId = e.target.value;
+    const isChecked = e.target.checked;
+    
+    console.log(`Subject ${subjectId} ${isChecked ? 'checked' : 'unchecked'}`);
+    
+    // Load faculty for this specific subject
+    loadFacultyBySubject(subjectId, isChecked);
+  }
+});
+
+// ========================= LOAD FACULTY BY SUBJECT =========================
+function loadFacultyBySubject(subjectId, isChecked) {
+  const facultyBox = document.getElementById("faculty-list");
+  
+  if (!facultyBox) {
+    console.error("Faculty list box not found");
+    return;
+  }
+  
+  // Initialize faculty list if not exists
+  if (!facultyBox.dataset.facultyData) {
+    facultyBox.dataset.facultyData = JSON.stringify({});
+  }
+  
+  const facultyData = JSON.parse(facultyBox.dataset.facultyData);
+  
+  if (isChecked) {
+    // Add faculty for this subject
+    fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`)
+      .then(r => r.json())
+      .then(faculty => {
+        console.log(`Faculty for subject ${subjectId}:`, faculty);
+        
+        // Store faculty data for this subject
+        facultyData[subjectId] = faculty;
+        facultyBox.dataset.facultyData = JSON.stringify(facultyData);
+        
+        // Update display
+        updateFacultyDisplay(facultyData);
+      })
+      .catch(err => {
+        console.error("Error loading faculty:", err);
+      });
+  } else {
+    // Remove faculty for this subject
+    delete facultyData[subjectId];
+    facultyBox.dataset.facultyData = JSON.stringify(facultyData);
+    
+    // Update display
+    updateFacultyDisplay(facultyData);
+  }
+}
+
+// ========================= UPDATE FACULTY DISPLAY =========================
+function updateFacultyDisplay(facultyData) {
+  const facultyBox = document.getElementById("faculty-list");
+  
+  // Get all unique faculty from all selected subjects
+  const allFaculty = new Map();
+  
+  Object.keys(facultyData).forEach(subjectId => {
+    const faculty = facultyData[subjectId];
+    faculty.forEach(f => {
+      if (!allFaculty.has(f.id)) {
+        allFaculty.set(f.id, f);
+      }
+    });
+  });
+  
+  // Clear existing content but keep header
+  facultyBox.innerHTML = '<h4><i class="fas fa-user-tie"></i> Available Faculty</h4>';
+  
+  if (allFaculty.size === 0) {
+    facultyBox.innerHTML += '<small>Select subjects to show available faculty</small>';
+    return;
+  }
+  
+  // Display faculty
+  allFaculty.forEach(faculty => {
+    const div = document.createElement("div");
+    div.className = "faculty-item";
+    div.style.cssText = `
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #f9f9f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    `;
+    
+    div.innerHTML = `
+      <i class="fas fa-user-tie" style="color: #007bff;"></i>
+      <div>
+        <div style="font-weight: bold;">${faculty.name}</div>
+        <small style="color: #666;">ID: ${faculty.faculty_id}</small>
+      </div>
+    `;
+    
+    facultyBox.appendChild(div);
+  });
+}
+
 // ========================= LOAD CLASSES =========================
 function loadClasses() {
-  if (!currentProgramId) return;
+  if (!currentProgramId) {
+    console.log("No currentProgramId set, cannot load classes");
+    return;
+  }
 
   console.log("Loading classes for program_id:", currentProgramId);
 
   fetch(`classes_crud.php?action=get&program_id=${currentProgramId}`)
-    .then(r => r.json())
+    .then(r => {
+      console.log("Response status:", r.status);
+      console.log("Response headers:", r.headers);
+      if (!r.ok) {
+        throw new Error(`HTTP error! status: ${r.status}`);
+      }
+      return r.json();
+    })
     .then(data => {
       console.log("Classes data received:", data);
+      
+      if (!classesTableBody) {
+        console.error("classesTableBody not found");
+        return;
+      }
+      
       classesTableBody.innerHTML = "";
 
       if (!data || data.length === 0) {
@@ -904,7 +1041,9 @@ function loadClasses() {
     })
     .catch(err => {
       console.error("Error loading classes:", err);
-      classesTableBody.innerHTML = "<tr><td colspan='4'>Error loading classes</td></tr>";
+      if (classesTableBody) {
+        classesTableBody.innerHTML = `<tr><td colspan='4'>Error loading classes: ${err.message}</td></tr>`;
+      }
     });
 }
 
@@ -1025,22 +1164,53 @@ const facultyTbody = document.querySelector("#faculties-section tbody");
 
 // ------------------- Load Faculty -------------------
 function loadFaculty() {
+  console.log("Loading faculty data...");
   fetch("getFaculty.php")
     .then(r => r.json())
     .then(data => {
+      console.log("Raw faculty data received:", data);
+      console.log("Data type:", typeof data);
+      console.log("Data length:", data ? data.length : "null/undefined");
+      
+      // Check if there's an error in the response
+      if (data && data.error) {
+        console.error("Server returned error:", data.error);
+        return;
+      }
       facultyTbody.innerHTML = "";
+      
+      // Check if no data or empty array
+      if (!data || data.length === 0) {
+        facultyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No faculty found</td></tr>';
+        return;
+      }
+      
       data.forEach(f => {
+        console.log("Processing faculty:", f);
+        console.log("Photo data:", f.photo);
+        console.log("Subjects data:", f.subjects);
         const row = document.createElement("tr");
         row.id = "faculty-" + f.faculty_id;
         Object.assign(row.dataset, f);
         row.dataset.faculty_id = f.faculty_id;
 
+        // Display subject codes or show "No subjects yet"
+        console.log("Faculty subjects data:", f.subjects);
+        console.log("Faculty subject_codes:", f.subject_codes);
+        
+        const subjectsDisplay = f.subject_codes && f.subject_codes.length > 0 
+          ? f.subject_codes.join('<br>') 
+          : 'No subjects yet';
+          
+        console.log("Subjects display:", subjectsDisplay);
+
         row.innerHTML = `
-          <td>${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : ""}</td>
+          <td>${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-tie" style="color:#6b7280;"></i></div>`}</td>
           <td><strong>${f.faculty_id}</strong></td>
           <td><div>${f.firstname} ${f.lastname} ${f.suffix||""}</div><small>${f.email}</small></td>
-          <td>No subjects yet</td>
+          <td>${subjectsDisplay}</td>
           <td class="action-cell"><div class="action-buttons">
+            <button class="view-btn"><i class="fas fa-eye"></i></button>
             <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
             <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
           </div></td>`;
@@ -1065,8 +1235,45 @@ function loadFaculty() {
           preview.src = f.photo || "";
           preview.hidden = !f.photo;
 
-          addFacultyModal.dataset.editRow = f.faculty_id;
+          // Load subjects and check faculty's existing subjects
+          loadAllFacultySubjects().then(() => {
+            // Check the faculty's existing subjects
+            if (f.subjects && f.subjects.length > 0) {
+              // Get all subject checkboxes
+              const checkboxes = document.querySelectorAll('#faculty-subjects-list input[type="checkbox"]');
+              checkboxes.forEach(checkbox => {
+                const subjectText = checkbox.parentElement.textContent.trim();
+                // Check if this subject is in the faculty's subjects
+                if (f.subjects.some(facultySubject => subjectText.includes(facultySubject))) {
+                  checkbox.checked = true;
+                }
+              });
+            }
+          });
+
+          addFacultyModal.dataset.editRow = f.id;
           openModal(addFacultyModal, "EDIT FACULTY", "UPDATE FACULTY");};
+
+        // VIEW ----------------------
+        row.querySelector(".view-btn").onclick = () => {
+          // Set faculty name in modal
+          document.getElementById("viewFacultyName").textContent = `${f.firstname} ${f.lastname} ${f.suffix || ""}`;
+          
+          // Show faculty subjects in modal
+          const subjectsList = document.getElementById("viewFacultySubjectsList");
+          if (f.subjects && f.subjects.length > 0) {
+            subjectsList.innerHTML = f.subjects.map(subject => 
+              `<div class="subject-item">
+                <div class="subject-code">${subject}</div>
+              </div>`
+            ).join('');
+          } else {
+            subjectsList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">No subjects assigned yet</p>';
+          }
+          
+          // Show modal
+          viewFacultySubjectsModal.style.display = "flex";
+        };
 
         // DELETE --------------------
         row.querySelector(".delete-btn").onclick = () => {
@@ -1081,6 +1288,14 @@ document.querySelector(".add-faculty-btn").onclick = () => {
   facultyIdInput.value = "";
   facultyIdInput.readOnly = false; 
 
+  // Enable email field for adding - multiple approaches
+  const emailInput = document.getElementById("faculty-email");
+  emailInput.disabled = false;
+  emailInput.readOnly = false;
+  emailInput.removeAttribute('disabled');
+  emailInput.removeAttribute('readonly');
+  console.log("Email field enabled for add. Disabled state:", emailInput.disabled);
+
   addFacultyModal.querySelectorAll("input").forEach(i => {
     if (i.id !== "faculty-number") i.value = "";
   });
@@ -1094,6 +1309,31 @@ document.querySelector(".add-faculty-btn").onclick = () => {
   document.getElementById("faculty-photo-preview").hidden = true;
   delete addFacultyModal.dataset.editRow;
   openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY");
+  
+  // Extra fix: ensure email field is enabled after modal opens
+  setTimeout(() => {
+    const emailInput = document.getElementById("faculty-email");
+    emailInput.disabled = false;
+    emailInput.readOnly = false;
+    emailInput.style.pointerEvents = 'auto';
+    emailInput.style.userSelect = 'auto';
+    emailInput.style.opacity = '1';
+    emailInput.setAttribute('contenteditable', 'true');
+    emailInput.focus(); // Also focus on the email field
+    console.log("Email field re-enabled after modal open. Disabled state:", emailInput.disabled);
+    
+    // Add event listener to prevent disabling
+    emailInput.addEventListener('input', function(e) {
+      e.target.disabled = false;
+      e.target.readOnly = false;
+    });
+    
+    // Override any attempts to disable
+    Object.defineProperty(emailInput, 'disabled', {
+      get: function() { return false; },
+      set: function(value) { return false; }
+    });
+  }, 100);
 };
 
 // SUBMIT (ADD/EDIT) ----------
@@ -1121,6 +1361,7 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
     firstname: f,
     lastname: l,
     suffix: s,
+    photo: photo,
     subjects: selectedSubjects
   };
 
@@ -1130,19 +1371,32 @@ addFacultyModal.querySelector(".submit-btn").onclick = async () => {
   }
 
   try {
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch("faculty_crud.php", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(facultyData)
+      body: JSON.stringify(facultyData),
+      signal: controller.signal
     });
-
+    
+    clearTimeout(timeoutId);
     const result = await response.json();
     console.log("Faculty creation response:", result);
     
     if (result.success) {
+      console.log("Faculty added successfully, reloading faculty list...");
       loadFaculty();
       closeModal(addFacultyModal);
-      showNotification(result.message, "#4caf50");
+      showNotification(result.message, "#10b981");
+      
+      // Force a refresh after a short delay to ensure photo data is loaded
+      setTimeout(() => {
+        console.log("Force refreshing faculty list...");
+        loadFaculty();
+      }, 500);
     } else {
       showNotification(result.message, "#f44336");
     }
@@ -1497,6 +1751,7 @@ function loadStudents(){
       
       data.forEach(stu => {
         console.log("Processing student:", stu);
+        console.log("Student subjects:", stu.subjects);
         const row = document.createElement("tr");
         row.dataset.id = stu.id;
         row.innerHTML = `
@@ -1562,6 +1817,9 @@ function loadStudents(){
             if (stu.subjects && Array.isArray(stu.subjects)) {
               selectedSubjects = stu.subjects;
               console.log("Loading subjects for edit:", selectedSubjects);
+              console.log("Number of subjects loaded:", selectedSubjects.length);
+            } else {
+              console.log("No subjects found for this student or subjects is not an array");
             }
             updateSelectedSubjectsDisplay();
 
@@ -1702,6 +1960,7 @@ function renderSubjectsTable() {
   
   filteredSubjects.forEach(subject => {
     const row = document.createElement("tr");
+    // Only check if subject is in selectedSubjects AND we're not in a fresh add mode
     const isSelected = selectedSubjects.some(s => s.id === subject.id);
     
     row.innerHTML = `
@@ -1773,6 +2032,9 @@ document.getElementById("add-subject-btn")?.addEventListener("click", () => {
         e.stopPropagation();
         console.log("Close X clicked directly");
         subjectSelectionModal.style.display = "none";
+        // Clear checkboxes to prevent repeated clicking issue
+        const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
+        allCheckboxes.forEach(cb => cb.checked = false);
       });
     }
     
@@ -1784,6 +2046,9 @@ document.getElementById("add-subject-btn")?.addEventListener("click", () => {
         e.stopPropagation();
         console.log("Cancel clicked directly");
         subjectSelectionModal.style.display = "none";
+        // Clear checkboxes to prevent repeated clicking issue
+        const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
+        allCheckboxes.forEach(cb => cb.checked = false);
       });
     }
   }, 100);
@@ -1804,6 +2069,9 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       console.log("Close X button clicked");
       subjectSelectionModal.style.display = "none";
+      // Clear checkboxes to prevent repeated clicking issue
+      const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
+      allCheckboxes.forEach(cb => cb.checked = false);
     });
   }
   
@@ -1812,12 +2080,18 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       console.log("Cancel button clicked");
       subjectSelectionModal.style.display = "none";
+      // Clear checkboxes to prevent repeated clicking issue
+      const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
+      allCheckboxes.forEach(cb => cb.checked = false);
     });
   }
 
   // Student modal close button
   document.querySelector("#addStudentModal .close-btn")?.addEventListener("click", () => {
     addStudentModal.style.display = "none";
+    // Clear selected subjects when closing modal to prevent carryover
+    selectedSubjects = [];
+    updateSelectedSubjectsDisplay();
   });
 
   // View student subjects modal close button
@@ -1932,31 +2206,57 @@ document.getElementById("select-all-subjects")?.addEventListener("change", (e) =
 document.getElementById("confirm-subject-selection")?.addEventListener("click", () => {
   const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:checked");
   
-  selectedSubjects = [];
+  console.log("Confirming subject selection. Checked checkboxes:", checkboxes.length);
+  
   checkboxes.forEach(cb => {
     const subject = allSubjects.find(s => s.id == cb.value);
     if (subject) {
-      selectedSubjects.push(subject);
+      // Check if subject is already in selectedSubjects to avoid duplicates
+      const existingIndex = selectedSubjects.findIndex(s => s.id === subject.id);
+      if (existingIndex === -1) {
+        selectedSubjects.push(subject);
+        console.log("Added subject:", subject);
+      } else {
+        console.log("Subject already exists, skipping:", subject);
+      }
     }
   });
   
+  console.log("Final selectedSubjects:", selectedSubjects);
   updateSelectedSubjectsDisplay();
   subjectSelectionModal.style.display = "none";
+  
+  // Clear all checkboxes to prevent repeated clicking issue
+  setTimeout(() => {
+    const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
+    allCheckboxes.forEach(cb => cb.checked = false);
+  }, 100);
 });
 
 // Update selected subjects display
 function updateSelectedSubjectsDisplay() {
   const container = document.getElementById("selected-subjects");
   
+  console.log("Updating selected subjects display. selectedSubjects:", selectedSubjects);
+  console.log("Container found:", container);
+  
+  if (!container) {
+    console.error("selected-subjects container not found!");
+    return;
+  }
+  
   if (selectedSubjects.length === 0) {
     container.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects selected</p>';
+    console.log("No subjects selected, showing default message");
   } else {
+    console.log(`Displaying ${selectedSubjects.length} subjects`);
     let html = '<div class="selected-subjects-list">';
     selectedSubjects.forEach(subject => {
+      console.log("Adding subject to display:", subject);
       html += `
-        <div class="selected-subject-item">
+        <div class="selected-subject-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 5px; background: #f3f4f6; border-radius: 4px; border: 1px solid #d1d5db;">
           <span>${subject.subject_code} - ${subject.subject_desc} (${subject.year_level})</span>
-          <button type="button" class="remove-subject" data-id="${subject.id}">
+          <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -1969,6 +2269,7 @@ function updateSelectedSubjectsDisplay() {
     container.querySelectorAll(".remove-subject").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const subjectId = parseInt(e.currentTarget.dataset.id);
+        console.log("Removing subject with ID:", subjectId);
         selectedSubjects = selectedSubjects.filter(s => s.id !== subjectId);
         updateSelectedSubjectsDisplay();
       });
@@ -2234,6 +2535,8 @@ document.addEventListener("DOMContentLoaded", loadCategories);
 
 // ========================= View Student Subjects =========================
 function viewStudentSubjects(student) {
+  console.log("viewStudentSubjects called with student:", student);
+  
   const modal = document.getElementById("viewStudentSubjectsModal");
   const subjectsList = document.getElementById("viewStudentSubjectsList");
   const studentNameElement = document.getElementById("viewStudentName");
@@ -2243,6 +2546,9 @@ function viewStudentSubjects(student) {
   
   subjectsList.innerHTML = "<div class='loading'>Loading subjects...</div>";
   modal.style.display = "flex";
+  
+  console.log("Student subjects:", student.subjects);
+  console.log("Is subjects array?", Array.isArray(student.subjects));
   
   // Display subjects that are already loaded with student data
   if (student.subjects && Array.isArray(student.subjects)) {
@@ -2266,17 +2572,24 @@ function viewStudentSubjects(student) {
       subjectsList.innerHTML = html;
     }
   } else {
+    console.log("Subjects not preloaded, fetching from server...");
     // If subjects aren't preloaded, fetch them
     fetch(`get_students.php`)
       .then(r => r.json())
       .then(students => {
+        console.log("Fetched students:", students);
         const currentStudent = students.find(s => s.id == student.id);
+        console.log("Found current student:", currentStudent);
+        
         if (currentStudent && currentStudent.subjects) {
+          console.log("Current student subjects:", currentStudent.subjects);
           if (currentStudent.subjects.length === 0) {
             subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
           } else {
+            console.log("Displaying", currentStudent.subjects.length, "subjects");
             let html = "<div class='subjects-grid'>";
             currentStudent.subjects.forEach(subject => {
+              console.log("Adding subject to display:", subject);
               html += `
                 <div class='subject-card'>
                   <div class='subject-header'>
@@ -2292,6 +2605,7 @@ function viewStudentSubjects(student) {
             subjectsList.innerHTML = html;
           }
         } else {
+          console.log("No current student found or no subjects");
           subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
         }
       })
@@ -2383,7 +2697,7 @@ function initAddStudentButton() {
       yearlevelRow.style.display = 'block';
       yearlevelSelect.required = true;
       
-      // Remove automatic subject loading - only load when Add Subject is clicked
+      // Clear selected subjects to prevent edit checking issue
       selectedSubjects = [];
       updateSelectedSubjectsDisplay();
 
@@ -2449,7 +2763,7 @@ function initAddStudentButton() {
             console.log("Dashboard stats updated after student add");
           }, 500); // Increased delay to ensure DB commit
           closeModal(addStudentModal);
-          alert(d.message || "Student added successfully. Password sent to email.");
+          showNotification(d.message || "Student added successfully. Password sent to email.", "#4caf50");
           addProgramToDropdown(p); // live add program
         } else {
           alert(d.message || "Error adding student.");

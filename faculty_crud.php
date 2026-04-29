@@ -1,13 +1,13 @@
 <?php
 header("Content-Type: application/json");
 include 'connect.php';
+require_once 'mailer.php';
 
-require __DIR__ . '/phpmailer/src/PHPMailer.php';
-require __DIR__ . '/phpmailer/src/SMTP.php';
-require __DIR__ . '/phpmailer/src/Exception.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+// Generate random password function
+function generateRandomPassword($length = 8) {
+    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    return substr(str_shuffle($chars), 0, $length);
+}
 
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
@@ -21,180 +21,146 @@ if ($action === "add") {
     $email = trim($data['email'] ?? '');
     $firstname = trim($data['firstname'] ?? '');
     $lastname = trim($data['lastname'] ?? '');
-    $suffix = $data['suffix'] ?? '';
-    $program = $data['program'] ?? '';
-    $yearlevel = $data['yearlevel'] ?? '';
+    $suffix = trim($data['suffix'] ?? '');
+    $photo = $data['photo'] ?? '';
     $subjects = $data['subjects'] ?? [];
+    
+    // Generate random password
+    $password = generateRandomPassword();
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Validate required fields
-    if (
-        empty($faculty_id) || empty($email) ||
-        empty($firstname) || empty($lastname)
-    ) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Please fill all required fields"
-        ]);
+    // Handle photo - if base64 string, store as is
+    if (!empty($photo) && strpos($photo, 'data:image') === 0) {
+        // Photo is base64 encoded, store as is
+        error_log("Photo is base64 encoded, length: " . strlen($photo));
+    } else {
+        // Empty or invalid photo
+        $photo = '';
+    }
+
+    if (!$faculty_id || !$email || !$firstname || !$lastname) {
+        echo json_encode(["success"=>false,"message"=>"Missing required fields"]);
         exit;
     }
 
-    // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Invalid email format"
-        ]);
+        echo json_encode(["success"=>false,"message"=>"Invalid email"]);
         exit;
     }
 
-    /* CHECK DUPLICATES (faculty ID) */
-    $check = $conn->prepare("SELECT id FROM add_faculties WHERE faculty_id=?");
-    $check->bind_param("s", $faculty_id);
+    /* duplicate check */
+    $check = $conn->prepare("SELECT id FROM add_faculties WHERE faculty_id=? OR email=?");
+    $check->bind_param("ss", $faculty_id, $email);
     $check->execute();
     $check->store_result();
 
     if ($check->num_rows > 0) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Faculty ID already exists"
-        ]);
+        echo json_encode(["success"=>false,"message"=>"Faculty already exists"]);
         exit;
     }
     $check->close();
 
-    /* CHECK DUPLICATES (email) */
-    $checkEmail = $conn->prepare("SELECT id FROM add_faculties WHERE email=?");
-    $checkEmail->bind_param("s", $email);
-    $checkEmail->execute();
-    $checkEmail->store_result();
+    $conn->begin_transaction();
 
-    if ($checkEmail->num_rows > 0) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Email already exists"
-        ]);
+    try {
+
+        // Check if password column exists
+        $result = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'password'");
+        $hasPasswordColumn = $result->num_rows > 0;
+        
+        if ($hasPasswordColumn) {
+            // Insert with password
+            $stmt = $conn->prepare("
+                INSERT INTO add_faculties
+                (faculty_id,email,firstname,lastname,suffix,photo,password)
+                VALUES (?,?,?,?,?,?,?)
+            ");
+            $stmt->bind_param(
+                "sssssss",
+                $faculty_id,
+                $email,
+                $firstname,
+                $lastname,
+                $suffix,
+                $photo,
+                $hashed_password
+            );
+        } else {
+            // Insert without password (fallback)
+            $stmt = $conn->prepare("
+                INSERT INTO add_faculties
+                (faculty_id,email,firstname,lastname,suffix,photo)
+                VALUES (?,?,?,?,?,?)
+            ");
+            $stmt->bind_param(
+                "ssssss",
+                $faculty_id,
+                $email,
+                $firstname,
+                $lastname,
+                $suffix,
+                $photo
+            );
+        }
+
+        $stmt->execute();
+        $faculty_db_id = $stmt->insert_id;
+        $stmt->close();
+
+        /* subjects */
+        if (!empty($subjects)) {
+
+            $sub = $conn->prepare("
+                INSERT INTO faculty_subjects (faculty_id,subject_id)
+                VALUES (?,?)
+            ");
+
+            foreach ($subjects as $sid) {
+                $sid = intval($sid);
+                $sub->bind_param("ii", $faculty_db_id, $sid);
+                $sub->execute();
+            }
+
+            $sub->close();
+        }
+
+        $conn->commit();
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Faculty add error: " . $e->getMessage());
+        echo json_encode(["success"=>false,"message"=>"Database error: " . $e->getMessage()]);
         exit;
     }
-    $checkEmail->close();
 
-    // Generate password
-    $password = substr(str_shuffle("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"), 0, 8);
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    /* ================= EMAIL WITH PASSWORD ================= */
+    $body = "
+        <h2>Welcome to Faculty Evaluation System</h2>
+        <p>Hello $firstname $lastname</p>
+        <p>Your account has been created successfully.</p>
+        <p><b>Faculty Number:</b> FC-$faculty_id</p>
+        <p><b>Temporary Password:</b> $password</p>
+        <hr>
+        <p>Please use this password to login to the Faculty Evaluation System.</p>
+        <p>You can change your password after logging in.</p>
+    ";
 
-    /* INSERT FACULTY */
-    $stmt = $conn->prepare("
-        INSERT INTO add_faculties
-        (faculty_id,email,firstname,lastname,suffix,program,yearlevel,password) 
-        VALUES (?,?,?,?,?,?,?,?)
-    ");
-
-    $stmt->bind_param(
-        "ssssssss",
-        $faculty_id,
+    // Send email asynchronously to avoid blocking
+    $sent = sendEmail(
         $email,
-        $firstname,
-        $lastname,
-        $suffix,
-        $program,
-        $yearlevel,
-        $hashedPassword
+        "$firstname $lastname",
+        "Faculty Evaluation System",
+        $body
     );
 
-    if ($stmt->execute()) {
-        $faculty_db_id = $stmt->insert_id;
-
-        /* INSERT FACULTY SUBJECTS IF ANY */
-        if (!empty($subjects) && is_array($subjects)) {
-            $subjectStmt = $conn->prepare("INSERT INTO faculty_subjects (faculty_id, subject_id) VALUES (?, ?)");
-            
-            foreach ($subjects as $subject_id) {
-                $subjectStmt->bind_param("ii", $faculty_db_id, $subject_id);
-                $subjectStmt->execute();
-            }
-            $subjectStmt->close();
-        }
-
-        /* INSERT INTO FACULTY LOGIN TABLE */
-        $loginStmt = $conn->prepare("INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)");
-        $loginStmt->bind_param("sss", $faculty_id, $faculty_id, $hashedPassword);
-        if (!$loginStmt->execute()) {
-            error_log("Faculty login insert failed: " . $loginStmt->error);
-        }
-        $loginStmt->close();
-
-        /* =========================
-           SEND EMAIL
-        ========================= */
-        $mail = new PHPMailer(true);
-
-        try {
-            $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->SMTPAuth = true;
-
-            $mail->Username = 'floresclarissaferraren@gmail.com';
-            $mail->Password = 'nicj elgi ruam ozca';
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
-
-            $mail->SMTPAutoTLS = true;
-
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
-                ]
-            ];
-
-            $mail->SMTPDebug = 0;
-
-            $mail->setFrom('floresclarissaferraren@gmail.com', 'Faculty Evaluation System');
-            $mail->addAddress($email, $firstname . " " . $lastname);
-
-            $mail->isHTML(true);
-            $mail->Subject = "Your Faculty Account Credentials";
-            $mail->Body = "
-                <h2>Welcome to Faculty Evaluation System</h2>
-                <p>Hello <b>$firstname $lastname</b>,</p>
-
-                <p>Your faculty account has been created successfully.</p>
-
-                <p><b>Faculty ID:</b> $faculty_id</p>
-                <p><b>Email:</b> $email</p>
-                <p><b>Temporary Password:</b> $password</p>
-
-                <br>
-                <p>Please change your password immediately after login.</p>
-
-                <br>
-                <p>Regards,<br>Faculty Evaluation System</p>
-            ";
-
-            $mail->send();
-
-            echo json_encode([
-                "success" => true,
-                "message" => "Faculty added successfully. Email sent!"
-            ]);
-
-        } catch (Exception $e) {
-            error_log("Mailer Error: " . $mail->ErrorInfo);
-
-            echo json_encode([
-                "success" => false,
-                "message" => "Faculty saved but email failed: " . $mail->ErrorInfo
-            ]);
-        }
-
-    } else {
-        echo json_encode([
-            "success" => false,
-            "message" => $stmt->error
-        ]);
+    if (!$sent) {
+        error_log("Failed to send email to faculty: $email");
     }
 
-    $stmt->close();
+    echo json_encode([
+        "success" => true,
+        "message" => $sent ? "Faculty added successfully and email sent with password" : "Faculty added successfully but email failed to send"
+    ]);
 }
 
 /* =========================
@@ -203,138 +169,60 @@ if ($action === "add") {
 elseif ($action === "edit") {
 
     $id = intval($data['id'] ?? 0);
-    $firstname = trim($data['firstname'] ?? '');
-    $lastname = trim($data['lastname'] ?? '');
-    $suffix = $data['suffix'] ?? '';
-    $email = trim($data['email'] ?? '');
-    $program = $data['program'] ?? '';
-    $yearlevel = $data['yearlevel'] ?? '';
-    $subjects = $data['subjects'] ?? [];
 
-    if (empty($id)) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Invalid ID"
-        ]);
+    if (!$id) {
+        echo json_encode(["success"=>false,"message"=>"Invalid ID"]);
         exit;
     }
 
-    // Get current faculty_id for email
-    $getFacultyId = $conn->prepare("SELECT faculty_id FROM add_faculties WHERE id=?");
-    $getFacultyId->bind_param("i", $id);
-    $getFacultyId->execute();
-    $result = $getFacultyId->get_result();
-    $facultyData = $result->fetch_assoc();
-    $faculty_id = $facultyData['faculty_id'] ?? '';
-    $getFacultyId->close();
+    $faculty_id = $data['faculty_id'];
+    $email = $data['email'];
+    $firstname = $data['firstname'];
+    $lastname = $data['lastname'];
+    $suffix = $data['suffix'];
+    $photo = $data['photo'];
+    $subjects = $data['subjects'] ?? [];
 
     $stmt = $conn->prepare("
-        UPDATE add_faculties 
-        SET firstname=?, lastname=?, suffix=?, email=?, program=?, yearlevel=? 
+        UPDATE add_faculties
+        SET faculty_id=?, email=?, firstname=?, lastname=?, suffix=?, photo=?
         WHERE id=?
     ");
 
     $stmt->bind_param(
         "ssssssi",
+        $faculty_id,
+        $email,
         $firstname,
         $lastname,
         $suffix,
-        $email,
-        $program,
-        $yearlevel,
+        $photo,
         $id
     );
 
     if ($stmt->execute()) {
-        
-        /* UPDATE FACULTY SUBJECTS */
-        // Delete existing subjects
-        $deleteSubjects = $conn->prepare("DELETE FROM faculty_subjects WHERE faculty_id=?");
-        $deleteSubjects->bind_param("i", $id);
-        $deleteSubjects->execute();
-        $deleteSubjects->close();
 
-        // Insert new subjects
-        if (!empty($subjects) && is_array($subjects)) {
-            $subjectStmt = $conn->prepare("INSERT INTO faculty_subjects (faculty_id, subject_id) VALUES (?, ?)");
-            
-            foreach ($subjects as $subject_id) {
-                $subjectStmt->bind_param("ii", $id, $subject_id);
-                $subjectStmt->execute();
+        $conn->query("DELETE FROM faculty_subjects WHERE faculty_id=$id");
+
+        if (!empty($subjects)) {
+
+            $sub = $conn->prepare("
+                INSERT INTO faculty_subjects (faculty_id,subject_id)
+                VALUES (?,?)
+            ");
+
+            foreach ($subjects as $sid) {
+                $sid = intval($sid);
+                $sub->bind_param("ii", $id, $sid);
+                $sub->execute();
             }
-            $subjectStmt->close();
+
+            $sub->close();
         }
 
-        /* =========================
-           SEND EMAIL NOTIFICATION
-        ========================= */
-        $mail = new PHPMailer(true);
-
-        try {
-            $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->SMTPAuth = true;
-
-            $mail->Username = 'floresclarissaferraren@gmail.com';
-            $mail->Password = 'nicj elgi ruam ozca';
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
-
-            $mail->SMTPAutoTLS = true;
-
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
-                ]
-            ];
-
-            $mail->SMTPDebug = 0;
-
-            $mail->setFrom('floresclarissaferraren@gmail.com', 'Faculty Evaluation System');
-            $mail->addAddress($email, $firstname . " " . $lastname);
-
-            $mail->isHTML(true);
-            $mail->Subject = "Your Faculty Account Information Updated";
-            $mail->Body = "
-                <h2>Faculty Evaluation System</h2>
-                <p>Hello <b>$firstname $lastname</b>,</p>
-
-                <p>Your faculty account information has been updated.</p>
-
-                <p><b>Faculty ID:</b> $faculty_id</p>
-                <p><b>Email:</b> $email</p>
-                <p><b>Program:</b> $program</p>
-                <p><b>Year Level:</b> $yearlevel</p>
-
-                <br>
-                <p>If you have any questions, please contact the administrator.</p>
-
-                <br>
-                <p>Regards,<br>Faculty Evaluation System</p>
-            ";
-
-            $mail->send();
-
-            echo json_encode([
-                "success" => true,
-                "message" => "Faculty updated successfully. Email sent!"
-            ]);
-
-        } catch (Exception $e) {
-            error_log("Mailer Error: " . $mail->ErrorInfo);
-
-            echo json_encode([
-                "success" => true,
-                "message" => "Faculty updated successfully, but email failed: " . $mail->ErrorInfo
-            ]);
-        }
+        echo json_encode(["success"=>true,"message"=>"Faculty updated"]);
     } else {
-        echo json_encode([
-            "success" => false,
-            "message" => $stmt->error
-        ]);
+        echo json_encode(["success"=>false,"message"=>$stmt->error]);
     }
 
     $stmt->close();
@@ -347,37 +235,15 @@ elseif ($action === "delete") {
 
     $id = intval($data['id'] ?? 0);
 
-    if (empty($id)) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Invalid ID"
-        ]);
+    if (!$id) {
+        echo json_encode(["success"=>false,"message"=>"Invalid ID"]);
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM add_faculties WHERE id=?");
-    $stmt->bind_param("i", $id);
+    $conn->query("DELETE FROM faculty_subjects WHERE faculty_id=$id");
+    $conn->query("DELETE FROM add_faculties WHERE id=$id");
 
-    if ($stmt->execute()) {
-        echo json_encode([
-            "success" => true,
-            "message" => "Faculty deleted successfully"
-        ]);
-    } else {
-        echo json_encode([
-            "success" => false,
-            "message" => $stmt->error
-        ]);
-    }
-
-    $stmt->close();
-}
-
- else {
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid action"
-    ]);
+    echo json_encode(["success"=>true,"message"=>"Faculty deleted"]);
 }
 
 $conn->close();
