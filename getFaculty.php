@@ -52,11 +52,11 @@ try {
 
         if (!empty($row['subjects_data'])) {
             error_log("Subjects data found: " . $row['subjects_data']);
-            $subject_entries = explode('|||', $row['subjects_data']);
+            $subject_entries = explode('||', $row['subjects_data']);
             error_log("Subject entries: " . json_encode($subject_entries));
             
             foreach ($subject_entries as $entry) {
-                $parts = explode('|||', $entry);
+                $parts = explode('||', $entry);
                 error_log("Entry parts: " . json_encode($parts));
                 if (count($parts) >= 4) {
                     $subjects[] = [

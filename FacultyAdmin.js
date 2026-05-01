@@ -6,6 +6,7 @@ const addQuestionModal = document.getElementById("addQuestionModal");
 const subjectSelectionModal = document.getElementById("subjectSelectionModal");
 const viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsModal");
 const viewFacultySubjectsModal = document.getElementById("viewFacultySubjectsModal");
+const managePeriodsModal = document.getElementById("managePeriodsModal");
 
 document.addEventListener("DOMContentLoaded", () => {
   let currentActiveLink = null;
@@ -28,8 +29,20 @@ function showNotification(message, color="#4caf50", duration=3000){
 }
   // ================= Sidebar Toggle ==========================================================================================
 window.toggleSidebar=()=>{
-  const s=document.getElementById("sidebar"),m=document.querySelector("main");
-  if(window.innerWidth>768){s.classList.toggle("collapsed");m.classList.toggle("full");}
+  const s=document.getElementById("sidebar"),m=document.querySelector("main"),navbar=document.querySelector(".navbar");
+  if(window.innerWidth>768){
+    s.classList.toggle("collapsed");
+    m.classList.toggle("full");
+    
+    // Directly manipulate navbar styles
+    if(s.classList.contains("collapsed")){
+      navbar.style.left="85px";
+      navbar.style.width="calc(100% - 85px)";
+    }else{
+      navbar.style.left="260px";
+      navbar.style.width="calc(100% - 260px)";
+    }
+  }
   else{s.classList.remove("collapsed");s.classList.toggle("active");m.style.marginLeft="0";m.style.width="100%";}
 };
 
@@ -71,6 +84,23 @@ window.showSection = (id, e) => {
   if (link) {
     link.classList.add("active");
     currentActiveLink = link;
+  }
+
+  // Update navbar section title
+  const navbarTitle = document.getElementById("navbarSectionTitle");
+  const sectionTitles = {
+    "dashboard-section": "Dashboard",
+    "programs-section": "Program",
+    "faculties-section": "Faculty List",
+    "students-section": "Student List",
+    "criteria-section": "Evaluation Criteria List",
+    "report-section": "Evaluation Report",
+    "subjects-section": "Subjects Management",
+    "manage-section": "Manage Program"
+  };
+  
+  if (navbarTitle && sectionTitles[id]) {
+    navbarTitle.textContent = sectionTitles[id];
   }
 
   // =========================
@@ -118,7 +148,8 @@ function openDeleteModal(type,name,el){
     addQuestionModal,
     subjectSelectionModal,
     viewStudentSubjectsModal,
-    viewFacultySubjectsModal
+    viewFacultySubjectsModal,
+    managePeriodsModal
   ];
   modalsToClose.forEach(m => { if(m) m.style.display = "none"; });
   
@@ -176,17 +207,24 @@ if (cfg.type === "json") {
   };
 } else {
   // For other entities, send form-encoded
+  let body = `${cfg.key}=${encodeURIComponent(val)}`;
+  
+  // Add action parameter for subjects
+  if (deleteType === "subject") {
+    body += `&action=delete`;
+  }
+  
   fetchOptions = {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `${cfg.key}=${encodeURIComponent(val)}`
+    body: body
   };
 }
 
 fetch(cfg.url, fetchOptions)
   .then(r => r.json())
   .then(resp => {
-    if (resp.success) {
+    if (resp.success || resp.status === "success") {
       deleteTarget.remove();
       closeDeleteModal();
       openDeleteSuccess();
@@ -404,6 +442,7 @@ function setupAllModalsClickOutside() {
     "subjectSelectionModal",
     "viewStudentSubjectsModal",
     "addSubjectMainModal",
+    "managePeriodsModal",
     "deleteModal",
     "deleteSuccessModal"
   ];
@@ -669,6 +708,7 @@ function loadSubjects() {
 
       data.forEach(s => {
         const row = document.createElement("tr");
+        row.dataset.id = s.id;
 
         row.innerHTML = `
           <td>${s.subject_code}</td>
@@ -1165,7 +1205,7 @@ const facultyTbody = document.querySelector("#faculties-section tbody");
 // ------------------- Load Faculty -------------------
 function loadFaculty() {
   console.log("Loading faculty data...");
-  fetch("getFaculty.php")
+  fetch("getFaculty.php?t=" + Date.now())
     .then(r => r.json())
     .then(data => {
       console.log("Raw faculty data received:", data);
@@ -2795,4 +2835,282 @@ window.testDeleteDashboardUpdate = function() {
   deleteType = "student"; // Simulate student delete context
   loadDashboardStats();
 };
+
+// ========================= MANAGE PERIODS =========================
+function initManagePeriodsButton() {
+  const manageBtn = document.querySelector(".btn-manage");
+  if (manageBtn) {
+    manageBtn.addEventListener("click", () => {
+      openManagePeriodsModal();
+    });
+  }
+}
+
+function openManagePeriodsModal() {
+  // Clear form
+  document.getElementById("period-ay").value = "";
+  document.getElementById("period-sem").value = "1st Semester";
+  document.getElementById("period-start").value = "";
+  document.getElementById("period-end").value = "";
+  
+  // Load existing periods
+  loadPeriods();
+  
+  // Show modal
+  managePeriodsModal.style.display = "flex";
+  managePeriodsModal.style.zIndex = "9999";
+}
+
+function loadPeriods() {
+  const tbody = document.getElementById("periods-tbody");
+  
+  // Show empty table - no data
+  tbody.innerHTML = `
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="action-cell">
+        <div class="action-buttons">
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
+
+function editPeriod(period) {
+  document.getElementById("period-ay").value = period.ay;
+  document.getElementById("period-sem").value = period.sem;
+  document.getElementById("period-start").value = period.start;
+  document.getElementById("period-end").value = period.end;
+  
+  // Change button text to update
+  const addBtn = document.getElementById("add-period-btn");
+  addBtn.textContent = "Update";
+  addBtn.onclick = () => updatePeriod(period.id);
+}
+
+function addPeriod() {
+  const ay = document.getElementById("period-ay").value.trim();
+  const sem = document.getElementById("period-sem").value;
+  const start = document.getElementById("period-start").value;
+  const end = document.getElementById("period-end").value;
+  
+  if (!ay || !sem || !start || !end) {
+    alert("Please fill all fields");
+    return;
+  }
+  
+  if (new Date(start) >= new Date(end)) {
+    alert("End date must be after start date");
+    return;
+  }
+  
+  // For now, just show notification and reload
+  // In production, you would make an API call here
+  showNotification("Period added successfully!", "#4caf50");
+  
+  // Clear form and reload
+  document.getElementById("period-ay").value = "";
+  document.getElementById("period-sem").selectedIndex = 0;
+  document.getElementById("period-start").value = "";
+  document.getElementById("period-end").value = "";
+  
+  loadPeriods();
+}
+
+function updatePeriod(periodId) {
+  const ay = document.getElementById("period-ay").value.trim();
+  const sem = document.getElementById("period-sem").value;
+  const start = document.getElementById("period-start").value;
+  const end = document.getElementById("period-end").value;
+  
+  if (!ay || !sem || !start || !end) {
+    alert("Please fill all fields");
+    return;
+  }
+  
+  if (new Date(start) >= new Date(end)) {
+    alert("End date must be after start date");
+    return;
+  }
+  
+  // For now, just show notification and reload
+  // In production, you would make an API call here
+  showNotification("Period updated successfully!", "#4caf50");
+  
+  // Reset button and clear form
+  const addBtn = document.getElementById("add-period-btn");
+  addBtn.textContent = "Add";
+  addBtn.onclick = addPeriod;
+  
+  document.getElementById("period-ay").value = "";
+  document.getElementById("period-sem").selectedIndex = 0;
+  document.getElementById("period-start").value = "";
+  document.getElementById("period-end").value = "";
+  
+  loadPeriods();
+}
+
+// Add period button event
+document.getElementById("add-period-btn")?.addEventListener("click", addPeriod);
+
+// Close modal event
+managePeriodsModal?.querySelector(".close-btn")?.addEventListener("click", () => {
+  managePeriodsModal.style.display = "none";
+});
+
+// Tooltip functionality for A.Y. field
+function initAYTooltip() {
+  const ayInput = document.getElementById("period-ay");
+  const tooltip = document.getElementById("ay-tooltip");
+  
+  if (ayInput && tooltip) {
+    ayInput.addEventListener("focus", () => {
+      tooltip.style.display = "block";
+    });
+    
+    ayInput.addEventListener("blur", () => {
+      tooltip.style.display = "none";
+    });
+    
+    ayInput.addEventListener("input", () => {
+      if (ayInput.value) {
+        tooltip.style.display = "none";
+      }
+    });
+  }
+}
+
+// Simple Calendar Click Handler
+function initCalendarClickHandlers() {
+  // Get calendar icons
+  const calendarIcons = document.querySelectorAll('.calendar-icon');
+  console.log('Found calendar icons:', calendarIcons.length); // Debug
+  
+  calendarIcons.forEach(icon => {
+    icon.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Calendar icon clicked!'); // Debug
+      
+      const targetId = icon.dataset.target;
+      const calendar = document.getElementById(targetId + '-calendar');
+      
+      console.log('Target ID:', targetId); // Debug
+      console.log('Calendar element:', calendar); // Debug
+      
+      if (calendar) {
+        // Hide all calendars first
+        document.querySelectorAll('.calendar-picker').forEach(cal => {
+          cal.style.display = 'none';
+          cal.classList.remove('active');
+        });
+        
+        // Show the clicked calendar
+        calendar.style.display = 'block';
+        calendar.classList.add('active');
+        
+        // Simple positioning - just below the input
+        const input = document.getElementById(targetId);
+        const inputRect = input.getBoundingClientRect();
+        
+        calendar.style.position = 'fixed';
+        calendar.style.top = (inputRect.bottom + 5) + 'px';
+        calendar.style.left = inputRect.left + 'px';
+        calendar.style.zIndex = '10000';
+        
+        // Generate calendar days
+        generateCalendarDays(calendar, targetId);
+        
+        console.log('Calendar should be visible now!'); // Debug
+      }
+    });
+  });
+  
+  // Close calendar when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('calendar-icon') && 
+        !e.target.closest('.calendar-picker')) {
+      document.querySelectorAll('.calendar-picker').forEach(cal => {
+        cal.style.display = 'none';
+        cal.classList.remove('active');
+      });
+    }
+  });
+}
+
+// Generate calendar days
+function generateCalendarDays(calendar, targetId) {
+  const grid = calendar.querySelector('.calendar-grid');
+  const monthYear = calendar.querySelector('.calendar-month-year');
+  
+  // Clear existing days (keep headers)
+  const existingDays = grid.querySelectorAll('.calendar-day');
+  existingDays.forEach(day => day.remove());
+  
+  // Current date
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  
+  // Update header
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+  monthYear.textContent = `${monthNames[month]} ${year}`;
+  
+  // Get first day and days in month
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  // Add empty cells
+  for (let i = 0; i < firstDay; i++) {
+    const emptyDay = document.createElement('div');
+    emptyDay.className = 'calendar-day disabled';
+    grid.appendChild(emptyDay);
+  }
+  
+  // Add days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day';
+    dayElement.textContent = day;
+    
+    // Highlight today
+    if (day === now.getDate()) {
+      dayElement.classList.add('today');
+    }
+    
+    // Add click event
+    dayElement.addEventListener('click', () => {
+      const formattedDate = String(day).padStart(2, '0') + '/' + 
+                           String(month + 1).padStart(2, '0') + '/' + year;
+      document.getElementById(targetId).value = formattedDate;
+      calendar.style.display = 'none';
+      calendar.classList.remove('active');
+    });
+    
+    grid.appendChild(dayElement);
+  }
+}
+
+// Initialize manage periods button
+document.addEventListener("DOMContentLoaded", () => {
+  initManagePeriodsButton();
+  initAYTooltip();
+  initCalendarClickHandlers();
+});
+initManagePeriodsButton();
+initAYTooltip();
+initCalendarClickHandlers();
+
 });

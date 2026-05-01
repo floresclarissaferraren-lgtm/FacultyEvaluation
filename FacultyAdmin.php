@@ -13,85 +13,121 @@ include 'totalstudents_dashcount.php';
 </head>
 <body>
 
-<!-- Navbar ========================================================================================================================================-->
+<!-- ===================== NAVBAR ===================== -->
 <div class="navbar">
-  <div style="display:flex;align-items:center;">
-    <div class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
-    <div class="brand">
-      <img src="schoollogo.png" alt="School Logo" class="brand-logo">
-      <span class="main-title">FaculRate</span>
-    </div>
-  </div>
-  
-  <!-- Logout Binago --------->
-  <div class="user-menu">
-    <div class="admin-box" id="dropdownToggle">
-    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
 
+  <!-- Left Side -->
+  <div class="nav-left">
+
+    <div class="hamburger" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </div>
+
+    
+    <div class="section-title" id="navbarSectionTitle">Dashboard</div>
+
+  </div>
+
+  <!-- Right Side User Menu -->
+  <div class="user-menu">
+
+    <div class="admin-box" id="dropdownToggle">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Admin" class="logo-img">
       <span>Administrator</span>
       <i class="fas fa-caret-down"></i>
     </div>
 
     <div class="dropdown-menu" id="dropdownMenu">
       <a href="#" id="logoutLink">
-    <i class="fas fa-sign-out-alt"></i> Logout</a>
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+      </a>
     </div>
+
   </div>
+
 </div>
+
+
+<!-- ===================== LOGOUT MODAL ===================== -->
 <div id="logoutModal" class="logoutform">
+
   <div class="logout-content">
+
     <div class="logout-icon">
       <span class="icon-bg">
         <i class="fas fa-sign-out-alt fa-2x"></i>
       </span>
     </div>
+
     <h3>Are you sure you want to logout?</h3>
+
     <div class="logout-buttons">
-      <button type="button" class="btn logout-btn" onclick="confirmLogout()">Yes, Log me out</button>
-      <button type="button" class="btn cancel-btn" onclick="closeLogoutModal()">No, Stay Logged In</button>
+      <button type="button" class="btn logout-btn" onclick="confirmLogout()">
+        Yes, Log me out
+      </button>
+
+      <button type="button" class="btn cancel-btn" onclick="closeLogoutModal()">
+        No, Stay Logged In
+      </button>
     </div>
+
   </div>
+
 </div>
 
-<!-- Sidebar ========================================================================================================================================-->
+
+<!-- ===================== SIDEBAR ===================== -->
 <div class="sidebar" id="sidebar">
 
-  <div class="sidebar-header">
-    <h1>Admin Panel</h1>
+  <!-- Logo Top -->
+  <div class="sidebar-top">
+
+    <img src="schoollogo.png" class="sidebar-logo">
+    <h1>FaculRate</h1>
+    <span>Admin Panel</span>
+
   </div>
 
+  <!-- Menu -->
   <nav class="sidebar-menu">
 
-    <a href="#" data-section="dashboard-section" onclick="showSection('dashboard-section', event)">
+    <a href="#" data-section="dashboard-section"
+       onclick="showSection('dashboard-section', event)">
       <i class="fas fa-tachometer-alt"></i>
       <span>Dashboard</span>
     </a>
 
-    <a href="#" data-section="programs-section" onclick="showSection('programs-section', event)">
+    <a href="#" data-section="programs-section"
+       onclick="showSection('programs-section', event)">
       <i class="fas fa-book"></i>
       <span>Program</span>
     </a>
 
-    <a href="#" data-section="faculties-section" onclick="showSection('faculties-section', event)">
+    <a href="#" data-section="faculties-section"
+       onclick="showSection('faculties-section', event)">
       <i class="fas fa-user-tie"></i>
       <span>Faculty</span>
     </a>
 
-    <a href="#" data-section="students-section" onclick="showSection('students-section', event)">
+    <a href="#" data-section="students-section"
+       onclick="showSection('students-section', event)">
       <i class="fas fa-user-graduate"></i>
       <span>Students</span>
     </a>
 
-
-    <a href="#" data-section="criteria-section" onclick="showSection('criteria-section', event)">
+    <a href="#" data-section="criteria-section"
+       onclick="showSection('criteria-section', event)">
       <i class="fas fa-list"></i>
       <span>Evaluation Criteria</span>
     </a>
 
-    <a href="#" data-section="report-section" onclick="showSection('report-section', event)">
-  <i class="fas fa-chart-bar"></i>
-  <span>Evaluation Report</span>
-</a>
+    <a href="#" data-section="report-section"
+       onclick="showSection('report-section', event)">
+      <i class="fas fa-chart-bar"></i>
+      <span>Evaluation Report</span>
+    </a>
+
   </nav>
 
 </div>
@@ -99,23 +135,66 @@ include 'totalstudents_dashcount.php';
 <main>
 <!-- Dashboard Section May nabago =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
-  <div class="dashboard-wrapper">
+  <!--<div class="dashboard-wrapper">
     <div class="dashboard-box">
       <h1>Welcome, Administrator</h1>
       <p>This dashboard provides administrators with a clear overview of ongoing faculty evaluations and results.</p>
       <div class="warning"><i class="fas fa-exclamation-triangle"></i> Authorized Personnel Only: All actions are logged and monitored for security compliance.</div>
+    </div>-->
+  <div class="dashboard">
+    <div class="dashboard-card faculty">
+      <div class="dashboard-content">
+        <div>
+          <h3>Total Faculty</h3>
+          <p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
+          <span>Across 9 Colleges</span>
+        </div>
+        <div class="icon-box"><i class="fas fa-user-tie"></i></div>
+      </div>
     </div>
-    <div class="dashboard">
-      <div class="dashboard-card faculty"><div class="dashboard-content"><div><h3>Total Faculty</h3><p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
-        <span>Across 9 Colleges</span></div><div class="icon-box"><i class="fas fa-user-tie"></i></div></div></div>
-      <div class="dashboard-card students"><div class="dashboard-content"><div><h3>Total Students</h3><p id="totalStudents" class="dashboard-value"><?php echo $totalStudentsCount; ?></p>
-        <span>Registered Users</span></div><div class="icon-box"><i class="fas fa-user-graduate"></i></div></div></div>
-      <div class="dashboard-card evaluations"><div class="dashboard-content"><div><h3>Total Evaluations</h3><p id="totalEvaluations" class="dashboard-value"><?php echo $totalEvaluationsCount; ?></p>
-        <span>Overall</span></div><div class="icon-box"><i class="fas fa-chart-line"></i></div></div></div>
+
+    <div class="dashboard-card students">
+      <div class="dashboard-content">
+        <div>
+          <h3>Total Students</h3>
+          <p id="totalStudents" class="dashboard-value"><?php echo $totalStudentsCount; ?></p>
+          <span>Registered Users</span>
+        </div>
+        <div class="icon-box"><i class="fas fa-user-graduate"></i></div>
+      </div>
+    </div>
+
+    <div class="dashboard-card evaluations">
+      <div class="dashboard-content">
+        <div>
+          <h3>Total Evaluations</h3>
+          <p id="totalEvaluations" class="dashboard-value"><?php echo $totalEvaluationsCount; ?></p>
+          <span>Overall</span>
+        </div>
+        <div class="icon-box"><i class="fas fa-chart-line"></i></div>
+      </div>
+    </div>
+
+    <!-- 🔹 Period Card replacing Programs -->
+    <div class="dashboard-card period">
+      <div class="dashboard-content">
+        <div class="period-header">
+          <h3>Period</h3>
+          <div class="period-box">No Active Period</div>
+        </div>
+        <p class="system-status">Evaluation is Open</p>
+        <div class="period-actions">
+          <button class="btn-close">Close</button>
+          <button class="btn-manage">Manage</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+
+
+ <!--
 <div id="dashboard-details">
   <div class="ratings-box">
     <h4><i class="fas fa-star"></i> Faculty Ratings</h4>
@@ -137,13 +216,16 @@ include 'totalstudents_dashcount.php';
     <h4><i class="fas fa-chart-bar"></i> Responded per Department</h4>
     <canvas id="departmentGraph"></canvas>
   </div>
-</div>
+</div>-->
 
 <!-- Programs Section ============================================================================================================================== -->
 <div id="programs-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
-      <h2>Academic Programs</h2>
+      <div class="header-title-section">
+        <!--<h2>Academic Program</h2>-->
+        <p class="section-subtitle"><i class="fas fa-book" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>Manage and update academic programs offered by the institution</p>
+      </div>
       <div class="header-actions">
         <div class="search-wrapper">
           <button class="search-btn"><i class="fas fa-search"></i></button>
@@ -204,18 +286,20 @@ include 'totalstudents_dashcount.php';
 <div id="manage-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
-      <div>
+      <div class="header-title-section">
         <h2 id="manageTitle">Manage Program</h2>
         <div class="manage-buttons">
           <button class="subject-btn active"><i class="fas fa-book"></i> Subjects</button>
           <button class="classes-btn"><i class="fas fa-users"></i> Classes</button>
         </div>
       </div>
-      <div class="header-actions">
+      <div class="header-actions-section">
         <div class="search-wrapper">
           <input type="text" placeholder="Search records...">
           <button class="search-btn"><i class="fas fa-search"></i></button>
-        </div><button class="add-manage-btn button-gradient"><i class="fas fa-plus"></i> Add</button><button class="back-btn">Back</button>
+        </div>
+        <button class="add-manage-btn button-gradient"><i class="fas fa-plus"></i> Add</button>
+        <button class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
       </div>
     </div>
 
@@ -223,7 +307,7 @@ include 'totalstudents_dashcount.php';
     <!-- Subject Table -->
     <div class="manage-body">
       <div id="subjects" class="table-wrapper">
-        <table><thead><tr>
+        <table class="subjects-table"><thead><tr>
           <th>Subject Code</th><th>Description</th><th>Year</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
@@ -232,13 +316,12 @@ include 'totalstudents_dashcount.php';
 
       <!-- Classes Table -->
       <div id="classes" class="table-wrapper" style="display:none;">
-        <table><thead><tr>
+        <table class="classes-table"><thead><tr>
           <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
       </div>
-
     </div>
   </div>
 </div>
@@ -317,35 +400,33 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Subjects Section ===================== -->
 <div id="subjects-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <h2>Subjects Management</h2>
-      <div class="header-actions">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="fas fa-search"></i></button>
-          <input type="text" id="subjects-search" placeholder="Search subjects...">
-        </div>
-        <button class="add-subject-main-btn button-gradient"><i class="fas fa-plus"></i> Add Subject</button>
+  <div class="section-header">
+    <h2>Subjects Management</h2>
+    <div class="header-actions">
+      <div class="search-wrapper">
+        <button class="search-btn"><i class="fas fa-search"></i></button>
+        <input type="text" id="subjects-search" placeholder="Search subjects...">
       </div>
+      <button class="add-subject-main-btn button-gradient"><i class="fas fa-plus"></i> Add Subject</button>
     </div>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Subject Code</th>
-            <th>Description</th>
-            <th>Program</th>
-            <th>Year Level</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="subjects-main-tbody">
-          <tr>
-            <td colspan="5" style="text-align: center; padding: 20px;">Loading subjects...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  </div>
+  <div class="table-wrapper">
+    <table class="subjects-table">
+      <thead>
+        <tr>
+          <th>Subject Code</th>
+          <th>Description</th>
+          <th>Program</th>
+          <th>Year Level</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="subjects-main-tbody">
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 20px;">Loading subjects...</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -396,7 +477,10 @@ include 'totalstudents_dashcount.php';
 <div id="faculties-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
-      <h2>Faculties</h2>
+      <div class="header-title-section">
+       <!-- <h2>Faculty Information</h2>-->
+        <p class="section-subtitle"><i class="fas fa-user-tie" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section contains all faculty members with their profiles and teaching assignments</p>
+      </div>
       <div class="header-actions">
         <div class="search-wrapper">
           <button class="search-btn"><i class="fas fa-search"></i></button>
@@ -406,7 +490,7 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
     <div class="table-wrapper">
-      <table>
+      <table class="faculties-table">
         <thead>
           <tr><th>Faculty</th><th>ID</th><th>Info</th><th>Subjects</th><th>Action</th></tr>
         </thead>
@@ -469,7 +553,10 @@ include 'totalstudents_dashcount.php';
 <div id="students-section" class="section" style="display:none;">
   <div class="box">
     <div class="section-header">
-      <h2>Students</h2>
+      <div class="header-title-section">
+       <!-- <h2>Students Information</h2> -->
+        <p class="section-subtitle"><i class="fas fa-user-graduate" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows all students with their basic details and records for easy management</p>
+      </div>
       <div class="header-actions">
         <div class="search-wrapper">
           <button class="search-btn"><i class="fas fa-search"></i></button>
@@ -479,7 +566,7 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
     <div class="table-wrapper">
-      <table>
+      <table class="students-table">
         <thead>
           <tr><th>ID</th><th>Name</th><th>Program</th><th>Action</th></tr>
         </thead>
@@ -628,19 +715,17 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Evaluation Criteria Section ================================================================================= -->
 <div id="criteria-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <h2>Evaluation Criteria</h2>
-      <div class="header-actions">
-        <button id="addCategoryBtn" class="add-program-btn button-gradient">
-          <i class="fas fa-plus"></i> Add Category
-        </button>
-      </div>
+  <div class="section-header">
+    <div class="header-title-section">
+      <p class="section-subtitle"><i class="fas fa-list" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows the list of criteria used for evaluating faculty performance</p>
     </div>
-    <div class="subtitle">
-      <p>Manage evaluation questions grouped by category.</p>
+    <div class="header-actions">
+      <button id="addCategoryBtn" class="add-program-btn button-gradient">
+        <i class="fas fa-plus"></i> Add Category
+      </button>
     </div>
   </div>
+
 
   <div class="criteria-layout" style="display:flex; gap:24px; align-items:flex-start;">
     <div class="categories-column" id="categoriesColumn" style="flex:2;"></div>
@@ -701,35 +786,32 @@ include 'totalstudents_dashcount.php';
 
 <!-- Report Section =========================================================================================================-->
 <div id="report-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <div>
-        <h2>Faculty Evaluation Summary</h2>
-        <p>Evaluation Overview</p>
-      </div>
-      <div class="header-actions">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="fas fa-search"></i></button>
-          <input type="text" id="searchInput" placeholder="Search Faculty...">
-        </div>
+  <div class="section-header">
+    <div class="header-title-section">
+      <p class="section-subtitle"><i class="fas fa-chart-bar" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows faculty evaluation results and performance ratings</p>
+    </div>
+    <div class="header-actions">
+      <div class="search-wrapper">
+        <button class="search-btn"><i class="fas fa-search"></i></button>
+        <input type="text" id="searchInput" placeholder="Search Faculty...">
       </div>
     </div>
-    <div class="table-wrapper">
-      <table class="evaluation-table">
-        <thead>
-          <tr>
-            <th>Faculty Name</th>
-            <th>Average Score</th>
-            <th>Rating</th>
-            <th>Responses</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="evaluationTableBody">
-          <!-- Dynamic content will be loaded here -->
-        </tbody>
-      </table>
-    </div>
+  </div>
+  <div class="table-wrapper">
+    <table class="evaluation-table">
+      <thead>
+        <tr>
+          <th>Faculty Name</th>
+          <th>Average Score</th>
+          <th>Rating</th>
+          <th>Responses</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="evaluationTableBody">
+        <!-- Dynamic content will be loaded here -->
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -753,6 +835,129 @@ include 'totalstudents_dashcount.php';
       
       <div id="viewStudentSubjectsList" class="subjects-container">
         <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Periods Modal -->
+<div id="managePeriodsModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:800px;">
+    <div class="modal-header">
+      <h3>MANAGE PERIODS</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <!-- Create New Period Section -->
+      <div class="period-creation-section">
+        <h4 style="color: #dc2626; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+          <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>CREATE NEW PERIOD
+        </h4>
+        <div class="period-form-row">
+          <div class="period-input-group">
+            <label for="period-ay">
+              <i class="fas fa-calendar-alt" style="margin-right: 4px; font-size: 0.8rem;"></i>AY
+            </label>
+            <input type="text" id="period-ay" placeholder="e.g. 2025-2026">
+            <div class="period-tooltip" id="ay-tooltip" style="display:none;">2025-2026</div>
+          </div>
+          
+          <div class="period-input-group">
+            <label for="period-sem">
+              <i class="fas fa-graduation-cap" style="margin-right: 4px; font-size: 0.8rem;"></i>Semester
+            </label>
+            <select id="period-sem">
+              <option value="1st Semester" selected>1st Semester</option>
+              <option value="2nd Semester">2nd Semester</option>
+              <option value="Summer">Summer</option>
+            </select>
+          </div>
+          
+          <div class="period-input-group">
+            <label for="period-start">
+              <i class="fas fa-play-circle" style="margin-right: 4px; font-size: 0.8rem;"></i>Start Date
+            </label>
+            <div class="date-input-wrapper">
+              <input type="text" id="period-start" placeholder="dd/mm/yyyy" readonly>
+              <i class="fas fa-calendar calendar-icon" data-target="period-start"></i>
+              <div class="calendar-picker" id="start-calendar">
+                <div class="calendar-header">
+                  <button class="calendar-nav" data-direction="prev">&lt;</button>
+                  <span class="calendar-month-year"></span>
+                  <button class="calendar-nav" data-direction="next">&gt;</button>
+                </div>
+                <div class="calendar-grid">
+                  <div class="calendar-day-header">Sun</div>
+                  <div class="calendar-day-header">Mon</div>
+                  <div class="calendar-day-header">Tue</div>
+                  <div class="calendar-day-header">Wed</div>
+                  <div class="calendar-day-header">Thu</div>
+                  <div class="calendar-day-header">Fri</div>
+                  <div class="calendar-day-header">Sat</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="period-input-group">
+            <label for="period-end">
+              <i class="fas fa-stop-circle" style="margin-right: 4px; font-size: 0.8rem;"></i>End Date
+            </label>
+            <div class="date-input-wrapper">
+              <input type="text" id="period-end" placeholder="dd/mm/yyyy" readonly>
+              <i class="fas fa-calendar calendar-icon" data-target="period-end"></i>
+              <div class="calendar-picker" id="end-calendar">
+                <div class="calendar-header">
+                  <button class="calendar-nav" data-direction="prev">&lt;</button>
+                  <span class="calendar-month-year"></span>
+                  <button class="calendar-nav" data-direction="next">&gt;</button>
+                </div>
+                <div class="calendar-grid">
+                  <div class="calendar-day-header">Sun</div>
+                  <div class="calendar-day-header">Mon</div>
+                  <div class="calendar-day-header">Tue</div>
+                  <div class="calendar-day-header">Wed</div>
+                  <div class="calendar-day-header">Thu</div>
+                  <div class="calendar-day-header">Fri</div>
+                  <div class="calendar-day-header">Sat</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="text-align: right; margin-top: 24px;">
+          <button id="add-period-btn" class="period-add-btn">
+            <i class="fas fa-plus" style="margin-right: 8px;"></i>Add Period
+          </button>
+        </div>
+      </div>
+
+      <!-- Existing Periods Table -->
+      <div class="periods-table-section">
+        <table class="periods-table">
+          <thead>
+            <tr>
+              <th>PERIOD NAME</th>
+              <th>DURATION</th>
+              <th>STATUS</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="periods-tbody">
+            <tr>
+              <td>1st 2025-2026</td>
+              <td>Jan 01 - May 01, 2026</td>
+              <td><span class="status-badge active">ACTIVE</span></td>
+              <td class="action-cell">
+                <div class="action-buttons">
+                  <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+                  <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

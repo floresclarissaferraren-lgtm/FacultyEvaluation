@@ -18,4 +18,5 @@ function getTotalCount($conn, $table) {
 
 $totalFacultyCount = getTotalCount($conn, 'add_faculties');
 $totalStudentsCount = getTotalCount($conn, 'add_students');
-$totalEvaluationsCount = 0; 
+$totalEvaluationsCount = 0;
+$totalProgramsCount = getTotalCount($conn, 'add_program'); 

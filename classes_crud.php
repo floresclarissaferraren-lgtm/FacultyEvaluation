@@ -224,5 +224,45 @@ if ($action === "add") {
     exit;
 }
 
+/* ========================= DELETE CLASS ========================= */
+if ($action === "delete") {
+    $id = $_POST['id'] ?? 0;
+    
+    if (!$id) {
+        echo json_encode(["status" => "error", "message" => "Missing class ID"]);
+        exit;
+    }
+    
+    $conn->begin_transaction();
+    
+    try {
+        // Delete class subjects first
+        $stmt = $conn->prepare("DELETE FROM class_subjects WHERE class_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Delete class
+        $stmt = $conn->prepare("DELETE FROM classes WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        
+        if ($stmt->affected_rows > 0) {
+            $conn->commit();
+            echo json_encode(["status" => "success", "message" => "Class deleted successfully"]);
+        } else {
+            $conn->rollback();
+            echo json_encode(["status" => "error", "message" => "Class not found"]);
+        }
+        $stmt->close();
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(["status" => "error", "message" => "Failed to delete class: " . $e->getMessage()]);
+    }
+    
+    exit;
+}
+
 echo json_encode(["status" => "error", "message" => "Invalid action"]);
 ?>
