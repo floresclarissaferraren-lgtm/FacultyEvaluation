@@ -361,6 +361,10 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="form-row">
         <div>
+          <label for="class-name">Section Name</label>
+          <input type="text" id="class-name" placeholder="eg. 1A, 2B">
+        </div>
+        <div>
           <label for="class-year">Year Level</label>
           <select id="class-year">
             <option value="">Select Year Level</option>
@@ -815,6 +819,30 @@ include 'totalstudents_dashcount.php';
   </div>
 </div>
 
+<!-- View Faculty Subjects Modal -->
+<div id="viewFacultySubjectsModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:700px;">
+    <div class="modal-header">
+      <h3>Faculty Subjects</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="student-info-header">
+        <div class="student-avatar">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="student-details">
+          <h4 id="viewFacultyName">Faculty Name</h4>
+          <p class="student-subtitle">Assigned Subjects</p>
+        </div>
+      </div>
+      <div id="viewFacultySubjectsList" class="subjects-container">
+        <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- View Student Subjects Modal -->
 <div id="viewStudentSubjectsModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:700px;">
@@ -840,8 +868,32 @@ include 'totalstudents_dashcount.php';
   </div>
 </div>
 
+<!-- View Class Subjects Modal -->
+<div id="viewClassSubjectsModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:700px;">
+    <div class="modal-header">
+      <h3>Class Subjects</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="student-info-header">
+        <div class="student-avatar">
+          <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="student-details">
+          <h4 id="viewClassName">Class Name</h4>
+          <p class="student-subtitle">Assigned Subjects & Teachers</p>
+        </div>
+      </div>
+      
+      <div id="viewClassSubjectsList" class="subjects-container">
+        <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Manage Periods Modal -->
-<div id="managePeriodsModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:800px;">
     <div class="modal-header">
       <h3>MANAGE PERIODS</h3>

@@ -1,4 +1,37 @@
+<?php
+session_start();
+include 'connect.php';
 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {
+    header('Location: EvalMain.php');
+    exit;
+}
+
+$student_id = intval($_SESSION['id']);
+$studentName = '';
+$studentYearLevel = '';
+$studentProgram = '';
+
+$stmt = $conn->prepare("SELECT firstname, lastname, yearlevel, program FROM add_students WHERE id = ?");
+$stmt->bind_param("i", $student_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows === 1) {
+    $student = $result->fetch_assoc();
+    $studentName = trim(($student['firstname'] ?? '') . ' ' . ($student['lastname'] ?? ''));
+    $studentYearLevel = $student['yearlevel'] ?? '';
+    $studentProgram = $student['program'] ?? '';
+} else {
+    $stmt->close();
+    $conn->close();
+    header('Location: EvalMain.php');
+    exit;
+}
+
+$stmt->close();
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,8 +93,10 @@
       </div>
     </div>
 
-    <!-- Hidden field to store student ID -->
-<input type="hidden" id="studentId" value="<?php echo $student_id; ?>">
+    <!-- Hidden fields to store student info -->
+    <input type="hidden" id="studentId" value="<?php echo htmlspecialchars($student_id); ?>">
+    <input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
+    <input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
 
     <div class="password-actions">
       <button class="cancel-btn" onclick="closePasswordForm()">Cancel</button>
@@ -77,8 +112,9 @@
   <div class="main-box" id="mainPage">
     <div class="main-left"><img src="schoollogo.png" alt="School Logo" class="main-img"></div>
     <div class="main-right">
-      <h1>Welcome, Students</h1>
+      <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
       <div class="academic-year"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div>
+      <div class="academic-year"><i class="fas fa-user-graduate"></i> Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>
       <button class="evaluate-btn" onclick="showEvaluateSection()"><i class="fas fa-check-circle"></i> Evaluate Now</button>
