@@ -5,7 +5,6 @@ $data = json_decode(file_get_contents("php://input"), true);
 $category_id = $data['category_id'];
 $question_text = $data['question_text'];
 
-// Check current question count for this category
 $count_sql = "SELECT COUNT(*) as question_count FROM add_questions WHERE category_id = ?";
 $count_stmt = $conn->prepare($count_sql);
 $count_stmt->bind_param("i", $category_id);

@@ -361,10 +361,6 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="form-row">
         <div>
-          <label for="class-name">Section Name</label>
-          <input type="text" id="class-name" placeholder="eg. 1A, 2B">
-        </div>
-        <div>
           <label for="class-year">Year Level</label>
           <select id="class-year">
             <option value="">Select Year Level</option>
@@ -375,8 +371,8 @@ include 'totalstudents_dashcount.php';
           </select>
         </div>
         <div>
-          <label for="class-block">Block</label>
-          <input type="text" id="class-block" placeholder="eg. A, B, C">
+          <label for="class-block">Section</label>
+          <input type="text" id="class-block">
         </div>
       </div>
       <div class="section-box">
@@ -882,7 +878,7 @@ include 'totalstudents_dashcount.php';
         </div>
         <div class="student-details">
           <h4 id="viewClassName">Class Name</h4>
-          <p class="student-subtitle">Assigned Subjects & Teachers</p>
+          <p class="student-subtitle">Assigned Subjects and Instructor</p>
         </div>
       </div>
       
@@ -894,6 +890,7 @@ include 'totalstudents_dashcount.php';
 </div>
 
 <!-- Manage Periods Modal -->
+<div id="managePeriodsModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:800px;">
     <div class="modal-header">
       <h3>MANAGE PERIODS</h3>

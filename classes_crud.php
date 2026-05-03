@@ -119,6 +119,8 @@ if ($action === "get_subjects_by_program_year") {
 if ($action === "get") {
     $class_id = $_GET['class_id'] ?? 0;
     if ($class_id) {
+        error_log("GET CLASS SUBJECTS - class_id: $class_id");
+        
         $stmt = $conn->prepare("
             SELECT cs.subject_id, s.subject_code, s.subject_desc, s.year_level,
                 f.id AS faculty_id, f.faculty_id AS faculty_number,
@@ -136,6 +138,8 @@ if ($action === "get") {
         while ($row = $result->fetch_assoc()) {
             $subjects[] = $row;
         }
+        
+        error_log("GET CLASS SUBJECTS - Found " . count($subjects) . " subjects: " . print_r($subjects, true));
         echo json_encode($subjects);
         exit;
     }
@@ -148,21 +152,18 @@ if ($action === "get") {
     }
     
     // Create table if not exists
-    $conn->query("CREATE TABLE IF NOT EXISTS classes (
-        id int(11) AUTO_INCREMENT PRIMARY KEY,
+    $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         program_id int(11) NOT NULL,
-        section_name varchar(100) NOT NULL,
         year_level varchar(20) NOT NULL,
-        block varchar(10) NOT NULL,
-        status enum('active','inactive') DEFAULT 'active',
-        created_at timestamp DEFAULT CURRENT_TIMESTAMP
+        block varchar(10) NOT NULL
     )");
     
     $stmt = $conn->prepare("
-        SELECT id, section_name, year_level, block, status
-        FROM classes
+        SELECT id, year_level, block
+        FROM add_classes
         WHERE program_id = ?
-        ORDER BY year_level ASC, section_name ASC
+        ORDER BY year_level ASC, block ASC
     ");
     
     if ($stmt) {
@@ -185,6 +186,8 @@ if ($action === "get") {
 
 /* ========================= ADD CLASS ========================= */
 if ($action === "add") {
+    error_log("ADD CLASS - Raw POST data: " . print_r($_POST, true));
+    
     $program_id = $_POST['program_id'] ?? null;
     $section_name = $_POST['section_name'] ?? "";
     $year_level = $_POST['year_level'] ?? "";
@@ -206,24 +209,25 @@ if ($action === "add") {
         }
     }
     
-    if (!$program_id || !$section_name || !$year_level || !$block || empty($subjects)) {
+    error_log("ADD CLASS - Parsed data: program_id=$program_id, section_name=$section_name, year_level=$year_level, block=$block");
+    error_log("ADD CLASS - Subjects: " . print_r($subjects, true));
+    error_log("ADD CLASS - Faculty assignments: " . print_r($faculty_assignments, true));
+    
+    if (!$program_id || !$year_level || !$block || empty($subjects)) {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
         exit;
     }
     
     // Create tables if not exist
-    $conn->query("CREATE TABLE IF NOT EXISTS classes (
-        id int(11) AUTO_INCREMENT PRIMARY KEY,
+    $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         program_id int(11) NOT NULL,
-        section_name varchar(100) NOT NULL,
         year_level varchar(20) NOT NULL,
-        block varchar(10) NOT NULL,
-        status enum('active','inactive') DEFAULT 'active',
-        created_at timestamp DEFAULT CURRENT_TIMESTAMP
+        block varchar(10) NOT NULL
     )");
     
     $conn->query("CREATE TABLE IF NOT EXISTS class_subjects (
-        id int(11) AUTO_INCREMENT PRIMARY KEY,
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         class_id int(11) NOT NULL,
         subject_id int(11) NOT NULL,
         faculty_id int(11) NOT NULL,
@@ -233,31 +237,107 @@ if ($action === "add") {
     $conn->begin_transaction();
     
     try {
-        $stmt = $conn->prepare("INSERT INTO classes (program_id, section_name, year_level, block) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $program_id, $section_name, $year_level, $block);
+        error_log("ADD CLASS - Starting transaction");
+        
+        $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, block) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $program_id, $year_level, $block);
         $stmt->execute();
         $class_id = $stmt->insert_id;
         $stmt->close();
         
+        error_log("ADD CLASS - Created class with ID: $class_id");
+        
+        if (!empty($subjects)) {
+            error_log("ADD CLASS - Adding " . count($subjects) . " subjects");
+            $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
+            foreach ($subjects as $subject_id) {
+                $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
+                error_log("ADD CLASS - Adding subject $subject_id with faculty $faculty_id to class $class_id");
+                // Allow faculty_id to be 0 for now, faculty can be assigned later
+                $sub_stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
+                $sub_stmt->execute();
+                error_log("ADD CLASS - Successfully inserted subject $subject_id");
+            }
+            $sub_stmt->close();
+        } else {
+            error_log("ADD CLASS - No subjects to add");
+        }
+        
+        $conn->commit();
+        error_log("ADD CLASS - Transaction committed successfully");
+        echo json_encode(["status" => "success", "message" => "Class added successfully with ID: $class_id"]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("ADD CLASS - Transaction rolled back: " . $e->getMessage());
+        echo json_encode(["status"=>"error","message"=>"Failed to add class: " . $e->getMessage()]);
+    }
+    
+    exit;
+}
+
+/* ========================= EDIT CLASS ========================= */
+if ($action === "edit") {
+    $id = $_POST['id'] ?? null;
+    $program_id = $_POST['program_id'] ?? null;
+    $section_name = $_POST['section_name'] ?? "";
+    $year_level = $_POST['year_level'] ?? "";
+    $block = $_POST['block'] ?? "";
+    
+    $subjects = [];
+    if (isset($_POST['subjects'])) {
+        $subjects = json_decode($_POST['subjects'], true);
+        if (!is_array($subjects)) {
+            $subjects = [];
+        }
+    }
+
+    $faculty_assignments = [];
+    if (isset($_POST['faculty_assignments'])) {
+        $faculty_assignments = json_decode($_POST['faculty_assignments'], true);
+        if (!is_array($faculty_assignments)) {
+            $faculty_assignments = [];
+        }
+    }
+    
+    if (!$id || !$program_id || !$year_level || !$block || empty($subjects)) {
+        echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
+        exit;
+    }
+    
+    $conn->begin_transaction();
+    
+    try {
+        // Update class
+        $stmt = $conn->prepare("UPDATE add_classes SET program_id = ?, year_level = ?, block = ? WHERE id = ?");
+        $stmt->bind_param("issi", $program_id, $year_level, $block, $id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Delete existing class subjects
+        $stmt = $conn->prepare("DELETE FROM class_subjects WHERE class_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Add new class subjects
         if (!empty($subjects)) {
             $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
             foreach ($subjects as $subject_id) {
                 $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
-                if (!$faculty_id) {
-                    throw new Exception("Missing faculty assignment for subject {$subject_id}");
-                }
-                $sub_stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
+                // Allow faculty_id to be 0 for now, faculty can be assigned later
+                $sub_stmt->bind_param("iii", $id, $subject_id, $faculty_id);
                 $sub_stmt->execute();
             }
             $sub_stmt->close();
         }
         
         $conn->commit();
-        echo json_encode(["status" => "success", "message" => "Class added successfully"]);
+        echo json_encode(["status" => "success", "message" => "Class updated successfully"]);
         
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(["status"=>"error","message"=>"Failed to add class: " . $e->getMessage()]);
+        echo json_encode(["status"=>"error","message"=>"Failed to update class: " . $e->getMessage()]);
     }
     
     exit;
@@ -282,7 +362,7 @@ if ($action === "delete") {
         $stmt->close();
         
         // Delete class
-        $stmt = $conn->prepare("DELETE FROM classes WHERE id = ?");
+        $stmt = $conn->prepare("DELETE FROM add_classes WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         

@@ -746,7 +746,6 @@ addManageBtn?.addEventListener("click", () => {
     addClassModal.style.display = "flex";
     addClassModal.dataset.isEditing = "false";
     delete addClassModal.dataset.editId;
-    document.getElementById("class-name").value = "";
     document.getElementById("class-year").selectedIndex = 0;
     document.getElementById("class-block").value = "";
     document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
@@ -1028,11 +1027,15 @@ function updateFacultyDisplay(facultyData) {
   entries.forEach(([subjectId, data]) => {
     const subjectSection = document.createElement("div");
     subjectSection.className = "faculty-subject-row";
-    subjectSection.style.margin = "10px 0";
+    subjectSection.style.margin = "1px 0";
+    subjectSection.style.padding = "2px 0";
+    subjectSection.style.position = "relative";
     
     const header = document.createElement("div");
-    header.style.marginBottom = "6px";
-    header.innerHTML = `<strong>${data.subjectLabel}</strong>`;
+    header.style.marginBottom = "2px";
+    // Extract only the program code from the subjectLabel (e.g., "ITC16" from "ITC16 - System Integration and Architecture 2")
+    const programCode = data.subjectLabel.split(' - ')[0];
+    header.innerHTML = `<span style="font-weight: normal; font-size: 12px;">${programCode}</span>`;
     subjectSection.appendChild(header);
     
     if (!data.faculty || data.faculty.length === 0) {
@@ -1051,7 +1054,7 @@ function updateFacultyDisplay(facultyData) {
       select.innerHTML = `<option value="">Assign teacher for this subject</option>` +
         data.faculty.map(f => `
           <option value="${f.id}" ${data.selectedFacultyId == f.id ? "selected" : ""}>
-            ${f.name} (${f.faculty_id})
+            ${f.name}
           </option>
         `).join("");
       
@@ -1104,9 +1107,9 @@ function loadClasses() {
         row.dataset.id = c.id;
 
         row.innerHTML = `
-          <td>${c.section_name}</td>
+          <td>${c.block}</td>
           <td>${c.year_level}</td>
-          <td><span class="status-badge active">Active</span></td>
+          <td><span class="status-badge active">Loading...</span></td>
           <td class="action-cell">
             <div class="action-buttons">
               <button class="view-subjects-btn" title="View Subjects"><i class="fas fa-eye"></i></button>
@@ -1116,9 +1119,27 @@ function loadClasses() {
           </td>
         `;
 
+        // Fetch subject count for each class
+        fetch(`classes_crud.php?action=get&class_id=${c.id}`)
+          .then(r => r.json())
+          .then(subjects => {
+            const subjectCount = Array.isArray(subjects) ? subjects.length : 0;
+            const statusCell = row.querySelector('.status-badge');
+            if (statusCell) {
+              statusCell.textContent = `${subjectCount} Subject${subjectCount !== 1 ? 's' : ''} Assigned`;
+            }
+          })
+          .catch(err => {
+            console.error("Error fetching subject count:", err);
+            const statusCell = row.querySelector('.status-badge');
+            if (statusCell) {
+              statusCell.textContent = '0 Subjects Assigned';
+            }
+          });
+
         // VIEW CLASS SUBJECTS
         row.querySelector(".view-subjects-btn").addEventListener("click", () => {
-          showClassSubjectsModal(c.id, c.section_name, c.year_level);
+          showClassSubjectsModal(c.id, c.block, c.year_level);
         });
 
         // EDIT CLASS
@@ -1128,7 +1149,6 @@ function loadClasses() {
           addClassModal.dataset.isEditing = "true";
           addClassModal.dataset.editId = c.id;
 
-          document.getElementById("class-name").value = c.section_name;
           document.getElementById("class-year").value = c.year_level;
           document.getElementById("class-block").value = c.block || "";
           document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Loading subjects...</small>';
@@ -1181,12 +1201,11 @@ document.getElementById("addClassModal")?.querySelector(".close-btn")?.addEventL
 
 // ========================= SAVE CLASS =========================
 saveClassBtn?.addEventListener("click", () => {
-  const sectionName = document.getElementById("class-name").value.trim();
   const year = document.getElementById("class-year").value.trim();
   const block = document.getElementById("class-block").value.trim();
   const addClassModalEl = document.getElementById("addClassModal");
 
-  if (!sectionName || !year || !block) return alert("Fill all fields");
+  if (!year || !block) return alert("Fill all fields");
   if (!currentProgramId) return alert("Select program first");
 
   const checked = [...document.querySelectorAll("#subject-checkbox-list input:checked")]
@@ -1195,23 +1214,20 @@ saveClassBtn?.addEventListener("click", () => {
   if (checked.length === 0) return alert("Select at least one subject");
 
   const assignments = {};
-  let missingTeacher = false;
   checked.forEach(subjectId => {
     const select = document.querySelector(`#faculty-list select[data-subject-id="${subjectId}"]`);
-    if (!select || !select.value) {
-      missingTeacher = true;
-    } else {
+    if (select && select.value) {
       assignments[subjectId] = select.value;
+    } else {
+      assignments[subjectId] = 0; // No faculty assigned yet
     }
   });
-
-  if (missingTeacher) return alert("Assign a teacher for each selected subject");
 
   const isEditing = addClassModalEl.dataset.isEditing === "true";
   const editId = addClassModalEl.dataset.editId;
 
   const action = isEditing ? "edit" : "add";
-  let body = `action=${action}&program_id=${currentProgramId}&section_name=${encodeURIComponent(sectionName)}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
+  let body = `action=${action}&program_id=${currentProgramId}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
   body += `&subjects=${encodeURIComponent(JSON.stringify(checked))}`;
   body += `&faculty_assignments=${encodeURIComponent(JSON.stringify(assignments))}`;
   
@@ -1219,7 +1235,10 @@ saveClassBtn?.addEventListener("click", () => {
     body += `&id=${encodeURIComponent(editId)}`;
   }
 
-  console.log("Saving class - Action:", action, "ID:", editId, "assignments:", assignments);
+  console.log("Saving class - Action:", action, "ID:", editId);
+  console.log("Checked subjects:", checked);
+  console.log("Faculty assignments:", assignments);
+  console.log("Full body being sent:", body);
 
   fetch("classes_crud.php", {
     method: "POST",
@@ -1258,9 +1277,24 @@ function showClassSubjectsModal(classId, sectionName, yearLevel) {
   const subjectsList = document.getElementById("viewClassSubjectsList");
   
   modalTitle.innerHTML = `Class Subjects`;
-  className.textContent = `${sectionName} - ${yearLevel}`;
+  className.textContent = `Loading...`;
   subjectsList.innerHTML = "<div class='loading'>Loading subjects...</div>";
   modal.style.display = "flex";
+  
+  // Fetch program information to get program code
+  fetch(`getProgram.php`)
+    .then(r => r.json())
+    .then(programs => {
+      const currentProgram = programs.find(p => p.id == currentProgramId);
+      const programCode = currentProgram ? currentProgram.program_code : 'PROGRAM';
+      const yearDigit = yearLevel.match(/\d+/);
+      className.textContent = `${programCode}- ${yearDigit ? yearDigit[0] : ''}${sectionName}`;
+    })
+    .catch(err => {
+      console.error("Error fetching program:", err);
+      const yearDigit = yearLevel.match(/\d+/);
+      className.textContent = `${yearDigit ? yearDigit[0] : ''}${sectionName}`;
+    });
   
   // Fetch subjects for this class
   fetch(`classes_crud.php?action=get&class_id=${classId}`)
@@ -1277,10 +1311,15 @@ function showClassSubjectsModal(classId, sectionName, yearLevel) {
       data.forEach(subject => {
         html += `
           <div class='subject-card'>
-            <h4>${subject.subject_code}</h4>
-            <p>${subject.subject_desc}</p>
-            <p style='margin:8px 0 0; font-size:0.95rem; color:#4b5563;'>Teacher: ${subject.faculty_name || 'Unassigned'}</p>
-            <span class='year-badge'>${subject.year_level}</span>
+            <div class='subject-header'>
+              <strong>${subject.subject_code}</strong>
+              <span class='year-badge'>${subject.year_level || ''}</span>
+            </div>
+            <p class='subject-desc'>${subject.subject_desc || ''}</p>
+            <div style='margin:8px 0 0; font-size:0.95rem; color:#4b5563;'>
+              <i class='fas fa-user-tie' style='margin-right:5px;'></i>
+              Instructor: ${subject.faculty_name || 'Unassigned'}
+            </div>
           </div>
         `;
       });
@@ -1346,8 +1385,10 @@ function loadFaculty() {
         console.log("Faculty subject_codes:", f.subject_codes);
         
         const subjectsDisplay = f.subject_codes && f.subject_codes.length > 0 
-          ? f.subject_codes.join('<br>') 
-          : 'No subjects yet';
+          ? f.subject_codes.map((code, index) => 
+              `<span class="subject-item">${code}</span>`
+            ).join('') 
+          : '<span class="no-subjects">No subjects yet</span>';
           
         console.log("Subjects display:", subjectsDisplay);
 
