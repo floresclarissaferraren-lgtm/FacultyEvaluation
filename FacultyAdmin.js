@@ -27,6 +27,65 @@ function showNotification(message, color="#4caf50", duration=3000){
         setTimeout(()=>{ notif.style.display = "none"; notif.style.transition = ""; }, 500);
     }, duration);
 }
+
+// Custom Notification Modal Functions
+function showNotificationModal() {
+    const modal = document.getElementById("notificationModal");
+    modal.style.display = "flex";
+    
+    // Ensure OK button is clickable when modal is shown
+    setTimeout(() => {
+        const okBtn = document.getElementById("notificationModalOkBtn");
+        if (okBtn) {
+            okBtn.onclick = function() {
+                closeNotificationModal();
+            };
+        }
+    }, 100);
+}
+
+function closeNotificationModal() {
+    const modal = document.getElementById("notificationModal");
+    modal.style.display = "none";
+    
+    // Also close the add question modal
+    const addQuestionModal = document.getElementById("addQuestionModal");
+    if (addQuestionModal) {
+        addQuestionModal.style.display = "none";
+    }
+}
+
+// Setup notification modal event listeners
+document.addEventListener("DOMContentLoaded", () => {
+    const notificationModal = document.getElementById("notificationModal");
+    const okBtn = document.getElementById("notificationModalOkBtn");
+    
+    if (notificationModal) {
+        // Click outside to close
+        notificationModal.addEventListener("click", (e) => {
+            // Check if click is on modal backdrop (outside modal content)
+            if (e.target === notificationModal) {
+                closeNotificationModal();
+            }
+        });
+        
+        // Ensure modal has proper z-index
+        notificationModal.style.zIndex = "10002";
+    }
+    
+    if (okBtn) {
+        // OK button click to close
+        okBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeNotificationModal();
+        });
+        
+        // Ensure button is clickable
+        okBtn.style.pointerEvents = "auto";
+        okBtn.style.cursor = "pointer";
+    }
+});
   // ================= Sidebar Toggle ==========================================================================================
 window.toggleSidebar=()=>{
   const s=document.getElementById("sidebar"),m=document.querySelector("main"),navbar=document.querySelector(".navbar");
@@ -1340,17 +1399,14 @@ document.querySelector(".add-faculty-btn").onclick = () => {
     if (i.id !== "faculty-number") i.value = "";
   });
 
-  // Clear subjects list
   document.getElementById("faculty-subjects-list").innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects available</p>';
 
-  // Load all subjects for faculty
   loadAllFacultySubjects();
 
   document.getElementById("faculty-photo-preview").hidden = true;
   delete addFacultyModal.dataset.editRow;
   openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY");
   
-  // Extra fix: ensure email field is enabled after modal opens
   setTimeout(() => {
     const emailInput = document.getElementById("faculty-email");
     emailInput.disabled = false;
@@ -1359,16 +1415,14 @@ document.querySelector(".add-faculty-btn").onclick = () => {
     emailInput.style.userSelect = 'auto';
     emailInput.style.opacity = '1';
     emailInput.setAttribute('contenteditable', 'true');
-    emailInput.focus(); // Also focus on the email field
+    emailInput.focus(); 
     console.log("Email field re-enabled after modal open. Disabled state:", emailInput.disabled);
     
-    // Add event listener to prevent disabling
     emailInput.addEventListener('input', function(e) {
       e.target.disabled = false;
       e.target.readOnly = false;
     });
     
-    // Override any attempts to disable
     Object.defineProperty(emailInput, 'disabled', {
       get: function() { return false; },
       set: function(value) { return false; }
@@ -1835,17 +1889,20 @@ function loadStudents(){
             const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
             const yearlevelRow = document.getElementById('yearlevel-row');
             const yearlevelSelect = document.getElementById('student-yearlevel');
+            const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
             
             if (stu.yearlevel === 'irregular') {
               document.querySelector('input[name="student-type"][value="irregular"]').checked = true;
               yearlevelRow.style.display = 'none';
               yearlevelSelect.required = false;
               yearlevelSelect.value = "";
+              if (subjectsSection) subjectsSection.style.display = 'block';
             } else {
               document.querySelector('input[name="student-type"][value="regular"]').checked = true;
-              yearlevelRow.style.display = 'block';
+              yearlevelRow.style.display = 'flex';
               yearlevelSelect.required = true;
               document.getElementById("student-yearlevel").value = stu.yearlevel || "";
+              if (subjectsSection) subjectsSection.style.display = 'none';
             }
             
             // Store student data for update
@@ -1875,10 +1932,11 @@ function loadStudents(){
               e.preventDefault(); 
               submitBtn.disabled = true;
 
-              const subjectIds = selectedSubjects.map(s => s.id);
               const studentData = JSON.parse(addStudentModal.dataset.studentData || "{}");
 
               const studentType = document.querySelector('input[name="student-type"]:checked').value;
+              // Clear subjects for regular students, keep only for irregular
+              const subjectIds = (studentType === 'irregular') ? selectedSubjects.map(s => s.id) : [];
               let yearlevelValue;
               if (studentType === 'irregular') {
                 yearlevelValue = 'irregular';
@@ -2448,6 +2506,33 @@ saveQuestionBtn.onclick = () => {
   if (!q) return alert("Enter a question.");
 
   const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
+  
+  // Check if this is a new question (not editing)
+  if (!addQuestionModal.dataset.editId) {
+    // Count existing questions for this category
+    fetch(`get_question.php?category_id=${catId}`)
+      .then(r => r.json())
+      .then(questions => {
+        if (questions.length >= 5) {
+          showNotificationModal();
+          return;
+        }
+        
+        // Proceed with adding the question
+        proceedToAddQuestion(catId, q);
+      })
+      .catch(err => {
+        console.error("Error checking question count:", err);
+        // Still proceed if there's an error checking count
+        proceedToAddQuestion(catId, q);
+      });
+  } else {
+    // Editing existing question, proceed directly
+    proceedToAddQuestion(catId, q);
+  }
+};
+
+function proceedToAddQuestion(catId, q) {
   const payload = { category_id: catId, question_text: q };
   let url = addQuestionModal.dataset.editId ? "edit_question.php" : "add_question.php";
 
@@ -2466,7 +2551,7 @@ saveQuestionBtn.onclick = () => {
       document.getElementById("question-text").value = ""
     ) : alert("Failed: " + d.message))
     .catch(err => console.error("Error saving question:", err));
-};
+}
 
 //  CATEGORY ACTIONS ========================= //
 function bindCategoryActions(cat) {
@@ -2720,22 +2805,26 @@ function initAddStudentButton() {
       const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
       const yearlevelRow = document.getElementById('yearlevel-row');
       const yearlevelSelect = document.getElementById('student-yearlevel');
+      const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
       
       studentTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
           if (this.value === 'irregular') {
             yearlevelRow.style.display = 'none';
             yearlevelSelect.required = false;
+            if (subjectsSection) subjectsSection.style.display = 'block';
           } else {
-            yearlevelRow.style.display = 'block';
+            yearlevelRow.style.display = 'flex';
             yearlevelSelect.required = true;
+            if (subjectsSection) subjectsSection.style.display = 'none';
           }
         });
       });
       
-      // Initially, since regular is checked, show year level
-      yearlevelRow.style.display = 'block';
+      // Initially, since regular is checked, show year level and hide subjects
+      yearlevelRow.style.display = 'flex';
       yearlevelSelect.required = true;
+      if (subjectsSection) subjectsSection.style.display = 'none';
       
       // Clear selected subjects to prevent edit checking issue
       selectedSubjects = [];
@@ -2777,7 +2866,8 @@ function initAddStudentButton() {
           submitBtn.disabled = false; 
           return; }
 
-        const subjectIds = selectedSubjects.map(s => s.id);
+        // Clear subjects for regular students, keep only for irregular
+        const subjectIds = (studentType === 'irregular') ? selectedSubjects.map(s => s.id) : [];
 
         const res = await fetch("student_crud.php", {
           method:"POST", headers:{ "Content-Type":"application/json" },

@@ -637,10 +637,10 @@ include 'totalstudents_dashcount.php';
           </div>
         </div>
 
-        <div class="form-row" id="yearlevel-row">
-          <div>
-            <label for="student-yearlevel">Year Level</label>
-            <select id="student-yearlevel" required>
+        <div class="form-row" id="yearlevel-row" style="display: flex !important; flex-direction: row !important; gap: 20px !important; align-items: flex-start !important; width: 100% !important;">
+          <div style="flex: 1 !important; display: flex !important; flex-direction: column !important;">
+            <label for="student-yearlevel" style="margin-bottom: 5px !important; font-weight: 500 !important; color: #374151 !important;">Year Level</label>
+            <select id="student-yearlevel" required style="width: 100% !important; padding: 8px 12px !important; border: 2px solid #d1d5db !important; border-radius: 6px !important; font-size: 14px !important;">
               <option value="" disabled selected>-- Select Year Level --</option>
               <option>1</option>
               <option>2</option>
@@ -648,9 +648,9 @@ include 'totalstudents_dashcount.php';
               <option>4</option>
             </select>
           </div>
-          <div>
-            <label for="student-section">Section</label>
-            <input type="text" id="student-section" placeholder="eg. A, B, C" required>
+          <div style="flex: 1 !important; display: flex !important; flex-direction: column !important;">
+            <label for="student-section" style="margin-bottom: 5px !important; font-weight: 500 !important; color: #374151 !important;">Section</label>
+            <input type="text" id="student-section" placeholder="eg. A, B, C" required style="width: 100% !important; padding: 8px 12px !important; border: 2px solid #d1d5db !important; border-radius: 6px !important; font-size: 14px !important;">
           </div>
         </div>
       </div>
@@ -979,6 +979,18 @@ include 'totalstudents_dashcount.php';
     font-family: sans-serif;
     font-size: 14px;
 "></div>
+
+<!-- Custom Notification Modal -->
+<div id="notificationModal" class="notification-modal">
+  <div class="notification-modal-content">
+    <div class="notification-modal-icon">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h3 class="notification-modal-title">Limit Reached</h3>
+    <p class="notification-modal-message">Maximum of 5 questions per category reached!</p>
+    <button id="notificationModalOkBtn" class="notification-modal-btn">OK</button>
+  </div>
+</div>
 
 <script src="FacultyAdmin.js?v=<?php echo time(); ?>"></script>
 </body>
