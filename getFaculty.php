@@ -4,30 +4,92 @@ include 'connect.php';
 
 try {
 
-    $query = "
-        SELECT 
-            f.id,
-            f.faculty_id,
-            f.email,
-            f.firstname,
-            f.lastname,
-            f.suffix,
-            f.photo,
-            GROUP_CONCAT(
-                CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
-                ORDER BY s.subject_code
-                SEPARATOR '|||'
-            ) AS subjects_data
-        FROM add_faculties f
-        LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
-        LEFT JOIN add_subjects s ON fs.subject_id = s.id
-        LEFT JOIN add_programs p ON s.program_id = p.id
-        GROUP BY 
-            f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
-        ORDER BY f.lastname, f.firstname
-    ";
+    $student_id = intval($_GET['student_id'] ?? 0);
+    $year_level = trim($_GET['year_level'] ?? '');
 
-    $result = $conn->query($query);
+    if ($student_id > 0) {
+        $query = "
+            SELECT 
+                f.id,
+                f.faculty_id,
+                f.email,
+                f.firstname,
+                f.lastname,
+                f.suffix,
+                f.photo,
+                GROUP_CONCAT(
+                    CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
+                    ORDER BY s.subject_code
+                    SEPARATOR '||;||'
+                ) AS subjects_data
+            FROM add_faculties f
+            INNER JOIN faculty_subjects fs ON f.id = fs.faculty_id
+            INNER JOIN student_subjects ss ON fs.subject_id = ss.subject_id AND ss.student_id = ?
+            INNER JOIN add_subjects s ON fs.subject_id = s.id
+            LEFT JOIN add_programs p ON s.program_id = p.id
+            GROUP BY 
+                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+            ORDER BY f.lastname, f.firstname
+        ";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } elseif ($year_level !== '') {
+        $query = "
+            SELECT 
+                f.id,
+                f.faculty_id,
+                f.email,
+                f.firstname,
+                f.lastname,
+                f.suffix,
+                f.photo,
+                GROUP_CONCAT(
+                    CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
+                    ORDER BY s.subject_code
+                    SEPARATOR '||;||'
+                ) AS subjects_data
+            FROM add_faculties f
+            INNER JOIN faculty_subjects fs ON f.id = fs.faculty_id
+            INNER JOIN add_subjects s ON fs.subject_id = s.id AND s.year_level = ?
+            LEFT JOIN add_programs p ON s.program_id = p.id
+            GROUP BY 
+                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+            ORDER BY f.lastname, f.firstname
+        ";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("s", $year_level);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $query = "
+            SELECT 
+                f.id,
+                f.faculty_id,
+                f.email,
+                f.firstname,
+                f.lastname,
+                f.suffix,
+                f.photo,
+                GROUP_CONCAT(
+                    CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
+                    ORDER BY s.subject_code
+                    SEPARATOR '||;||'
+                ) AS subjects_data
+            FROM add_faculties f
+            LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
+            LEFT JOIN add_subjects s ON fs.subject_id = s.id
+            LEFT JOIN add_programs p ON s.program_id = p.id
+            GROUP BY 
+                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+            ORDER BY f.lastname, f.firstname
+        ";
+
+        $result = $conn->query($query);
+    }
 
     if (!$result) {
         echo json_encode([
@@ -52,11 +114,11 @@ try {
 
         if (!empty($row['subjects_data'])) {
             error_log("Subjects data found: " . $row['subjects_data']);
-            $subject_entries = explode('||', $row['subjects_data']);
+            $subject_entries = explode('||;||', $row['subjects_data']);
             error_log("Subject entries: " . json_encode($subject_entries));
             
             foreach ($subject_entries as $entry) {
-                $parts = explode('||', $entry);
+                $parts = explode('|||', $entry);
                 error_log("Entry parts: " . json_encode($parts));
                 if (count($parts) >= 4) {
                     $subjects[] = [

@@ -107,6 +107,13 @@ if ($action === "add") {
         $faculty_db_id = $stmt->insert_id;
         $stmt->close();
 
+        // create login credentials for faculty
+        $faculty_username = $faculty_id;
+        $loginStmt = $conn->prepare("INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)");
+        $loginStmt->bind_param("iss", $faculty_db_id, $faculty_username, $hashed_password);
+        $loginStmt->execute();
+        $loginStmt->close();
+
         /* subjects */
         if (!empty($subjects)) {
 
@@ -138,10 +145,11 @@ if ($action === "add") {
         <h2>Welcome to Faculty Evaluation System</h2>
         <p>Hello $firstname $lastname</p>
         <p>Your account has been created successfully.</p>
-        <p><b>Faculty Number:</b> FC-$faculty_id</p>
+        <p><b>Faculty Number:</b> $faculty_id</p>
+        <p><b>Login Username:</b> $faculty_id</p>
         <p><b>Temporary Password:</b> $password</p>
         <hr>
-        <p>Please use this password to login to the Faculty Evaluation System.</p>
+        <p>Please use this username and password to login to the Faculty Evaluation System.</p>
         <p>You can change your password after logging in.</p>
     ";
 

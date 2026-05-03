@@ -115,8 +115,31 @@ if ($action === "get_subjects_by_program_year") {
     exit;
 }
 
-/* ========================= GET CLASSES BY PROGRAM ========================= */
+/* ========================= GET CLASSES OR CLASS SUBJECTS ========================= */
 if ($action === "get") {
+    $class_id = $_GET['class_id'] ?? 0;
+    if ($class_id) {
+        $stmt = $conn->prepare("
+            SELECT cs.subject_id, s.subject_code, s.subject_desc, s.year_level,
+                f.id AS faculty_id, f.faculty_id AS faculty_number,
+                CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, '')) AS faculty_name
+            FROM class_subjects cs
+            JOIN add_subjects s ON cs.subject_id = s.id
+            LEFT JOIN add_faculties f ON cs.faculty_id = f.id
+            WHERE cs.class_id = ?
+            ORDER BY s.subject_code ASC
+        ");
+        $stmt->bind_param("i", $class_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $subjects = [];
+        while ($row = $result->fetch_assoc()) {
+            $subjects[] = $row;
+        }
+        echo json_encode($subjects);
+        exit;
+    }
+
     $program_id = $_GET['program_id'] ?? 0;
     
     if (!$program_id) {
@@ -168,11 +191,22 @@ if ($action === "add") {
     $block = $_POST['block'] ?? "";
     
     $subjects = [];
-    if (isset($_POST['subjects']) && is_array($_POST['subjects'])) {
-        $subjects = $_POST['subjects'];
+    if (isset($_POST['subjects'])) {
+        $subjects = json_decode($_POST['subjects'], true);
+        if (!is_array($subjects)) {
+            $subjects = [];
+        }
+    }
+
+    $faculty_assignments = [];
+    if (isset($_POST['faculty_assignments'])) {
+        $faculty_assignments = json_decode($_POST['faculty_assignments'], true);
+        if (!is_array($faculty_assignments)) {
+            $faculty_assignments = [];
+        }
     }
     
-    if (!$program_id || !$section_name || !$year_level || !$block) {
+    if (!$program_id || !$section_name || !$year_level || !$block || empty($subjects)) {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
         exit;
     }
@@ -192,6 +226,7 @@ if ($action === "add") {
         id int(11) AUTO_INCREMENT PRIMARY KEY,
         class_id int(11) NOT NULL,
         subject_id int(11) NOT NULL,
+        faculty_id int(11) NOT NULL,
         UNIQUE KEY unique_class_subject (class_id, subject_id)
     )");
     
@@ -205,9 +240,13 @@ if ($action === "add") {
         $stmt->close();
         
         if (!empty($subjects)) {
-            $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id) VALUES (?, ?)");
+            $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
             foreach ($subjects as $subject_id) {
-                $sub_stmt->bind_param("ii", $class_id, $subject_id);
+                $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
+                if (!$faculty_id) {
+                    throw new Exception("Missing faculty assignment for subject {$subject_id}");
+                }
+                $sub_stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
                 $sub_stmt->execute();
             }
             $sub_stmt->close();
@@ -218,7 +257,7 @@ if ($action === "add") {
         
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(["status"=>"error","message"=>"Failed to add class"]);
+        echo json_encode(["status"=>"error","message"=>"Failed to add class: " . $e->getMessage()]);
     }
     
     exit;

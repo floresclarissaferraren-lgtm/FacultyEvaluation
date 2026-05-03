@@ -43,6 +43,7 @@ if (str_starts_with($username, 'GC-')) {
 }
 
 // Faculty login
+
 $stmt = $conn->prepare("SELECT faculty_id, faculty_username, faculty_password FROM faculty_login WHERE faculty_username = ?");
 $stmt->bind_param("s", $username);
 $stmt->execute();

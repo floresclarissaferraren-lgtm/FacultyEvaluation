@@ -105,12 +105,13 @@ function togglePassword(id, icon) {
 
 // ================= switch section =================
 
-function showEvaluateSection() {
+async function showEvaluateSection() {
   document.getElementById("mainPage").style.display = "none";
   document.getElementById("evaluateSection").style.display = "block";
   document.getElementById("ratingLegends").style.display = "block";
   document.getElementById("evaluationContainer").style.display = "block";
 
+  await loadStudentFacultyDropdown();
   loadFacultyCategories(); 
 }
 function goBackToMain() {
@@ -123,9 +124,61 @@ function goBackToMain() {
 let currentCriteria = 0;
 let criteriaTables = [];
 
+async function loadStudentFacultyDropdown() {
+  const studentId = document.getElementById('studentId')?.value.trim();
+  const yearLevel = document.getElementById('studentYearLevel')?.value.trim();
+  const dropdown = document.getElementById('facultyDropdown');
+
+  if (!dropdown) return;
+
+  if (!studentId && !yearLevel) {
+    dropdown.innerHTML = '<option value="">-- No faculty available --</option>';
+    return;
+  }
+
+  const params = new URLSearchParams();
+  if (studentId) params.set('student_id', studentId);
+  else if (yearLevel) params.set('year_level', yearLevel);
+
+  try {
+    const res = await fetch(`getFaculty.php?${params.toString()}`);
+    const facultyList = await res.json();
+
+    dropdown.innerHTML = '';
+
+    if (Array.isArray(facultyList) && facultyList.length > 0) {
+      dropdown.innerHTML = '<option value="">-- Select Faculty --</option>';
+      facultyList.forEach(faculty => {
+        const subjectLabels = Array.isArray(faculty.subjects)
+          ? faculty.subjects.map(sub => sub.subject_code || sub.subject_desc).join(', ')
+          : '';
+
+        const labelParts = [
+          faculty.firstname || '',
+          faculty.lastname || '',
+          faculty.suffix ? faculty.suffix : ''
+        ].filter(Boolean);
+
+        const label = `${labelParts.join(' ')}${subjectLabels ? ' (' + subjectLabels + ')' : ''}`;
+
+        const option = document.createElement('option');
+        option.value = faculty.id;
+        option.textContent = label;
+        option.dataset.subjects = subjectLabels;
+        dropdown.appendChild(option);
+      });
+    } else {
+      dropdown.innerHTML = `<option value="">-- No faculty available for ${yearLevel} --</option>`;
+    }
+  } catch (err) {
+    console.error('Error loading faculty dropdown:', err);
+    dropdown.innerHTML = '<option value="">-- Unable to load faculty --</option>';
+  }
+}
+
 async function loadFacultyCategories() {
   try {
-    const res = await fetch("/FacultyEvaluation/get_category.php");
+    const res = await fetch("get_category.php");
     const categories = await res.json();
     console.log("Categories:", categories);
 
@@ -172,7 +225,7 @@ async function loadFacultyCategories() {
       `;
       
       const tbody = table.querySelector("tbody");
-      const qRes = await fetch(`/FacultyEvaluation/get_question.php?category_id=${c.id}`);
+      const qRes = await fetch(`get_question.php?category_id=${c.id}`);
       const questions = await qRes.json();
       console.log("Questions for", c.id, questions);
 
@@ -198,9 +251,6 @@ async function loadFacultyCategories() {
       container.appendChild(table);
       criteriaTables.push(table);
     }
-    
-    // Add pagination after all tables
-    container.appendChild(paginationContainer);
     
     // Add feedback and submit button container (hidden initially)
     const feedbackSubmitContainer = document.createElement("div");
@@ -273,6 +323,14 @@ function updatePaginationButtons() {
 
 // ================= SUBMIT =================
 function submitEvaluation() {
+  const facultyDropdown = document.getElementById('facultyDropdown');
+  const facultyId = facultyDropdown ? facultyDropdown.value : '';
+
+  if (!facultyId) {
+    alert('Please select a faculty member to evaluate.');
+    return;
+  }
+
   const selected = document.querySelectorAll('input[type="radio"]:checked');
   const data = {};
 
@@ -287,6 +345,14 @@ function submitEvaluation() {
     return;
   }
 
-  console.log("Submitted:", data);
+  const facultyLabel = facultyDropdown.options[facultyDropdown.selectedIndex]?.text || '';
+  const submission = {
+    faculty_id: facultyId,
+    faculty_name: facultyLabel,
+    answers: data,
+    feedback: document.getElementById('studentFeedback')?.value.trim() || ''
+  };
+
+  console.log("Submitted:", submission);
   alert("Evaluation submitted!");
 }
