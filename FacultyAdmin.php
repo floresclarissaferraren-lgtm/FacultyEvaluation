@@ -128,6 +128,7 @@ include 'totalstudents_dashcount.php';
     </a>
 
   </nav>
+  
 </div>
 
 <main>
@@ -569,7 +570,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-wrapper">
       <table class="students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Program</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -651,7 +652,7 @@ include 'totalstudents_dashcount.php';
           </div>
           <div style="flex: 1 !important; display: flex !important; flex-direction: column !important;">
             <label for="student-section" style="margin-bottom: 5px !important; font-weight: 500 !important; color: #374151 !important;">Section</label>
-            <input type="text" id="student-section" placeholder="eg. A, B, C" required style="width: 100% !important; padding: 8px 12px !important; border: 2px solid #d1d5db !important; border-radius: 6px !important; font-size: 14px !important;">
+            <input type="text" id="student-section" required style="width: 100% !important; padding: 8px 12px !important; border: 2px solid #d1d5db !important; border-radius: 6px !important; font-size: 14px !important;">
           </div>
         </div>
       </div>

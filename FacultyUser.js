@@ -36,6 +36,57 @@ function showPasswordForm(){
 function closePasswordForm(){
   document.getElementById("passwordForm").style.display="none";
 }
+function showProfile(){
+  // Close dropdown first
+  document.getElementById("dropdownMenu").style.display = "none";
+  
+  // Get student information from hidden fields
+  const studentId = document.getElementById("studentId")?.value;
+  const studentName = document.getElementById("studentName")?.value;
+  const studentNumber = document.getElementById("studentNumber")?.value;
+  const studentYearLevel = document.getElementById("studentYearLevel")?.value;
+  const studentProgram = document.getElementById("studentProgram")?.value;
+  
+  // Create profile modal content
+  const profileContent = `
+    <div class="profile-header">
+      <div class="profile-icon">
+        <i class="ph ph-user-circle"></i>
+      </div>
+      <h3>Student Profile</h3>
+    </div>
+    <div class="profile-info">
+      <p><strong>Full Name:</strong> ${studentName || 'N/A'}</p>
+      <p><strong>Student Number:</strong> ${studentNumber || 'N/A'}</p>
+      <p><strong>Year Level:</strong> ${studentYearLevel || 'N/A'}</p>
+      <p><strong>Program:</strong> ${studentProgram || 'N/A'}</p>
+    </div>
+    <div class="profile-buttons">
+      <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
+    </div>
+  `;
+  
+  // Create modal if it doesn't exist
+  let profileModal = document.getElementById("profileModal");
+  if (!profileModal) {
+    profileModal = document.createElement("div");
+    profileModal.id = "profileModal";
+    profileModal.className = "profileform";
+    document.body.appendChild(profileModal);
+  }
+  
+  profileModal.innerHTML = `
+    <div class="logout-content">
+      ${profileContent}
+    </div>
+  `;
+  
+  profileModal.style.display = "flex";
+}
+
+window.closeProfileModal = () => {
+  document.getElementById("profileModal").style.display = "none";
+};
 function updatePassword() {
   const studentId = document.getElementById("studentId").value.trim();
   const oldPass = document.getElementById("oldPass").value.trim();
@@ -94,12 +145,12 @@ function togglePassword(id, icon) {
   const input = document.getElementById(id);
   if (input.type === "password") {
     input.type = "text";
-    icon.classList.remove("fa-eye-slash");
-    icon.classList.add("fa-eye");
+    icon.classList.remove("ph-eye-slash");
+    icon.classList.add("ph-eye");
   } else {
     input.type = "password";
-    icon.classList.remove("fa-eye");
-    icon.classList.add("fa-eye-slash");
+    icon.classList.remove("ph-eye");
+    icon.classList.add("ph-eye-slash");
   }
 }
 
@@ -217,7 +268,7 @@ async function loadFacultyCategories() {
       table.innerHTML = `
         <thead>
           <tr>
-            <th><i class="fa-solid fa-graduation-cap"></i> ${c.category_name.toUpperCase()}</th>
+            <th><i class="ph ph-graduation-cap"></i> ${c.category_name.toUpperCase()}</th>
             <th>5</th><th>4</th><th>3</th><th>2</th><th>1</th>
           </tr>
         </thead>

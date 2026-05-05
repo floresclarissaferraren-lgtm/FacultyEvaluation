@@ -18,8 +18,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
   }
 
-  // check if program already exists
-  $check = $conn->prepare("SELECT id FROM add_programs WHERE program_code = ?");
+  // check if program code already exists (case-insensitive)
+  $check = $conn->prepare("SELECT id FROM add_programs WHERE LOWER(program_code) = LOWER(?)");
   $check->bind_param("s", $code);
   $check->execute();
   $check->store_result();
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   if ($check->num_rows > 0) {
     echo json_encode([
       "status" => "error",
-      "message" => "Program code already exists."
+      "message" => "Program Code already exists"
     ]);
     $check->close();
     exit;
@@ -35,6 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   $check->close();
 
+  // Convert program code to uppercase for consistency
+  $code = strtoupper($code);
+  
   $stmt = $conn->prepare("INSERT INTO add_programs (program_code, program_name) VALUES (?, ?)");
   $stmt->bind_param("ss", $code, $name);
 

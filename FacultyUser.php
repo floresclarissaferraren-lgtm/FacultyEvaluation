@@ -12,7 +12,10 @@ $studentName = '';
 $studentYearLevel = '';
 $studentProgram = '';
 
-$stmt = $conn->prepare("SELECT firstname, lastname, yearlevel, program FROM add_students WHERE id = ?");
+$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, p.program_name 
+                          FROM add_students s 
+                          LEFT JOIN add_programs p ON s.program = p.id 
+                          WHERE s.id = ?");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -21,7 +24,8 @@ if ($result && $result->num_rows === 1) {
     $student = $result->fetch_assoc();
     $studentName = trim(($student['firstname'] ?? '') . ' ' . ($student['lastname'] ?? ''));
     $studentYearLevel = $student['yearlevel'] ?? '';
-    $studentProgram = $student['program'] ?? '';
+    $studentNumber = $student['student_number'] ?? '';
+    $studentProgram = $student['program_name'] ?? '';
 } else {
     $stmt->close();
     $conn->close();
@@ -38,29 +42,38 @@ $conn->close();
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System - Admin Panel</title>
   <link rel="stylesheet" href="FacultyUser.css?v=<?=time()?>">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+
 </head>
 <body>
 
 <!-- Navbar ======================================================================================-->
 
 <div class="navbar">
-  <div class="brand"> <i class="fas fa-graduation-cap"></i><span class="logo-text main-title">FaculRate</span></div>
+  <div class="brand"> 
+    <i class="ph ph-graduation-cap"></i>
+    <span class="logo-text main-title">Faculty Evaluation System</span>
+  </div>
   <div class="user-menu">
-    <div class="student-box" onclick="toggleDropdown()"><img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
-        <span>Student</span><i class="fas fa-caret-down"></i></div>
+    <div class="student-box" onclick="toggleDropdown()">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
+      <span>Student</span>
+      <i class="ph ph-caret-down"></i>
+    </div>
     <div class="dropdown-menu" id="dropdownMenu">
-      <a href="#" onclick="showPasswordForm()"><i class="fas fa-key"></i> Change Password</a>
-      <a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      <a href="#" onclick="showPasswordForm()"><i class="ph ph-key"></i> Change Password</a>
+      <a href="#" onclick="showProfile()"><i class="ph ph-user"></i> Profile</a>
+      <a href="#" onclick="logout(event)"><i class="ph ph-sign-out"></i> Logout</a>
     </div>
   </div>
 </div>
+
 
 <!-- Logout ======================================================================================-->
 
 <div id="logoutModal" class="logoutform">
   <div class="logout-content">
-    <div class="logout-icon"><span class="icon-bg"><i class="fas fa-sign-out-alt fa-2x"></i></span></div>
+    <div class="logout-icon"><span class="icon-bg"><i class="ph ph-sign-out"></i></span></div>
     <h3>Are you sure you want to logout?</h3>
     <div class="logout-buttons">
       <button class="btn logout-btn" onclick="confirmLogout()">Yes, Log me out</button>
@@ -73,7 +86,7 @@ $conn->close();
   <div class="password-box">
     <div class="password-icon-container">
       <div class="password-icon-circle">
-        <i class="fas fa-user-lock password-icon"></i>
+        <i class="ph ph-lock password-icon"></i>
       </div>
       <div class="password-title">Change Password</div>
     </div>
@@ -81,20 +94,22 @@ $conn->close();
     <div class="password-body">
       <div class="password-field">
         <input id="oldPass" type="password" placeholder="Old Password">
-        <i class="fa-solid fa-eye-slash toggle" onclick="togglePassword('oldPass', this)"></i>
+        <i class="ph ph-eye-slash toggle" onclick="togglePassword('oldPass', this)"></i>
       </div>
       <div class="password-field">
         <input id="newPass" type="password" placeholder="New Password">
-        <i class="fa-solid fa-eye-slash toggle" onclick="togglePassword('newPass', this)"></i>
+        <i class="ph ph-eye-slash toggle" onclick="togglePassword('newPass', this)"></i>
       </div>
       <div class="password-field">
         <input id="confirmPass" type="password" placeholder="Confirm Password">
-        <i class="fa-solid fa-eye-slash toggle" onclick="togglePassword('confirmPass', this)"></i>
+        <i class="ph ph-eye-slash toggle" onclick="togglePassword('confirmPass', this)"></i>
       </div>
     </div>
 
     <!-- Hidden fields to store student info -->
     <input type="hidden" id="studentId" value="<?php echo htmlspecialchars($student_id); ?>">
+    <input type="hidden" id="studentName" value="<?php echo htmlspecialchars($studentName); ?>">
+    <input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars($studentNumber); ?>">
     <input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
     <input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
 
@@ -113,11 +128,11 @@ $conn->close();
     <div class="main-left"><img src="schoollogo.png" alt="School Logo" class="main-img"></div>
     <div class="main-right">
       <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
-      <div class="academic-year"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div>
-      <div class="academic-year"><i class="fas fa-user-graduate"></i> Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
+      <div class="academic-year"><i class="ph ph-calendar"></i> Academic Year: 2025–2026 • 2nd Semester</div>
+      <div class="academic-year"><i class="ph ph-graduation-cap"></i> Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>
-      <button class="evaluate-btn" onclick="showEvaluateSection()"><i class="fas fa-check-circle"></i> Evaluate Now</button>
+      <button class="evaluate-btn" onclick="showEvaluateSection()"><i class="ph ph-check-circle"></i> Evaluate Now</button>
     </div>
   </div>
 
@@ -130,11 +145,11 @@ $conn->close();
           <!-- Header Section 
           <div class="academic-year-eval"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div> -->
         </div>
-        <button class="back-btn" onclick="goBackToMain()"><i class="fas fa-arrow-left"></i> Back</button>
+        <button class="back-btn" onclick="goBackToMain()"><i class="ph ph-arrow-left"></i> Back</button>
       </div>
 
       <div class="faculty-select">
-        <label for="facultyDropdown"><i class="fas fa-user-tie"></i> Select Faculty:</label>
+        <label for="facultyDropdown"><i class="ph ph-user"></i> Select Faculty:</label>
         <select id="facultyDropdown" class="faculty-dropdown"><option value="">-- No faculty available --</option></select>
       </div>
     </div>

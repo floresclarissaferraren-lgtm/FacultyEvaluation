@@ -218,6 +218,22 @@ if ($action === "add") {
         exit;
     }
     
+    // Check for duplicate class (same year level and section in same program)
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ?");
+    $check_stmt->bind_param("iss", $program_id, $year_level, $block);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    $row = $result->fetch_assoc();
+    $check_stmt->close();
+    
+    if ($row['count'] > 0) {
+        echo json_encode([
+            "status" => "error", 
+            "message" => "A class with the same year level and section already exists in this program."
+        ]);
+        exit;
+    }
+    
     // Create tables if not exist
     $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -305,6 +321,22 @@ if ($action === "edit") {
         exit;
     }
     
+    // Check for duplicate class (same year level and section in same program), excluding current class
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND id != ?");
+    $check_stmt->bind_param("issi", $program_id, $year_level, $block, $id);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    $row = $result->fetch_assoc();
+    $check_stmt->close();
+    
+    if ($row['count'] > 0) {
+        echo json_encode([
+            "status" => "error", 
+            "message" => "A class with the same year level and section already exists in this program."
+        ]);
+        exit;
+    }
+    
     $conn->begin_transaction();
     
     try {
@@ -340,6 +372,65 @@ if ($action === "edit") {
         echo json_encode(["status"=>"error","message"=>"Failed to update class: " . $e->getMessage()]);
     }
     
+    exit;
+}
+
+/* ========================= ADD SUBJECT TO CLASS ========================= */
+if ($action === "add_subject_to_class") {
+    $class_id = $_POST['class_id'] ?? 0;
+    $subject_id = $_POST['subject_id'] ?? 0;
+    $faculty_id = $_POST['faculty_id'] ?? 0;
+    
+    if (!$class_id || !$subject_id) {
+        echo json_encode(["status" => "error", "message" => "Missing class ID or subject ID"]);
+        exit;
+    }
+    
+    $stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
+    $stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(["status" => "success", "message" => "Subject added to class successfully"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Failed to add subject: " . $stmt->error]);
+    }
+    
+    $stmt->close();
+    exit;
+}
+
+/* ========================= DELETE SUBJECT FROM CLASS ========================= */
+if ($action === "delete_subject") {
+    error_log("DELETE_SUBJECT called");
+    error_log("POST data: " . print_r($_POST, true));
+    
+    $class_id = $_POST['class_id'] ?? 0;
+    $subject_id = $_POST['subject_id'] ?? 0;
+    
+    error_log("class_id: $class_id, subject_id: $subject_id");
+    
+    if (!$class_id || !$subject_id) {
+        error_log("Missing IDs");
+        echo json_encode(["status" => "error", "message" => "Missing class ID or subject ID"]);
+        exit;
+    }
+    
+    $stmt = $conn->prepare("DELETE FROM class_subjects WHERE class_id = ? AND subject_id = ?");
+    $stmt->bind_param("ii", $class_id, $subject_id);
+    
+    if ($stmt->execute()) {
+        error_log("Execute successful, affected_rows: " . $stmt->affected_rows);
+        if ($stmt->affected_rows > 0) {
+            echo json_encode(["status" => "success", "message" => "Subject removed from class successfully"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Subject not found in this class"]);
+        }
+    } else {
+        error_log("Execute failed: " . $stmt->error);
+        echo json_encode(["status" => "error", "message" => "Failed to remove subject: " . $stmt->error]);
+    }
+    
+    $stmt->close();
     exit;
 }
 

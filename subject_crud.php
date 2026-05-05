@@ -84,14 +84,44 @@ if ($action === "get") {
 if ($action === "delete") {
 
     $id = $_POST['id'] ?? 0;
+    
+    error_log("Attempting to delete subject with ID: $id");
+
+    // Check if subject is assigned to any classes first
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM class_subjects WHERE subject_id = ?");
+    $check_stmt->bind_param("i", $id);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    $row = $result->fetch_assoc();
+    $check_stmt->close();
+    
+    if ($row['count'] > 0) {
+        error_log("Subject is assigned to " . $row['count'] . " classes, cannot delete");
+        echo json_encode([
+            "status" => "error", 
+            "message" => "Cannot delete subject. It is currently assigned to " . $row['count'] . " class(es). Please remove it from all classes first."
+        ]);
+        exit;
+    }
 
     $stmt = $conn->prepare("DELETE FROM add_subjects WHERE id=?");
     $stmt->bind_param("i", $id);
 
-    echo json_encode([
-        "status" => $stmt->execute() ? "success" : "error"
-    ]);
+    if ($stmt->execute()) {
+        error_log("Subject deleted successfully");
+        echo json_encode([
+            "status" => "success",
+            "message" => "Subject deleted successfully"
+        ]);
+    } else {
+        error_log("Failed to delete subject: " . $stmt->error);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to delete subject: " . $stmt->error
+        ]);
+    }
 
+    $stmt->close();
     exit;
 }
 
@@ -235,6 +265,44 @@ if ($action === "get_by_program_and_year") {
     }
 
     echo json_encode($data);
+    exit;
+}
+
+/* ========================= GET SUBJECTS AUTOMATICALLY FOR STUDENTS ========================= */
+if ($action === "get_auto_subjects") {
+
+    header("Content-Type: application/json");
+
+    $program_id = $_GET['program_id'] ?? 0;
+    $year_level = $_GET['year_level'] ?? "";
+
+    if (!$program_id || !$year_level) {
+        echo json_encode(["status" => "error", "message" => "Program ID and year level are required"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("
+        SELECT id, subject_code, subject_desc, year_level
+        FROM add_subjects
+        WHERE program_id = ? AND year_level = ?
+        ORDER BY subject_code ASC
+    ");
+
+    $stmt->bind_param("is", $program_id, $year_level);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode([
+        "status" => "success", 
+        "subjects" => $data,
+        "count" => count($data)
+    ]);
     exit;
 }
 

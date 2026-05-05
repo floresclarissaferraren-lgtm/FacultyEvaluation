@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['role'] = 'faculty';
             $_SESSION['id'] = $user['faculty_id'];
             $_SESSION['username'] = $user['faculty_username'];
-            header("Location: faculty_dashboard.php");
+            header("Location: FacultyInstructor.php");
             exit();
         } else {
             echo "Incorrect password";

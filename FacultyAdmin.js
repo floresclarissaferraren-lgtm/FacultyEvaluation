@@ -57,6 +57,7 @@ function closeNotificationModal() {
     }
 }
 
+
 // Setup notification modal event listeners
 document.addEventListener("DOMContentLoaded", () => {
     const notificationModal = document.getElementById("notificationModal");
@@ -244,6 +245,9 @@ function openDeleteModal(type,name,el){
 
 const closeDeleteModal=()=>{document.getElementById("deleteModal").style.display="none";deleteTarget=null;deleteType="";};
 const confirmDelete = () => {
+  console.log("confirmDelete called with deleteType:", deleteType);
+  console.log("confirmDelete called with deleteTarget:", deleteTarget);
+  
   if (!deleteTarget || !deleteType) return closeDeleteModal();
 
 const cfg = {
@@ -253,16 +257,27 @@ const cfg = {
   question: { url: "delete_question.php", key: "question_id", type: "form" },
   student: { url: "student_crud.php", key: "id", type: "json" }, // student uses JSON
   subject: { url: "subject_crud.php", key: "id", type: "form" }, // subject uses form
-  class: { url: "classes_crud.php", key: "id", type: "form" } // class uses form
+  class: { url: "classes_crud.php", key: "id", type: "form" }, // class uses form
+  class_subject: { url: "classes_crud.php", key: "custom", type: "form" } // class subject uses custom handling
 }[deleteType];
 
 if (!cfg) return closeDeleteModal();
 
-const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
-
 let fetchOptions;
-if (cfg.type === "json") {
+if (deleteType === "class_subject") {
+  // Custom handling for class subject deletion
+  const body = `action=delete_subject&class_id=${deleteTarget.classId}&subject_id=${deleteTarget.subjectId}`;
+  console.log("Deleting class subject with body:", body);
+  console.log("Delete target:", deleteTarget);
+  
+  fetchOptions = {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body
+  };
+} else if (cfg.type === "json") {
   // For students, send JSON with action + id
+  const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
   fetchOptions = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -270,10 +285,11 @@ if (cfg.type === "json") {
   };
 } else {
   // For other entities, send form-encoded
+  const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
   let body = `${cfg.key}=${encodeURIComponent(val)}`;
   
-  // Add action parameter for subjects
-  if (deleteType === "subject") {
+  // Add action parameter for subjects and classes
+  if (deleteType === "subject" || deleteType === "class") {
     body += `&action=delete`;
   }
   
@@ -288,9 +304,25 @@ fetch(cfg.url, fetchOptions)
   .then(r => r.json())
   .then(resp => {
     if (resp.success || resp.status === "success") {
-      deleteTarget.remove();
+      if (deleteType === "class_subject") {
+        // Remove the subject card from DOM
+        deleteTarget.subjectCard.remove();
+      } else {
+        deleteTarget.remove();
+      }
       closeDeleteModal();
       openDeleteSuccess();
+      
+      // Refresh subjects list after successful deletion
+      if (deleteType === "subject") {
+        loadAllSubjects();
+      }
+      
+      // Refresh classes list after successful deletion
+      if (deleteType === "class") {
+        loadClasses();
+      }
+      
       if (deleteType === "student") {
         // Delay dashboard update to ensure DB transaction is committed
         setTimeout(() => {
@@ -298,14 +330,24 @@ fetch(cfg.url, fetchOptions)
           console.log("Dashboard stats updated after student delete");
         }, 500);
       }
+      
+      if (deleteType === "program") {
+        // Update dashboard after program deletion
+        setTimeout(() => {
+          loadDashboardStats();
+          console.log("Dashboard stats updated after program delete");
+        }, 500);
+      }
     } else {
-      alert("Error deleting: " + (resp.error || resp.message));
+      const errorMessage = resp.error || resp.message || "Unknown error occurred";
+      console.error("Delete failed response:", resp);
+      showNotification("Error deleting: " + errorMessage, "#f44336", 5000);
       closeDeleteModal();
     }
   })
   .catch(err => {
     console.error(err);
-    alert("Unexpected error");
+    showNotification("Unexpected error occurred while deleting", "#f44336", 5000);
     closeDeleteModal();
   });
 
@@ -323,11 +365,23 @@ function openDeleteSuccess(){
       console.log("Dashboard stats updated on delete success modal");
     }, 100);
   }
+  
+  if (deleteType === "program") {
+    setTimeout(() => {
+      loadDashboardStats();
+      console.log("Dashboard stats updated on delete success modal");
+    }, 100);
+  }
 }
 function closeDeleteSuccess(){
   document.getElementById("deleteSuccessModal").style.display = "none";
   // Update dashboard when success modal is closed
   if (deleteType === "student") {
+    loadDashboardStats();
+    console.log("Dashboard stats updated on delete success modal close");
+  }
+  
+  if (deleteType === "program") {
     loadDashboardStats();
     console.log("Dashboard stats updated on delete success modal close");
   }
@@ -388,15 +442,69 @@ let editRowProgram=null;
 document.querySelector(".add-program-btn")?.addEventListener("click",()=>{
   programHeader.innerText="ADD PROGRAM";programSubmitBtn.innerText="SAVE PROGRAM";
   programCodeInput.value="";programNameInput.value="";editRowProgram=null;
+  // Clear validation states
+  programCodeInput.style.borderColor = "";
+  programCodeInput.title = "";
   addProgramModal.style.display = "flex";
   addProgramModal.style.zIndex = "10001";
   addProgramModal.style.position = "fixed";
 });
 
+// REAL-TIME VALIDATION FOR PROGRAM CODE (using existing table data)
+programCodeInput?.addEventListener("input", () => {
+  // Convert to uppercase in real-time
+  const originalValue = programCodeInput.value;
+  const upperValue = originalValue.toUpperCase();
+  if (originalValue !== upperValue) {
+    const cursorPos = programCodeInput.selectionStart;
+    programCodeInput.value = upperValue;
+    programCodeInput.setSelectionRange(cursorPos, cursorPos);
+  }
+  
+  const code = programCodeInput.value.trim();
+  if (!code || code.length < 2) {
+    programCodeInput.style.borderColor = "";
+    return;
+  }
+
+  // Check against existing programs in table
+  const existingCodes = [];
+  document.querySelectorAll(".programs-table tbody tr").forEach(row => {
+    const rowCode = row.cells[0]?.textContent?.trim().toUpperCase();
+    if (rowCode && (!editRowProgram || row.dataset.id !== editRowProgram.dataset.id)) {
+      existingCodes.push(rowCode);
+    }
+  });
+  
+  if (existingCodes.includes(code.toUpperCase())) {
+    programCodeInput.style.borderColor = "#f44336";
+    programCodeInput.title = "Program Code already exists";
+  } else {
+    programCodeInput.style.borderColor = "#4caf50";
+    programCodeInput.title = "";
+  }
+});
+
+
 // SAVE / UPDATE
 programSubmitBtn.addEventListener("click",()=>{
   const code=programCodeInput.value.trim(),name=programNameInput.value.trim();
   if(!code||!name)return alert("Please fill in both Program Code and Program Name.");
+  
+  // Simple validation using existing table data
+  const existingCodes = [];
+  document.querySelectorAll(".programs-table tbody tr").forEach(row => {
+    const rowCode = row.cells[0]?.textContent?.trim().toUpperCase();
+    if (rowCode && (!editRowProgram || row.dataset.id !== editRowProgram.dataset.id)) {
+      existingCodes.push(rowCode);
+    }
+  });
+  
+  if (existingCodes.includes(code.toUpperCase())) {
+    showNotification("Program Code already exists. Please use a different code.", "#f44336", 4000);
+    programCodeInput.focus();
+    return;
+  }
 
   const url=editRowProgram?"edit_program.php":"add_program.php";
   const body=editRowProgram?`id=${editRowProgram.dataset.id}&program_code=${encodeURIComponent(code)}
@@ -407,9 +515,20 @@ programSubmitBtn.addEventListener("click",()=>{
   .then(res=>{
     const ok=(typeof res==="object"&&res.status==="success")||(typeof res==="string"&&res.toLowerCase().includes("success"));
     if(ok){loadPrograms();closeProgramModal(); 
-    showNotification("Program edited successfully!", "#4caf50"); 
-    }else alert(res.message||res||"Error updating Program.", "#f44336");
-  }).catch(err=>{console.error("FETCH ERROR:",err);alert("Something went wrong.");});
+    if(editRowProgram){
+      showNotification("Program edited successfully!", "#4caf50"); 
+    }else{
+      showNotification("Program added successfully!", "#4caf50"); 
+    }
+    }else{
+      // Show simple notification for duplicate program errors
+      if(typeof res==="object" && res.message && res.message.includes("already exists")){
+        showNotification(res.message, "#f44336", 4000);
+      }else{
+        showNotification(res.message||res||"Error updating Program.", "#f44336", 4000);
+      }
+    }
+  }).catch(err=>{console.error("FETCH ERROR:",err);showNotification("Something went wrong.", "#f44336", 4000);});
 });
 
 // ATTACH ROW EVENTS
@@ -424,7 +543,11 @@ function attachProgramRowEvents(row){
   row.querySelector(".edit-btn")?.addEventListener("click",()=>{
     programHeader.innerText="EDIT PROGRAM";programSubmitBtn.innerText="UPDATE PROGRAM";
     programCodeInput.value=row.cells[0].innerText;programNameInput.value=row.cells[1].innerText;
-    editRowProgram=row;addProgramModal.style.display="flex";
+    editRowProgram=row;
+    // Clear validation states
+    programCodeInput.style.borderColor = "";
+    programCodeInput.title = "";
+    addProgramModal.style.display="flex";
   });
   row.querySelector(".delete-btn")?.addEventListener("click",()=>openDeleteModal("program",row.cells[1].innerText,row));
 }
@@ -1281,7 +1404,7 @@ saveClassBtn?.addEventListener("click", () => {
       delete addClassModalEl.dataset.editId;
       delete addClassModalEl.dataset.isEditing;
     } else {
-      alert("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"));
+      showNotification("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"), "#f44336", 5000);
     }
   })
   .catch(err => {
@@ -1331,7 +1454,7 @@ function showClassSubjectsModal(classId, sectionName, yearLevel) {
       let html = "<div class='subjects-grid'>";
       data.forEach(subject => {
         html += `
-          <div class='subject-card'>
+          <div class='subject-card' data-subject-id='${subject.subject_id}' data-class-id='${classId}'>
             <div class='subject-header'>
               <strong>${subject.subject_code}</strong>
               <span class='year-badge'>${subject.year_level || ''}</span>
@@ -1352,6 +1475,167 @@ function showClassSubjectsModal(classId, sectionName, yearLevel) {
       console.error("Error fetching class subjects:", err);
       subjectsList.innerHTML = "<div class='error'>Error loading subjects</div>";
     });
+}
+
+// ========================= DELETE SUBJECT FROM CLASS MODAL =========================
+function openDeleteSubjectFromClassModal(classId, subjectId, subjectCode, subjectCard) {
+  console.log("openDeleteSubjectFromClassModal called with:", {classId, subjectId, subjectCode});
+  
+  const modal = document.getElementById("deleteModal");
+  const deleteMessage = document.getElementById("deleteMessage");
+  const deleteWarning = document.getElementById("deleteWarning");
+  
+  deleteMessage.innerHTML = `Do you want to remove <strong>${subjectCode}</strong> from this class?`;
+  deleteWarning.textContent = "This subject will be removed from class but will not be deleted from the system.";
+  
+  // Store data for deletion
+  deleteTarget = {
+    classId: classId,
+    subjectId: subjectId,
+    subjectCard: subjectCard,
+    type: "class_subject"
+  };
+  deleteType = "class_subject";
+  
+  console.log("Set deleteType to:", deleteType);
+  console.log("Set deleteTarget to:", deleteTarget);
+  
+  modal.style.display = "flex";
+  modal.style.zIndex = "10001";
+  modal.style.position = "fixed";
+}
+
+// ========================= EDIT SUBJECT IN CLASS MODAL =========================
+function openEditSubjectInClassModal(classId, subjectId, currentFacultyId, subjectCode, subjectCard) {
+  // For now, we'll show a simple faculty assignment modal
+  // This could be expanded to a full modal later
+  const modal = document.getElementById("editSubjectInClassModal");
+  if (!modal) {
+    // Create modal if it doesn't exist
+    createEditSubjectInClassModal();
+    return openEditSubjectInClassModal(classId, subjectId, currentFacultyId, subjectCode, subjectCard);
+  }
+  
+  const modalTitle = modal.querySelector("h3");
+  const subjectName = modal.querySelector("#editSubjectName");
+  const facultySelect = modal.querySelector("#editFacultySelect");
+  
+  modalTitle.textContent = "Edit Subject Assignment";
+  subjectName.textContent = subjectCode;
+  
+  // Load available faculty for this subject
+  facultySelect.innerHTML = '<option value="">Loading faculty...</option>';
+  fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`)
+    .then(r => r.json())
+    .then(faculty => {
+      facultySelect.innerHTML = '<option value="0">Unassigned</option>';
+      faculty.forEach(f => {
+        const option = document.createElement('option');
+        option.value = f.id;
+        option.textContent = f.name;
+        if (f.id == currentFacultyId) {
+          option.selected = true;
+        }
+        facultySelect.appendChild(option);
+      });
+    })
+    .catch(err => {
+      console.error("Error loading faculty:", err);
+      facultySelect.innerHTML = '<option value="">Error loading faculty</option>';
+    });
+  
+  // Store data for saving
+  modal.dataset.classId = classId;
+  modal.dataset.subjectId = subjectId;
+  modal.dataset.subjectCard = JSON.stringify(subjectCard.outerHTML);
+  
+  modal.style.display = "flex";
+  modal.style.zIndex = "10001";
+  modal.style.position = "fixed";
+}
+
+function createEditSubjectInClassModal() {
+  const modalHTML = `
+    <div id="editSubjectInClassModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:500px;">
+        <div class="modal-header">
+          <h3>Edit Subject Assignment</h3>
+          <span class="close-btn">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label>Subject</label>
+            <div id="editSubjectName" style="padding: 8px; background: #f3f4f6; border-radius: 4px; font-weight: bold;"></div>
+          </div>
+          <div class="form-row">
+            <label for="editFacultySelect">Assign Faculty</label>
+            <select id="editFacultySelect">
+              <option value="">Loading...</option>
+            </select>
+          </div>
+          <button id="saveSubjectAssignmentBtn" class="submit-btn">Save Assignment</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // Add event listeners
+  const modal = document.getElementById("editSubjectInClassModal");
+  modal.querySelector(".close-btn").addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+  
+  modal.querySelector("#saveSubjectAssignmentBtn").addEventListener("click", saveSubjectAssignment);
+}
+
+function saveSubjectAssignment() {
+  const modal = document.getElementById("editSubjectInClassModal");
+  const classId = modal.dataset.classId;
+  const subjectId = modal.dataset.subjectId;
+  const facultyId = document.getElementById("editFacultySelect").value;
+  
+  // First remove the existing assignment, then add new one
+  fetch(`classes_crud.php?action=delete_subject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `class_id=${classId}&subject_id=${subjectId}`
+  })
+  .then(r => r.json())
+  .then(deleteRes => {
+    if (deleteRes.status === "success") {
+      // Add the subject back with new faculty assignment
+      fetch(`classes_crud.php?action=add_subject_to_class`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `class_id=${classId}&subject_id=${subjectId}&faculty_id=${facultyId}`
+      })
+      .then(r => r.json())
+      .then(addRes => {
+        if (addRes.status === "success") {
+          modal.style.display = "none";
+          showNotification("Faculty assignment updated successfully!", "#4caf50");
+          // Refresh class subjects - get current class info from modal
+          const classModal = document.getElementById("viewClassSubjectsModal");
+          const className = classModal.querySelector("#viewClassName").textContent;
+          showClassSubjectsModal(classId, className, ""); // This will refresh the modal
+        } else {
+          showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
+        }
+      })
+      .catch(err => {
+        console.error("Error adding subject:", err);
+        showNotification("Error updating assignment", "#f44336");
+      });
+    } else {
+      showNotification("Error updating assignment: " + (deleteRes.message || "Unknown error"), "#f44336");
+    }
+  })
+  .catch(err => {
+    console.error("Error deleting subject:", err);
+    showNotification("Error updating assignment", "#f44336");
+  });
 }
 
 // ========================= Forms ==========================================================================================
@@ -1969,7 +2253,7 @@ function loadStudents(){
           <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix||""}</div>
               <small style="color:#6b7280;">${stu.email || ''}</small>
           </td>
-          <td><div>${getFormattedYearLevel(stu.yearlevel)}</div>
+          <td><div>${stu.yearlevel === 'irregular' ? 'irregular' : (stu.yearlevel || '') + (stu.section || '')}</div>
               <small style="color:#6b7280;">${getProgramName(stu.program)}</small>
           </td>
           <td class="action-cell">
@@ -2005,19 +2289,24 @@ function loadStudents(){
             const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
             const yearlevelRow = document.getElementById('yearlevel-row');
             const yearlevelSelect = document.getElementById('student-yearlevel');
+            const sectionSelect = document.getElementById('student-section');
             const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
             
             if (stu.yearlevel === 'irregular') {
               document.querySelector('input[name="student-type"][value="irregular"]').checked = true;
-              yearlevelRow.style.display = 'none';
+              yearlevelRow.style.setProperty('display', 'none', 'important');
               yearlevelSelect.required = false;
               yearlevelSelect.value = "";
+              sectionSelect.required = false;
+              sectionSelect.value = "";
               if (subjectsSection) subjectsSection.style.display = 'block';
             } else {
               document.querySelector('input[name="student-type"][value="regular"]').checked = true;
-              yearlevelRow.style.display = 'flex';
+              yearlevelRow.style.setProperty('display', 'flex', 'important');
               yearlevelSelect.required = true;
+              sectionSelect.required = true;
               document.getElementById("student-yearlevel").value = stu.yearlevel || "";
+              document.getElementById("student-section").value = stu.section || "";
               if (subjectsSection) subjectsSection.style.display = 'none';
             }
             
@@ -2039,6 +2328,47 @@ function loadStudents(){
             // Set program value immediately after loading programs
             loadStudentPrograms().then(() => {
               console.log("Programs loaded, setting program to:", stu.program);
+              
+              // Re-attach student type radio button event listeners after edit form setup
+              const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
+              const yearlevelRow = document.getElementById('yearlevel-row');
+              const yearlevelSelect = document.getElementById('student-yearlevel');
+              const sectionSelect = document.getElementById('student-section');
+              const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
+              
+              // Remove existing listeners to avoid duplicates
+              studentTypeRadios.forEach(radio => {
+                radio.replaceWith(radio.cloneNode(true));
+              });
+              
+              // Get fresh reference after cloning and attach new listeners
+              const freshRadios = document.querySelectorAll('input[name="student-type"]');
+              freshRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                  console.log('Edit form radio changed to:', this.value);
+                  
+                  if (!yearlevelRow || !yearlevelSelect || !sectionSelect) {
+                    console.error('Required elements not found in edit form');
+                    return;
+                  }
+                  
+                  if (this.value === 'irregular') {
+                    console.log('Hiding year level and section for irregular in edit form');
+                    yearlevelRow.style.setProperty('display', 'none', 'important');
+                    yearlevelSelect.required = false;
+                    yearlevelSelect.value = '';
+                    sectionSelect.required = false;
+                    sectionSelect.value = '';
+                    if (subjectsSection) subjectsSection.style.display = 'block';
+                  } else {
+                    console.log('Showing year level and section for regular in edit form');
+                    yearlevelRow.style.setProperty('display', 'flex', 'important');
+                    yearlevelSelect.required = true;
+                    sectionSelect.required = true;
+                    if (subjectsSection) subjectsSection.style.display = 'none';
+                  }
+                });
+              });
               programSelect.value = stu.program || "";
               console.log("Program set to:", programSelect.value);
             });
@@ -2079,7 +2409,8 @@ function loadStudents(){
                   yearlevel: yearlevelValue,
                   program: document.getElementById("student-program").value,
                   section: document.getElementById("student-section").value.trim(),
-                  subjects: subjectIds
+                  subjects: subjectIds,
+                  student_type: document.querySelector('input[name="student-type"]:checked')?.value || 'regular'
                 })
               });
 
@@ -2318,6 +2649,7 @@ document.addEventListener("DOMContentLoaded", () => {
     viewFacultySubjectsModal.style.display = "none";
   });
 
+  
   // Add Faculty modal close button
   const facultyCloseBtn = document.querySelector("#addFacultyModal .close-btn");
   if (facultyCloseBtn) {
@@ -2613,18 +2945,30 @@ saveCategoryBtn.onclick = () => {
     body: JSON.stringify(payload)
   })
     .then(r => r.json())
-    .then(d => d.success ? (
-      loadCategories(),
-      addCategoryModal.style.display = "none",
-      delete addCategoryModal.dataset.editId
-    ) : alert("Failed: " + d.message))
-    .catch(err => console.error("Error saving category:", err));
+    .then(d => {
+      if (d.success) {
+        const isEditing = addCategoryModal.dataset.editId ? true : false;
+        loadCategories();
+        addCategoryModal.style.display = "none";
+        delete addCategoryModal.dataset.editId;
+        showNotification(isEditing ? "Category edited successfully!" : "Category added successfully!", "#10b981");
+      } else {
+        showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
+      }
+    })
+    .catch(err => {
+      console.error("Error saving category:", err);
+      showNotification("Network error occurred", "#ef4444");
+    });
 };
 
 //  SAVE QUESTION ========================= //
 saveQuestionBtn.onclick = () => {
   const q = document.getElementById("question-text").value.trim();
-  if (!q) return alert("Enter a question.");
+  if (!q) {
+    showNotification("Please enter a question", "#f59e0b");
+    return;
+  }
 
   const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
   
@@ -2665,13 +3009,22 @@ function proceedToAddQuestion(catId, q) {
     body: JSON.stringify(payload)
   })
     .then(r => r.json())
-    .then(d => d.success ? (
-      loadCategories(),
-      addQuestionModal.style.display = "none",
-      delete addQuestionModal.dataset.editId,
-      document.getElementById("question-text").value = ""
-    ) : alert("Failed: " + d.message))
-    .catch(err => console.error("Error saving question:", err));
+    .then(d => {
+      if (d.success) {
+        const isEditing = addQuestionModal.dataset.editId ? true : false;
+        loadCategories();
+        addQuestionModal.style.display = "none";
+        delete addQuestionModal.dataset.editId;
+        document.getElementById("question-text").value = "";
+        showNotification(isEditing ? "Question edited successfully!" : "Question added successfully!", "#10b981");
+      } else {
+        showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
+      }
+    })
+    .catch(err => {
+      console.error("Error saving question:", err);
+      showNotification("Network error occurred", "#ef4444");
+    });
 }
 
 //  CATEGORY ACTIONS ========================= //
@@ -2926,25 +3279,55 @@ function initAddStudentButton() {
       const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
       const yearlevelRow = document.getElementById('yearlevel-row');
       const yearlevelSelect = document.getElementById('student-yearlevel');
+      const sectionSelect = document.getElementById('student-section');
       const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
       
+      console.log('Found radio buttons:', studentTypeRadios.length);
+      console.log('Found yearlevel row:', yearlevelRow);
+      console.log('Found section select:', sectionSelect);
+      
+      // Remove existing listeners to avoid duplicates
       studentTypeRadios.forEach(radio => {
+        radio.replaceWith(radio.cloneNode(true));
+      });
+      
+      // Get fresh reference after cloning
+      const freshRadios = document.querySelectorAll('input[name="student-type"]');
+      
+      freshRadios.forEach(radio => {
         radio.addEventListener('change', function() {
+          console.log('Radio changed to:', this.value);
+          
+          // Ensure elements exist before trying to manipulate them
+          if (!yearlevelRow || !yearlevelSelect || !sectionSelect) {
+            console.error('Required elements not found');
+            return;
+          }
+          
           if (this.value === 'irregular') {
-            yearlevelRow.style.display = 'none';
+            // Hide both year level and section for irregular students
+            console.log('Hiding year level and section for irregular');
+            yearlevelRow.style.setProperty('display', 'none', 'important');
             yearlevelSelect.required = false;
+            yearlevelSelect.value = '';
+            sectionSelect.required = false;
+            sectionSelect.value = '';
             if (subjectsSection) subjectsSection.style.display = 'block';
           } else {
-            yearlevelRow.style.display = 'flex';
+            // Show both year level and section for regular students
+            console.log('Showing year level and section for regular');
+            yearlevelRow.style.setProperty('display', 'flex', 'important');
             yearlevelSelect.required = true;
+            sectionSelect.required = true;
             if (subjectsSection) subjectsSection.style.display = 'none';
           }
         });
       });
       
-      // Initially, since regular is checked, show year level and hide subjects
-      yearlevelRow.style.display = 'flex';
+      // Initially, since regular is checked, show year level and section, hide subjects
+      yearlevelRow.style.setProperty('display', 'flex', 'important');
       yearlevelSelect.required = true;
+      sectionSelect.required = true;
       if (subjectsSection) subjectsSection.style.display = 'none';
       
       // Clear selected subjects to prevent edit checking issue

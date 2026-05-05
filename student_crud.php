@@ -43,7 +43,7 @@ if ($action === "add") {
     }
     $check->close();
 
-    $password = substr(str_shuffle("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"), 0, 8);
+    $password = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 8);
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     $stmt = $conn->prepare("
@@ -69,8 +69,9 @@ if ($action === "add") {
 
         $student_id = $stmt->insert_id;
 
-        /* subjects */
+        /* subjects - automatic assignment for regular students */
         if (!empty($subjects)) {
+            // Manual subject assignment (for special cases)
             $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
 
             foreach ($subjects as $sid) {
@@ -80,6 +81,27 @@ if ($action === "add") {
             }
 
             $sub->close();
+        } else {
+            // Automatic subject assignment for regular students based on program and year level
+            $auto_subjects = $conn->prepare("
+                SELECT id FROM add_subjects 
+                WHERE program_id = ? AND year_level = ?
+                ORDER BY subject_code ASC
+            ");
+            $auto_subjects->bind_param("is", $program, $yearlevel);
+            $auto_subjects->execute();
+            $auto_result = $auto_subjects->get_result();
+
+            $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+            
+            while ($subject_row = $auto_result->fetch_assoc()) {
+                $subject_id = $subject_row['id'];
+                $sub->bind_param("ii", $student_id, $subject_id);
+                $sub->execute();
+            }
+
+            $auto_subjects->close();
+            $sub->close();
         }
 
         /* ================= EMAIL WITH PASSWORD ================= */
@@ -87,7 +109,7 @@ if ($action === "add") {
             <h2>Welcome to Faculty Evaluation System</h2>
             <p>Hello $firstname $lastname</p>
             <p>Your account has been created successfully.</p>
-            <p><b>Faculty Number:</b> GC-$student_number</p>
+            <p><b>Faculty Number:</b> $student_number</p>
             <p><b>Temporary Password:</b> $password</p>
             <hr>
             <p>Please use this password to login to the Faculty Evaluation System.</p>
@@ -132,8 +154,12 @@ elseif ($action === "edit") {
     $program = $data['program'];
     $section = $data['section'];
     $email = $data['email'];
+    $student_type = $data['student_type'] ?? 'regular';
     $subjects = $data['subjects'] ?? [];
 
+    // Set the yearlevel value based on student type
+    $yearlevelValue = $student_type === 'irregular' ? 'irregular' : $yearlevel;
+    
     $stmt = $conn->prepare("
         UPDATE add_students 
         SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, section=?, email=?
@@ -145,7 +171,7 @@ elseif ($action === "edit") {
         $firstname,
         $lastname,
         $suffix,
-        $yearlevel,
+        $yearlevelValue,
         $program,
         $section,
         $email,
@@ -157,6 +183,7 @@ elseif ($action === "edit") {
         $conn->query("DELETE FROM student_subjects WHERE student_id=$id");
 
         if (!empty($subjects)) {
+            // Manual subject assignment (for special cases)
             $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
 
             foreach ($subjects as $sid) {
@@ -165,6 +192,27 @@ elseif ($action === "edit") {
                 $sub->execute();
             }
 
+            $sub->close();
+        } else {
+            // Automatic subject assignment for regular students based on program and year level
+            $auto_subjects = $conn->prepare("
+                SELECT id FROM add_subjects 
+                WHERE program_id = ? AND year_level = ?
+                ORDER BY subject_code ASC
+            ");
+            $auto_subjects->bind_param("is", $program, $yearlevel);
+            $auto_subjects->execute();
+            $auto_result = $auto_subjects->get_result();
+
+            $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+            
+            while ($subject_row = $auto_result->fetch_assoc()) {
+                $subject_id = $subject_row['id'];
+                $sub->bind_param("ii", $id, $subject_id);
+                $sub->execute();
+            }
+
+            $auto_subjects->close();
             $sub->close();
         }
 
