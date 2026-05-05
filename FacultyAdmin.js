@@ -32,6 +32,8 @@ function showNotification(message, color="#4caf50", duration=3000){
 function showNotificationModal() {
     const modal = document.getElementById("notificationModal");
     modal.style.display = "flex";
+    modal.style.zIndex = "10002";
+    modal.style.position = "fixed";
     
     // Ensure OK button is clickable when modal is shown
     setTimeout(() => {
@@ -235,6 +237,8 @@ function openDeleteModal(type,name,el){
   }
   
   deleteModal.style.display = "flex";
+  deleteModal.style.zIndex = "10001";
+  deleteModal.style.position = "fixed";
   console.log("Modal display set to flex");
 }
 
@@ -308,7 +312,10 @@ fetch(cfg.url, fetchOptions)
 };
 
 function openDeleteSuccess(){
-  document.getElementById("deleteSuccessModal").style.display = "flex";
+  const modal = document.getElementById("deleteSuccessModal");
+  modal.style.display = "flex";
+  modal.style.zIndex = "10002";
+  modal.style.position = "fixed";
   // Also update dashboard when success modal is shown (for immediate feedback)
   if (deleteType === "student") {
     setTimeout(() => {
@@ -346,6 +353,8 @@ function showLogoutModal(e) {
   e.preventDefault();
   e.stopPropagation();
   logoutModal.style.display = "flex";
+  logoutModal.style.zIndex = "10002";
+  logoutModal.style.position = "fixed";
   dropdownMenu.classList.remove("show");}
 function closeLogoutModal() {
   logoutModal.style.display = "none";}
@@ -379,7 +388,9 @@ let editRowProgram=null;
 document.querySelector(".add-program-btn")?.addEventListener("click",()=>{
   programHeader.innerText="ADD PROGRAM";programSubmitBtn.innerText="SAVE PROGRAM";
   programCodeInput.value="";programNameInput.value="";editRowProgram=null;
-  addProgramModal.style.display="flex";
+  addProgramModal.style.display = "flex";
+  addProgramModal.style.zIndex = "10001";
+  addProgramModal.style.position = "fixed";
 });
 
 // SAVE / UPDATE
@@ -444,9 +455,9 @@ function loadPrograms(){
           <td>${p.program_name}</td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="manage-btn"><i class="fas fa-sliders-h"></i></button>
-              <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-              <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+              <button class="manage-btn"><i class="ph ph-sliders"></i></button>
+              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+              <button class="delete-btn"><i class="ph ph-trash"></i></button>
             </div>
           </td>`;
         tbody.appendChild(tr);
@@ -539,7 +550,7 @@ function initAddSubjectMainBtn() {
       loadProgramsForDropdown();
       
       addSubjectMainModal.style.display = "flex";
-      addSubjectMainModal.style.zIndex = "9999";
+      addSubjectMainModal.style.zIndex = "10001";
       addSubjectMainModal.style.position = "fixed";
       console.log("Modal should be visible now");
       console.log("Modal element:", addSubjectMainModal);
@@ -633,8 +644,8 @@ function loadAllSubjects(){
           <td>${s.year_level}</td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-              <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+              <button class="delete-btn"><i class="ph ph-trash"></i></button>
             </div>
           </td>
         `;
@@ -735,6 +746,8 @@ addManageBtn?.addEventListener("click", () => {
   if (subjectsTab) {
     // Open subject modal
     addSubjectModal.style.display = "flex";
+    addSubjectModal.style.zIndex = "10001";
+    addSubjectModal.style.position = "fixed";
     document.getElementById("subject-code").value = "";
     document.getElementById("subject-desc").value = "";
     document.getElementById("subject-year").selectedIndex = 0;
@@ -744,15 +757,17 @@ addManageBtn?.addEventListener("click", () => {
     // Open class modal
     const addClassModal = document.getElementById("addClassModal");
     addClassModal.style.display = "flex";
+    addClassModal.style.zIndex = "10001";
+    addClassModal.style.position = "fixed";
     addClassModal.dataset.isEditing = "false";
     delete addClassModal.dataset.editId;
     document.getElementById("class-year").selectedIndex = 0;
     document.getElementById("class-block").value = "";
-    document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
+    document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
       facultyBox.dataset.facultyData = JSON.stringify({});
-      facultyBox.innerHTML = '<h4><i class="fas fa-user-tie"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+      facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
     }
   }
 });
@@ -782,14 +797,16 @@ function loadSubjects() {
           <td>${s.year_level}</td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-              <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+              <button class="delete-btn"><i class="ph ph-trash"></i></button>
             </div>
           </td>
         `;
 
-        // SELECT SUBJECT
-        row.addEventListener("click", () => {
+        // SELECT SUBJECT - Only click on non-action areas
+        row.addEventListener("click", (e) => {
+          // Don't trigger if clicking on action buttons
+          if (e.target.closest(".action-cell")) return;
           currentSubjectId = s.id;
           showTable("classes");
           loadClasses();
@@ -815,6 +832,8 @@ function loadSubjects() {
           }
 
           addSubjectModal.style.display = "flex";
+          addSubjectModal.style.zIndex = "10001";
+          addSubjectModal.style.position = "fixed";
         });
 
         // DELETE SUBJECT
@@ -894,13 +913,13 @@ function loadSubjectsByYear(yearLevel, callback = null) {
       box.innerHTML = "";
 
       if (!data || data.length === 0) {
-        box.innerHTML = `<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>No subjects found for year ${yearLevel}</small>`;
+        box.innerHTML = `<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>No subjects found for year ${yearLevel}</small>`;
         if (typeof callback === "function") callback([]);
         return;
       }
 
       // Clear existing content but keep the header
-      box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4>';
+      box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4>';
       
       data.forEach(sub => {
         const label = document.createElement("label");
@@ -915,7 +934,7 @@ function loadSubjectsByYear(yearLevel, callback = null) {
     })
     .catch(err => {
       console.error("Error loading subjects:", err);
-      box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Error loading subjects</small>';
+      box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Error loading subjects</small>';
       if (typeof callback === "function") callback([]);
     });
 }
@@ -937,14 +956,14 @@ document.getElementById("class-year")?.addEventListener("change", (e) => {
   
   if (!currentProgramId) {
     console.log("No program ID set");
-    box.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Please select a program first from the programs list, then click Manage</small>';
+    box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Please select a program first from the programs list, then click Manage</small>';
     return;
   }
   
   const facultyBox = document.getElementById("faculty-list");
   if (facultyBox) {
     facultyBox.dataset.facultyData = JSON.stringify({});
-    facultyBox.innerHTML = '<h4><i class="fas fa-user-tie"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+    facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
   }
   
   console.log("Calling loadSubjectsByYear with year:", year);
@@ -1016,7 +1035,7 @@ function loadFacultyBySubject(subjectId, subjectLabel, isChecked, selectedFacult
 function updateFacultyDisplay(facultyData) {
   const facultyBox = document.getElementById("faculty-list");
   
-  facultyBox.innerHTML = '<h4><i class="fas fa-user-tie"></i> Available Faculty</h4>';
+  facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4>';
   
   const entries = Object.entries(facultyData);
   if (entries.length === 0) {
@@ -1112,9 +1131,9 @@ function loadClasses() {
           <td><span class="status-badge active">Loading...</span></td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="view-subjects-btn" title="View Subjects"><i class="fas fa-eye"></i></button>
-              <button class="edit-btn" title="Edit Class"><i class="fas fa-pen-to-square"></i></button>
-              <button class="delete-btn" title="Delete Class"><i class="fas fa-trash-alt"></i></button>
+              <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
+              <button class="edit-btn" title="Edit Class"><i class="ph ph-pencil-simple"></i></button>
+              <button class="delete-btn" title="Delete Class"><i class="ph ph-trash"></i></button>
             </div>
           </td>
         `;
@@ -1146,17 +1165,19 @@ function loadClasses() {
         row.querySelector(".edit-btn").addEventListener("click", () => {
           const addClassModal = document.getElementById("addClassModal");
           addClassModal.style.display = "flex";
+          addClassModal.style.zIndex = "10001";
+          addClassModal.style.position = "fixed";
           addClassModal.dataset.isEditing = "true";
           addClassModal.dataset.editId = c.id;
 
           document.getElementById("class-year").value = c.year_level;
           document.getElementById("class-block").value = c.block || "";
-          document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>Loading subjects...</small>';
+          document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Loading subjects...</small>';
 
           const facultyBox = document.getElementById("faculty-list");
           if (facultyBox) {
             facultyBox.dataset.facultyData = JSON.stringify({});
-            facultyBox.innerHTML = '<h4><i class="fas fa-user-tie"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+            facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
           }
 
           loadSubjectsByYear(c.year_level, () => {
@@ -1317,7 +1338,7 @@ function showClassSubjectsModal(classId, sectionName, yearLevel) {
             </div>
             <p class='subject-desc'>${subject.subject_desc || ''}</p>
             <div style='margin:8px 0 0; font-size:0.95rem; color:#4b5563;'>
-              <i class='fas fa-user-tie' style='margin-right:5px;'></i>
+              <i class='ph ph-user' style='margin-right:5px;'></i>
               Instructor: ${subject.faculty_name || 'Unassigned'}
             </div>
           </div>
@@ -1393,14 +1414,14 @@ function loadFaculty() {
         console.log("Subjects display:", subjectsDisplay);
 
         row.innerHTML = `
-          <td>${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-tie" style="color:#6b7280;"></i></div>`}</td>
+          <td>${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;"><i class="ph ph-user" style="color:#6b7280;"></i></div>`}</td>
           <td><strong>${f.faculty_id}</strong></td>
           <td><div>${f.firstname} ${f.lastname} ${f.suffix||""}</div><small>${f.email}</small></td>
           <td>${subjectsDisplay}</td>
           <td class="action-cell"><div class="action-buttons">
-            <button class="view-btn"><i class="fas fa-eye"></i></button>
-            <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-            <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+            <button class="view-btn"><i class="ph ph-eye"></i></button>
+            <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+            <button class="delete-btn"><i class="ph ph-trash"></i></button>
           </div></td>`;
 
         facultyTbody.appendChild(row);
@@ -1465,6 +1486,8 @@ function loadFaculty() {
           
           // Show modal
           viewFacultySubjectsModal.style.display = "flex";
+          viewFacultySubjectsModal.style.zIndex = "10001";
+          viewFacultySubjectsModal.style.position = "fixed";
         };
 
         // DELETE --------------------
@@ -1641,7 +1664,7 @@ function loadEvaluations() {
             <td>${evaluation.total_responses}</td>
             <td>
               <button class="view-btn" onclick="viewEvaluationDetails('${evaluation.id}')">
-                <i class="fas fa-eye"></i> View
+                <i class="ph ph-eye"></i> View
               </button>
             </td>
           `;
@@ -1857,9 +1880,9 @@ function loadAllFacultySubjects(){
     .then(data => {
       const subjectsList = document.getElementById("faculty-subjects-list");
       if (data.length === 0) {
-        subjectsList.innerHTML = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4><small>No subjects available</small>';
+        subjectsList.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>No subjects available</small>';
       } else {
-        let html = '<h4><i class="fas fa-book"></i> Assigned Subjects</h4>';
+        let html = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4>';
         data.forEach(subject => {
           html += `
             <label class="subject-checkbox-item">
@@ -1951,9 +1974,9 @@ function loadStudents(){
           </td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="view-subjects-btn" title="View Subjects"><i class="fas fa-eye"></i></button>
-              <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-              <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+              <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
+              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+              <button class="delete-btn"><i class="ph ph-trash"></i></button>
             </div>
           </td>`;
 
@@ -2195,7 +2218,7 @@ document.getElementById("add-subject-btn")?.addEventListener("click", () => {
   // Load subjects for the selected program and open popup
   loadSubjectsForProgramPopup(program);
   subjectSelectionModal.style.display = "flex";
-  subjectSelectionModal.style.zIndex = "999999";
+  subjectSelectionModal.style.zIndex = "10002";
   subjectSelectionModal.style.position = "fixed";
   subjectSelectionModal.style.top = "0";
   subjectSelectionModal.style.left = "0";
@@ -2288,6 +2311,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // View student subjects modal close button
   document.querySelector("#viewStudentSubjectsModal .close-btn")?.addEventListener("click", () => {
     viewStudentSubjectsModal.style.display = "none";
+  });
+
+  // View faculty subjects modal close button
+  document.querySelector("#viewFacultySubjectsModal .close-btn")?.addEventListener("click", () => {
+    viewFacultySubjectsModal.style.display = "none";
   });
 
   // Add Faculty modal close button
@@ -2448,7 +2476,7 @@ function updateSelectedSubjectsDisplay() {
         <div class="selected-subject-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 5px; background: #f3f4f6; border-radius: 4px; border: 1px solid #d1d5db;">
           <span>${subject.subject_code} - ${subject.subject_desc} (${subject.year_level})</span>
           <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
-            <i class="fas fa-times"></i>
+            <i class="ph ph-x"></i>
           </button>
         </div>
       `;
@@ -2503,7 +2531,7 @@ function updateAvailableSubjectsDisplay(availableSubjects) {
           <div class="selected-subject-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px; margin-bottom: 3px; background: #dbeafe; border-radius: 4px;">
             <span>${subject.subject_code} - ${subject.subject_desc}</span>
             <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;">
-              <i class="fas fa-times"></i>
+              <i class="ph ph-x"></i>
             </button>
           </div>
         `;
@@ -2702,16 +2730,16 @@ function loadCategories() {
         cat.innerHTML = `
           <div class="category-header">
             <div class="title-block">
-              <i class="fas fa-chalkboard-teacher"></i>
+              <i class="ph ph-chalkboard-teacher"></i>
               <div class="text-block">
                 <div class="section-number">SECTION ${c.section_number}</div>
                 <div class="category-name">${c.category_name}</div>
               </div>
             </div>
             <div class="action-buttons">
-              <button class="add-btn"><i class="fa-solid fa-plus"></i></button>
-              <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-              <button class="delete-btn"><i class="fas fa-trash-can"></i></button>
+              <button class="add-btn"><i class="ph ph-plus"></i></button>
+              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+              <button class="delete-btn"><i class="ph ph-trash"></i></button>
             </div>
           </div>
           <div class="category-table-header"><div>Question</div><div>Action</div></div>
@@ -2732,8 +2760,8 @@ function loadCategories() {
               item.innerHTML = `
                 <span class="question-text">${q.question_text}</span>
                 <div class="actions">
-                  <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-                  <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+                  <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+                  <button class="delete-btn"><i class="ph ph-trash"></i></button>
                 </div>
               `;
               list.appendChild(item);

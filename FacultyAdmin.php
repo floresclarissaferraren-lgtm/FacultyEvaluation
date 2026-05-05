@@ -9,7 +9,8 @@ include 'totalstudents_dashcount.php';
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System</title>
   <link rel="stylesheet" href="FacultyAdmin.css?v=<?php echo time(); ?>">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+
 </head>
 <body>
 
@@ -20,7 +21,7 @@ include 'totalstudents_dashcount.php';
   <div class="nav-left">
 
     <div class="hamburger" onclick="toggleSidebar()">
-      <i class="fas fa-bars"></i>
+      <i class="ph ph-list"></i>
     </div>
 
     
@@ -34,12 +35,12 @@ include 'totalstudents_dashcount.php';
     <div class="admin-box" id="dropdownToggle">
       <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Admin" class="logo-img">
       <span>Administrator</span>
-      <i class="fas fa-caret-down"></i>
+      <i class="ph ph-caret-down"></i>
     </div>
 
     <div class="dropdown-menu" id="dropdownMenu">
       <a href="#" id="logoutLink">
-        <i class="fas fa-sign-out-alt"></i>
+        <i class="ph ph-sign-out"></i>
         Logout
       </a>
     </div>
@@ -56,7 +57,7 @@ include 'totalstudents_dashcount.php';
 
     <div class="logout-icon">
       <span class="icon-bg">
-        <i class="fas fa-sign-out-alt fa-2x"></i>
+        <i class="ph ph-sign-out ph-2x"></i>
       </span>
     </div>
 
@@ -82,11 +83,9 @@ include 'totalstudents_dashcount.php';
 
   <!-- Logo Top -->
   <div class="sidebar-top">
-
     <img src="schoollogo.png" class="sidebar-logo">
     <h1>FaculRate</h1>
     <span>Admin Panel</span>
-
   </div>
 
   <!-- Menu -->
@@ -94,54 +93,49 @@ include 'totalstudents_dashcount.php';
 
     <a href="#" data-section="dashboard-section"
        onclick="showSection('dashboard-section', event)">
-      <i class="fas fa-tachometer-alt"></i>
+      <i class="ph ph-house"></i>
       <span>Dashboard</span>
     </a>
 
     <a href="#" data-section="programs-section"
        onclick="showSection('programs-section', event)">
-      <i class="fas fa-book"></i>
+      <i class="ph ph-book"></i>
       <span>Program</span>
     </a>
 
     <a href="#" data-section="faculties-section"
        onclick="showSection('faculties-section', event)">
-      <i class="fas fa-user-tie"></i>
+      <i class="ph ph-chalkboard-teacher"></i>
       <span>Faculty</span>
     </a>
 
     <a href="#" data-section="students-section"
        onclick="showSection('students-section', event)">
-      <i class="fas fa-user-graduate"></i>
+      <i class="ph ph-graduation-cap"></i>
       <span>Students</span>
     </a>
 
     <a href="#" data-section="criteria-section"
        onclick="showSection('criteria-section', event)">
-      <i class="fas fa-list"></i>
+      <i class="ph ph-list-checks"></i>
       <span>Evaluation Criteria</span>
     </a>
 
     <a href="#" data-section="report-section"
        onclick="showSection('report-section', event)">
-      <i class="fas fa-chart-bar"></i>
+      <i class="ph ph-chart-bar"></i>
       <span>Evaluation Report</span>
     </a>
 
   </nav>
-
 </div>
 
 <main>
 <!-- Dashboard Section May nabago =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
-  <!--<div class="dashboard-wrapper">
-    <div class="dashboard-box">
-      <h1>Welcome, Administrator</h1>
-      <p>This dashboard provides administrators with a clear overview of ongoing faculty evaluations and results.</p>
-      <div class="warning"><i class="fas fa-exclamation-triangle"></i> Authorized Personnel Only: All actions are logged and monitored for security compliance.</div>
-    </div>-->
   <div class="dashboard">
+
+    <!-- Faculty Card -->
     <div class="dashboard-card faculty">
       <div class="dashboard-content">
         <div>
@@ -149,10 +143,11 @@ include 'totalstudents_dashcount.php';
           <p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
           <span>Across 9 Colleges</span>
         </div>
-        <div class="icon-box"><i class="fas fa-user-tie"></i></div>
+        <div class="icon-box"><i class="ph ph-chalkboard-teacher"></i></div>
       </div>
     </div>
 
+    <!-- Students Card -->
     <div class="dashboard-card students">
       <div class="dashboard-content">
         <div>
@@ -160,10 +155,11 @@ include 'totalstudents_dashcount.php';
           <p id="totalStudents" class="dashboard-value"><?php echo $totalStudentsCount; ?></p>
           <span>Registered Users</span>
         </div>
-        <div class="icon-box"><i class="fas fa-user-graduate"></i></div>
+        <div class="icon-box"><i class="ph ph-graduation-cap"></i></div>
       </div>
     </div>
 
+    <!-- Evaluations Card -->
     <div class="dashboard-card evaluations">
       <div class="dashboard-content">
         <div>
@@ -171,11 +167,11 @@ include 'totalstudents_dashcount.php';
           <p id="totalEvaluations" class="dashboard-value"><?php echo $totalEvaluationsCount; ?></p>
           <span>Overall</span>
         </div>
-        <div class="icon-box"><i class="fas fa-chart-line"></i></div>
+        <div class="icon-box"><i class="ph ph-chart-bar"></i></div>
       </div>
     </div>
-
-    <!-- 🔹 Period Card replacing Programs -->
+    
+    <!-- Period Card -->
     <div class="dashboard-card period">
       <div class="dashboard-content">
         <div class="period-header">
@@ -189,15 +185,14 @@ include 'totalstudents_dashcount.php';
         </div>
       </div>
     </div>
+
   </div>
 </div>
-
-
 
  <!--
 <div id="dashboard-details">
   <div class="ratings-box">
-    <h4><i class="fas fa-star"></i> Faculty Ratings</h4>
+    <h4><i class="ph ph-star"></i> Faculty Ratings</h4>
     <table>
       <thead><tr><th>Faculty Name</th><th>Rating</th></tr></thead>
       <tbody id="ratings-body"></tbody>
@@ -205,7 +200,7 @@ include 'totalstudents_dashcount.php';
   </div>
 
   <div class="ranking-box">
-    <h4><i class="fas fa-trophy"></i> Faculty Ranking</h4>
+    <h4><i class="ph ph-trophy"></i> Faculty Ranking</h4>
     <table>
       <thead><tr><th>Rank</th><th>Faculty</th><th>Ratings</th></tr></thead>
       <tbody id="ranking-body"></tbody>
@@ -213,7 +208,7 @@ include 'totalstudents_dashcount.php';
   </div>
 
   <div class="graph-box">
-    <h4><i class="fas fa-chart-bar"></i> Responded per Department</h4>
+    <h4><i class="ph ph-chart-bar"></i> Responded per Department</h4>
     <canvas id="departmentGraph"></canvas>
   </div>
 </div>-->
@@ -224,14 +219,14 @@ include 'totalstudents_dashcount.php';
     <div class="section-header">
       <div class="header-title-section">
         <!--<h2>Academic Program</h2>-->
-        <p class="section-subtitle"><i class="fas fa-book" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>Manage and update academic programs offered by the institution</p>
+        <p class="section-subtitle"><i class="ph ph-book" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>Manage and update academic programs offered by the institution</p>
       </div>
       <div class="header-actions">
         <div class="search-wrapper">
-          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="program-search" placeholder="Search program..."/>
         </div>
-        <button class="add-program-btn button-gradient"><i class="fas fa-plus"></i> Add Program</button>
+        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add Program</button>
       </div>
     </div>
     <div class="table-wrapper"> 
@@ -259,7 +254,7 @@ include 'totalstudents_dashcount.php';
 <!-- Add Delete Forms ==============================================================================================================================-->
 <div id="deleteModal" class="modal">
   <div class="modal-content delete-modal-card">
-    <div class="delete-icon-circle"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="delete-icon-circle"><i class="ph ph-warning"></i></div>
     <p id="deleteMessage" class="delete-main-text">
       Do you want to delete <strong>category</strong>?<br><b>TEACHING SKILLS</b>
     </p>
@@ -273,7 +268,7 @@ include 'totalstudents_dashcount.php';
 
 <div id="deleteSuccessModal" class="modal" style="display:none;">
   <div class="modal-content success-modal-card">
-    <div class="success-icon-circle"><i class="fas fa-check-circle"></i></div>
+    <div class="success-icon-circle"><i class="ph ph-check-circle"></i></div>
     <p class="success-main-text">Deleted successfully!</p>
     <div class="success-buttons">
       <button id="success-ok-btn" class="ok-btn">OK</button>
@@ -289,17 +284,17 @@ include 'totalstudents_dashcount.php';
       <div class="header-title-section">
         <h2 id="manageTitle">Manage Program</h2>
         <div class="manage-buttons">
-          <button class="subject-btn active"><i class="fas fa-book"></i> Subjects</button>
-          <button class="classes-btn"><i class="fas fa-users"></i> Classes</button>
+          <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
+          <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
         </div>
       </div>
       <div class="header-actions-section">
         <div class="search-wrapper">
           <input type="text" placeholder="Search records...">
-          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         </div>
-        <button class="add-manage-btn button-gradient"><i class="fas fa-plus"></i> Add</button>
-        <button class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+        <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add</button>
+        <button class="back-btn"><i class="ph ph-arrow-left"></i> Back</button>
       </div>
     </div>
 
@@ -361,7 +356,7 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="form-row">
         <div>
-          <label for="class-year">Year Level</label>
+          <label for="class-year"><i class="ph ph-graduation-cap"></i> Year Level</label>
           <select id="class-year">
             <option value="">Select Year Level</option>
             <option value="1st Year">1st Year</option>
@@ -371,23 +366,29 @@ include 'totalstudents_dashcount.php';
           </select>
         </div>
         <div>
-          <label for="class-block">Section</label>
+          <label for="class-block"><i class="ph ph-hash"></i> Section</label>
           <input type="text" id="class-block">
         </div>
       </div>
       <div class="section-box">
         <div id="subject-checkbox-list" class="subjects-list">
-          <h4><i class="fas fa-book"></i> Assigned Subjects</h4>
+          <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
           <div class="subject-filters">
-            <input type="text" id="class-program-search" placeholder="Search by program..." class="subject-search-input">
-            <input type="text" id="class-year-search" placeholder="Search by year level..." class="subject-search-input">
+            <div class="search-input-wrapper">
+              <input type="text" id="class-program-search" placeholder="Search by program..." class="subject-search-input">
+              <i class="ph ph-magnifying-glass"></i>
+            </div>
+            <div class="search-input-wrapper">
+              <input type="text" id="class-year-search" placeholder="Search by year level..." class="subject-search-input">
+              <i class="ph ph-magnifying-glass"></i>
+            </div>
           </div>
           <small>Select year level first to load subjects</small>
         </div>
       </div>
       <div class="section-box">
         <div id="faculty-list" class="subjects-list">
-          <h4><i class="fas fa-user-tie"></i> Available Faculty</h4>
+          <h4><i class="ph ph-user"></i> Available Faculty</h4>
           <small>Select subjects to show available faculty</small>
         </div>
       </div>
@@ -404,10 +405,10 @@ include 'totalstudents_dashcount.php';
     <h2>Subjects Management</h2>
     <div class="header-actions">
       <div class="search-wrapper">
-        <button class="search-btn"><i class="fas fa-search"></i></button>
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         <input type="text" id="subjects-search" placeholder="Search subjects...">
       </div>
-      <button class="add-subject-main-btn button-gradient"><i class="fas fa-plus"></i> Add Subject</button>
+      <button class="add-subject-main-btn button-gradient"><i class="ph ph-plus"></i> Add Subject</button>
     </div>
   </div>
   <div class="table-wrapper">
@@ -479,14 +480,14 @@ include 'totalstudents_dashcount.php';
     <div class="section-header">
       <div class="header-title-section">
        <!-- <h2>Faculty Information</h2>-->
-        <p class="section-subtitle"><i class="fas fa-user-tie" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section contains all faculty members with their profiles and teaching assignments</p>
+        <p class="section-subtitle"><i class="ph ph-user" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section contains all faculty members with their profiles and teaching assignments</p>
       </div>
       <div class="header-actions">
         <div class="search-wrapper">
-          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input id="faculty-search" placeholder="Search faculty...">
         </div>
-        <button class="add-faculty-btn button-gradient"><i class="fas fa-plus"></i> Add Faculty</button>
+        <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
       </div>
     </div>
     <div class="table-wrapper">
@@ -536,7 +537,7 @@ include 'totalstudents_dashcount.php';
             
       <div class="section-box">
         <div id="faculty-subjects-list" class="subjects-list">
-          <h4><i class="fas fa-book"></i> Assigned Subjects</h4>
+          <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
           <div class="subject-filters">
             <input type="text" id="faculty-program-search" placeholder="Search by program..." class="subject-search-input">
             <input type="text" id="faculty-year-search" placeholder="Search by year level..." class="subject-search-input">
@@ -555,14 +556,14 @@ include 'totalstudents_dashcount.php';
     <div class="section-header">
       <div class="header-title-section">
        <!-- <h2>Students Information</h2> -->
-        <p class="section-subtitle"><i class="fas fa-user-graduate" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows all students with their basic details and records for easy management</p>
+        <p class="section-subtitle"><i class="ph ph-graduation-cap" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows all students with their basic details and records for easy management</p>
       </div>
       <div class="header-actions">
         <div class="search-wrapper">
-          <button class="search-btn"><i class="fas fa-search"></i></button>
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input id="student-search" placeholder="Search student...">
         </div>
-        <button class="add-student-btn button-gradient"><i class="fas fa-plus"></i> Add Student</button>
+        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
       </div>
     </div>
     <div class="table-wrapper">
@@ -614,7 +615,7 @@ include 'totalstudents_dashcount.php';
       </div>
 
       <div class="section-box">
-        <h4><i class="fas fa-graduation-cap"></i> Academic Details</h4>
+        <h4><i class="ph ph-graduation-cap"></i> Academic Details</h4>
         <div class="form-row">
           <div>
             <label>Student Type</label>
@@ -656,9 +657,9 @@ include 'totalstudents_dashcount.php';
       </div>
 
       <div class="section-box">
-        <h4><i class="fas fa-book"></i> Subjects</h4>
+        <h4><i class="ph ph-book"></i> Subjects</h4>
         <button type="button" id="add-subject-btn" class="button-gradient" style="margin-bottom: 10px;">
-          <i class="fas fa-plus"></i> Add Subject
+          <i class="ph ph-plus"></i> Add Subject
         </button>
         <div id="selected-subjects" class="selected-subjects">
           <p style="color: #6b7280; font-size: 0.9em;">No subjects selected</p>
@@ -717,11 +718,11 @@ include 'totalstudents_dashcount.php';
 <div id="criteria-section" class="section" style="display:none;">
   <div class="section-header">
     <div class="header-title-section">
-      <p class="section-subtitle"><i class="fas fa-list" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows the list of criteria used for evaluating faculty performance</p>
+      <p class="section-subtitle"><i class="ph ph-list" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows the list of criteria used for evaluating faculty performance</p>
     </div>
     <div class="header-actions">
       <button id="addCategoryBtn" class="add-program-btn button-gradient">
-        <i class="fas fa-plus"></i> Add Category
+        <i class="ph ph-plus"></i> Add Category
       </button>
     </div>
   </div>
@@ -731,11 +732,11 @@ include 'totalstudents_dashcount.php';
     <div class="categories-column" id="categoriesColumn" style="flex:2;"></div>
 
     <div class="summary-panel" style="flex:1;">
-      <h4><i class="fas fa-clipboard-check"></i> Summary</h4>
+      <h4><i class="ph ph-clipboard-check"></i> Summary</h4>
       <p><strong>Categories:</strong> <span id="total-categories">0</span></p>
       <p><strong>Total Questions:</strong> <span id="total-questions">0</span></p>
       <div class="legend">
-        <h5><i class="fas fa-list-ul"></i> LEGEND</h5>
+        <h5><i class="ph ph-list-bullets"></i> LEGEND</h5>
         <ul>
           <li data-value="5"><span class="badge">5</span> Strongly Agree - Excellent</li>
           <li data-value="4"><span class="badge">4</span> Agree - Very Good</li>
@@ -788,11 +789,11 @@ include 'totalstudents_dashcount.php';
 <div id="report-section" class="section" style="display:none;">
   <div class="section-header">
     <div class="header-title-section">
-      <p class="section-subtitle"><i class="fas fa-chart-bar" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows faculty evaluation results and performance ratings</p>
+      <p class="section-subtitle"><i class="ph ph-chart-bar" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows faculty evaluation results and performance ratings</p>
     </div>
     <div class="header-actions">
       <div class="search-wrapper">
-        <button class="search-btn"><i class="fas fa-search"></i></button>
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         <input type="text" id="searchInput" placeholder="Search Faculty...">
       </div>
     </div>
@@ -825,7 +826,7 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="student-info-header">
         <div class="student-avatar">
-          <i class="fas fa-user-tie"></i>
+          <i class="ph ph-user"></i>
         </div>
         <div class="student-details">
           <h4 id="viewFacultyName">Faculty Name</h4>
@@ -849,7 +850,7 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="student-info-header">
         <div class="student-avatar">
-          <i class="fas fa-user-graduate"></i>
+          <i class="ph ph-graduation-cap"></i>
         </div>
         <div class="student-details">
           <h4 id="viewStudentName">Student Name</h4>
