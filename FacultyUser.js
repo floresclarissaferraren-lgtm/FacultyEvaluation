@@ -421,7 +421,7 @@ function submitEvaluation() {
     body: JSON.stringify(submission)
   })
     .then(r => r.json())
-    .then(res => {
+    .then(async res => {
       if (!res.success) {
         alert(res.message || "Failed to submit evaluation.");
         updatePaginationButtons();
@@ -431,6 +431,15 @@ function submitEvaluation() {
       document.querySelectorAll('input[type="radio"]:checked').forEach(el => { el.checked = false; });
       const fb = document.getElementById('studentFeedback');
       if (fb) fb.value = '';
+      
+      // Refresh faculty dropdown to remove evaluated faculty
+      await loadStudentFacultyDropdown();
+      
+      // Reset to first criteria page
+      currentCriteria = 0;
+      criteriaTables.forEach((table, index) => {
+        table.classList.toggle("active", index === 0);
+      });
       updatePaginationButtons();
     })
     .catch(err => {

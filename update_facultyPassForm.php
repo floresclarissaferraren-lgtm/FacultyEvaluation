@@ -1,6 +1,13 @@
 <?php
+session_start();
 header('Content-Type: application/json');
 include 'connect.php'; 
+
+// Verify user is logged in as faculty
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
+    exit;
+}
 
 // Get JSON input
 $data = json_decode(file_get_contents('php://input'), true);
@@ -11,6 +18,12 @@ $new_password = isset($data['new_password']) ? trim($data['new_password']) : '';
 // Validate required fields
 if (empty($faculty_id) || empty($old_password) || empty($new_password)) {
     echo json_encode(['success' => false, 'message' => 'All fields are required.']);
+    exit;
+}
+
+// Verify that the faculty_id matches the logged-in user's ID
+if ($faculty_id != $_SESSION['id']) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
     exit;
 }
 

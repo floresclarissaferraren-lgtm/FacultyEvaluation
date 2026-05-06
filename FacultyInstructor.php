@@ -126,7 +126,7 @@ $stmt->close();
       </div>
     </div>
 
-    <input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
+    <input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_id); ?>">
     <input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
     <input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
 

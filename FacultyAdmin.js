@@ -338,6 +338,15 @@ fetch(cfg.url, fetchOptions)
           console.log("Dashboard stats updated after program delete");
         }, 500);
       }
+      
+      if (deleteType === "faculty") {
+        // Refresh faculty list after successful deletion
+        setTimeout(() => {
+          loadFaculty();
+          loadDashboardStats();
+          console.log("Faculty list and dashboard updated after faculty delete");
+        }, 500);
+      }
     } else {
       const errorMessage = resp.error || resp.message || "Unknown error occurred";
       console.error("Delete failed response:", resp);

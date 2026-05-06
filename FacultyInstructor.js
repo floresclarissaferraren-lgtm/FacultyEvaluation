@@ -165,7 +165,11 @@ function loadFacultyStats() {
       const responsesEl = document.getElementById("totalResponsesValue");
 
       if (overallEl) {
-        overallEl.textContent = `${data.overall_rating} / 5.00 - ${data.rating_label}`;
+        if (data.rating_label === "No Rating Yet") {
+          overallEl.textContent = "No Rating Yet";
+        } else {
+          overallEl.textContent = `${data.overall_rating} / 5.00 - ${data.rating_label}`;
+        }
       }
       if (responsesEl) {
         responsesEl.textContent = `${data.total_responses}`;

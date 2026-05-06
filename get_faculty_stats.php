@@ -41,7 +41,12 @@ $stmt->close();
 $overall = $row && $row['overall_rating'] !== null ? floatval($row['overall_rating']) : 0.00;
 $total = $row ? intval($row['total_responses']) : 0;
 
-function ratingLabel(float $score): string {
+function ratingLabel(float $score, int $total): string {
+    // If no responses, return "No Rating Yet"
+    if ($total === 0) {
+        return "No Rating Yet";
+    }
+    
     if ($score >= 4.5) return "Outstanding";
     if ($score >= 3.5) return "Very Good";
     if ($score >= 2.5) return "Good";
@@ -49,10 +54,13 @@ function ratingLabel(float $score): string {
     return "Needs Improvement";
 }
 
+$rating_label = ratingLabel($overall, $total);
+$display_rating = $total === 0 ? "0.00" : number_format($overall, 2);
+
 echo json_encode([
     "success" => true,
-    "overall_rating" => number_format($overall, 2),
-    "rating_label" => ratingLabel($overall),
+    "overall_rating" => $display_rating,
+    "rating_label" => $rating_label,
     "total_responses" => $total
 ]);
 
