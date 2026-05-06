@@ -967,6 +967,7 @@ function loadSubjects() {
 
         subjectsTableBody.appendChild(row);
       });
+      applyManageSearchFilter();
     });
 }
 
@@ -1247,6 +1248,7 @@ function loadClasses() {
       data.forEach(c => {
         const row = document.createElement("tr");
         row.dataset.id = c.id;
+        row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()}`;
 
         row.innerHTML = `
           <td>${c.block}</td>
@@ -1329,6 +1331,7 @@ function loadClasses() {
 
         classesTableBody.appendChild(row);
       });
+      applyManageSearchFilter();
     })
     .catch(err => {
       console.error("Error loading classes:", err);
@@ -1337,6 +1340,31 @@ function loadClasses() {
       }
     });
 }
+
+// ========================= Manage Search (Subjects / Classes) =========================
+const manageSearchInput = document.getElementById("manage-search");
+function applyManageSearchFilter() {
+  const term = (manageSearchInput?.value || "").toLowerCase().trim();
+  const subjectsVisible = document.getElementById("subjects")?.style.display !== "none";
+  const targetTbody = subjectsVisible ? subjectsTableBody : classesTableBody;
+  if (!targetTbody) return;
+  [...targetTbody.rows].forEach((row) => {
+    if (!term) {
+      row.style.display = "";
+      return;
+    }
+    if (!subjectsVisible) {
+      const key = (row.dataset.searchKey || "").toLowerCase();
+      row.style.display = key.includes(term) ? "" : "none";
+      return;
+    }
+    row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+  });
+}
+
+manageSearchInput?.addEventListener("input", (e) => {
+  applyManageSearchFilter();
+});
 
 // ========================= CLOSE CLASS MODAL =========================
 document.getElementById("addClassModal")?.querySelector(".close-btn")?.addEventListener("click", () => {
@@ -1684,15 +1712,16 @@ function loadFaculty() {
         row.id = "faculty-" + f.faculty_id;
         Object.assign(row.dataset, f);
         row.dataset.faculty_id = f.faculty_id;
+        row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()}`;
 
         // Display subject codes or show "No subjects yet"
         console.log("Faculty subjects data:", f.subjects);
         console.log("Faculty subject_codes:", f.subject_codes);
         
         const subjectsDisplay = f.subject_codes && f.subject_codes.length > 0 
-          ? f.subject_codes.map((code, index) => 
+          ? `<div class="faculty-subject-grid">${f.subject_codes.map((code) => 
               `<span class="subject-item">${code}</span>`
-            ).join('') 
+            ).join('')}</div>` 
           : '<span class="no-subjects">No subjects yet</span>';
           
         console.log("Subjects display:", subjectsDisplay);
@@ -1917,7 +1946,10 @@ document.getElementById("faculty-photo").onchange = e => {
 // SEARCH -----------------------
 document.getElementById("faculty-search").oninput = e => {
   const term = e.target.value.toLowerCase();
-  [...facultyTbody.rows].forEach(r => r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none");
+  [...facultyTbody.rows].forEach(r => {
+    const key = (r.dataset.searchKey || "").toLowerCase();
+    r.style.display = key.includes(term) ? "" : "none";
+  });
 };
 // ========================= Report Section =========================
 function loadEvaluations() {
@@ -2317,7 +2349,14 @@ function loadStudents(){
             // Load existing subjects for this student
             selectedSubjects = [];
             if (stu.subjects && Array.isArray(stu.subjects)) {
-              selectedSubjects = stu.subjects;
+              selectedSubjects = stu.subjects.map(s => ({
+                ...s,
+                id: parseInt(s.id, 10),
+                class_id: s.class_id ? parseInt(s.class_id, 10) : 0,
+                class_year_level: s.class_year_level || "",
+                class_section: s.class_section || "",
+                instructor_name: s.instructor_name || "Unassigned"
+              }));
               console.log("Loading subjects for edit:", selectedSubjects);
               console.log("Number of subjects loaded:", selectedSubjects.length);
             } else {
@@ -2382,7 +2421,14 @@ function loadStudents(){
 
               const studentType = document.querySelector('input[name="student-type"]:checked').value;
               // Clear subjects for regular students, keep only for irregular
-              const subjectIds = (studentType === 'irregular') ? selectedSubjects.map(s => s.id) : [];
+              const subjectIds = (studentType === 'irregular')
+                ? selectedSubjects.map(s => ({
+                    id: s.id,
+                    class_id: s.class_id || 0,
+                    class_year_level: s.class_year_level || "",
+                    class_section: s.class_section || ""
+                  }))
+                : [];
               let yearlevelValue;
               if (studentType === 'irregular') {
                 yearlevelValue = 'irregular';
@@ -2471,6 +2517,22 @@ function loadStudents(){
 // ========================= Subject Selection for Students =========================
 let selectedSubjects = [];
 let allSubjects = [];
+let subjectClassOptions = {};
+
+async function loadClassOptionsForSubjects(programId, subjects) {
+  subjectClassOptions = {};
+  const requests = subjects.map(subject =>
+    fetch(`classes_crud.php?action=get_subject_class_options&program_id=${programId}&subject_id=${subject.id}`)
+      .then(r => r.json())
+      .then(rows => {
+        subjectClassOptions[subject.id] = Array.isArray(rows) ? rows : [];
+      })
+      .catch(() => {
+        subjectClassOptions[subject.id] = [];
+      })
+  );
+  await Promise.all(requests);
+}
 
 // Load all subjects for selection
 function loadAllSubjects() {
@@ -2505,14 +2567,43 @@ function renderSubjectsTable() {
   
   filteredSubjects.forEach(subject => {
     const row = document.createElement("tr");
-    // Only check if subject is in selectedSubjects AND we're not in a fresh add mode
-    const isSelected = selectedSubjects.some(s => s.id === subject.id);
+    const selectedSubject = selectedSubjects.find(s => s.id === subject.id);
+    const isSelected = !!selectedSubject;
+    const options = subjectClassOptions[subject.id] || [];
+    let selectedClassId = selectedSubject?.class_id ? String(selectedSubject.class_id) : "";
+
+    // Recover existing class selection during edit if class_id is missing but class year/section exists.
+    if (!selectedClassId && selectedSubject && options.length > 0) {
+      const matched = options.find(opt =>
+        String(opt.year_level || "").trim().toLowerCase() === String(selectedSubject.class_year_level || "").trim().toLowerCase() &&
+        String(opt.section || "").trim().toLowerCase() === String(selectedSubject.class_section || "").trim().toLowerCase()
+      );
+      if (matched) {
+        selectedClassId = String(matched.class_id);
+        selectedSubject.class_id = parseInt(matched.class_id, 10);
+        selectedSubject.class_year_level = matched.year_level;
+        selectedSubject.class_section = matched.section;
+        selectedSubject.instructor_name = matched.instructor_name || selectedSubject.instructor_name || "Unassigned";
+      }
+    }
+    const optionHtml = options.length > 0
+      ? options.map(opt => {
+          const label = `${opt.year_level} - ${opt.section}`;
+          const sel = selectedClassId && selectedClassId === String(opt.class_id) ? "selected" : "";
+          return `<option value="${opt.class_id}" ${sel}>${label}</option>`;
+        }).join("")
+      : '<option value="">No class found</option>';
     
     row.innerHTML = `
       <td><input type="checkbox" value="${subject.id}" ${isSelected ? 'checked' : ''}></td>
       <td>${subject.subject_code}</td>
       <td>${subject.subject_desc}</td>
-      <td>${subject.year_level}</td>
+      <td>
+        <select class="subject-class-select" data-subject-id="${subject.id}">
+          <option value="">Select Year & Section</option>
+          ${optionHtml}
+        </select>
+      </td>
     `;
     
     tbody.appendChild(row);
@@ -2526,8 +2617,9 @@ function loadSubjectsForProgramPopup(programId) {
   
   fetch(`subject_crud.php?action=get_all_by_program&program_id=${programId}`)
     .then(r => r.json())
-    .then(data => {
+    .then(async data => {
       allSubjects = data;
+      await loadClassOptionsForSubjects(programId, allSubjects);
       renderSubjectsTable();
     })
     .catch(err => {
@@ -2549,7 +2641,7 @@ document.getElementById("add-subject-btn")?.addEventListener("click", () => {
   // Load subjects for the selected program and open popup
   loadSubjectsForProgramPopup(program);
   subjectSelectionModal.style.display = "flex";
-  subjectSelectionModal.style.zIndex = "10002";
+  subjectSelectionModal.style.zIndex = "100000";
   subjectSelectionModal.style.position = "fixed";
   subjectSelectionModal.style.top = "0";
   subjectSelectionModal.style.left = "0";
@@ -2743,6 +2835,18 @@ document.addEventListener("click", function(e) {
   }
 });
 
+// Close any open modal when clicking the backdrop/outside modal-content.
+document.addEventListener("mousedown", function(e) {
+  const visibleModals = document.querySelectorAll(".modal");
+  visibleModals.forEach((modal) => {
+    const isVisible = window.getComputedStyle(modal).display !== "none";
+    if (!isVisible) return;
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+});
+
 // Filter handlers
 document.getElementById("subject-search")?.addEventListener("input", renderSubjectsTable);
 
@@ -2756,22 +2860,45 @@ document.getElementById("select-all-subjects")?.addEventListener("change", (e) =
 // Confirm subject selection
 document.getElementById("confirm-subject-selection")?.addEventListener("click", () => {
   const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:checked");
+  let hasMissingClass = false;
   
   console.log("Confirming subject selection. Checked checkboxes:", checkboxes.length);
   
   checkboxes.forEach(cb => {
     const subject = allSubjects.find(s => s.id == cb.value);
     if (subject) {
+      const classSelect = document.querySelector(`.subject-class-select[data-subject-id="${subject.id}"]`);
+      const classId = classSelect ? parseInt(classSelect.value || "0", 10) : 0;
+      const classOptions = subjectClassOptions[subject.id] || [];
+      const selectedClass = classOptions.find(opt => parseInt(opt.class_id, 10) === classId);
+
+      if (!classId || !selectedClass) {
+        alert(`Please select year level and section for subject ${subject.subject_code}.`);
+        hasMissingClass = true;
+        return;
+      }
+
+      const subjectWithClass = {
+        ...subject,
+        class_id: parseInt(selectedClass.class_id, 10),
+        class_year_level: selectedClass.year_level,
+        class_section: selectedClass.section,
+        instructor_name: selectedClass.instructor_name || "Unassigned"
+      };
+
       // Check if subject is already in selectedSubjects to avoid duplicates
       const existingIndex = selectedSubjects.findIndex(s => s.id === subject.id);
       if (existingIndex === -1) {
-        selectedSubjects.push(subject);
-        console.log("Added subject:", subject);
+        selectedSubjects.push(subjectWithClass);
+        console.log("Added subject:", subjectWithClass);
       } else {
-        console.log("Subject already exists, skipping:", subject);
+        selectedSubjects[existingIndex] = subjectWithClass;
+        console.log("Updated subject class selection:", subjectWithClass);
       }
     }
   });
+
+  if (hasMissingClass) return;
   
   console.log("Final selectedSubjects:", selectedSubjects);
   updateSelectedSubjectsDisplay();
@@ -2806,7 +2933,7 @@ function updateSelectedSubjectsDisplay() {
       console.log("Adding subject to display:", subject);
       html += `
         <div class="selected-subject-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 5px; background: #f3f4f6; border-radius: 4px; border: 1px solid #d1d5db;">
-          <span>${subject.subject_code} - ${subject.subject_desc} (${subject.year_level})</span>
+          <span>${subject.subject_code} - ${subject.subject_desc} (${subject.class_year_level || subject.year_level}${subject.class_section ? " / " + subject.class_section : ""})${subject.instructor_name ? " - " + subject.instructor_name : ""}</span>
           <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
             <i class="ph ph-x"></i>
           </button>
@@ -3163,6 +3290,8 @@ function viewStudentSubjects(student) {
               <span class='year-badge'>${subject.year_level}</span>
             </div>
             <p class='subject-desc'>${subject.subject_desc}</p>
+            ${subject.class_year_level || subject.class_section ? `<p class='subject-desc'><strong>Class:</strong> ${subject.class_year_level || ''}${subject.class_section ? ' - ' + subject.class_section : ''}</p>` : ''}
+            <p class='subject-desc'><strong>Instructor:</strong> ${subject.instructor_name || 'Unassigned'}</p>
             ${subject.program_name ? `<span class='program-badge'>${subject.program_name}</span>` : ''}
           </div>
         `;
@@ -3196,6 +3325,8 @@ function viewStudentSubjects(student) {
                     <span class='year-badge'>${subject.year_level}</span>
                   </div>
                   <p class='subject-desc'>${subject.subject_desc}</p>
+                  ${subject.class_year_level || subject.class_section ? `<p class='subject-desc'><strong>Class:</strong> ${subject.class_year_level || ''}${subject.class_section ? ' - ' + subject.class_section : ''}</p>` : ''}
+                  <p class='subject-desc'><strong>Instructor:</strong> ${subject.instructor_name || 'Unassigned'}</p>
                   ${subject.program_name ? `<span class='program-badge'>${subject.program_name}</span>` : ''}
                 </div>
               `;
@@ -3371,7 +3502,14 @@ function initAddStudentButton() {
           return; }
 
         // Clear subjects for regular students, keep only for irregular
-        const subjectIds = (studentType === 'irregular') ? selectedSubjects.map(s => s.id) : [];
+        const subjectIds = (studentType === 'irregular')
+          ? selectedSubjects.map(s => ({
+              id: s.id,
+              class_id: s.class_id || 0,
+              class_year_level: s.class_year_level || "",
+              class_section: s.class_section || ""
+            }))
+          : [];
 
         const res = await fetch("student_crud.php", {
           method:"POST", headers:{ "Content-Type":"application/json" },
@@ -3385,7 +3523,8 @@ function initAddStudentButton() {
             yearlevel:y, 
             program:p,
             section:section,
-            subjects: subjectIds 
+            subjects: subjectIds,
+            student_type: studentType
           })
         });
         const d = await res.json();

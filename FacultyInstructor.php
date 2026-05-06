@@ -141,8 +141,8 @@ $stmt->close();
 <div class="faculty-box">
   <div class="faculty-header">
     <div class="faculty-info">
-      <span class="faculty-id"></strong> FAC-0001:</span>
-      <span class="faculty-name"></strong> Juan Dela Cruz</span>
+      <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?>:</span>
+      <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
     </div>
     <button class="report-btn">Generate Report</button>
   </div>
@@ -152,7 +152,7 @@ $stmt->close();
       <i class="ph ph-star"></i>
       <div class="card-info">
         <span class="card-title">Overall Ratings</span>
-        <span class="card-value">4.50 / 5.00 - Outstanding</span>
+        <span class="card-value" id="overallRatingValue">0.00 / 5.00 - No Data</span>
       </div>
     </div>
 
@@ -160,7 +160,7 @@ $stmt->close();
       <i class="ph ph-users-three"></i>
       <div class="card-info">
         <span class="card-title">Total Responses</span>
-        <span class="card-value">67</span>
+        <span class="card-value" id="totalResponsesValue">0</span>
       </div>
     </div>
   </div>

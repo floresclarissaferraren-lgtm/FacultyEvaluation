@@ -1441,6 +1441,10 @@ input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:
 #subject-search::placeholder{color:var(--neutral-400);font-weight:400}
 #subjectSelectionModal .form-row{margin-bottom:20px}
 #subjectSelectionModal .form-row label{display:block;margin-bottom:8px;font-weight:600;color:var(--neutral-700);font-size:.875rem}
+#subjectSelectionModal{z-index:100000 !important}
+#subjectSelectionModal .modal-content{position:relative;z-index:100001}
+#subjectSelectionModal .modal-body{max-height:calc(90vh - 140px);overflow-y:auto}
+#subjectSelectionModal .subjects-table-wrapper{max-height:none !important;overflow:visible !important}
 .selected-subjects{margin-top:16px;padding:12px;background:var(--neutral-50);border-radius:8px;border:1px solid var(--neutral-200)}
 .selected-subjects h5{margin:0 0 8px;color:var(--neutral-700);font-size:14px;font-weight:600}
 .selected-subject-item{display:inline-block;background:var(--primary-100);color:var(--primary-700);padding:4px 8px;border-radius:4px;
@@ -1482,7 +1486,8 @@ input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:
   align-items:center;padding:var(--spacing-md);box-sizing:border-box;backdrop-filter:blur(4px);display:none}
 #viewStudentSubjectsModal .modal-content,#viewFacultySubjectsModal .modal-content,#viewClassSubjectsModal .modal-content{background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);color:var(--neutral-900);border-radius:12px;
   width:90%;max-width:700px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.5);overflow:hidden;
-  animation:modalSlideIn .3s cubic-bezier(.4,0,.2,1);border:1px solid rgba(226,232,240,.8);backdrop-filter:blur(20px);position:relative;transform:none}
+  animation:modalSlideIn .3s cubic-bezier(.4,0,.2,1);border:1px solid rgba(226,232,240,.8);backdrop-filter:blur(20px);position:relative;transform:none;max-height:90vh;display:flex;flex-direction:column}
+#viewStudentSubjectsModal .modal-body,#viewFacultySubjectsModal .modal-body,#viewClassSubjectsModal .modal-body{overflow-y:auto;max-height:calc(90vh - 110px)}
 #viewStudentSubjectsModal .student-info-header,#viewFacultySubjectsModal .student-info-header,#viewClassSubjectsModal .student-info-header{display:flex;align-items:center;gap:16px;padding:24px;background:linear-gradient(135deg,#3b82f6 0%,#fbbf24 100%);
   color:#fff;border-radius:16px;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,0,0,.1);position:relative;overflow:hidden}
 #viewStudentSubjectsModal .student-info-header::before,#viewFacultySubjectsModal .student-info-header::before,#viewClassSubjectsModal .student-info-header::before{content:'';position:absolute;top:0;left:0;right:0;
@@ -1492,8 +1497,9 @@ input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:
   border:2px solid rgba(255,255,255,.3)}
 #viewStudentSubjectsModal .student-details h4,#viewFacultySubjectsModal .student-details h4,#viewClassSubjectsModal .student-details h4{margin:0;font-size:1.4rem;font-weight:700;text-shadow:0 2px 4px rgba(0,0,0,.2);letter-spacing:.5px;color:#fbbf24}
 #viewStudentSubjectsModal .student-subtitle,#viewFacultySubjectsModal .student-subtitle,#viewClassSubjectsModal .student-subtitle{margin:6px 0 0;opacity:.95;font-size:1rem;font-weight:500;letter-spacing:.3px}
-#viewStudentSubjectsModal .subjects-container,#viewFacultySubjectsModal .subjects-container,#viewClassSubjectsModal .subjects-container{max-height:400px;overflow-y:auto}
+#viewStudentSubjectsModal .subjects-container,#viewFacultySubjectsModal .subjects-container,#viewClassSubjectsModal .subjects-container{max-height:none;overflow:visible}
 #viewStudentSubjectsModal .subjects-grid,#viewFacultySubjectsModal .subjects-grid,#viewClassSubjectsModal .subjects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px 0}
+#viewStudentSubjectsModal .subjects-grid,#viewFacultySubjectsModal .subjects-grid,#viewClassSubjectsModal .subjects-grid{max-height:none !important;overflow:visible !important}
 #viewStudentSubjectsModal .subject-card,#viewFacultySubjectsModal .subject-card,#viewClassSubjectsModal .subject-card{background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);border:1px solid #e2e8f0;border-radius:12px;
   padding:20px;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 #viewStudentSubjectsModal .subject-card::before,#viewFacultySubjectsModal .subject-card::before,#viewClassSubjectsModal .subject-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
@@ -1536,6 +1542,19 @@ input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:
   border:1px solid #e2e8f0;border-radius:6px;font-size:13px}
 .selected-subject-item span{flex:1;color:#374151}
 .selected-subject-item .remove-subject{background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;border-radius:4px;transition:background-color .2s}
+
+/* Faculty table subject chips: keep compact height */
+.faculties-table .subject-item{
+  display:inline-flex;
+  align-items:center;
+  line-height:1.1;
+  padding:2px 6px;
+  margin:1px 3px 1px 0;
+  min-height:18px;
+  height:auto;
+  font-size:11px;
+  border-radius:4px;
+}
 .selected-subject-item .remove-subject:hover{background:#fee2e2}
 .form-row{display:flex;gap:15px;margin-bottom:15px;align-items:end}
 .form-row>div{flex:1}

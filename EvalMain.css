@@ -178,23 +178,31 @@ body.modal-open{overflow:hidden}
 .LoginForm-subtitle span{flex:1;height:1px;background:#051c44}
 .input-group {
   position: relative;
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;   /* stack input + error vertically */
-  align-items: flex-start;  /* align children to the left */
-}.input-group input{width:100%;padding:12px 12px 12px 40px;border:1px solid #87b3ff;border-radius:8px;font-size:14px;color:#1a3c6c;transition:.3s}
+  margin-bottom: 18px;
+}
+.input-group input{width:100%;padding:12px 12px 12px 40px;border:1px solid #87b3ff;border-radius:8px;font-size:14px;color:#1a3c6c;transition:.3s}
 .input-group input:focus{border-color:#0a313d;outline:0;box-shadow:0 0 5px rgba(37,99,235,.3)}
 .StudentLogin-link{display:block;text-align:right;margin-bottom:15px;font-size:13px;color:#01161c;text-decoration:none;transition:.2s}
 .StudentLogin-link:hover{color:#162e61;text-decoration:underline}
 .StudentLogin-btn{width:100%;background:#0a313d;color:#fff;border:0;padding:12px 0;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:.3s}
 .StudentLogin-btn:hover{background:#162e61}
-.input-group i{position:absolute;top:50%;transform:translateY(-50%);color:#0a313d;font-size:16px}
+.input-group i{position:absolute;top:24px;transform:translateY(-50%);color:#0a313d;font-size:16px;line-height:1}
 .input-group i.fa-user,
 .input-group i.fa-user-gear,
 .input-group i.fa-chalkboard-user,
 .input-group i.fa-envelope,
 .input-group i.fa-lock{left:12px}
 .input-group #togglePassword{right:8px;cursor:pointer}
+.input-group input[type="password"]{padding-right:42px}
+.input-group input[type="password"]::-ms-reveal,
+.input-group input[type="password"]::-ms-clear{
+  display:none;
+}
+.input-group input[type="password"]::-webkit-credentials-auto-fill-button{
+  visibility:hidden;
+  display:none !important;
+  pointer-events:none;
+}
 
 
 
@@ -205,9 +213,10 @@ body.modal-open{overflow:hidden}
 .error-message {
   color: red;
   font-size: 0.85em;
-  margin-top: 4px;
+  margin-top: 6px;
+  min-height: 18px;
   display: block;
   text-align: left;   /* siguraduhin naka-align sa kaliwa */
-  padding-left: 4px;  /* konting indent para hindi dikit sa gilid */
+  padding-left: 0;
 }
 

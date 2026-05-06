@@ -258,6 +258,7 @@ async function loadFacultyCategories() {
     `;
 
     criteriaTables = [];
+    currentCriteria = 0;
     
     for (let i = 0; i < categories.length; i++) {
       const c = categories[i];
@@ -361,7 +362,7 @@ function updatePaginationButtons() {
   
   if (nextBtn) {
     const isLastPage = currentCriteria === criteriaTables.length - 1;
-    nextBtn.disabled = isLastPage;
+    nextBtn.disabled = false;
     nextBtn.textContent = isLastPage ? "Submit" : "Next";
     nextBtn.onclick = isLastPage ? submitEvaluation : nextCriteria;
   }
@@ -374,11 +375,19 @@ function updatePaginationButtons() {
 
 // ================= SUBMIT =================
 function submitEvaluation() {
+  const nextBtn = document.getElementById("nextBtn");
+  if (nextBtn) {
+    nextBtn.disabled = true;
+    nextBtn.textContent = "Submitting...";
+  }
+
+  const studentId = document.getElementById('studentId')?.value?.trim() || '';
   const facultyDropdown = document.getElementById('facultyDropdown');
   const facultyId = facultyDropdown ? facultyDropdown.value : '';
 
   if (!facultyId) {
     alert('Please select a faculty member to evaluate.');
+    updatePaginationButtons();
     return;
   }
 
@@ -393,17 +402,40 @@ function submitEvaluation() {
 
   if (Object.keys(data).length < totalQuestions) {
     alert("Please answer all questions!");
+    updatePaginationButtons();
     return;
   }
 
   const facultyLabel = facultyDropdown.options[facultyDropdown.selectedIndex]?.text || '';
   const submission = {
+    student_id: studentId,
     faculty_id: facultyId,
     faculty_name: facultyLabel,
     answers: data,
     feedback: document.getElementById('studentFeedback')?.value.trim() || ''
   };
 
-  console.log("Submitted:", submission);
-  alert("Evaluation submitted!");
+  fetch("submit_evaluation.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(submission)
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success) {
+        alert(res.message || "Failed to submit evaluation.");
+        updatePaginationButtons();
+        return;
+      }
+      alert(`Evaluation submitted! Your overall rating for this instructor: ${res.overall_rating}/5.00`);
+      document.querySelectorAll('input[type="radio"]:checked').forEach(el => { el.checked = false; });
+      const fb = document.getElementById('studentFeedback');
+      if (fb) fb.value = '';
+      updatePaginationButtons();
+    })
+    .catch(err => {
+      console.error("Submit error:", err);
+      alert("Error submitting evaluation. Please try again.");
+      updatePaginationButtons();
+    });
 }

@@ -155,3 +155,25 @@ document.getElementById("logoutModal").addEventListener("click", function(e){
     closeLogoutModal();
   }
 });
+
+function loadFacultyStats() {
+  fetch("get_faculty_stats.php")
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      const overallEl = document.getElementById("overallRatingValue");
+      const responsesEl = document.getElementById("totalResponsesValue");
+
+      if (overallEl) {
+        overallEl.textContent = `${data.overall_rating} / 5.00 - ${data.rating_label}`;
+      }
+      if (responsesEl) {
+        responsesEl.textContent = `${data.total_responses}`;
+      }
+    })
+    .catch(err => {
+      console.error("Failed to load faculty stats:", err);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", loadFacultyStats);

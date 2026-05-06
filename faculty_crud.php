@@ -146,7 +146,6 @@ if ($action === "add") {
         <p>Hello $firstname $lastname</p>
         <p>Your account has been created successfully.</p>
         <p><b>Faculty Number:</b> $faculty_id</p>
-        <p><b>Login Username:</b> $faculty_id</p>
         <p><b>Temporary Password:</b> $password</p>
         <hr>
         <p>Please use this username and password to login to the Faculty Evaluation System.</p>

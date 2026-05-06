@@ -6,6 +6,135 @@ require_once 'mailer.php';
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
+$checkStudentTypeColumn = $conn->query("SHOW COLUMNS FROM add_students LIKE 'student_type'");
+if ($checkStudentTypeColumn && $checkStudentTypeColumn->num_rows === 0) {
+    $conn->query("ALTER TABLE add_students ADD COLUMN student_type VARCHAR(20) DEFAULT 'regular' AFTER section");
+}
+
+function resolveProgramId(mysqli $conn, string $program): int {
+    $program = trim($program);
+    if ($program === '') {
+        return 0;
+    }
+    if (ctype_digit($program)) {
+        return intval($program);
+    }
+
+    $stmt = $conn->prepare("SELECT id FROM add_programs WHERE program_name = ? OR program_code = ? LIMIT 1");
+    if (!$stmt) {
+        return 0;
+    }
+    $stmt->bind_param("ss", $program, $program);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : null;
+    $stmt->close();
+    return $row ? intval($row['id']) : 0;
+}
+
+function assignStudentSubjects(mysqli $conn, int $student_id, string $program, string $yearlevel, string $section, array $subjects, bool $is_regular): array {
+    $conn->query("CREATE TABLE IF NOT EXISTS student_subject_classes (
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        student_id int(11) NOT NULL,
+        subject_id int(11) NOT NULL,
+        class_id int(11) NOT NULL,
+        UNIQUE KEY unique_student_subject_class (student_id, subject_id),
+        KEY idx_ssc_student (student_id),
+        KEY idx_ssc_class (class_id)
+    )");
+
+    $program_id = resolveProgramId($conn, $program);
+    if ($program_id <= 0) {
+        return ['inserted' => 0, 'message' => 'Invalid program for subject assignment'];
+    }
+
+    if (!$is_regular && !empty($subjects)) {
+        $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+        $ssc = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+
+        $inserted = 0;
+        foreach ($subjects as $entry) {
+            $sid = is_array($entry) ? intval($entry['id'] ?? 0) : intval($entry);
+            $class_id = is_array($entry) ? intval($entry['class_id'] ?? 0) : 0;
+            if (!$sid) {
+                continue;
+            }
+            $sub->bind_param("ii", $student_id, $sid);
+            if ($sub->execute()) {
+                $inserted++;
+            }
+
+            if ($class_id > 0) {
+                $ssc->bind_param("iii", $student_id, $sid, $class_id);
+                $ssc->execute();
+            }
+        }
+        $sub->close();
+        $ssc->close();
+        return ['inserted' => $inserted, 'message' => $inserted > 0 ? '' : 'No irregular subjects were inserted'];
+    }
+
+    $normalized_year = trim($yearlevel);
+    $formatted_year = $normalized_year;
+    if (ctype_digit($normalized_year)) {
+        $n = intval($normalized_year);
+        $suffix = $n === 1 ? 'st' : ($n === 2 ? 'nd' : ($n === 3 ? 'rd' : 'th'));
+        $formatted_year = $n . $suffix . ' Year';
+    }
+
+    // Regular students: prioritize class-based subjects (program + year level + section/block).
+    $class_subjects = $conn->prepare("
+        SELECT DISTINCT cs.subject_id
+        FROM add_classes ac
+        INNER JOIN class_subjects cs ON cs.class_id = ac.id
+        WHERE ac.program_id = ?
+          AND (ac.year_level = ? OR ac.year_level = ?)
+          AND TRIM(UPPER(ac.block)) = TRIM(UPPER(?))
+        ORDER BY cs.subject_id ASC
+    ");
+    $class_subjects->bind_param("isss", $program_id, $normalized_year, $formatted_year, $section);
+    $class_subjects->execute();
+    $class_result = $class_subjects->get_result();
+
+    $subject_ids = [];
+    while ($row = $class_result->fetch_assoc()) {
+        $subject_ids[] = intval($row['subject_id']);
+    }
+    $class_subjects->close();
+
+    // Fallback for existing data setups without class_subjects yet.
+    if (empty($subject_ids)) {
+        $auto_subjects = $conn->prepare("
+            SELECT id
+            FROM add_subjects
+            WHERE program_id = ? AND (year_level = ? OR year_level = ?)
+            ORDER BY subject_code ASC
+        ");
+        $auto_subjects->bind_param("iss", $program_id, $normalized_year, $formatted_year);
+        $auto_subjects->execute();
+        $auto_result = $auto_subjects->get_result();
+
+        while ($subject_row = $auto_result->fetch_assoc()) {
+            $subject_ids[] = intval($subject_row['id']);
+        }
+        $auto_subjects->close();
+    }
+
+    if (!empty($subject_ids)) {
+        $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+        $inserted = 0;
+        foreach ($subject_ids as $subject_id) {
+            $sub->bind_param("ii", $student_id, $subject_id);
+            if ($sub->execute()) {
+                $inserted++;
+            }
+        }
+        $sub->close();
+        return ['inserted' => $inserted, 'message' => $inserted > 0 ? '' : 'No regular subjects were inserted'];
+    }
+    return ['inserted' => 0, 'message' => 'No matching subjects found for the selected program/year/section'];
+}
+
 /* =========================
    ADD STUDENT
 ========================= */
@@ -20,6 +149,7 @@ if ($action === "add") {
     $program = $data['program'] ?? '';
     $section = $data['section'] ?? '';
     $subjects = $data['subjects'] ?? [];
+    $student_type = $data['student_type'] ?? 'regular';
 
     if (!$student_number || !$email || !$firstname || !$lastname) {
         echo json_encode(["success"=>false,"message"=>"Missing fields"]);
@@ -46,22 +176,24 @@ if ($action === "add") {
     $password = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 8);
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+    $yearlevelValue = $student_type === 'irregular' ? 'irregular' : $yearlevel;
     $stmt = $conn->prepare("
         INSERT INTO add_students 
-        (student_number,email,firstname,lastname,suffix,yearlevel,program,section,password)
-        VALUES (?,?,?,?,?,?,?,?,?)
+        (student_number,email,firstname,lastname,suffix,yearlevel,program,section,student_type,password)
+        VALUES (?,?,?,?,?,?,?,?,?,?)
     ");
 
     $stmt->bind_param(
-        "sssssssss",
+        "ssssssssss",
         $student_number,
         $email,
         $firstname,
         $lastname,
         $suffix,
-        $yearlevel,
+        $yearlevelValue,
         $program,
         $section,
+        $student_type,
         $hashedPassword
     );
 
@@ -69,47 +201,14 @@ if ($action === "add") {
 
         $student_id = $stmt->insert_id;
 
-        /* subjects - automatic assignment for regular students */
-        if (!empty($subjects)) {
-            // Manual subject assignment (for special cases)
-            $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
-
-            foreach ($subjects as $sid) {
-                $sid = intval($sid);
-                $sub->bind_param("ii", $student_id, $sid);
-                $sub->execute();
-            }
-
-            $sub->close();
-        } else {
-            // Automatic subject assignment for regular students based on program and year level
-            $auto_subjects = $conn->prepare("
-                SELECT id FROM add_subjects 
-                WHERE program_id = ? AND year_level = ?
-                ORDER BY subject_code ASC
-            ");
-            $auto_subjects->bind_param("is", $program, $yearlevel);
-            $auto_subjects->execute();
-            $auto_result = $auto_subjects->get_result();
-
-            $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
-            
-            while ($subject_row = $auto_result->fetch_assoc()) {
-                $subject_id = $subject_row['id'];
-                $sub->bind_param("ii", $student_id, $subject_id);
-                $sub->execute();
-            }
-
-            $auto_subjects->close();
-            $sub->close();
-        }
+        $assignResult = assignStudentSubjects($conn, $student_id, $program, $yearlevelValue, $section, $subjects, $student_type !== 'irregular');
 
         /* ================= EMAIL WITH PASSWORD ================= */
         $body = "
             <h2>Welcome to Faculty Evaluation System</h2>
             <p>Hello $firstname $lastname</p>
             <p>Your account has been created successfully.</p>
-            <p><b>Faculty Number:</b> $student_number</p>
+            <p><b>Student Number:</b> $student_number</p>
             <p><b>Temporary Password:</b> $password</p>
             <hr>
             <p>Please use this password to login to the Faculty Evaluation System.</p>
@@ -125,7 +224,9 @@ if ($action === "add") {
 
         echo json_encode([
             "success" => true,
-            "message" => $sent ? "Student added + email sent" : "Student added but email failed"
+            "message" => $sent ? "Student added + email sent" : "Student added but email failed",
+            "subject_inserted" => $assignResult['inserted'] ?? 0,
+            "subject_message" => $assignResult['message'] ?? ""
         ]);
 
     } else {
@@ -162,12 +263,12 @@ elseif ($action === "edit") {
     
     $stmt = $conn->prepare("
         UPDATE add_students 
-        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, section=?, email=?
+        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, section=?, email=?, student_type=?
         WHERE id=?
     ");
 
     $stmt->bind_param(
-        "sssssssi",
+        "ssssssssi",
         $firstname,
         $lastname,
         $suffix,
@@ -175,48 +276,23 @@ elseif ($action === "edit") {
         $program,
         $section,
         $email,
+        $student_type,
         $id
     );
 
     if ($stmt->execute()) {
 
         $conn->query("DELETE FROM student_subjects WHERE student_id=$id");
+        $conn->query("DELETE FROM student_subject_classes WHERE student_id=$id");
 
-        if (!empty($subjects)) {
-            // Manual subject assignment (for special cases)
-            $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+        $assignResult = assignStudentSubjects($conn, $id, $program, $yearlevelValue, $section, $subjects, $student_type !== 'irregular');
 
-            foreach ($subjects as $sid) {
-                $sid = intval($sid);
-                $sub->bind_param("ii", $id, $sid);
-                $sub->execute();
-            }
-
-            $sub->close();
-        } else {
-            // Automatic subject assignment for regular students based on program and year level
-            $auto_subjects = $conn->prepare("
-                SELECT id FROM add_subjects 
-                WHERE program_id = ? AND year_level = ?
-                ORDER BY subject_code ASC
-            ");
-            $auto_subjects->bind_param("is", $program, $yearlevel);
-            $auto_subjects->execute();
-            $auto_result = $auto_subjects->get_result();
-
-            $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
-            
-            while ($subject_row = $auto_result->fetch_assoc()) {
-                $subject_id = $subject_row['id'];
-                $sub->bind_param("ii", $id, $subject_id);
-                $sub->execute();
-            }
-
-            $auto_subjects->close();
-            $sub->close();
-        }
-
-        echo json_encode(["success"=>true,"message"=>"Student updated"]);
+        echo json_encode([
+            "success"=>true,
+            "message"=>"Student updated",
+            "subject_inserted" => $assignResult['inserted'] ?? 0,
+            "subject_message" => $assignResult['message'] ?? ""
+        ]);
     } else {
         echo json_encode(["success"=>false,"message"=>$stmt->error]);
     }
@@ -237,6 +313,7 @@ elseif ($action === "delete") {
     }
 
     $conn->query("DELETE FROM student_subjects WHERE student_id=$id");
+    $conn->query("DELETE FROM student_subject_classes WHERE student_id=$id");
     $conn->query("DELETE FROM add_students WHERE id=$id");
 
     echo json_encode(["success"=>true,"message"=>"Student deleted"]);

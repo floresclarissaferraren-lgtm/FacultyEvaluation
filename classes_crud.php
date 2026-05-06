@@ -5,6 +5,117 @@ header("Content-Type: application/json");
 
 $action = $_REQUEST['action'] ?? "";
 
+function classYearVariants(string $classYear): array {
+    $variants = [trim($classYear)];
+    if (preg_match('/^(\d+)/', $classYear, $m)) {
+        $num = $m[1];
+        if (!in_array($num, $variants, true)) {
+            $variants[] = $num;
+        }
+    }
+    return array_values(array_filter(array_unique($variants)));
+}
+
+function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
+    $classStmt = $conn->prepare("SELECT program_id, year_level, block FROM add_classes WHERE id = ? LIMIT 1");
+    if (!$classStmt) {
+        return;
+    }
+    $classStmt->bind_param("i", $class_id);
+    $classStmt->execute();
+    $classRes = $classStmt->get_result();
+    $class = $classRes ? $classRes->fetch_assoc() : null;
+    $classStmt->close();
+
+    if (!$class) {
+        return;
+    }
+
+    $program_id = intval($class['program_id']);
+    $year_level = trim((string)$class['year_level']);
+    $block = trim((string)$class['block']);
+    $yearVariants = classYearVariants($year_level);
+
+    if (empty($yearVariants)) {
+        return;
+    }
+
+    $yearPlaceholders = implode(',', array_fill(0, count($yearVariants), '?'));
+    $studentSql = "
+        SELECT s.id
+        FROM add_students s
+        LEFT JOIN add_programs p ON p.id = ?
+        WHERE (
+            s.program = CAST(? AS CHAR)
+            OR UPPER(TRIM(s.program)) = UPPER(TRIM(p.program_code))
+            OR UPPER(TRIM(s.program)) = UPPER(TRIM(p.program_name))
+        )
+          AND TRIM(UPPER(s.section)) = TRIM(UPPER(?))
+          AND LOWER(TRIM(s.yearlevel)) != 'irregular'
+          AND s.yearlevel IN ($yearPlaceholders)
+    ";
+
+    $studentStmt = $conn->prepare($studentSql);
+    if (!$studentStmt) {
+        return;
+    }
+
+    $types = "iis" . str_repeat("s", count($yearVariants));
+    $params = [$program_id, $program_id, $block, ...$yearVariants];
+    $refs = [];
+    foreach ($params as $k => $v) {
+        $refs[$k] = &$params[$k];
+    }
+    array_unshift($refs, $types);
+    call_user_func_array([$studentStmt, "bind_param"], $refs);
+    $studentStmt->execute();
+    $studentRes = $studentStmt->get_result();
+
+    $studentIds = [];
+    while ($row = $studentRes->fetch_assoc()) {
+        $studentIds[] = intval($row['id']);
+    }
+    $studentStmt->close();
+
+    if (empty($studentIds)) {
+        return;
+    }
+
+    $subjectStmt = $conn->prepare("SELECT subject_id FROM class_subjects WHERE class_id = ? ORDER BY subject_id ASC");
+    if (!$subjectStmt) {
+        return;
+    }
+    $subjectStmt->bind_param("i", $class_id);
+    $subjectStmt->execute();
+    $subjectRes = $subjectStmt->get_result();
+    $subjectIds = [];
+    while ($row = $subjectRes->fetch_assoc()) {
+        $subjectIds[] = intval($row['subject_id']);
+    }
+    $subjectStmt->close();
+
+    $del = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
+    $ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
+    if (!$del || !$ins) {
+        if ($del) $del->close();
+        if ($ins) $ins->close();
+        return;
+    }
+
+    foreach ($studentIds as $sid) {
+        $del->bind_param("i", $sid);
+        $del->execute();
+
+        foreach ($subjectIds as $subjId) {
+            $ins->bind_param("ii", $sid, $subjId);
+            $ins->execute();
+        }
+    }
+
+    $del->close();
+    $ins->close();
+}
+
 /* ========================= GET FACULTY BY SUBJECT ========================= */
 if ($action === "get_faculty_by_subject") {
     $subject_id = $_GET['subject_id'] ?? 0;
@@ -112,6 +223,43 @@ if ($action === "get_subjects_by_program_year") {
     }
     
     echo json_encode($subjects);
+    exit;
+}
+
+/* ========================= GET CLASS OPTIONS BY SUBJECT ========================= */
+if ($action === "get_subject_class_options") {
+    $program_id = intval($_GET['program_id'] ?? 0);
+    $subject_id = intval($_GET['subject_id'] ?? 0);
+
+    if (!$program_id || !$subject_id) {
+        echo json_encode([]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("
+        SELECT
+            ac.id AS class_id,
+            ac.year_level,
+            ac.block AS section,
+            cs.subject_id,
+            cs.faculty_id,
+            TRIM(CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, ''))) AS instructor_name
+        FROM add_classes ac
+        INNER JOIN class_subjects cs ON cs.class_id = ac.id AND cs.subject_id = ?
+        LEFT JOIN add_faculties f ON f.id = cs.faculty_id
+        WHERE ac.program_id = ?
+        ORDER BY ac.year_level ASC, ac.block ASC
+    ");
+    $stmt->bind_param("ii", $subject_id, $program_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+
+    echo json_encode($rows);
     exit;
 }
 
@@ -278,6 +426,8 @@ if ($action === "add") {
         } else {
             error_log("ADD CLASS - No subjects to add");
         }
+
+        syncRegularStudentsForClass($conn, intval($class_id));
         
         $conn->commit();
         error_log("ADD CLASS - Transaction committed successfully");
@@ -363,6 +513,8 @@ if ($action === "edit") {
             }
             $sub_stmt->close();
         }
+
+        syncRegularStudentsForClass($conn, intval($id));
         
         $conn->commit();
         echo json_encode(["status" => "success", "message" => "Class updated successfully"]);
@@ -390,6 +542,7 @@ if ($action === "add_subject_to_class") {
     $stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
     
     if ($stmt->execute()) {
+        syncRegularStudentsForClass($conn, intval($class_id));
         echo json_encode(["status" => "success", "message" => "Subject added to class successfully"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to add subject: " . $stmt->error]);
@@ -421,6 +574,7 @@ if ($action === "delete_subject") {
     if ($stmt->execute()) {
         error_log("Execute successful, affected_rows: " . $stmt->affected_rows);
         if ($stmt->affected_rows > 0) {
+            syncRegularStudentsForClass($conn, intval($class_id));
             echo json_encode(["status" => "success", "message" => "Subject removed from class successfully"]);
         } else {
             echo json_encode(["status" => "error", "message" => "Subject not found in this class"]);

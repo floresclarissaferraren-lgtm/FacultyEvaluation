@@ -291,7 +291,7 @@ include 'totalstudents_dashcount.php';
       </div>
       <div class="header-actions-section">
         <div class="search-wrapper">
-          <input type="text" placeholder="Search records...">
+          <input type="text" id="manage-search" placeholder="Search records...">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         </div>
         <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add</button>
@@ -694,7 +694,7 @@ include 'totalstudents_dashcount.php';
               <th></th>
               <th>Subject Code</th>
               <th>Description</th>
-              <th>Year Level</th>
+              <th>Year Level / Section</th>
             </tr>
           </thead>
           <tbody id="subjects-selection-tbody">
