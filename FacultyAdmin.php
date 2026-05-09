@@ -494,7 +494,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-wrapper">
       <table class="faculties-table">
         <thead>
-          <tr><th>Faculty</th><th>ID</th><th>Info</th><th>Subjects</th><th>Action</th></tr>
+          <tr><th>Faculty</th><th>ID</th><th>Info</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -799,6 +799,9 @@ include 'totalstudents_dashcount.php';
         <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         <input type="text" id="searchInput" placeholder="Search Faculty...">
       </div>
+      <button class="generate-report-btn" onclick="generateEvaluationReport()">
+        <i class="ph ph-download-simple"></i> Generate Report
+      </button>
     </div>
   </div>
   <div class="table-wrapper">
@@ -806,9 +809,9 @@ include 'totalstudents_dashcount.php';
       <thead>
         <tr>
           <th>Faculty Name</th>
-          <th>Average Score</th>
-          <th>Rating</th>
+          <th>Overall Rating</th>
           <th>Responses</th>
+          <th>Status</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -1044,6 +1047,8 @@ include 'totalstudents_dashcount.php';
     <button id="notificationModalOkBtn" class="notification-modal-btn">OK</button>
   </div>
 </div>
+
+
 
 <script src="FacultyAdmin.js?v=<?php echo time(); ?>"></script>
 </body>

@@ -121,6 +121,9 @@ if (loginForm) {
 
 // ===================== Forgot form submit handler =====================
 const forgotForm = document.getElementById('forgotForm');
+const codeVerificationSection = document.getElementById('codeVerificationSection');
+const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+
 if (forgotForm) {
   forgotForm.addEventListener('submit', async e => {
     e.preventDefault();
@@ -132,9 +135,91 @@ if (forgotForm) {
       return;
     }
 
-    // Placeholder for forgot password logic
-    alert('Reset link sent to ' + email);
-    switchModal(modals.forgot, modals.login);
+    try {
+      const response = await fetch('send_password_reset.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'email=' + encodeURIComponent(email)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Reset code sent to ' + email);
+        // Show code verification section
+        codeVerificationSection.style.display = 'block';
+        // Hide the send button
+        e.target.style.display = 'none';
+      } else {
+        alert(result.message || 'Failed to send reset code');
+      }
+    } catch (error) {
+      alert('An error occurred. Please try again.');
+    }
+  });
+}
+
+// Verification code handler
+if (verifyCodeBtn) {
+  verifyCodeBtn.addEventListener('click', async () => {
+    const email = document.getElementById('resetEmail').value;
+    const code = document.getElementById('resetCode').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+    if (!email || !code || !newPassword || !confirmPassword) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    if (code.length !== 6) {
+      alert('Please enter a valid 6-digit code');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      const response = await fetch('verify_reset_code.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          code: code,
+          password: newPassword
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Password reset successful! You can now login with your new password.');
+        switchModal(modals.forgot, modals.login);
+        // Clear form
+        document.getElementById('resetCode').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmNewPassword').value = '';
+        codeVerificationSection.style.display = 'none';
+        // Show the send button again
+        forgotForm.querySelector('button[type="submit"]').style.display = 'block';
+      } else {
+        alert(result.message || 'Failed to reset password');
+      }
+    } catch (error) {
+      alert('An error occurred. Please try again.');
+    }
   });
 }
 

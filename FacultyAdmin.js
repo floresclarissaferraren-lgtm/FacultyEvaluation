@@ -186,7 +186,7 @@ window.showSection = (id, e) => {
   }
 
   // =========================
-  // Hide evaluation table from other sections
+  // Show/hide evaluation table based on section
   // =========================
   const evaluationTable = document.querySelector(".evaluation-table");
   if (evaluationTable) {
@@ -1740,6 +1740,13 @@ function loadFaculty() {
           <td><strong>${f.faculty_id}</strong></td>
           <td><div>${f.firstname} ${f.lastname} ${f.suffix||""}</div><small>${f.email}</small></td>
           <td>${subjectsDisplay}</td>
+          <td>
+            <label class="status-toggle">
+              <input type="checkbox" class="status-checkbox" data-faculty-id="${f.id}" ${f.status === 'active' ? 'checked' : ''}>
+              <span class="status-slider"></span>
+              <span class="status-text">${f.status === 'active' ? 'Active' : 'Inactive'}</span>
+            </label>
+          </td>
           <td class="action-cell"><div class="action-buttons">
             <button class="view-btn"><i class="ph ph-eye"></i></button>
             <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
@@ -1811,6 +1818,39 @@ function loadFaculty() {
           viewFacultySubjectsModal.style.zIndex = "10001";
           viewFacultySubjectsModal.style.position = "fixed";
         };
+
+        // STATUS TOGGLE --------------------
+        const statusCheckbox = row.querySelector(".status-checkbox");
+        const statusText = row.querySelector(".status-text");
+        statusCheckbox.addEventListener("change", async (e) => {
+          const newStatus = e.target.checked ? 'active' : 'inactive';
+          const facultyId = e.target.dataset.facultyId;
+          
+          try {
+            const response = await fetch("faculty_crud.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "update_status",
+                id: facultyId,
+                status: newStatus
+              })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+              statusText.textContent = newStatus === 'active' ? 'Active' : 'Inactive';
+              showNotification(`Faculty status updated to ${newStatus}`, "#4caf50");
+            } else {
+              e.target.checked = !e.target.checked; // Revert checkbox
+              showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
+            }
+          } catch (error) {
+            e.target.checked = !e.target.checked; // Revert checkbox
+            console.error("Status update error:", error);
+            showNotification("Error updating status", "#f44336");
+          }
+        });
 
         // DELETE --------------------
         row.querySelector(".delete-btn").onclick = () => {
@@ -1962,18 +2002,17 @@ document.getElementById("faculty-search").oninput = e => {
 };
 // ========================= Report Section =========================
 function loadEvaluations() {
-  // Check if we're in the report section, if not, don't load the table
-  const currentSection = document.querySelector('.section:not([style*="display: none"])');
-  if (!currentSection || currentSection.id !== 'report-section') {
-    return; // Don't load evaluations if not in report section
-  }
-  
   fetch("get_evaluations.php")
     .then(r => r.json())
     .then(data => {
+      const tbody = document.getElementById("evaluationTableBody");
+      tbody.innerHTML = "";
+      
       if (data.success) {
-        const tbody = document.getElementById("evaluationTableBody");
-        tbody.innerHTML = "";
+        if (!data.data || data.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No evaluation data available</td></tr>';
+          return;
+        }
         
         data.data.forEach(evaluation => {
           const row = document.createElement("tr");
@@ -1983,10 +2022,10 @@ function loadEvaluations() {
               <small>${evaluation.faculty_id}</small>
             </td>
             <td>${evaluation.average_score}</td>
+            <td>${evaluation.total_responses}</td>
             <td>
               <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
             </td>
-            <td>${evaluation.total_responses}</td>
             <td>
               <button class="view-btn" onclick="viewEvaluationDetails('${evaluation.id}')">
                 <i class="ph ph-eye"></i> View
@@ -2005,14 +2044,159 @@ function loadEvaluations() {
         };
       } else {
         console.error("Error loading evaluations:", data.message);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: red;">Error loading evaluation data</td></tr>';
       }
     })
-    .catch(err => console.error("Network error:", err));
+    .catch(err => {
+      console.error("Network error:", err);
+      const tbody = document.getElementById("evaluationTableBody");
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: red;">Network error loading data</td></tr>';
+    });
+}
+
+function generateEvaluationReport() {
+  const tbody = document.getElementById("evaluationTableBody");
+  const rows = tbody.getElementsByTagName("tr");
+  
+  if (rows.length === 0) {
+    showNotification("No evaluation data available to generate report", "#f59e0b", 3000);
+    return;
+  }
+  
+  // Get current search filter
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+  
+  // Filter rows based on search
+  const filteredRows = Array.from(rows).filter(row => {
+    if (searchTerm === "") return true;
+    return row.textContent.toLowerCase().includes(searchTerm);
+  });
+  
+  if (filteredRows.length === 0) {
+    showNotification("No matching results found", "#f59e0b", 3000);
+    return;
+  }
+  
+  // Generate report content
+  let reportContent = generateReportContent(filteredRows);
+  
+  // Create and download the report
+  downloadReport(reportContent, "faculty_evaluation_report.csv");
+}
+
+function generateReportContent(rows) {
+  let content = "Faculty Name,Faculty ID,Overall Rating,Responses,Status\n";
+  
+  Array.from(rows).forEach(row => {
+    const cells = row.getElementsByTagName("td");
+    if (cells.length >= 5) {
+      const facultyName = cells[0].textContent.replace(/\s+/g, ' ').trim();
+      const facultyId = cells[0].querySelector('small')?.textContent || '';
+      const overallRating = cells[1].textContent;
+      const responses = cells[2].textContent;
+      const status = cells[3].querySelector('.badge')?.textContent || '';
+      
+      content += `"${facultyName}","${facultyId}","${overallRating}","${responses}","${status}"\n`;
+    }
+  });
+  
+  return content;
+}
+
+function downloadReport(content, filename) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.display = 'none';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
+  showNotification("Report generated successfully!", "#4caf50", 3000);
 }
 
 function viewEvaluationDetails(facultyId) {
-  // TODO: Implement detailed view modal
-  console.log("View details for faculty:", facultyId);
+  fetch(`get_faculty_report.php?faculty_id=${facultyId}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        // Populate modal with faculty data
+        document.getElementById('reportFacultyName').textContent = data.data.name;
+        document.getElementById('reportFacultyId').textContent = data.data.faculty_id;
+        document.getElementById('reportOverallRating').textContent = data.data.overall_rating;
+        document.getElementById('reportTotalResponses').textContent = data.data.total_responses;
+        
+        // Clear and populate report details
+        const reportDetails = document.getElementById('reportDetails');
+        reportDetails.innerHTML = '';
+        
+        if (data.data.evaluation_details && data.data.evaluation_details.length > 0) {
+          const detailsTable = document.createElement('table');
+          detailsTable.className = 'report-details-table';
+          detailsTable.style.width = '100%';
+          detailsTable.style.borderCollapse = 'collapse';
+          detailsTable.style.marginTop = '20px';
+          
+          // Create table header
+          const thead = document.createElement('thead');
+          thead.innerHTML = `
+            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+              <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">Category</th>
+              <th style="padding: 12px; text-align: center; border: 1px solid #e2e8f0;">Average Score</th>
+              <th style="padding: 12px; text-align: center; border: 1px solid #e2e8f0;">Rating</th>
+            </tr>
+          `;
+          detailsTable.appendChild(thead);
+          
+          // Create table body
+          const tbody = document.createElement('tbody');
+          data.data.evaluation_details.forEach(detail => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td style="padding: 10px; border: 1px solid #e2e8f0;">${detail.category}</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #e2e8f0;">${detail.average_score}</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #e2e8f0;">
+                <span class="badge ${detail.rating_class}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                  ${detail.rating}
+                </span>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+          detailsTable.appendChild(tbody);
+          
+          reportDetails.appendChild(detailsTable);
+        } else {
+          reportDetails.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">No evaluation details available.</p>';
+        }
+        
+        // Show modal
+        const modal = document.getElementById('facultyReportModal');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10001';
+        modal.style.position = 'fixed';
+      } else {
+        showNotification('Error loading faculty report: ' + data.message, '#f44336', 5000);
+      }
+    })
+    .catch(err => {
+      console.error('Error fetching faculty report:', err);
+      showNotification('Network error while loading faculty report', '#f44336', 5000);
+    });
+}
+
+function closeFacultyReportModal() {
+  const modal = document.getElementById('facultyReportModal');
+  modal.style.display = 'none';
+}
+
+function printReport() {
+  window.print();
 }
 
 // ========================= Dashboard Statistics =========================

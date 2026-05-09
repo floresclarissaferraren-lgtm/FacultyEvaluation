@@ -62,6 +62,13 @@ function showProfile(){
   `;
   
   profileModal.style.display = "flex";
+  
+  // Add click outside to close functionality
+  profileModal.addEventListener('click', function(event) {
+    if (event.target === profileModal) {
+      closeProfileModal();
+    }
+  });
 }
 
 window.closeProfileModal = () => {
@@ -161,16 +168,18 @@ function loadFacultyStats() {
     .then(r => r.json())
     .then(data => {
       if (!data.success) return;
-      const overallEl = document.getElementById("overallRatingValue");
+      const ratingNumberEl = document.getElementById("overallRatingNumber");
+      const ratingStatusEl = document.getElementById("overallRatingStatus");
       const responsesEl = document.getElementById("totalResponsesValue");
 
-      if (overallEl) {
-        if (data.rating_label === "No Rating Yet") {
-          overallEl.textContent = "No Rating Yet";
-        } else {
-          overallEl.textContent = `${data.overall_rating} / 5.00 - ${data.rating_label}`;
-        }
+      if (ratingNumberEl) {
+        ratingNumberEl.textContent = `${data.overall_rating} / 5.00`;
       }
+      
+      if (ratingStatusEl) {
+        ratingStatusEl.textContent = data.rating_label || "No Rating Yet";
+      }
+      
       if (responsesEl) {
         responsesEl.textContent = `${data.total_responses}`;
       }
@@ -178,6 +187,156 @@ function loadFacultyStats() {
     .catch(err => {
       console.error("Failed to load faculty stats:", err);
     });
+}
+
+function showEvaluationReport() {
+  // Get faculty information from hidden fields
+  const facultyId = document.getElementById("facultyId")?.value;
+  const facultyName = document.getElementById("facultyName")?.value;
+  
+  // Create evaluation report modal if it doesn't exist
+  let reportModal = document.getElementById("evaluationReportModal");
+  if (!reportModal) {
+    reportModal = document.createElement("div");
+    reportModal.id = "evaluationReportModal";
+    reportModal.className = "evaluation-report-modal";
+    document.body.appendChild(reportModal);
+  }
+  
+  // Fetch faculty evaluation data
+  fetch("get_faculty_evaluation_report.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      faculty_id: facultyId
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const reportContent = `
+        <div class="report-content">
+          <div class="report-header">
+            <div class="header-left">
+              <img src="logo.png" alt="College Logo" class="college-logo">
+              <div class="college-info">
+                <h2>Granby Colleges of Science and Technology</h2>
+                <p class="report-subtitle">Faculty Evaluation Report</p>
+              </div>
+            </div>
+            <button class="close-report-btn" onclick="closeEvaluationReport()">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          
+          
+            <div class="report-body">
+            <div class="faculty-details">
+              <div class="detail-item">
+                <label>Name:</label>
+                <span>${facultyName || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <label>Faculty ID:</label>
+                <span>${facultyId || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <label>Overall Rating:</label>
+                <span>${data.overall_rating || '0.00'} / 5.00</span>
+              </div>
+              <div class="detail-item">
+                <label>Total Student Responses:</label>
+                <span>${data.total_responses || '0'}</span>
+              </div>
+            </div>
+            <div class="report-footer">
+              <button class="download-pdf-btn" onclick="downloadEvaluationReport()">
+                <i class="ph ph-download"></i> Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      reportModal.innerHTML = reportContent;
+      reportModal.style.display = "flex";
+      
+      // Add click outside to close functionality
+      reportModal.addEventListener('click', function(event) {
+        if (event.target === reportModal) {
+          closeEvaluationReport();
+        }
+      });
+      
+      // Store data for PDF download
+      reportModal.dataset.facultyName = facultyName || 'N/A';
+      reportModal.dataset.facultyId = facultyId || 'N/A';
+      reportModal.dataset.totalResponses = data.total_responses || 0;
+      reportModal.dataset.overallRating = data.overall_rating || '0.00';
+      reportModal.dataset.feedback = data.feedback || 'No feedback available';
+    } else {
+      alert("Failed to load evaluation report: " + (data.message || "Unknown error"));
+    }
+  })
+  .catch(error => {
+    console.error("Error fetching evaluation report:", error);
+    alert("An error occurred while loading the evaluation report.");
+  });
+}
+
+function downloadEvaluationReport() {
+  const modal = document.getElementById("evaluationReportModal");
+  if (!modal) return;
+  
+  // Get stored data
+  const facultyName = modal.dataset.facultyName || 'N/A';
+  const facultyId = modal.dataset.facultyId || 'N/A';
+  const totalResponses = modal.dataset.totalResponses || 0;
+  const overallRating = modal.dataset.overallRating || '0.00';
+  const feedback = modal.dataset.feedback || 'No feedback available';
+  
+  // Create PDF content
+  const pdfContent = {
+    facultyName: facultyName,
+    facultyId: facultyId,
+    totalResponses: totalResponses,
+    overallRating: overallRating,
+    feedback: feedback
+  };
+  
+  // Send to PDF generation endpoint
+  fetch("generate_evaluation_pdf.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(pdfContent)
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Faculty_Evaluation_Report_${facultyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  })
+  .catch(error => {
+    console.error("Error generating PDF:", error);
+    alert("An error occurred while generating the PDF.");
+  });
+}
+
+function closeEvaluationReport() {
+  const modal = document.getElementById("evaluationReportModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
 }
 
 document.addEventListener("DOMContentLoaded", loadFacultyStats);

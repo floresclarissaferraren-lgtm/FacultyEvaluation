@@ -82,6 +82,13 @@ function showProfile(){
   `;
   
   profileModal.style.display = "flex";
+  
+  // Add click outside to close functionality
+  profileModal.addEventListener('click', function(event) {
+    if (event.target === profileModal) {
+      closeProfileModal();
+    }
+  });
 }
 
 window.closeProfileModal = () => {

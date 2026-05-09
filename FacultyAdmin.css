@@ -597,7 +597,47 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 
 /* Specific backgrounds */
 .action-cell .manage-btn { background: transparent!important; }
-.action-cell .view-btn { background: transparent!important; }
+
+/* View Report button specific styles */
+.action-cell .view-btn, 
+table.evaluation-table .view-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)!important; 
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(30, 64, 175, 0.4) !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Generate Report button styles */
+.generate-report-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)!important; 
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  border-radius: 6px !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(30, 64, 175, 0.4) !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.generate-report-btn:hover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%)!important; 
+  box-shadow: 0 4px 12px rgba(23, 37, 84, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
 
 /* Icon colors (size unchanged) */
 .action-cell .manage-btn i { color: var(--primary-700); }
@@ -606,7 +646,10 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 .action-cell .delete-btn i,
 .actions .delete-btn i { color: #6b7280; }
 .action-cell .view-btn i,
-.action-cell .view-subjects-btn i { color: var(--primary-600); }
+.action-cell .view-subjects-btn i,
+table.evaluation-table .view-btn i { 
+  color: white !important; 
+}
 
 /* Hover effects */
 .action-cell .manage-btn:hover { background: var(--primary-200)!important; box-shadow: var(--shadow-lg); }
@@ -614,14 +657,23 @@ td:first-child{font-weight:700;color:var(--primary-900)}
 .actions .edit-btn:hover { background: #fde68a!important; box-shadow: var(--shadow-lg); }
 .action-cell .delete-btn:hover,
 .actions .delete-btn:hover { background: #fecaca!important; box-shadow: var(--shadow-lg); }
+
 .action-cell .view-btn:hover,
-.action-cell .view-subjects-btn:hover { background: var(--primary-200)!important; box-shadow: var(--shadow-lg); }
+.action-cell .view-subjects-btn:hover,
+table.evaluation-table .view-btn:hover { 
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%)!important; 
+  box-shadow: 0 4px 12px rgba(23, 37, 84, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
 
 
 /* Status Badge */
-.status-badge{display:inline-block;padding:var(--spacing-xs) var(--spacing-sm);border-radius:12px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.status-badge.active{background:transparent;color:var(--neutral-700)}
-.status-badge.inactive{background:var(--neutral-300);color:var(--neutral-700)}
+.badge{display:inline-block;padding:var(--spacing-xs) var(--spacing-sm);border-radius:12px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.badge.excellent{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 100%);color:#fff}
+.badge.very-good{background:linear-gradient(135deg,#2563eb 0%,#60a5fa 100%);color:#fff}
+.badge.good{background:linear-gradient(135deg,#facc15 0%,#f59e0b 100%);color:#172554}
+.badge.fair{background:linear-gradient(135deg,#f59e0b 0%,#fb923c 100%);color:#fff}
+.badge.poor{background:linear-gradient(135deg,#dc2626 0%,#ef4444 100%);color:#fff}
 
 /* ====================================================================================================================================
    Top Buttons & Filters
@@ -1294,8 +1346,44 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   box-shadow:0 0 0 1000px white inset !important;background-color:white !important;color:#104e91 !important;}
 input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:not-allowed;}
 .faculty-id{font-weight:700;color:var(--blue-900);}
-.faculty-name{font-weight:700;color:#000;}
+.faculty-name{font-weight:700;color:var(--neutral-800);}
 .faculty-email{color:var(--slate-500);}
+
+/* Evaluation table specific styles */
+div#report-section .evaluation-table td strong { 
+  color: var(--neutral-800) !important; 
+  font-weight: 700;
+}
+div#report-section .evaluation-table td small { 
+  color: var(--slate-500) !important; 
+  font-weight: 400;
+}
+div#report-section .evaluation-table .badge { 
+  background: linear-gradient(135deg,#1d4ed8 0%,#2563eb 100%)!important;
+  color: #fff !important;
+  padding: 6px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+div#report-section .evaluation-table .badge.very-good { 
+  background: linear-gradient(135deg,#2563eb 0%,#60a5fa 100%)!important;
+  color: #fff !important;
+}
+div#report-section .evaluation-table .badge.good { 
+  background: linear-gradient(135deg,#facc15 0%,#f59e0b 100%)!important;
+  color: #172554 !important;
+}
+div#report-section .evaluation-table .badge.fair { 
+  background: linear-gradient(135deg,#f59e0b 0%,#fb923c 100%)!important;
+  color: #fff !important;
+}
+div#report-section .evaluation-table .badge.poor { 
+  background: linear-gradient(135deg,#dc2626 0%,#ef4444 100%)!important;
+  color: #fff !important;
+}
 
 /* ============================================
    Subject Modal
@@ -1467,8 +1555,9 @@ input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:
 #subject-search::placeholder{color:var(--neutral-400);font-weight:400}
 #subjectSelectionModal .form-row{margin-bottom:20px}
 #subjectSelectionModal .form-row label{display:block;margin-bottom:8px;font-weight:600;color:var(--neutral-700);font-size:.875rem}
+#subjectSelectionModal .form-row select{width:100%;min-width:300px;max-width:400px}
 #subjectSelectionModal{z-index:100000 !important}
-#subjectSelectionModal .modal-content{position:relative;z-index:100001}
+#subjectSelectionModal .modal-content{position:relative;z-index:100001;max-width:50rem;width:95%}
 #subjectSelectionModal .modal-body{max-height:calc(90vh - 140px);overflow-y:auto}
 #subjectSelectionModal .subjects-table-wrapper{max-height:none !important;overflow:visible !important}
 .selected-subjects{margin-top:16px;padding:12px;background:var(--neutral-50);border-radius:8px;border:1px solid var(--neutral-200)}
@@ -1585,7 +1674,8 @@ input:disabled{background-color:#f9f9f9 !important;color:#555 !important;cursor:
 .form-row{display:flex;gap:15px;margin-bottom:15px;align-items:end}
 .form-row>div{flex:1}
 .form-row label{display:block;margin-bottom:5px;font-weight:500;color:#374151}
-.form-row input,.form-row select{width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:14px}
+.form-row select{width:100%;min-width:250px;padding:10px;border:1px solid var(--border-color);border-radius:6px;background:#fff;font-size:14px;color:var(--neutral-800);appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:40px}
+.form-row input{width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:14px}
 .form-row input:focus,.form-row select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
 
 /* ============================================
@@ -2284,5 +2374,290 @@ tr:hover td{
   .notification-modal-content {
     padding: 24px;
     margin: 20px;
+  }
+}
+
+/* CUSTOM SCROLLBARS FOR ADMIN FORMS =====================================================================================================================================*/
+
+/* Webkit browsers */
+.modal-body,
+.form-container,
+.form-row,
+input,
+textarea,
+select {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-600) var(--neutral-100);
+}
+
+.modal-body::-webkit-scrollbar,
+.form-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+.modal-body::-webkit-scrollbar-track,
+.form-container::-webkit-scrollbar-track {
+  background: var(--neutral-100);
+  border-radius: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb,
+.form-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+  border-radius: 8px;
+  border: 3px solid var(--neutral-100);
+  transition: all 0.3s ease;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover,
+.form-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+}
+
+/* Firefox */
+input[type=range] {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-600) var(--neutral-100);
+}
+
+/* STATUS TOGGLE BUTTON =====================================================================================================================================*/
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+.status-checkbox {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  appearance: none;
+  background-color: #cbd5e1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.status-checkbox:checked {
+  background-color: var(--success, #10b981);
+}
+
+.status-checkbox::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-checkbox:checked::before {
+  transform: translateX(20px);
+}
+
+.status-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--neutral-700);
+  transition: color 0.3s ease;
+}
+
+.status-checkbox:checked + .status-text {
+  color: var(--success, #10b981);
+}
+
+.status-checkbox:not(:checked) + .status-text {
+  color: var(--neutral-500);
+}
+
+/* Hover effects */
+.status-toggle:hover .status-checkbox {
+  transform: scale(1.05);
+}
+
+.status-toggle:hover .status-text {
+  font-weight: 600;
+}
+
+/* Firefox */
+.modal-body,
+.form-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-600) var(--neutral-100);
+}
+
+/* Faculty Evaluation Report Modal Styles */
+.report-modal-content {
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.report-modal-body {
+  padding: 0;
+  background: #fff;
+}
+
+.report-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 30px;
+  border-bottom: 2px solid var(--primary-200);
+}
+
+.report-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.report-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.report-title-section {
+  flex: 1;
+}
+
+.report-main-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-800);
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.report-subtitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-600);
+  margin: 0;
+  font-style: normal;
+  text-align: center;
+}
+
+.report-faculty-info {
+  padding: 25px 30px;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-row {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 15px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: var(--neutral-700);
+  min-width: 140px;
+  font-size: 14px;
+}
+
+.info-item span {
+  font-weight: 500;
+  color: var(--neutral-900);
+  font-size: 15px;
+}
+
+.report-content {
+  padding: 30px;
+  min-height: 200px;
+}
+
+.modal-footer {
+  padding: 20px 30px;
+  background: #f8fafc;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.print-report-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.print-report-btn:hover {
+  background: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.close-report-btn {
+  padding: 10px 20px;
+  background: var(--neutral-200);
+  color: var(--neutral-700);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-report-btn:hover {
+  background: var(--neutral-300);
+  color: var(--neutral-800);
+}
+
+/* Print Styles */
+@media print {
+  .modal-header,
+  .modal-footer {
+    display: none !important;
+  }
+  
+  .report-modal-content {
+    box-shadow: none;
+    border: none;
+    max-width: 100%;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .report-header {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  .report-faculty-info {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
   }
 }

@@ -53,13 +53,13 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 
 /* Logout Form ==================================================================================================== */
 .logoutform {
-  display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;}
-.logout-content {background:#fff;padding:30px;border-radius:20px;text-align:center;min-width:250px;
-  border-top:6px solid #dc2626;box-shadow:0 20px 50px rgba(220, 38, 38, 0.2)}
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.3);justify-content:center;align-items:center;z-index:1000; backdrop-filter: blur(8px);}
+.logout-content {background: rgba(255, 255, 255, 0.95);padding:30px;border-radius:20px;text-align:center;min-width:250px;
+  border-top:6px solid #dc2626;box-shadow:0 12px 40px rgba(220, 38, 38, 0.15)}
   .logout-buttons {display:flex;flex-direction:column;gap:10px;align-items:stretch;}
 .logout-buttons .btn {padding:10px 0;border-radius:8px;font-size:14px;cursor:pointer;transition:.3s ease;width:80%;margin:0 auto;}
 .logout-icon {margin-top:15px;}
-.icon-bg {display:inline-flex;justify-content:center;align-items:center;background:linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);border-radius:50%;padding:12px;box-shadow:0 4px 12px rgba(220, 38, 38, 0.15)}
+.icon-bg {display:inline-flex;justify-content:center;align-items:center;background: rgba(254, 226, 226, 0.8);border-radius:50%;padding:12px;box-shadow:0 4px 12px rgba(220, 38, 38, 0.1)}
 .icon-bg i {color:#dc2626;}
 .logout-content h3 {margin-bottom:18px;font-weight:600;color:#1e3a8a;font-size: 16px;}
 .no-btn {background:#ffffff;color:#dc2626; border: 2px solid #fecaca;}
@@ -73,88 +73,242 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 
 /* Profile Form ==================================================================================================== */
 .profileform {
-  display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;}
-.profileform .logout-content {background:#fff;padding:30px;border-radius:20px;text-align:center;min-width:320px;
-  border-top:6px solid #3b82f6;box-shadow:0 20px 50px rgba(59, 130, 246, 0.2)}
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.3);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+  backdrop-filter: blur(8px);
+}
+
+.profileform .logout-content {
+  background: rgba(255, 255, 255, 0.95);
+  padding: clamp(30px, 5vw, 45px);
+  border-radius: 28px;
+  text-align: center;
+  min-width: clamp(320px, 80vw, 420px);
+  max-width: 95%;
+  width: auto;
+  height: auto;
+  border-top: 8px solid #3b82f6;
+  box-shadow: 0 20px 60px rgba(59, 130, 246, 0.15), 0 8px 30px rgba(15, 46, 117, 0.1);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.profileform .logout-content::before {
+  content: none;
+}
+
+.profileform .logout-content::after {
+  content: none;
+}
 
 /* Profile Modal Styles */
 .profile-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 35px;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-icon {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  background: #3b82f6;
   border-radius: 50%;
-  padding: 15px;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  padding: clamp(20px, 4vw, 25px);
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3), 0 4px 16px rgba(37, 99, 235, 0.2);
+  position: relative;
+  width: clamp(80px, 15vw, 100px);
+  height: clamp(80px, 15vw, 100px);
+}
+
+.profile-icon::before {
+  content: none;
+}
+
+.profile-icon::after {
+  content: none;
+}
+
+.profile-icon:hover {
+  transform: none;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3), 0 4px 16px rgba(37, 99, 235, 0.2);
 }
 
 .profile-icon i {
-  font-size: 48px;
-  color: #3b82f6;
+  font-size: clamp(32px, 6vw, 56px);
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .profile-header h3 {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: #1e3a8a;
-  font-size: 18px;
+  font-size: clamp(18px, 4vw, 24px);
+  letter-spacing: -0.8px;
+  text-shadow: none;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #1e3a8a;
+  background-clip: unset;
+  position: relative;
+}
+
+.profile-header h3::after {
+  content: none;
 }
 
 .profile-info {
-  text-align: left;
-  margin: 20px 0;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #3b82f6;
+  text-align: center;
+  margin: 30px 0;
+  padding: clamp(20px, 4vw, 25px);
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 20px;
+  border-left: 6px solid #3b82f6;
+  box-shadow: 0 4px 16px rgba(30, 58, 138, 0.08), 0 2px 8px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile-info:hover {
+  transform: none;
+  box-shadow: 0 8px 24px rgba(30, 58, 138, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.profile-info::before {
+  content: none;
+}
+
+.profile-info::after {
+  content: none;
 }
 
 .profile-info p {
-  margin: 8px 0;
-  font: 14px "Inter", sans-serif;
+  margin: clamp(12px, 2vw, 16px) 0;
+  font: clamp(13px, 2.5vw, 15px) "Inter", sans-serif;
   color: #374151;
+  line-height: 1.7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 2vw, 14px);
+  position: relative;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.profile-info p:hover {
+  transform: none;
+  color: #374151;
+}
+
+.profile-info p::before {
+  content: none;
 }
 
 .profile-info strong {
   color: #1e3a8a;
-  font-weight: 600;
+  font-weight: 700;
+  background: rgba(224, 242, 254, 0.8);
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
+  border-radius: 12px;
+  border: 1px solid rgba(147, 197, 253, 0.6);
+  min-width: clamp(100px, 25vw, 140px);
+  text-align: center;
+  font-size: clamp(12px, 2.5vw, 14px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  flex-shrink: 0;
+}
+
+.profile-info strong::before {
+  content: none;
+}
+
+.profile-info strong:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.profile-info strong:hover::before {
+  content: none;
 }
 
 .profile-buttons {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 35px;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .close-profile-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: #3b82f6;
   color: #fff;
   border: none;
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: clamp(12px, 3vw, 16px) clamp(24px, 6vw, 40px);
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: clamp(14px, 3vw, 16px);
   cursor: pointer;
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(37, 99, 235, 0.2);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: auto;
+  min-width: clamp(120px, 30vw, 200px);
+}
+
+.close-profile-btn::before {
+  content: none;
+}
+
+.close-profile-btn::after {
+  content: none;
 }
 
 .close-profile-btn:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+  background: #2563eb;
+  transform: none;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.close-profile-btn:hover::before {
+  content: none;
+}
+
+.close-profile-btn:hover::after {
+  content: none;
+}
+
+.close-profile-btn:active {
+  transform: none;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 /* Password Form ==================================================================================================== */
-.passwordForm {display:none; position:fixed; inset:0;background:rgba(0,0,0,.5); justify-content:center; align-items:center;z-index:1000;}
-.password-box {background:#d0f0ff; border-radius:12px; width:400px; max-width:90%;box-shadow:0 5px 20px rgba(0,0,0,.25);
+.passwordForm {display:none; position:fixed; inset:0;background:rgba(0,0,0,.3); justify-content:center; align-items:center;z-index:1000; backdrop-filter: blur(8px);}
+.password-box {background: rgba(208, 240, 255, 0.95); border-radius:12px; width:400px; max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.15);
   display:flex; flex-direction:column; align-items:center;padding:40px 30px 30px; overflow:hidden;}
 
 .password-icon-container {display:flex; flex-direction:column; align-items:center; gap:15px; margin-bottom:25px;}
-.password-icon-circle {width:100px; height:100px; background:#cce0ff; border-radius:50%;display:flex; justify-content:center; align-items:center;}
+.password-icon-circle {width:100px; height:100px; background: rgba(204, 224, 255, 0.8); border-radius:50%;display:flex; justify-content:center; align-items:center;}
 .password-icon {font-size:50px; color:#0066cc;}
 .password-title {font:600 20px "Segoe UI",sans-serif; color:#333;}
 
@@ -177,6 +331,25 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   font-size: 12px; transition: color 0.3s ease;}
 .password-field .toggle:hover {color: #0066cc;}
 
+/* Prevent duplicate eye icons */
+.password-field .toggle:first-of-type {
+  display: block !important;
+}
+.password-field .toggle:not(:first-of-type) {
+  display: none !important;
+}
+
+/* Hide browser's default password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-password-toggle {
+  display: none !important;
+}
+
 .password-actions {width: 100%;max-width: 350px;display: flex;justify-content: space-between;gap: 12px;margin-top: 25px;}
 .password-actions button {flex: 1;padding: 14px 0;font: 600 16px "Segoe UI", sans-serif;border-radius: 10px;
   cursor: pointer;transition: 0.3s ease;box-shadow: 0 4px 12px rgba(0,0,0,0.08);}
@@ -189,11 +362,12 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 .main-img{width:200px;height:200px;object-fit:cover;border-radius:18px;border:4px solid var(--yellow-500);box-shadow:0 12px 32px rgba(30,58,138,.15);transition:.3s ease}
 .main-img:hover{transform:scale(1.02);box-shadow:0 16px 40px rgba(30,58,138,.2)}
 .main-right{flex:1;padding-left:40px;text-align:left}
-.main-right h1{font:700 28px;background:linear-gradient(135deg, var(--blue-900) 0%, var(--blue-500) 55%, var(--yellow-500) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;letter-spacing:-.5px}
+.main-right h1{font:700 28px;background:#1f2937;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;letter-spacing:-.5px}
 .academic-year{font:600 15px;color:#7a5c00;background:#fff7db;padding:12px 18px;border-radius:10px;margin-bottom:18px;display:inline-flex;
   align-items:center;gap:10px;border:1px solid #ffe38a;transition:.3s ease;position:relative;overflow:hidden}
 .academic-year::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transition:.3s;animation:shine 2s infinite}
 @keyframes shine{0%{left:-100%}100%{left:100%}}
+.main-right .subtitle{text-align:left}
 
 
 .faculty-box {
@@ -212,7 +386,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   display: flex;
   align-items: center;
   justify-content: space-between; /* info left, button right */
-  background:linear-gradient(135deg, #ffe157 0%, var(--yellow-500) 45%, #f59e0b 100%);
+  background:var(--yellow-500);
   color:#1f2937;
   padding: var(--space-md) var(--space-lg);
   border-top-left-radius: 24px;
@@ -240,7 +414,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 }
 
 .report-btn {
-  background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 55%, #1d4ed8 100%);
+  background: var(--blue-600);
   color: #ffffff;
   border: none;
   padding: 12px 24px;
@@ -271,7 +445,8 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 .card {
   min-width: 0;
   display: flex;              
-  align-items: flex-start;    
+  align-items: center;    
+  justify-content: space-between;
   gap: 16px;
   background: #ffffff;
   border-radius: var(--radius-lg);
@@ -282,10 +457,6 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   position:relative;
   overflow:hidden
 }
-/*.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, #1e3a8a 0%, #3b82f6 40%, #fbbf24 100%)}
-.card::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent)}
-.card:hover{box-shadow:0 16px 40px rgba(30, 58, 138, 0.15);transform:none;border-color:#c8d8ff} */
-.card:active{transform:none}
 
 .card i {
   font-size: 32px;
@@ -298,31 +469,52 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   justify-content:center;
   background:linear-gradient(135deg,#e2ebff 0%,#c9dbff 100%);
   border-radius:14px;
-  box-shadow:0 6px 16px rgba(30, 58, 138, 0.15)
+  box-shadow:0 6px 16px rgba(30, 58, 138, 0.15);
+  order: 2;
 }
 
 .card-info {
   display: flex;
   flex-direction: column;     
   text-align: left;
+  flex: 1;
+  order: 1;
 }
 
 .card-title {
   font-weight: 700;
   color: #6b7280;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-size:13px;
   text-transform:uppercase;
   letter-spacing:.3px
 }
 
+.rating-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rating-number {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing:-.5px;
+  line-height: 1.2;
+}
+
+.rating-status {
+  font-size: 16px;
+  font-weight: 600;
+  color: #10b981;
+  letter-spacing:-.2px;
+}
+
 .card-value {
   font-size: 24px;
   font-weight: 800;
-  background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
+  color: #1e3a8a;
   letter-spacing:-.5px
 }
 
@@ -393,4 +585,381 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   .card i{width:48px;height:48px;font-size:24px}
   .card-title{font-size:12px}
   .card-value{font-size:20px}
+}
+
+/* CUSTOM SCROLLBARS FOR INSTRUCTOR FORMS =====================================================================================================================================*/
+
+/* Webkit browsers */
+.passwordForm,
+.logoutform,
+input,
+textarea,
+select {
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-600) var(--surface-soft);
+}
+
+.passwordForm::-webkit-scrollbar,
+.logoutform::-webkit-scrollbar {
+  width: 12px;
+}
+
+.passwordForm::-webkit-scrollbar-track,
+.logoutform::-webkit-scrollbar-track {
+  background: var(--surface-soft);
+  border-radius: 8px;
+}
+
+.passwordForm::-webkit-scrollbar-thumb,
+.logoutform::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-800));
+  border-radius: 8px;
+  border: 3px solid var(--surface-soft);
+  transition: all 0.3s ease;
+}
+
+.passwordForm::-webkit-scrollbar-thumb:hover,
+.logoutform::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--blue-800), var(--blue-900));
+}
+
+/* Firefox */
+.passwordForm,
+.logoutform {
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-600) var(--surface-soft);
+}
+
+/* Evaluation Report Modal ==================================================================================================== */
+.evaluation-report-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.report-content {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 50px rgba(30, 58, 138, 0.2);
+  border-top: 6px solid var(--blue-600);
+  animation: fadeInScale 0.3s ease;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 30px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-radius: 20px 20px 0 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.college-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
+}
+
+.college-info h2 {
+  margin: 0;
+  font: 700 20px "Inter", sans-serif;
+  color: var(--blue-900);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.report-subtitle {
+  margin: 4px 0 0 0;
+  font: 500 14px "Inter", sans-serif;
+  color: var(--blue-600);
+  text-align: center;
+  width: 100%;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.download-pdf-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: 600 14px "Inter", sans-serif;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.download-pdf-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+.download-pdf-btn i {
+  font-size: 16px;
+}
+
+.close-report-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-report-btn:hover {
+  background: #f3f4f6;
+  color: var(--blue-600);
+  transform: scale(1.1);
+}
+
+.report-body {
+  padding: 30px;
+}
+
+.report-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.faculty-details {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 30px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);
+}
+
+.faculty-details h3,
+.evaluation-details h3 {
+  margin: 0 0 20px 0;
+  font: 600 18px "Inter", sans-serif;
+  color: var(--blue-800);
+  border-left: 4px solid var(--blue-600);
+  padding-left: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  min-height: 52px;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.05);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+
+.detail-item label {
+  font: 600 14px "Inter", sans-serif;
+  color: #64748b;
+  margin: 0;
+  flex: 1 1 auto;
+  text-align: left;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.detail-item label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--blue-400);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.detail-item span {
+  font: 700 16px "Inter", sans-serif;
+  color: var(--blue-800);
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #bae6fd;
+  min-width: 80px;
+  max-width: 200px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+
+/* Responsive styles for evaluation report modal */
+@media (max-width: 768px) {
+  .report-content {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px;
+  }
+  
+  .report-header {
+    padding: 20px 24px 16px;
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .header-left {
+    width: auto;
+  }
+  
+  .college-logo {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .college-info h2 {
+    font-size: 18px;
+  }
+  
+  .report-subtitle {
+    font-size: 13px;
+  }
+  
+  .header-actions {
+    width: auto;
+    justify-content: flex-end;
+  }
+  
+  .download-pdf-btn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .report-body {
+    padding: 24px;
+  }
+  
+  .detail-item {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+  
+  .detail-item span {
+    align-self: auto;
+    text-align: right;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-content {
+    width: 90%;
+    max-width: 600px;
+    margin: 15px;
+  }
+  
+  .report-header {
+    padding: 16px 20px;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .header-left {
+    gap: 12px;
+  }
+  
+  .college-logo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .college-info h2 {
+    font-size: 16px;
+  }
+  
+  .report-subtitle {
+    font-size: 12px;
+  }
+  
+  .header-actions {
+    gap: 8px;
+  }
+  
+  .download-pdf-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .download-pdf-btn i {
+    font-size: 14px;
+  }
+  
+  .report-body {
+    padding: 20px;
+  }
+  
+  .faculty-details h3,
+  .evaluation-details h3 {
+    font-size: 16px;
+  }
+  
+  .detail-item {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 16px;
+  }
+  
+  .detail-item label {
+    min-width: 160px;
+    font-size: 13px;
+  }
+  
+  .detail-item span {
+    font-size: 14px;
+    padding: 6px 8px;
+    min-width: 60px;
+    max-width: 150px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
 }

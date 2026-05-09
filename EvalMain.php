@@ -103,21 +103,21 @@
 <div class="LoginForm" id="loginModal">
   <div class="LoginForm-content">
     <div class="LoginForm-header">
-      <img src="schoollogo.png" class="logo">
-      <div class="back-btn" id="closeLogin">Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+      <img src="logo.png" class="logo">
+      <div class="back-btn" id="closeLogin">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     <h2>Login</h2>
     <p class="LoginForm-subtitle"><span></span>Enter your credentials<span></span></p>
     <form id="loginForm">
       <div class="input-group">
-        <i class="fa-solid fa-user"></i>
+        <i class="ph ph-user"></i>
         <input type="text" id="username" placeholder="Username/ID" required>
         <small id="usernameError" class="error-message"></small>
       </div>
       <div class="input-group">
-        <i class="fa-solid fa-lock"></i>
+        <i class="ph ph-lock"></i>
         <input type="password" id="password" placeholder="Password" required>
-        <i class="fa-solid fa-eye-slash" id="togglePassword"></i>
+        <i class="ph ph-eye-slash" id="togglePassword"></i>
         <small id="passwordError" class="error-message"></small>
       </div>
       <a href="#" id="openForgot" class="StudentLogin-link">Forgot Password?</a>
@@ -129,13 +129,13 @@
 <!-- FORGOT PASSWORD ==============================================================================================================-->
 <div class="LoginForm" id="forgotModal">
 <div class="LoginForm-content">
-<div class="LoginForm-header"><img src="schoollogo.png" class="logo"><div class="back-btn" id="closeForgot">
-    Back<i class="fa-solid fa-arrow-up-right-from-square"></i></div></div>
+<div class="LoginForm-header"><img src="logo.png" class="logo"><div class="back-btn" id="closeForgot">
+    Back<i class="ph ph-arrow-up-right"></i></div></div>
 <h2>Reset Password</h2>
 <p class="LoginForm-subtitle"><span></span>Enter your email to reset<span></span></p>
 <form id="forgotForm">
-<div class="input-group"><i class="fa-solid fa-envelope"></i><input type="email" id="resetEmail" placeholder="Email" required></div>
-<button type="submit" class="StudentLogin-btn">Send Reset Link</button>
+<div class="input-group"><i class="ph ph-envelope"></i><input type="email" id="resetEmail" placeholder="Email" required></div>
+<button type="submit" class="StudentLogin-btn">Submit</button>
 </form>
 </div>
 </div>

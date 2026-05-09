@@ -22,7 +22,7 @@ if (empty($faculty_id) || empty($old_password) || empty($new_password)) {
 }
 
 // Verify that the faculty_id matches the logged-in user's ID
-if ($faculty_id != $_SESSION['id']) {
+if (!is_numeric($faculty_id) || $faculty_id != $_SESSION['id']) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
     exit;
 }

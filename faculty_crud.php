@@ -236,6 +236,31 @@ elseif ($action === "edit") {
 }
 
 /* =========================
+   UPDATE FACULTY STATUS
+========================= */
+elseif ($action === "update_status") {
+
+    $id = intval($data['id'] ?? 0);
+    $status = $data['status'] ?? '';
+
+    if (!$id || !in_array($status, ['active', 'inactive'])) {
+        echo json_encode(["success"=>false,"message"=>"Invalid ID or status"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("UPDATE add_faculties SET status = ? WHERE id = ?");
+    $stmt->bind_param("si", $status, $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(["success"=>true,"message"=>"Faculty status updated successfully"]);
+    } else {
+        echo json_encode(["success"=>false,"message"=>$stmt->error]);
+    }
+
+    $stmt->close();
+}
+
+/* =========================
    DELETE FACULTY
 ========================= */
 elseif ($action === "delete") {

@@ -168,30 +168,28 @@ footer{padding:20px;text-align:center;background:#0f172a;color:#cbd5f5;font-size
 body.modal-open{overflow:hidden}
 .LoginForm{display:none;position:fixed;inset:0;background:#fff;justify-content:center;align-items:center;z-index:9999;opacity:0;transition:.3s}
 .LoginForm.show{display:flex;opacity:1}
-.LoginForm-content{background:#fff;border-radius:16px;width:100%;max-width:450px;padding:35px 30px;text-align:center;box-shadow:0 12px 30px rgba(0,0,50,.2);position:relative;color:#1a3c6c;transform:translateY(-40px);animation:slideDown .4s ease}
+.LoginForm-content{background:#f2f8ff;border-radius:16px;width:100%;max-width:450px;padding:35px 30px;text-align:center;box-shadow:0 12px 30px rgba(0,0,50,.2);position:relative;color:#1a3c6c;transform:translateY(-40px);animation:slideDown .4s ease}
 .LoginForm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .logo{height:70px}
 .back-btn{background:0;border:0;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:5px;color:#1a3c6c;margin-top:-20px;transition:.2s}
-.back-btn:hover{color:#162e61}
+.back-btn:hover{color:#4a6fa5}
 .LoginForm-content h2{font-size:28px;font-weight:700;margin:-20px 0 12px}
-.LoginForm-subtitle{display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;color:#1a3c6c;margin-bottom:25px}
-.LoginForm-subtitle span{flex:1;height:1px;background:#051c44}
+.LoginForm-subtitle{display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;color:#1a3c6c;margin-bottom:15px}
+.LoginForm-subtitle span{flex:1;height:1px;background:#1a3c6c}
 .input-group {
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 6px;
 }
-.input-group input{width:100%;padding:12px 12px 12px 40px;border:1px solid #87b3ff;border-radius:8px;font-size:14px;color:#1a3c6c;transition:.3s}
+.input-group input{width:100%;padding:12px 12px 12px 40px;border:1px solid #87b3ff;border-radius:8px;font-size:14px;color:#1a3c6c;background:#fff;transition:.3s}
 .input-group input:focus{border-color:#0a313d;outline:0;box-shadow:0 0 5px rgba(37,99,235,.3)}
-.StudentLogin-link{display:block;text-align:right;margin-bottom:15px;font-size:13px;color:#01161c;text-decoration:none;transition:.2s}
-.StudentLogin-link:hover{color:#162e61;text-decoration:underline}
-.StudentLogin-btn{width:100%;background:#0a313d;color:#fff;border:0;padding:12px 0;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:.3s}
-.StudentLogin-btn:hover{background:#162e61}
-.input-group i{position:absolute;top:24px;transform:translateY(-50%);color:#0a313d;font-size:16px;line-height:1}
-.input-group i.fa-user,
-.input-group i.fa-user-gear,
-.input-group i.fa-chalkboard-user,
-.input-group i.fa-envelope,
-.input-group i.fa-lock{left:12px}
+.StudentLogin-link{display:block;text-align:right;margin-bottom:6px;font-size:13px;color:#1a3c6c;text-decoration:none;transition:.2s}
+.StudentLogin-link:hover{color:#4a6fa5;text-decoration:underline}
+.StudentLogin-btn{width:100%;background:#2c5282;color:#fff;border:0;padding:12px 0;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:.3s}
+.StudentLogin-btn:hover{background:#1e3a5f}
+.input-group i{position:absolute;top:24px;transform:translateY(-50%);color:#2c5282;font-size:16px;line-height:1}
+.input-group i.ph-user,
+.input-group i.ph-envelope,
+.input-group i.ph-lock{left:12px}
 .input-group #togglePassword{right:8px;cursor:pointer}
 .input-group input[type="password"]{padding-right:42px}
 .input-group input[type="password"]::-ms-reveal,
@@ -218,5 +216,79 @@ body.modal-open{overflow:hidden}
   display: block;
   text-align: left;   /* siguraduhin naka-align sa kaliwa */
   padding-left: 0;
+}
+
+/* CUSTOM SCROLLBARS FOR ALL FORMS =====================================================================================================================================*/
+
+/* Global scrollbar styling for all forms and form elements */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4a6fa5, #2c5282);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2c5282, #1e3a5f);
+  border-color: #e2e8f0;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a6fa5 #f1f5f9;
+}
+
+/* Specific form scrollbar styling */
+.LoginForm,
+.contact-form,
+.passwordForm,
+.logoutform,
+.modal-body,
+.form-container,
+.form-row,
+input,
+textarea,
+select {
+  scrollbar-width: thin;
+  scrollbar-color: #4a6fa5 #f1f5f9;
+}
+
+/* Enhanced scrollbar for modal content */
+.modal-body::-webkit-scrollbar,
+.form-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+.modal-body::-webkit-scrollbar-track,
+.form-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb,
+.form-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 8px;
+  border: 3px solid #f8fafc;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover,
+.form-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 

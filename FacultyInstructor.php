@@ -36,7 +36,7 @@ $stmt->close();
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System</title>
 
-  <link rel="stylesheet" href="FacultyInstructor.css?v=<?=time()?>">
+  <link rel="stylesheet" href="FacultyInstructor.css?v=<?=time()?>&fix=<?=rand(1000,9999)?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 
@@ -126,7 +126,7 @@ $stmt->close();
       </div>
     </div>
 
-    <input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_id); ?>">
+    <input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
     <input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
     <input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
 
@@ -144,16 +144,19 @@ $stmt->close();
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?>:</span>
       <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
     </div>
-    <button class="report-btn">Generate Report</button>
+    <button class="report-btn" onclick="showEvaluationReport()">Generate Report</button>
   </div>
 
   <div class="faculty-cards">
     <div class="card">
-      <i class="ph ph-star"></i>
       <div class="card-info">
-        <span class="card-title">Overall Ratings</span>
-        <span class="card-value" id="overallRatingValue">0.00 / 5.00 - No Data</span>
+        <span class="card-title">Overall Rating</span>
+        <div class="rating-container">
+          <span class="rating-number" id="overallRatingNumber">0.00 / 5.00</span>
+          <span class="rating-status" id="overallRatingStatus">No Data</span>
+        </div>
       </div>
+      <i class="ph ph-star"></i>
     </div>
 
     <div class="card">
