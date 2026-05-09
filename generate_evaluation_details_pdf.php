@@ -44,9 +44,6 @@ $overallRating = cleanText($data['overallRating'] ?? '0.00');
 $totalResponses = cleanText($data['totalResponses'] ?? '0');
 $feedback      = cleanText($data['feedback'] ?? 'No feedback available');
 
-// Check if this is admin request (empty feedback indicates admin)
-$isAdminRequest = (empty($data['feedback']) || $data['feedback'] === '');
-
 // Get faculty_id from add_faculties table
 $facultyIdDisplay = $facultyId; // Default to original ID
 $stmt = $conn->prepare("SELECT faculty_id FROM add_faculties WHERE id = ?");
@@ -80,7 +77,7 @@ $collegeName = 'Granby Colleges of Science and Technology';
 $collegeNameWidth = $pdf->GetStringWidth($collegeName);
 
 $pdf->SetFont('Arial', 'B', 14);
-$reportTitle = $isAdminRequest ? 'Individual Performance Report' : 'Faculty Evaluation Report';
+$reportTitle = 'Individual Performance Report';
 $reportTitleWidth = $pdf->GetStringWidth($reportTitle);
 
 $maxTextWidth = max($collegeNameWidth, $reportTitleWidth);
@@ -127,8 +124,8 @@ $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
 // =====================
 $boxX = 15; // Left margin
 $boxWidth = 180; // Full width minus margins
-$boxHeight = 45; // 4 rows * 10 + 5 padding
-$boxY = 60;
+$boxHeight = 35; // 3 rows * 10 + 5 padding
+$boxY = $pdf->GetY();
 
 $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
 $pdf->SetFillColor(248, 248, 248); // Light background
@@ -150,51 +147,50 @@ $pdf->Cell(0, 10, $facultyIdDisplay, 0, 1);
 
 $pdf->SetX($boxX + 10);
 $pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(60, 10, 'Overall Ratings:', 0, 0);
+$pdf->Cell(60, 10, 'Overall Rating:', 0, 0);
 $pdf->SetFont('Arial', '', 12);
 $pdf->Cell(0, 10, $overallRating . ' / 5.00', 0, 1);
 
-$pdf->SetX($boxX + 10);
+// =====================
+// PERFORMANCE SUMMARY
+// =====================
+$pdf->Ln(15);
+
+// Performance header with background
+$pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
+$pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(60, 10, 'Total Student Responses:', 0, 0);
-$pdf->SetFont('Arial', '', 12);
-$pdf->Cell(0, 10, $totalResponses, 0, 1);
+$pdf->Cell(0, 10, '  Performance Summary', 0, 1, 'L', true);
+
+// Reset for performance content
+$pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+$pdf->SetFont('Arial', '', 11);
+
+// Performance metrics
+$pdf->Ln(5);
+$pdf->Cell(0, 8, 'Total Evaluations Received: ' . $totalResponses, 0, 1);
+$pdf->Cell(0, 8, 'Overall Performance Rating: ' . $overallRating . ' / 5.00', 0, 1);
+$pdf->Cell(0, 8, 'Evaluation Period: Current Semester', 0, 1);
 
 // =====================
-// FEEDBACK SECTION (only for instructor requests)
+// FOOTER
 // =====================
-if (!$isAdminRequest) {
-    $pdf->Ln(10);
+$pdf->Ln(15);
+$pdf->SetDrawColor($headerColor[0], $headerColor[1], $headerColor[2]);
+$pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+$pdf->Ln(5);
 
-    // Feedback header with background
-    $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
-    $pdf->SetTextColor(255, 255, 255);
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell(0, 10, '  Feedback Comments', 0, 1, 'L', true);
-
-    // Reset for feedback content
-    $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-    $pdf->SetFont('Arial', '', 11);
-
-    // Feedback box with border
-    $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
-    $pdf->SetFillColor(255, 255, 255);
-    $pdf->Rect(10, $pdf->GetY(), 190, 40, 'DF');
-
-    $pdf->MultiCell(
-        0,
-        6,
-        $feedback,
-        0
-    );
-}
+$pdf->SetFont('Arial', 'I', 9);
+$pdf->SetTextColor(100, 100, 100);
+$pdf->Cell(0, 5, 'This is an official performance evaluation report', 0, 1, 'C');
+$pdf->Cell(0, 5, 'Generated on: ' . date('Y-m-d H:i:s'), 0, 1, 'C');
 
 // =====================
 // OUTPUT PDF
 // =====================
 // Set proper headers for blob display
 header('Content-Type: application/pdf');
-header('Content-Disposition: inline; filename="' . 'Faculty_Evaluation_Report_' . str_replace(' ', '_', $facultyName) . '.pdf' . '"');
+header('Content-Disposition: inline; filename="' . 'Individual_Performance_Report_' . str_replace(' ', '_', $facultyName) . '.pdf' . '"');
 header('Cache-Control: private, max-age=0, must-revalidate');
 header('Pragma: public');
 

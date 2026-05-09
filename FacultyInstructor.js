@@ -89,7 +89,7 @@ function togglePassword(fieldId, icon) {
 }
 
 function updatePassword() {
-  const facultyId = document.getElementById("facultyId").value;
+  const facultyId = document.getElementById("facultyNumericId").value;
   const oldPass = document.getElementById("oldPass").value;
   const newPass = document.getElementById("newPass").value;
   const confirmPass = document.getElementById("confirmPass").value;
@@ -314,7 +314,12 @@ function downloadEvaluationReport() {
     },
     body: JSON.stringify(pdfContent)
   })
-  .then(response => response.blob())
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.blob();
+  })
   .then(blob => {
     // Create download link
     const url = window.URL.createObjectURL(blob);
@@ -323,6 +328,8 @@ function downloadEvaluationReport() {
     a.download = `Faculty_Evaluation_Report_${facultyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
     document.body.appendChild(a);
     a.click();
+    
+    // Clean up immediately
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   })

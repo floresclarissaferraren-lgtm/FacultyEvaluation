@@ -646,7 +646,8 @@ function setupAllModalsClickOutside() {
     "addSubjectMainModal",
     "managePeriodsModal",
     "deleteModal",
-    "deleteSuccessModal"
+    "deleteSuccessModal",
+    "facultyReportModal"
   ];
   
   modals.forEach(modalId => {
@@ -2002,9 +2003,11 @@ document.getElementById("faculty-search").oninput = e => {
 };
 // ========================= Report Section =========================
 function loadEvaluations() {
+  console.log('Loading evaluations...');
   fetch("get_evaluations.php")
     .then(r => r.json())
     .then(data => {
+      console.log('Evaluations data received:', data);
       const tbody = document.getElementById("evaluationTableBody");
       tbody.innerHTML = "";
       
@@ -2018,8 +2021,7 @@ function loadEvaluations() {
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>
-              <strong>${evaluation.name}</strong><br>
-              <small>${evaluation.faculty_id}</small>
+              <strong>${evaluation.name}</strong>
             </td>
             <td>${evaluation.average_score}</td>
             <td>${evaluation.total_responses}</td>
@@ -2027,11 +2029,18 @@ function loadEvaluations() {
               <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
             </td>
             <td>
-              <button class="view-btn" onclick="viewEvaluationDetails('${evaluation.id}')">
+              <button class="view-btn" data-faculty-id="${evaluation.id}">
                 <i class="ph ph-eye"></i> View
               </button>
             </td>
           `;
+          
+          // Add event listener to view button
+          const viewBtn = row.querySelector('.view-btn');
+          viewBtn.addEventListener('click', () => {
+            viewEvaluationDetails(evaluation.id);
+          });
+          
           tbody.appendChild(row);
         });
         
@@ -2120,73 +2129,88 @@ function downloadReport(content, filename) {
   showNotification("Report generated successfully!", "#4caf50", 3000);
 }
 
+// Global variable to store current faculty data for PDF
+let currentFacultyData = null;
+
+// Add event listener for PDF button when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Add click event listener to PDF button
+  const pdfButton = document.querySelector('.download-pdf-btn');
+  if (pdfButton) {
+    console.log('PDF button found, adding click listener');
+    pdfButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('PDF button clicked!');
+      downloadFacultyReportPDF();
+    });
+  } else {
+    console.log('PDF button not found on page load');
+  }
+});
+
 function viewEvaluationDetails(facultyId) {
+  console.log('View button clicked for faculty ID:', facultyId);
+  
   fetch(`get_faculty_report.php?faculty_id=${facultyId}`)
     .then(r => r.json())
     .then(data => {
       if (data.success) {
+        // Store faculty data globally for PDF use
+        currentFacultyData = data.data;
+        
         // Populate modal with faculty data
-        document.getElementById('reportFacultyName').textContent = data.data.name;
-        document.getElementById('reportFacultyId').textContent = data.data.faculty_id;
-        document.getElementById('reportOverallRating').textContent = data.data.overall_rating;
-        document.getElementById('reportTotalResponses').textContent = data.data.total_responses;
+        const nameElement = document.getElementById('reportFacultyName');
+        const idElement = document.getElementById('reportFacultyId');
+        const ratingElement = document.getElementById('reportOverallRating');
+        const responsesElement = document.getElementById('reportTotalResponses');
         
-        // Clear and populate report details
-        const reportDetails = document.getElementById('reportDetails');
-        reportDetails.innerHTML = '';
+        if (nameElement) nameElement.textContent = data.data.name;
+        if (idElement) idElement.textContent = data.data.faculty_id;
+        if (ratingElement) ratingElement.textContent = data.data.overall_rating;
+        if (responsesElement) responsesElement.textContent = data.data.total_responses;
         
-        if (data.data.evaluation_details && data.data.evaluation_details.length > 0) {
-          const detailsTable = document.createElement('table');
-          detailsTable.className = 'report-details-table';
-          detailsTable.style.width = '100%';
-          detailsTable.style.borderCollapse = 'collapse';
-          detailsTable.style.marginTop = '20px';
-          
-          // Create table header
-          const thead = document.createElement('thead');
-          thead.innerHTML = `
-            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-              <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">Category</th>
-              <th style="padding: 12px; text-align: center; border: 1px solid #e2e8f0;">Average Score</th>
-              <th style="padding: 12px; text-align: center; border: 1px solid #e2e8f0;">Rating</th>
-            </tr>
-          `;
-          detailsTable.appendChild(thead);
-          
-          // Create table body
-          const tbody = document.createElement('tbody');
-          data.data.evaluation_details.forEach(detail => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td style="padding: 10px; border: 1px solid #e2e8f0;">${detail.category}</td>
-              <td style="padding: 10px; text-align: center; border: 1px solid #e2e8f0;">${detail.average_score}</td>
-              <td style="padding: 10px; text-align: center; border: 1px solid #e2e8f0;">
-                <span class="badge ${detail.rating_class}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                  ${detail.rating}
-                </span>
-              </td>
-            `;
-            tbody.appendChild(row);
-          });
-          detailsTable.appendChild(tbody);
-          
-          reportDetails.appendChild(detailsTable);
-        } else {
-          reportDetails.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">No evaluation details available.</p>';
-        }
+        // No table needed - just show cards
         
         // Show modal
         const modal = document.getElementById('facultyReportModal');
-        modal.style.display = 'flex';
-        modal.style.zIndex = '10001';
-        modal.style.position = 'fixed';
+        console.log('Modal element found:', modal);
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.style.zIndex = '10001';
+          modal.style.position = 'fixed';
+          console.log('Modal should be visible now');
+          
+          // Add click event listener to PDF button after modal is shown
+          setTimeout(() => {
+            const pdfButton = modal.querySelector('.download-pdf-btn');
+            if (pdfButton) {
+              console.log('PDF button found in modal, adding click listener');
+              // Remove existing listeners to avoid duplicates
+              pdfButton.replaceWith(pdfButton.cloneNode(true));
+              const newPdfButton = modal.querySelector('.download-pdf-btn');
+              newPdfButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('PDF button clicked from modal!');
+                downloadFacultyReportPDF();
+              });
+              console.log('PDF button listener added');
+            } else {
+              console.log('PDF button not found in modal');
+            }
+          }, 100);
+        } else {
+          console.error('Modal element not found!');
+        }
       } else {
         showNotification('Error loading faculty report: ' + data.message, '#f44336', 5000);
       }
     })
     .catch(err => {
       console.error('Error fetching faculty report:', err);
-      showNotification('Network error while loading faculty report', '#f44336', 5000);
+      console.error('Error details:', err.message);
+      showNotification('Network error while loading faculty report: ' + err.message, '#f44336', 5000);
     });
 }
 
@@ -2197,6 +2221,79 @@ function closeFacultyReportModal() {
 
 function printReport() {
   window.print();
+}
+
+// Test function to verify modal works
+function testModal() {
+  console.log('Testing modal display...');
+  const modal = document.getElementById('facultyReportModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    console.log('Modal should be visible now');
+  } else {
+    console.error('Modal not found!');
+  }
+}
+
+function downloadFacultyReportPDF() {
+  // Check if we have faculty data available
+  if (!currentFacultyData) {
+    showNotification('No faculty data available. Please try again.', '#f44336', 3000);
+    return;
+  }
+  
+  // Create the PDF content using stored faculty data (matching instructor format)
+  const pdfContent = {
+    facultyName: currentFacultyData.name,
+    facultyId: currentFacultyData.id, // Use database ID, not faculty_id
+    overallRating: currentFacultyData.overall_rating,
+    totalResponses: currentFacultyData.total_responses,
+    evaluationDetails: currentFacultyData.evaluation_details || [],
+    feedback: '' // No feedback for admin version
+  };
+  
+  // Send to server for PDF generation
+  console.log('Sending PDF request with data:', pdfContent);
+  
+  fetch('generate_evaluation_pdf.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(pdfContent)
+  })
+  .then(response => {
+    console.log('PDF response status:', response.status);
+    console.log('PDF response headers:', response.headers);
+    
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error('PDF generation error:', text);
+        throw new Error(text);
+      });
+    }
+    return response.blob();
+  })
+  .then(blob => {
+    console.log('PDF blob received, size:', blob.size);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `Individual_Performance_Report_${currentFacultyData.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up immediately
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    showNotification('PDF downloaded successfully!', '#4caf50', 3000);
+  })
+  .catch(err => {
+    console.error('Error generating PDF:', err);
+    showNotification('Error generating PDF: ' + err.message, '#f44336', 5000);
+  });
 }
 
 // ========================= Dashboard Statistics =========================

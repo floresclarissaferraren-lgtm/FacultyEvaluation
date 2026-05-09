@@ -50,6 +50,7 @@ try {
                 f.lastname,
                 f.suffix,
                 f.photo,
+                f.status,
                 GROUP_CONCAT(
                     CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
                     ORDER BY s.subject_code
@@ -67,7 +68,7 @@ try {
             LEFT JOIN evaluations ev ON ev.student_id = st.id AND ev.faculty_id = f.id
             WHERE st.id = ? AND cs.faculty_id > 0 AND ev.id IS NULL
             GROUP BY 
-                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
             ORDER BY f.lastname, f.firstname
         ";
 
@@ -87,6 +88,7 @@ try {
                     f.lastname,
                     f.suffix,
                     f.photo,
+                    f.status,
                     GROUP_CONCAT(
                         CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
                         ORDER BY s.subject_code
@@ -100,7 +102,7 @@ try {
                 LEFT JOIN evaluations ev ON ev.student_id = ss.student_id AND ev.faculty_id = f.id
                 WHERE ev.id IS NULL
                 GROUP BY 
-                    f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+                    f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
                 ORDER BY f.lastname, f.firstname
             ";
 
@@ -119,6 +121,7 @@ try {
                 f.lastname,
                 f.suffix,
                 f.photo,
+                f.status,
                 GROUP_CONCAT(
                     CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
                     ORDER BY s.subject_code
@@ -129,7 +132,7 @@ try {
             INNER JOIN add_subjects s ON fs.subject_id = s.id AND s.year_level = ?
             LEFT JOIN add_programs p ON s.program_id = p.id
             GROUP BY 
-                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
             ORDER BY f.lastname, f.firstname
         ";
 
@@ -147,6 +150,7 @@ try {
                 f.lastname,
                 f.suffix,
                 f.photo,
+                f.status,
                 GROUP_CONCAT(
                     CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
                     ORDER BY s.subject_code
@@ -157,7 +161,7 @@ try {
             LEFT JOIN add_subjects s ON fs.subject_id = s.id
             LEFT JOIN add_programs p ON s.program_id = p.id
             GROUP BY 
-                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo
+                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
             ORDER BY f.lastname, f.firstname
         ";
 
@@ -215,6 +219,7 @@ try {
             "lastname" => $row["lastname"],
             "suffix" => $row["suffix"] ?? "",
             "photo" => $row["photo"] ?? "",
+            "status" => $row["status"] ?? "active",
             "subjects" => $subjects,
             "subject_codes" => $subject_codes // For simple display
         ];

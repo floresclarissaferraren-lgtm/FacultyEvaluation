@@ -33,8 +33,8 @@ include 'totalstudents_dashcount.php';
   <div class="user-menu">
 
     <div class="admin-box" id="dropdownToggle">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Admin" class="logo-img">
-      <span>Administrator</span>
+      <i class="ph ph-user" style="font-size: 24px; color: #1e293b;"></i>
+      <span style="font-size: 14px;">Administrator</span>
       <i class="ph ph-caret-down"></i>
     </div>
 
@@ -83,7 +83,7 @@ include 'totalstudents_dashcount.php';
 
   <!-- Logo Top -->
   <div class="sidebar-top">
-    <img src="schoollogo.png" class="sidebar-logo">
+    <img src="logo.png" class="sidebar-logo">
     <h1>FaculRate</h1>
     <span>Admin Panel</span>
   </div>
@@ -1048,7 +1048,48 @@ include 'totalstudents_dashcount.php';
   </div>
 </div>
 
+<!-- Faculty Report Modal -->
+<div id="facultyReportModal" class="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header" style="background: var(--primary-900); color: white;">
+      <h3 style="margin: 0; color: white;">Evaluation Details</h3>
+      <span class="close-btn" onclick="closeFacultyReportModal()" style="color: white;">&times;</span>
+    </div>
+    <div class="modal-body" style="background: white; padding: 20px;">
+      <!-- Faculty Info Header -->
+      <div class="faculty-info-header" style="display: flex; align-items: center; margin-bottom: 15px; padding: 12px; background: #2c5282; border-radius: 6px; color: white;">
+        <div class="faculty-avatar" style="width: 35px; height: 35px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+          <i class="ph ph-user" style="font-size: 18px; color: var(--primary-900);"></i>
+        </div>
+        <div class="faculty-details" style="flex: 1;">
+          <h4 id="reportFacultyName" style="margin: 0; font-size: 16px; font-weight: 600; color: white;">Loading...</h4>
+          <p id="reportFacultyId" style="margin: 2px 0 0 0; opacity: 0.9; font-size: 11px; color: white;">ID: Loading...</p>
+        </div>
+        <button class="download-pdf-btn" onclick="downloadFacultyReportPDF()" style="background: white; color: var(--primary-900); border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 11px;">
+          <i class="ph ph-download-simple"></i> PDF
+        </button>
+      </div>
 
+      <!-- Stats Cards -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <!-- Overall Rating Card -->
+        <div class="stat-card" style="background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div style="font-size: 11px; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Overall Rating</div>
+          <div id="reportOverallRating" style="font-size: 24px; font-weight: 700; margin-bottom: 2px; color: var(--primary-900);">-</div>
+          <div style="font-size: 10px; color: #9ca3af;">out of 5.0</div>
+        </div>
+
+        <!-- Total Responses Card -->
+        <div class="stat-card" style="background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div style="font-size: 11px; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total Responses</div>
+          <div id="reportTotalResponses" style="font-size: 24px; font-weight: 700; margin-bottom: 2px; color: var(--primary-900);">-</div>
+          <div style="font-size: 10px; color: #9ca3af;">evaluation responses</div>
+        </div>
+      </div>
+
+      </div>
+  </div>
+</div>
 
 <script src="FacultyAdmin.js?v=<?php echo time(); ?>"></script>
 </body>

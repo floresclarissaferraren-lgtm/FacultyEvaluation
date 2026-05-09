@@ -3,21 +3,6 @@ header("Content-Type: application/json");
 include 'connect.php';
 
 try {
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS evaluations (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            student_id INT(11) NOT NULL,
-            faculty_id INT(11) NOT NULL,
-            overall_rating DECIMAL(4,2) NOT NULL DEFAULT 0.00,
-            feedback TEXT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uniq_student_faculty (student_id, faculty_id),
-            KEY idx_eval_faculty (faculty_id),
-            KEY idx_eval_student (student_id)
-        )
-    ");
-
     // Get faculty with their evaluation averages
     $query = "SELECT 
         f.id,
@@ -69,6 +54,7 @@ try {
 }
 
 function getRatingLabel($score) {
+    if ($score == 0) return 'N/A';
     if ($score >= 4.5) return 'Excellent';
     if ($score >= 3.5) return 'Very Good';
     if ($score >= 2.5) return 'Good';
@@ -77,6 +63,7 @@ function getRatingLabel($score) {
 }
 
 function getRatingClass($score) {
+    if ($score == 0) return 'na';
     if ($score >= 4.5) return 'excellent';
     if ($score >= 3.5) return 'very-good';
     if ($score >= 2.5) return 'good';

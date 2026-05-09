@@ -1,8 +1,21 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
+
+// Check if connect.php exists
+if (!file_exists('connect.php')) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection file not found'
+    ]);
+    exit;
+}
 
 include 'connect.php';
 
@@ -37,7 +50,7 @@ try {
     
     // Get overall rating and total responses from evaluations
     $overall_query = "SELECT 
-                        AVG(e.rating) as overall_rating,
+                        AVG(e.overall_rating) as overall_rating,
                         COUNT(e.id) as total_responses
                     FROM evaluations e
                     WHERE e.faculty_id = ?";
@@ -100,12 +113,14 @@ try {
         ];
     }
     
+    // No sample data - use only real evaluation records
+    
     // Prepare response data
     $response_data = [
         'id' => $faculty['id'],
         'name' => $faculty['name'],
         'faculty_id' => $faculty['faculty_id'],
-        'overall_rating' => $overall_data['overall_rating'] ? number_format($overall_data['overall_rating'], 2) : 'N/A',
+        'overall_rating' => $overall_data['overall_rating'] ? number_format($overall_data['overall_rating'], 2) : '0.00',
         'total_responses' => $overall_data['total_responses'] ?: 0,
         'evaluation_details' => $evaluation_details
     ];
