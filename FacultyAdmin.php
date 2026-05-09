@@ -83,7 +83,7 @@ include 'totalstudents_dashcount.php';
 
   <!-- Logo Top -->
   <div class="sidebar-top">
-    <img src="logo.png" class="sidebar-logo">
+    <img src="schoollogo.png" class="sidebar-logo">
     <h1>FaculRate</h1>
     <span>Admin Panel</span>
   </div>
@@ -132,7 +132,7 @@ include 'totalstudents_dashcount.php';
 </div>
 
 <main>
-<!-- Dashboard Section May nabago =====================================================================================================================================-->
+<!-- Dashboard Section  =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
   <div class="dashboard">
 
@@ -216,21 +216,21 @@ include 'totalstudents_dashcount.php';
 
 <!-- Programs Section ============================================================================================================================== -->
 <div id="programs-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <div class="header-title-section">
-        <!--<h2>Academic Program</h2>-->
-        <p class="section-subtitle"><i class="ph ph-book" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>Manage and update academic programs offered by the institution</p>
-      </div>
-      <div class="header-actions">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input type="text" id="program-search" placeholder="Search program..."/>
-        </div>
-        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add Program</button>
-      </div>
+  <div class="section-header">
+    <div class="header-title-section">
+      <!--<h2>Academic Program</h2>-->
+      <p class="section-subtitle"><i class="ph ph-book" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>Manage and update academic programs offered by the institution</p>
     </div>
-    <div class="table-wrapper"> 
+    <div class="header-actions">
+      <div class="search-wrapper">
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+        <input type="text" id="program-search" placeholder="Search program..."/>
+      </div>
+      <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add Program</button>
+    </div>
+  </div>
+  <div class="table-wrapper"> 
+    <div class="table-scroll-container">
       <table class="programs-table">
         <thead><tr><th>Program Code</th><th>Program Name</th><th>Action</th></tr></thead>
         <tbody></tbody>
@@ -280,38 +280,40 @@ include 'totalstudents_dashcount.php';
 
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <div class="header-title-section">
-        <h2 id="manageTitle">Manage Program</h2>
-        <div class="manage-buttons">
-          <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
-          <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
-        </div>
-      </div>
-      <div class="header-actions-section">
-        <div class="search-wrapper">
-          <input type="text" id="manage-search" placeholder="Search records...">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        </div>
-        <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add</button>
-        <button class="back-btn"><i class="ph ph-arrow-left"></i> Back</button>
+  <div class="section-header">
+    <div class="header-title-section">
+      <h2 id="manageTitle">Manage Program</h2>
+      <div class="manage-buttons">
+        <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
+        <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
       </div>
     </div>
+    <div class="header-actions-section">
+      <div class="search-wrapper">
+        <input type="text" id="manage-search" placeholder="Search records...">
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+      </div>
+      <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add</button>
+      <button class="back-btn"><i class="ph ph-arrow-left"></i> Back</button>
+    </div>
+  </div>
 
-    
-    <!-- Subject Table -->
-    <div class="manage-body">
-      <div id="subjects" class="table-wrapper">
+  
+  <!-- Subject Table -->
+  <div class="manage-body">
+    <div id="subjects" class="table-wrapper">
+      <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
           <th>Subject Code</th><th>Description</th><th>Year</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
       </div>
+    </div>
 
-      <!-- Classes Table -->
-      <div id="classes" class="table-wrapper" style="display:none;">
+    <!-- Classes Table -->
+    <div id="classes" class="table-wrapper" style="display:none;">
+      <div class="table-scroll-container">
         <table class="classes-table"><thead><tr>
           <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
         </tr></thead>
@@ -413,22 +415,24 @@ include 'totalstudents_dashcount.php';
     </div>
   </div>
   <div class="table-wrapper">
-    <table class="subjects-table">
-      <thead>
-        <tr>
-          <th>Subject Code</th>
-          <th>Description</th>
-          <th>Program</th>
-          <th>Year Level</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="subjects-main-tbody">
-        <tr>
-          <td colspan="5" style="text-align: center; padding: 20px;">Loading subjects...</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-scroll-container">
+      <table class="subjects-table">
+        <thead>
+          <tr>
+            <th>Subject Code</th>
+            <th>Description</th>
+            <th>Program</th>
+            <th>Year Level</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="subjects-main-tbody">
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 20px;">Loading subjects...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -477,21 +481,21 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Faculties Section ===================== -->
 <div id="faculties-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <div class="header-title-section">
-       <!-- <h2>Faculty Information</h2>-->
-        <p class="section-subtitle"><i class="ph ph-user" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section contains all faculty members with their profiles and teaching assignments</p>
-      </div>
-      <div class="header-actions">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input id="faculty-search" placeholder="Search faculty...">
-        </div>
-        <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
-      </div>
+  <div class="section-header">
+    <div class="header-title-section">
+     <!-- <h2>Faculty Information</h2>-->
+      <p class="section-subtitle"><i class="ph ph-user" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section contains all faculty members with their profiles and teaching assignments</p>
     </div>
-    <div class="table-wrapper">
+    <div class="header-actions">
+      <div class="search-wrapper">
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+        <input id="faculty-search" placeholder="Search faculty...">
+      </div>
+      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
           <tr><th>Faculty</th><th>ID</th><th>Info</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
@@ -553,21 +557,21 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Students Section ===================== -->
 <div id="students-section" class="section" style="display:none;">
-  <div class="box">
-    <div class="section-header">
-      <div class="header-title-section">
-       <!-- <h2>Students Information</h2> -->
-        <p class="section-subtitle"><i class="ph ph-graduation-cap" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows all students with their basic details and records for easy management</p>
-      </div>
-      <div class="header-actions">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input id="student-search" placeholder="Search student...">
-        </div>
-        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
-      </div>
+  <div class="section-header">
+    <div class="header-title-section">
+     <!-- <h2>Students Information</h2> -->
+      <p class="section-subtitle"><i class="ph ph-graduation-cap" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows all students with their basic details and records for easy management</p>
     </div>
-    <div class="table-wrapper">
+    <div class="header-actions">
+      <div class="search-wrapper">
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+        <input id="student-search" placeholder="Search student...">
+      </div>
+      <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <div class="table-scroll-container">
       <table class="students-table">
         <thead>
           <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Action</th></tr>
@@ -805,20 +809,22 @@ include 'totalstudents_dashcount.php';
     </div>
   </div>
   <div class="table-wrapper">
-    <table class="evaluation-table">
-      <thead>
-        <tr>
-          <th>Faculty Name</th>
-          <th>Overall Rating</th>
-          <th>Responses</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="evaluationTableBody">
-        <!-- Dynamic content will be loaded here -->
-      </tbody>
-    </table>
+    <div class="table-scroll-container">
+      <table class="evaluation-table">
+        <thead>
+          <tr>
+            <th>Faculty Name</th>
+            <th>Overall Rating</th>
+            <th>Responses</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="evaluationTableBody">
+          <!-- Dynamic content will be loaded here -->
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
