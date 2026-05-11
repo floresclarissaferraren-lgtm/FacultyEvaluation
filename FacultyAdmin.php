@@ -25,7 +25,9 @@ include 'totalstudents_dashcount.php';
     </div>
 
     
-    <div class="section-title" id="navbarSectionTitle">Dashboard</div>
+    <div class="section-title-container">
+      <div class="section-title" id="navbarSectionTitle">Dashboard</div>
+    </div>
 
   </div>
 
@@ -83,9 +85,13 @@ include 'totalstudents_dashcount.php';
 
   <!-- Logo Top -->
   <div class="sidebar-top">
-    <img src="schoollogo.png" class="sidebar-logo">
-    <h1>FaculRate</h1>
-    <span>Admin Panel</span>
+    <div class="logo-title-container">
+      <img src="schoollogo.png" class="sidebar-logo">
+      <div class="title-container">
+        <h1>FaculRate</h1>
+        <span class="subtitle">Faculty Evaluation System</span>
+      </div>
+    </div>
   </div>
 
   <!-- Menu -->
@@ -100,19 +106,19 @@ include 'totalstudents_dashcount.php';
     <a href="#" data-section="programs-section"
        onclick="showSection('programs-section', event)">
       <i class="ph ph-book"></i>
-      <span>Program</span>
+      <span>Program Management</span>
     </a>
 
     <a href="#" data-section="faculties-section"
        onclick="showSection('faculties-section', event)">
       <i class="ph ph-chalkboard-teacher"></i>
-      <span>Faculty</span>
+      <span>Faculty Management</span>
     </a>
 
     <a href="#" data-section="students-section"
        onclick="showSection('students-section', event)">
       <i class="ph ph-graduation-cap"></i>
-      <span>Students</span>
+      <span>Student Management</span>
     </a>
 
     <a href="#" data-section="criteria-section"
@@ -124,7 +130,7 @@ include 'totalstudents_dashcount.php';
     <a href="#" data-section="report-section"
        onclick="showSection('report-section', event)">
       <i class="ph ph-chart-bar"></i>
-      <span>Evaluation Report</span>
+      <span>Report</span>
     </a>
 
   </nav>
@@ -171,24 +177,63 @@ include 'totalstudents_dashcount.php';
         <div class="icon-box"><i class="ph ph-chart-bar"></i></div>
       </div>
     </div>
-    
-    <!-- Period Card -->
-    <div class="dashboard-card period">
+
+    <!-- Rating Distribution Card -->
+    <div class="dashboard-card rating-distribution">
       <div class="dashboard-content">
-        <div class="period-header">
-          <h3>Period</h3>
-          <div class="period-box">No Active Period</div>
+        <div class="rating-header">
+          <h3>Rating Distribution</h3>
         </div>
-        <p class="system-status">Evaluation is Open</p>
-        <div class="period-actions">
-          <button class="btn-close">Close</button>
-          <button class="btn-manage">Manage</button>
+        <div class="rating-chart-wrapper">
+          <canvas id="ratingDistributionChart" width="300" height="300"></canvas>
+        </div>
+        <div class="rating-legend" id="ratingLegend">
+          <div class="legend-item">
+            <div class="legend-color excellence"></div>
+            <span class="legend-label">Excellent</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color very-good"></div>
+            <span class="legend-label">Very Good</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color good"></div>
+            <span class="legend-label">Good</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color fair"></div>
+            <span class="legend-label">Fair</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color poor"></div>
+            <span class="legend-label">Poor</span>
+          </div>
         </div>
       </div>
     </div>
 
   </div>
+  
+  <!-- Second Row - Period Card aligned below Total Faculty -->
+  <div class="dashboard-row-2">
+    <div class="period-container">
+      <div class="dashboard-card period">
+        <div class="dashboard-content">
+          <div class="period-header">
+            <h3>Period</h3>
+            <div class="period-box">No Active Period</div>
+          </div>
+          <p class="system-status">Evaluation is Open</p>
+          <div class="period-actions">
+            <button class="btn-close">Close</button>
+            <button class="btn-manage">Manage</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
 
  <!--
 <div id="dashboard-details">
@@ -216,25 +261,30 @@ include 'totalstudents_dashcount.php';
 
 <!-- Programs Section ============================================================================================================================== -->
 <div id="programs-section" class="section" style="display:none;">
-  <div class="section-header">
-    <div class="header-title-section">
-      <!--<h2>Academic Program</h2>-->
-      <p class="section-subtitle"><i class="ph ph-book" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>Manage and update academic programs offered by the institution</p>
-    </div>
-    <div class="header-actions">
-      <div class="search-wrapper">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        <input type="text" id="program-search" placeholder="Search program..."/>
+  <!-- Programs Container Box -->
+  <div class="programs-container-box">
+    <!-- Programs Header -->
+    <div class="programs-header">
+      <div class="programs-stats">
+        <div class="stats-icon">
+          <i class="ph ph-graduation-cap"></i>
+        </div>
+        <div class="stats-info">
+          <p class="stats-number" id="totalPrograms">0 Program Record</p>
+        </div>
       </div>
-      <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add Program</button>
+      <div class="programs-actions">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input type="text" id="program-search" placeholder="Search program..."/>
+        </div>
+        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add New Program</button>
+      </div>
     </div>
-  </div>
-  <div class="table-wrapper"> 
-    <div class="table-scroll-container">
-      <table class="programs-table">
-        <thead><tr><th>Program Code</th><th>Program Name</th><th>Action</th></tr></thead>
-        <tbody></tbody>
-      </table>
+
+    <!-- Programs Cards Container -->
+    <div class="programs-cards-container" id="programsCardsContainer">
+      <!-- Program cards will be dynamically added here -->
     </div>
   </div>
 </div>
@@ -481,24 +531,73 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Faculties Section ===================== -->
 <div id="faculties-section" class="section" style="display:none;">
-  <div class="section-header">
-    <div class="header-title-section">
-     <!-- <h2>Faculty Information</h2>-->
-      <p class="section-subtitle"><i class="ph ph-user" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section contains all faculty members with their profiles and teaching assignments</p>
-    </div>
-    <div class="header-actions">
-      <div class="search-wrapper">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        <input id="faculty-search" placeholder="Search faculty...">
+  
+  <!-- Faculty Statistics Cards -->
+  <div class="faculty-stats-container">
+    <div class="faculty-stat-card total-faculty">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>All Registered Faculty</h3>
+          <p class="stat-number"><?php echo $facultyStats['total_faculty']; ?></p>
+          <span>Total Faculty Members</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-chalkboard-teacher"></i>
+        </div>
       </div>
-      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
+    </div>
+
+    <div class="faculty-stat-card active-faculty">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>With Assigned Subjects</h3>
+          <p class="stat-number"><?php echo $facultyStats['active_faculty']; ?></p>
+          <span>Active Faculty</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-user-check"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="faculty-stat-card pending-evaluation">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>Awaiting Evaluation</h3>
+          <p class="stat-number"><?php echo $facultyStats['pending_evaluation']; ?></p>
+          <span>Pending Faculty</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-clock-clockwise"></i>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="table-wrapper">
+    <div class="table-header">
+      <div class="search-filters-container">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input id="faculty-search" placeholder="Search faculty...">
+        </div>
+        <div class="filter-wrapper">
+          <i class="ph ph-funnel" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
+          <select id="faculty-status-filter" class="status-dropdown">
+            <option value="">Filter by Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
+      </div>
+    </div>
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
-          <tr><th>Faculty</th><th>ID</th><th>Info</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
+          <tr><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -557,20 +656,80 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Students Section ===================== -->
 <div id="students-section" class="section" style="display:none;">
-  <div class="section-header">
-    <div class="header-title-section">
-     <!-- <h2>Students Information</h2> -->
-      <p class="section-subtitle"><i class="ph ph-graduation-cap" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows all students with their basic details and records for easy management</p>
-    </div>
-    <div class="header-actions">
-      <div class="search-wrapper">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        <input id="student-search" placeholder="Search student...">
+  
+  <!-- Student Statistics Cards -->
+  <div class="student-stats-container">
+    <div class="student-stat-card total-students">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>Total Students</h3>
+          <p class="stat-number"><?php echo $studentStats['total_students']; ?></p>
+          <span>All Registered Students</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-users"></i>
+        </div>
       </div>
-      <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
+    </div>
+
+    <div class="student-stat-card active-students">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>Active Students</h3>
+          <p class="stat-number"><?php echo $studentStats['active_students']; ?></p>
+          <span>With Enrolled Subjects</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-user-check"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="student-stat-card regular-students">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>Regular Students</h3>
+          <p class="stat-number"><?php echo $studentStats['regular_students']; ?></p>
+          <span>Regular Status</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-graduation-cap"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="student-stat-card irregular-students">
+      <div class="stat-content">
+        <div class="stat-info">
+          <h3>Irregular Students</h3>
+          <p class="stat-number"><?php echo $studentStats['irregular_students']; ?></p>
+          <span>Irregular Status</span>
+        </div>
+        <div class="stat-icon">
+          <i class="ph ph-warning"></i>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="table-wrapper">
+    <div class="table-header">
+      <div class="search-filters-container">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input id="student-search" placeholder="Search student...">
+        </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-funnel" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
+          <select id="student-program-filter" class="program-dropdown">
+            <option value="">All Programs</option>
+          </select>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
+      </div>
+    </div>
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
@@ -725,7 +884,6 @@ include 'totalstudents_dashcount.php';
 <div id="criteria-section" class="section" style="display:none;">
   <div class="section-header">
     <div class="header-title-section">
-      <p class="section-subtitle"><i class="ph ph-list" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows the list of criteria used for evaluating faculty performance</p>
     </div>
     <div class="header-actions">
       <button id="addCategoryBtn" class="add-program-btn button-gradient">
@@ -794,21 +952,20 @@ include 'totalstudents_dashcount.php';
 
 <!-- Report Section =========================================================================================================-->
 <div id="report-section" class="section" style="display:none;">
-  <div class="section-header">
-    <div class="header-title-section">
-      <p class="section-subtitle"><i class="ph ph-chart-bar" style="margin-right: 8px; font-size: 1em; color: var(--primary-600);"></i>This section shows faculty evaluation results and performance ratings</p>
-    </div>
-    <div class="header-actions">
-      <div class="search-wrapper">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        <input type="text" id="searchInput" placeholder="Search Faculty...">
-      </div>
-      <button class="generate-report-btn" onclick="generateEvaluationReport()">
-        <i class="ph ph-download-simple"></i> Generate Report
-      </button>
-    </div>
-  </div>
   <div class="table-wrapper">
+    <div class="table-header">
+      <div class="search-filters-container">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input type="text" id="searchInput" placeholder="Search Faculty...">
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="generate-report-btn" onclick="generateEvaluationReport()">
+          <i class="ph ph-download-simple"></i> Generate Report
+        </button>
+      </div>
+    </div>
     <div class="table-scroll-container">
       <table class="evaluation-table">
         <thead>

@@ -150,19 +150,35 @@ window.showSection = (id, e) => {
 
   // Update navbar section title
   const navbarTitle = document.getElementById("navbarSectionTitle");
+  const navbarSubtitle = document.querySelector(".section-subtitle");
   const sectionTitles = {
     "dashboard-section": "Dashboard",
-    "programs-section": "Program",
-    "faculties-section": "Faculty List",
-    "students-section": "Student List",
+    "programs-section": "Program Management",
+    "faculties-section": "Faculty Management",
+    "students-section": "Student Management",
     "criteria-section": "Evaluation Criteria List",
     "report-section": "Evaluation Report",
     "subjects-section": "Subjects Management",
     "manage-section": "Manage Program"
   };
   
+  const sectionSubtitles = {
+    "dashboard-section": "Real-time Overview of Faculty Performance and Evaluation Status",
+    "programs-section": "Manage and update academic programs offered by the institution",
+    "faculties-section": "This section contains all faculty members with their profiles and teaching assignments",
+    "students-section": "This section shows all students with their basic details and records for easy management",
+    "criteria-section": "This section shows the list of criteria used for evaluating faculty performance",
+    "report-section": "This section shows faculty evaluation results and performance ratings",
+    "subjects-section": "Manage and update subjects offered across different programs",
+    "manage-section": "Manage subjects and classes for this program"
+  };
+  
   if (navbarTitle && sectionTitles[id]) {
     navbarTitle.textContent = sectionTitles[id];
+  }
+  
+  if (navbarSubtitle && sectionSubtitles[id]) {
+    navbarSubtitle.textContent = sectionSubtitles[id];
   }
 
   // =========================
@@ -566,34 +582,61 @@ function loadPrograms(){
   fetch("getProgram.php")
     .then(r => r.json())
     .then(data => {
-      const tbody = document.querySelector(".programs-table tbody");
-      tbody.innerHTML = "";
+      const container = document.getElementById("programsCardsContainer");
+      container.innerHTML = "";
+
+      // Update program count
+      const totalProgramsElement = document.getElementById("totalPrograms");
+      const count = data ? data.length : 0;
+      totalProgramsElement.textContent = `${count} Program Record`;
 
       // Check if no data or empty array
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;">No programs found</td></tr>';
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">No programs found</div>';
         return;
       }
 
       // Sort data alphabetically by program_code
       data.sort((a, b) => a.program_code.localeCompare(b.program_code));
 
-      data.forEach(p => {
-        const tr = document.createElement("tr");
-        tr.dataset.id = p.id;
-        tr.dataset.program_code = p.program_code;
-        tr.innerHTML = `
-          <td>${p.program_code}</td>
-          <td>${p.program_name}</td>
-          <td class="action-cell">
-            <div class="action-buttons">
-              <button class="manage-btn"><i class="ph ph-sliders"></i></button>
-              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-              <button class="delete-btn"><i class="ph ph-trash"></i></button>
+      data.forEach((p, index) => {
+        const card = document.createElement("div");
+        card.className = "program-card";
+        card.dataset.id = p.id;
+        card.dataset.program_code = p.program_code;
+        card.dataset.program_name = p.program_name;
+        card.innerHTML = `
+          <div class="program-card-header">
+            <div class="program-icon">
+              <i class="ph ph-graduation-cap"></i>
             </div>
-          </td>`;
-        tbody.appendChild(tr);
-        attachProgramRowEvents(tr);
+            <div class="program-content">
+              <div class="program-code">${p.program_code}</div>
+              <div class="program-name">${p.program_name}</div>
+            </div>
+          </div>
+          <div class="program-card-actions">
+            <button class="btn-manage">
+              <i class="ph ph-sliders"></i> Manage
+            </button>
+            <button class="btn-edit">
+              <i class="ph ph-pencil-simple"></i> Edit
+            </button>
+            <button class="btn-delete">
+              <i class="ph ph-trash"></i> Delete
+            </button>
+          </div>`;
+        
+        // Add event listeners
+        const manageBtn = card.querySelector('.btn-manage');
+        const editBtn = card.querySelector('.btn-edit');
+        const deleteBtn = card.querySelector('.btn-delete');
+        
+        manageBtn.addEventListener('click', () => manageProgram(p.id, p.program_code));
+        editBtn.addEventListener('click', () => editProgram(p.id, p.program_code, p.program_name));
+        deleteBtn.addEventListener('click', () => deleteProgram(p.id, p.program_code));
+        
+        container.appendChild(card);
       });
     })
     .catch(err => console.error("FETCH ERROR:", err));
@@ -603,11 +646,61 @@ function closeProgramModal(){programCodeInput.value="";programNameInput.value=""
 
 document.getElementById("program-search")?.addEventListener("input",e=>{
   const term=e.target.value.toLowerCase();
-  const rows=document.querySelectorAll(".programs-table tbody tr");
-  rows.forEach(r=>{
-    r.style.display=r.textContent.toLowerCase().includes(term)?"":"none";
+  const cards=document.querySelectorAll(".program-card");
+  cards.forEach(card=>{
+    const text=card.textContent.toLowerCase();
+    card.style.display=text.includes(term)?"":"none";
   });
 });
+
+// Program Card Action Functions
+function manageProgram(id, code) {
+  // Set current program for management first
+  currentProgramId = id;
+  currentProgramCode = code;
+  
+  // Navigate to manage section for this program
+  showSection('manage-section', event);
+  
+  // Update manage title
+  const manageTitle = document.getElementById('manageTitle');
+  if (manageTitle) {
+    manageTitle.textContent = `Manage Program - ${code}`;
+  }
+  
+  // Show subjects tab by default
+  const subjectsTab = document.querySelector('.subject-btn');
+  const classesTab = document.querySelector('.classes-btn');
+  const subjectsDiv = document.getElementById('subjects');
+  const classesDiv = document.getElementById('classes');
+  
+  if (subjectsTab && classesTab && subjectsDiv && classesDiv) {
+    subjectsTab.classList.add('active');
+    classesTab.classList.remove('active');
+    subjectsDiv.style.display = 'block';
+    classesDiv.style.display = 'none';
+  }
+  
+  // Load subjects and classes for this program
+  loadSubjects();
+  loadClasses();
+}
+
+function editProgram(id, code, name) {
+  // Open edit modal with program data
+  programHeader.innerText="EDIT PROGRAM";
+  programSubmitBtn.innerText="UPDATE PROGRAM";
+  programCodeInput.value = code;
+  programNameInput.value = name;
+  editRowProgram = {dataset: {id: id}};
+  addProgramModal.style.display = "flex";
+  addProgramModal.style.zIndex = "10001";
+  addProgramModal.style.position = "fixed";
+}
+
+function deleteProgram(id, code) {
+  openDeleteModal("program", code, {dataset: {id: id}});
+}
 
 document.addEventListener("DOMContentLoaded",loadPrograms);
 
@@ -1723,6 +1816,7 @@ function loadFaculty() {
         Object.assign(row.dataset, f);
         row.dataset.faculty_id = f.faculty_id;
         row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()}`;
+        row.dataset.status = (f.status || "").toLowerCase();
 
         // Display subject codes or show "No subjects yet"
         console.log("Faculty subjects data:", f.subjects);
@@ -1737,10 +1831,19 @@ function loadFaculty() {
         console.log("Subjects display:", subjectsDisplay);
 
         row.innerHTML = `
-          <td>${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;"><i class="ph ph-user" style="color:#6b7280;"></i></div>`}</td>
           <td><strong>${f.faculty_id}</strong></td>
-          <td><div>${f.firstname} ${f.lastname} ${f.suffix||""}</div><small>${f.email}</small></td>
-          <td>${subjectsDisplay}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              ${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;"><i class="ph ph-user" style="color:#6b7280;"></i></div>`}
+              <div>
+                <div style="font-weight: 600; color: var(--primary-900);">${f.firstname} ${f.lastname} ${f.suffix||""}</div>
+                <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="subject-count-badge">${f.subjects ? f.subjects.length : 0}</span>
+          </td>
           <td>
             <label class="status-toggle">
               <input type="checkbox" class="status-checkbox" data-faculty-id="${f.id}" ${f.status === 'active' ? 'checked' : ''}>
@@ -1993,14 +2096,40 @@ document.getElementById("faculty-photo").onchange = e => {
   }
 };
 
-// SEARCH -----------------------
-document.getElementById("faculty-search").oninput = e => {
-  const term = e.target.value.toLowerCase();
+// SEARCH AND STATUS FILTER -----------------------
+function filterFaculty() {
+  const searchTerm = document.getElementById("faculty-search").value.toLowerCase();
+  const statusFilter = document.getElementById("faculty-status-filter").value;
+  
   [...facultyTbody.rows].forEach(r => {
-    const key = (r.dataset.searchKey || "").toLowerCase();
-    r.style.display = key.includes(term) ? "" : "none";
+    // Get ID and name only (columns 1 and 2), status is in column 4
+    const idCell = r.querySelector("td:nth-child(1)");
+    const nameCell = r.querySelector("td:nth-child(2)");
+    const statusCell = r.querySelector("td:nth-child(4) .status-text");
+    
+    let matchesSearch = true;
+    let matchesStatus = true;
+    
+    // Check search term against ID and name only
+    if (searchTerm) {
+      const idText = idCell ? idCell.textContent.toLowerCase() : "";
+      const nameText = nameCell ? nameCell.textContent.toLowerCase() : "";
+      matchesSearch = idText.includes(searchTerm) || nameText.includes(searchTerm);
+    }
+    
+    // Check status filter - status is in the .status-text span within column 4
+    if (statusFilter && statusFilter !== "") {
+      const statusText = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+      matchesStatus = statusText === statusFilter.toLowerCase();
+    }
+    
+    // Show row only if both conditions are met
+    r.style.display = (matchesSearch && matchesStatus) ? "" : "none";
   });
-};
+}
+
+document.getElementById("faculty-search").oninput = filterFaculty;
+document.getElementById("faculty-status-filter").onchange = filterFaculty;
 // ========================= Report Section =========================
 function loadEvaluations() {
   console.log('Loading evaluations...');
@@ -2452,6 +2581,34 @@ function resetSubmitBtn(text){
   return btn;
 }
 
+// Populate Program Dropdown
+function populateProgramDropdown() {
+  const dropdown = document.getElementById("student-program-filter");
+  if (!dropdown) {
+    console.error("Program dropdown not found");
+    return;
+  }
+  
+  console.log("Populating dropdown with programs:", programs);
+  
+  // Clear existing options except "All Programs"
+  dropdown.innerHTML = '<option value="">All Programs</option>';
+  
+  // Add programs to dropdown
+  if (programs && Array.isArray(programs)) {
+    programs.forEach(program => {
+      const option = document.createElement("option");
+      option.value = program.name || program.program_name || '';
+      option.textContent = program.name || program.program_name || '';
+      dropdown.appendChild(option);
+      console.log("Added program to dropdown:", program.name || program.program_name);
+    });
+  } else {
+    console.log("No programs available or programs is not an array");
+  }
+}
+
+
 //  Dynamic Program -------------------
 let programs = []; 
 function addProgramToDropdown(programName){
@@ -2463,14 +2620,20 @@ function addProgramToDropdown(programName){
 
 //  Load Programs -------------------
 function loadStudentPrograms(){
+  console.log("Loading student programs...");
   return fetch("get_StudentProgram.php")
-    .then(r => r.json())
+    .then(r => {
+      console.log("Response status:", r.status);
+      return r.json();
+    })
     .then(data => {
+      console.log("Programs data received:", data);
       programs = data; // Store full program objects with id and name
       programSelect.innerHTML = `<option value="" disabled selected>-- Select Program --</option>`;
       data.forEach(program => {
         programSelect.insertAdjacentHTML("beforeend", `<option value="${program.id}">${program.name}</option>`);
       });
+      console.log("Programs stored in variable:", programs);
       return data; // Return data for chaining
     })
     .catch(err => {
@@ -2538,6 +2701,9 @@ function loadStudents(){
   
   // First load programs, then load students
   loadStudentPrograms().then(() => {
+    // Populate program dropdown
+    populateProgramDropdown();
+    
     fetch("get_students.php")
     .then(r => {
       console.log("Response status:", r.status);
@@ -2791,14 +2957,53 @@ function loadStudents(){
         
         studentTbody.appendChild(row);
       });
-      // Search
+      // Search functionality
       const searchInput = document.getElementById("student-search");
-      if(searchInput) searchInput.oninput = e => {
-        const term = e.target.value.toLowerCase();
-        [...studentTbody.rows].forEach(r => 
-          r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none"
-        );
-      };
+      const programFilter = document.getElementById("student-program-filter");
+      
+      if(searchInput) {
+        searchInput.oninput = e => {
+          filterStudents();
+        };
+      }
+      
+      if(programFilter) {
+        programFilter.onchange = e => {
+          filterStudents();
+        };
+      }
+      
+      // Combined filter function
+      function filterStudents() {
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+        const selectedProgram = programFilter ? programFilter.value : "";
+        
+        [...studentTbody.rows].forEach(row => {
+          // Get ID and name only (columns 1 and 2)
+          const idCell = row.querySelector("td:nth-child(1)");
+          const nameCell = row.querySelector("td:nth-child(2)");
+          const programCell = row.querySelector("td:nth-child(3) small");
+          
+          let matchesSearch = true;
+          let matchesProgram = true;
+          
+          // Check search term against ID and name only
+          if (searchTerm) {
+            const idText = idCell ? idCell.textContent.toLowerCase() : "";
+            const nameText = nameCell ? nameCell.textContent.toLowerCase() : "";
+            matchesSearch = idText.includes(searchTerm) || nameText.includes(searchTerm);
+          }
+          
+          // Check program filter
+          if (selectedProgram && selectedProgram !== "") {
+            const programText = programCell ? programCell.textContent.trim() : "";
+            matchesProgram = programText === selectedProgram;
+          }
+          
+          // Show row only if both conditions are met
+          row.style.display = (matchesSearch && matchesProgram) ? "" : "none";
+        });
+      }
     })
     .catch(err => console.error("Error loading students:", err));
   });
@@ -4131,9 +4336,120 @@ document.addEventListener("DOMContentLoaded", () => {
   initManagePeriodsButton();
   initAYTooltip();
   initCalendarClickHandlers();
-});
+  
+  });
 initManagePeriodsButton();
 initAYTooltip();
 initCalendarClickHandlers();
 
+});
+
+// Rating Distribution Donut Chart
+function initRatingDistributionChart() {
+  const canvas = document.getElementById('ratingDistributionChart');
+  const chartWrapper = document.querySelector('.rating-chart-wrapper');
+  const legendContainer = document.getElementById('ratingLegend');
+  const noRatingsText = document.createElement('div');
+  noRatingsText.className = 'no-ratings-text';
+  noRatingsText.textContent = 'No ratings yet';
+  
+  // Check if there are actual ratings (for now, using sample data - replace with real data check)
+  const hasRatings = false; // Set to false to show "No ratings yet"
+  
+  if (!hasRatings) {
+    // Hide chart and legend, show "No ratings yet"
+    if (chartWrapper) {
+      chartWrapper.style.display = 'none';
+    }
+    if (legendContainer) {
+      legendContainer.style.display = 'none';
+    }
+    
+    // Add "No ratings yet" text
+    const ratingContent = document.querySelector('.rating-distribution .dashboard-content');
+    if (ratingContent && !ratingContent.querySelector('.no-ratings-text')) {
+      ratingContent.appendChild(noRatingsText);
+    }
+  } else {
+    // Show chart and legend, hide "No ratings yet"
+    if (chartWrapper) {
+      chartWrapper.style.display = 'flex';
+    }
+    if (legendContainer) {
+      legendContainer.style.display = 'flex';
+    }
+    
+    // Remove "No ratings yet" text if it exists
+    const existingNoRatings = document.querySelector('.no-ratings-text');
+    if (existingNoRatings) {
+      existingNoRatings.remove();
+    }
+    
+    // Draw the chart with actual data
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      
+      // Sample data for rating distribution (replace with real data)
+      const ratingData = [
+        { label: 'Excellent', value: 15, color: '#1d4ed8' },
+        { label: 'Very Good', value: 35, color: '#2563eb' },
+        { label: 'Good', value: 25, color: '#f59e0b' },
+        { label: 'Fair', value: 20, color: '#fb923c' },
+        { label: 'Poor', value: 5, color: '#ef4444' }
+      ];
+      
+      drawRatingDonutChart(ctx, ratingData);
+    }
+  }
+}
+
+function drawRatingDonutChart(ctx, data) {
+  const centerX = 140;
+  const centerY = 140;
+  const radius = 80;
+  const innerRadius = 50;
+  
+  ctx.clearRect(0, 0, 300, 300);
+  
+  let currentAngle = -Math.PI / 2;
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  
+  data.forEach((segment, index) => {
+    const sliceAngle = (segment.value / total) * 2 * Math.PI;
+    
+    // Draw outer arc
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+    ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
+    ctx.closePath();
+    ctx.fillStyle = segment.color;
+    ctx.fill();
+    
+    // Draw percentage text
+    const textAngle = currentAngle + sliceAngle / 2;
+    const textX = centerX + Math.cos(textAngle) * (radius + 20);
+    const textY = centerY + Math.sin(textAngle) * (radius + 20);
+    
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${Math.round((segment.value / total) * 100)}%`, textX, textY);
+    
+    currentAngle += sliceAngle;
+  });
+  
+  // Draw center text
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Rating', centerX, centerY - 10);
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText('Distribution', centerX, centerY + 10);
+}
+
+// Initialize rating chart when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(initRatingDistributionChart, 100);
 });
