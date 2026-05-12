@@ -2461,6 +2461,22 @@ function loadDashboardStats() {
         }
         if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.totalEvaluations;
         
+        // Update overall faculty rating
+        const overallRatingEl = document.getElementById("overallRating");
+        if (overallRatingEl && data.data.overallRating) {
+          const oldValue = overallRatingEl.textContent;
+          overallRatingEl.textContent = data.data.overallRating;
+          console.log("Updated overallRating from", oldValue, "to:", data.data.overallRating);
+          // Add visual feedback for rating change
+          overallRatingEl.style.transition = "color 0.5s, transform 0.3s";
+          overallRatingEl.style.color = "#f59e0b";
+          overallRatingEl.style.transform = "scale(1.1)";
+          setTimeout(() => {
+            overallRatingEl.style.color = "";
+            overallRatingEl.style.transform = "";
+          }, 800);
+        }
+        
         // Update faculty ratings table
         const ratingsBody = document.getElementById("ratings-body");
         ratingsBody.innerHTML = "";
@@ -4349,104 +4365,85 @@ function initRatingDistributionChart() {
   const canvas = document.getElementById('ratingDistributionChart');
   const chartWrapper = document.querySelector('.rating-chart-wrapper');
   const legendContainer = document.getElementById('ratingLegend');
-  const noRatingsText = document.createElement('div');
-  noRatingsText.className = 'no-ratings-text';
-  noRatingsText.textContent = 'No ratings yet';
   
-  // Check if there are actual ratings (for now, using sample data - replace with real data check)
-  const hasRatings = false; // Set to false to show "No ratings yet"
+  // Always show chart and legend
+  if (chartWrapper) {
+    chartWrapper.style.display = 'flex';
+  }
+  if (legendContainer) {
+    legendContainer.style.display = 'flex';
+  }
   
-  if (!hasRatings) {
-    // Hide chart and legend, show "No ratings yet"
-    if (chartWrapper) {
-      chartWrapper.style.display = 'none';
-    }
-    if (legendContainer) {
-      legendContainer.style.display = 'none';
-    }
+  // Remove "No ratings yet" text if it exists
+  const existingNoRatings = document.querySelector('.no-ratings-text');
+  if (existingNoRatings) {
+    existingNoRatings.remove();
+  }
+  
+  // Draw the chart with sample data
+  if (canvas) {
+    // Sample data for rating distribution
+    const ratingData = [
+      { label: 'Excellent', value: 15, color: '#1d4ed8' },
+      { label: 'Very Good', value: 35, color: '#ab7dfa' },
+      { label: 'Good', value: 25, color: '#f59e0b' },
+      { label: 'Fair', value: 20, color: '#ffe16a' },
+      { label: 'Poor', value: 5, color: '#ef4444' }
+    ];
     
-    // Add "No ratings yet" text
-    const ratingContent = document.querySelector('.rating-distribution .dashboard-content');
-    if (ratingContent && !ratingContent.querySelector('.no-ratings-text')) {
-      ratingContent.appendChild(noRatingsText);
-    }
-  } else {
-    // Show chart and legend, hide "No ratings yet"
-    if (chartWrapper) {
-      chartWrapper.style.display = 'flex';
-    }
-    if (legendContainer) {
-      legendContainer.style.display = 'flex';
-    }
-    
-    // Remove "No ratings yet" text if it exists
-    const existingNoRatings = document.querySelector('.no-ratings-text');
-    if (existingNoRatings) {
-      existingNoRatings.remove();
-    }
-    
-    // Draw the chart with actual data
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      
-      // Sample data for rating distribution (replace with real data)
-      const ratingData = [
-        { label: 'Excellent', value: 15, color: '#1d4ed8' },
-        { label: 'Very Good', value: 35, color: '#2563eb' },
-        { label: 'Good', value: 25, color: '#f59e0b' },
-        { label: 'Fair', value: 20, color: '#fb923c' },
-        { label: 'Poor', value: 5, color: '#ef4444' }
-      ];
-      
-      drawRatingDonutChart(ctx, ratingData);
-    }
+    drawRatingDonutChart(canvas, ratingData);
   }
 }
 
-function drawRatingDonutChart(ctx, data) {
-  const centerX = 140;
-  const centerY = 140;
-  const radius = 80;
-  const innerRadius = 50;
+function drawRatingDonutChart(canvas, data) {
+  // Destroy existing chart instance if it exists
+  if (window.ratingChartInstance) {
+    window.ratingChartInstance.destroy();
+  }
   
-  ctx.clearRect(0, 0, 300, 300);
+  const ctx = canvas.getContext('2d');
   
-  let currentAngle = -Math.PI / 2;
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  // Prepare data for Chart.js
+  const chartData = {
+    labels: data.map(item => item.label),
+    datasets: [{
+      data: data.map(item => item.value),
+      backgroundColor: data.map(item => item.color),
+      borderWidth: 2,
+      borderColor: '#ffffff'
+    }]
+  };
   
-  data.forEach((segment, index) => {
-    const sliceAngle = (segment.value / total) * 2 * Math.PI;
-    
-    // Draw outer arc
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-    ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
-    ctx.closePath();
-    ctx.fillStyle = segment.color;
-    ctx.fill();
-    
-    // Draw percentage text
-    const textAngle = currentAngle + sliceAngle / 2;
-    const textX = centerX + Math.cos(textAngle) * (radius + 20);
-    const textY = centerY + Math.sin(textAngle) * (radius + 20);
-    
-    ctx.fillStyle = '#374151';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`${Math.round((segment.value / total) * 100)}%`, textX, textY);
-    
-    currentAngle += sliceAngle;
+  // Create new Chart.js donut chart
+  window.ratingChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: chartData,
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false // Hide default legend as we have custom legend
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = Math.round((value / total) * 100);
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      cutout: '60%', // Creates the donut effect
+      animation: {
+        animateRotate: true,
+        animateScale: false
+      }
+    }
   });
-  
-  // Draw center text
-  ctx.fillStyle = '#1e293b';
-  ctx.font = 'bold 24px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Rating', centerX, centerY - 10);
-  ctx.font = 'bold 16px sans-serif';
-  ctx.fillText('Distribution', centerX, centerY + 10);
 }
 
 // Initialize rating chart when page loads

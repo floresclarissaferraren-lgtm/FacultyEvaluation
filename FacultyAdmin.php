@@ -10,6 +10,7 @@ include 'totalstudents_dashcount.php';
   <title>Faculty Evaluation System</title>
   <link rel="stylesheet" href="FacultyAdmin.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 <body>
@@ -178,6 +179,22 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
 
+    <!-- Overall Faculty Ratings Card -->
+    <div class="dashboard-card overall-ratings">
+      <div class="dashboard-content">
+        <div>
+          <h3>Overall Faculty Rating</h3>
+          <p id="overallRating" class="dashboard-value">4.2</p>
+          <span>Out of 5.0</span>
+        </div>
+        <div class="icon-box"><i class="ph ph-star"></i></div>
+      </div>
+    </div>
+
+  </div>
+  
+  <!-- Second Row - Rating Distribution and Period Cards -->
+  <div class="dashboard-row-2">
     <!-- Rating Distribution Card -->
     <div class="dashboard-card rating-distribution">
       <div class="dashboard-content">
@@ -185,7 +202,7 @@ include 'totalstudents_dashcount.php';
           <h3>Rating Distribution</h3>
         </div>
         <div class="rating-chart-wrapper">
-          <canvas id="ratingDistributionChart" width="300" height="300"></canvas>
+          <canvas id="ratingDistributionChart" width="200" height="200"></canvas>
         </div>
         <div class="rating-legend" id="ratingLegend">
           <div class="legend-item">
@@ -212,10 +229,6 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
 
-  </div>
-  
-  <!-- Second Row - Period Card aligned below Total Faculty -->
-  <div class="dashboard-row-2">
     <div class="period-container">
       <div class="dashboard-card period">
         <div class="dashboard-content">

@@ -65,28 +65,25 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   margin-inline:auto;
 }
 
-.main-box{padding:clamp(18px,3vw,30px);background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%);border-radius:var(--radius-xl);box-shadow:var(--shadow-strong);
- border-left:8px solid var(--yellow-500);display:flex;align-items:center;justify-content:center;transition:.3s ease;border:1px solid var(--line);overflow:hidden}
-.main-box:hover{box-shadow:var(--shadow-strong)}
-.main-left{flex:0 0 220px;text-align:center;border-right:1px solid #f3f4f6;padding-right:24px}
-.main-img{width:200px;height:200px;object-fit:cover;border-radius:16px;box-shadow:0 10px 25px rgba(30, 58, 138, 0.15);border:3px solid var(--yellow-500);transition:.3s ease}
-.main-img:hover{box-shadow:0 15px 35px rgba(251, 191, 36, 0.3),0 10px 25px rgba(30, 58, 138, 0.15);opacity:0.95}
-.main-right{flex:1;padding-left:40px;text-align:left;display:flex;flex-direction:column;justify-content:center}
-.main-right h1{font:700 25px;color:#1e3a8a;margin-bottom:14px;background:linear-gradient(135deg, var(--blue-900) 0%, var(--blue-500) 55%, var(--yellow-500) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.academic-year{font:600 15px;color:#7a5c00;background:#fff7db;padding:12px 18px;border-radius:10px;margin-bottom:18px;display:inline-flex;
+.main-box{padding:clamp(18px,3vw,30px);background-image:url('polygon-scatter-haikei.png');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:var(--radius-xl);box-shadow:var(--shadow-strong);
+ border-left:8px solid var(--yellow-500);display:flex;align-items:center;justify-content:center;transition:.3s ease;border:1px solid var(--line);overflow:hidden;position:relative}
+.main-box::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.3);z-index:1}
+.main-content{position:relative;z-index:2;text-align:center}
+.main-content h1{font:700 28px;color:#1e3a8a;margin-bottom:20px;background:linear-gradient(135deg, var(--blue-900) 0%, var(--blue-500) 55%, var(--yellow-500) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.academic-year{font:600 15px;color:#7a5c00;background:#fff7db;padding:12px 18px;border-radius:10px;margin-bottom:18px;display:inline-block;
   align-items:center;gap:10px;border:1px solid #ffe38a;transition:.3s ease}
-.academic-year:hover{transform:none;box-shadow:none}
-.academic-year i{font-size:18px;color:#8f6c00}
-.subtitle{font:400 14px;color:#4b5563;margin:14px 0;line-height:1.6;max-width:600px}
+.subtitle{font:400 14px;color:#4b5563;margin:20px 0;line-height:1.6;max-width:600px}
 .evaluate-btn{margin-top:24px;padding:14px 32px;border:none;border-radius:12px;background:linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 55%, #1d4ed8 100%);color:#ffffff;font-weight:600;
-  font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:.3s ease;box-shadow:0 8px 20px rgba(37,99,235,.28);position:relative;overflow:hidden;width:fit-content}
+  font-size:15px;cursor:pointer;display:inline-block;transition:.3s ease;box-shadow:0 8px 20px rgba(37,99,235,.28);position:relative;overflow:hidden;width:fit-content}
 .evaluate-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);transition:.5s ease}
 .evaluate-btn:hover{background:linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);box-shadow:0 12px 30px rgba(37,99,235,.35)}
 .evaluate-btn:hover::before{left:100%}
 
 /* Evaluation Section ==================================================================================================== */
 
-.evaluate-section{padding:clamp(18px,3vw,30px);background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%);border-radius:var(--radius-xl);box-shadow:var(--shadow-soft);border-left:8px solid var(--yellow-500);border:1px solid var(--line);transition:all .3s ease}
+.evaluate-section{padding:clamp(18px,3vw,30px);background-image:url('polygon-scatter-haikei.png');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:var(--radius-xl);box-shadow:var(--shadow-soft);border-left:8px solid var(--yellow-500);border:1px solid var(--line);transition:all .3s ease;position:relative;overflow:hidden}
+.evaluate-section::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);z-index:1}
+.eval-box{position:relative;z-index:2}
 .evaluate-section:hover{box-shadow:0 20px 50px rgba(30, 58, 138, 0.16)}
 .eval-box{display:flex;flex-direction:column;gap:16px}
 .eval-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
@@ -109,7 +106,9 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   align-items:center;gap:8px;background:linear-gradient(135deg, #f4f8ff 0%, #ffffff 100%);color:var(--blue-800);transition:.3s ease}
 .back-btn:hover{background:linear-gradient(135deg, #e6efff 0%, #f4f8ff 100%);color:var(--blue-900);box-shadow:0 8px 20px rgba(37,99,235,.2)}
 
-.rating-legends{padding:clamp(12px,2vw,20px);background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%);border-radius:var(--radius-xl);box-shadow:var(--shadow-soft);border-left:8px solid var(--yellow-500);border:1px solid var(--line);display:flex;flex-direction:column;gap:15px;transition:all .3s ease}
+.rating-legends{padding:clamp(12px,2vw,20px);background-image:url('polygon-scatter-haikei.png');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:var(--radius-xl);box-shadow:var(--shadow-soft);border-left:8px solid var(--yellow-500);border:1px solid var(--line);display:flex;flex-direction:column;gap:15px;transition:all .3s ease;position:relative;overflow:hidden}
+.rating-legends::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);z-index:1}
+.rating-legends h2, .rating-legends ul{position:relative;z-index:2}
 .rating-legends:hover{box-shadow:0 20px 50px rgba(30, 58, 138, 0.16)}
 .rating-legends ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;justify-content:flex-start}
 .rating-legends li{font:500 12px "Segoe UI",sans-serif;color:#374151;display:flex;align-items:center;gap:6px;transition:.3s ease;padding:0;border-radius:0;min-height:auto}
@@ -534,12 +533,11 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
   margin: 0 auto;
 }
 
-.feedback-container {
-  margin:0 auto; padding:clamp(18px,3vw,30px);
-  background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%); border-left:8px solid var(--yellow-500); border:1px solid var(--line); border-radius:var(--radius-xl);
-  box-shadow:var(--shadow-soft); overflow:hidden;
-  transition:all .3s ease; display: block;
-}
+.feedback-container{margin:0 auto; padding:clamp(18px,3vw,30px);
+  background-image:url('polygon-scatter-haikei.png');background-size:cover;background-position:center;background-repeat:no-repeat;border-left:8px solid var(--yellow-500); border:1px solid var(--line); border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-soft); overflow:hidden; transition:all .3s ease; position:relative;}
+.feedback-container::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);z-index:1}
+.feedback-box{position:relative;z-index:2}
 
 .feedback-box {
   display:flex; flex-direction:column; align-items:center;
@@ -568,12 +566,11 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 }
 @media(max-width:768px){
   .content-container{padding:84px 16px 16px}
-  .main-box{flex-direction:column}
-  .main-left{border-right:none;margin-bottom:20px}
-  .main-img{width:160px;height:160px;margin-top:20px}
-  .main-right{padding-left:0;text-align:center;display:flex;flex-direction:column;align-items:center}
-  .main-right h1{font-size:22px;margin-top:-10px}
-  .academic-year,.academic-year-eval{font-size:14px;padding:10px 14px}
+  .main-box{padding:clamp(20px,4vw,30px)}
+  .main-content h1{font-size:24px;margin-bottom:16px}
+  .academic-year{font-size:14px;padding:10px 14px;margin-bottom:14px}
+  .subtitle{font-size:13px;margin:16px 0}
+  .evaluate-btn{padding:12px 24px;font-size:14px}
   .eval-header h1{font-size:22px;margin-top:0}
   .academic-year-eval{font-size:12px;padding:6px 10px}
   .faculty-dropdown{font-size:13px}
@@ -585,13 +582,11 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#ffffff;color
 @media(max-width:480px){
   .content-container{padding:84px 12px 12px}
   .main-box,.evaluate-section,.rating-legends,.feedback-container{padding:16px}
+  .main-content h1{font-size:20px;margin-bottom:12px}
+  .academic-year{font-size:13px;padding:8px 12px;margin-bottom:12px}
+  .subtitle{font-size:12px;margin:12px 0}
+  .evaluate-btn{padding:10px 20px;font-size:13px}
   .pagination-container{padding:0 4px}
-  .main-img{width:120px;height:120px;margin-top:15px}
-  .main-right{display:flex;flex-direction:column;align-items:center;gap:0}
-  .main-right h1{font-size:20px;margin-top:-30px}
-  .faculty-dropdown{font-size:13px;width:100%;max-width:none;margin-top:0;align-self:center}
-  .evaluate-btn,.back-btn{display:inline-flex;width:auto}
-  .submit-container{justify-content:center}
   .eval-header h1{font-size:20px;margin-top:0}
   .rating-legends ul{grid-template-columns:1fr;gap:10px}
   .rating-legends li{font-size:13px}

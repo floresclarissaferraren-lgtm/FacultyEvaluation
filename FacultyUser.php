@@ -125,14 +125,13 @@ $conn->close();
 
 <div class="content-container">
   <div class="main-box" id="mainPage">
-    <div class="main-left"><img src="schoollogo.png" alt="School Logo" class="main-img"></div>
-    <div class="main-right">
+    <div class="main-content">
       <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
-      <div class="academic-year"><i class="ph ph-calendar"></i> Academic Year: 2025–2026 • 2nd Semester</div>
-      <div class="academic-year"><i class="ph ph-graduation-cap"></i> Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
+      <div class="academic-year">Academic Year: 2025–2026 • 2nd Semester</div>
+      <div class="academic-year">Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>
-      <button class="evaluate-btn" onclick="showEvaluateSection()"><i class="ph ph-check-circle"></i> Evaluate Now</button>
+      <button class="evaluate-btn" onclick="showEvaluateSection()">Evaluate Now</button>
     </div>
   </div>
 
@@ -149,7 +148,7 @@ $conn->close();
       </div>
 
       <div class="faculty-select">
-        <label for="facultyDropdown"><i class="ph ph-user"></i> Select Faculty:</label>
+        <label for="facultyDropdown">Select Faculty:</label>
         <select id="facultyDropdown" class="faculty-dropdown"><option value="">-- No faculty available --</option></select>
       </div>
     </div>

@@ -22,6 +22,16 @@ try {
     $evaluation_result = $conn->query($evaluation_query);
     $total_evaluations = $evaluation_result->fetch_assoc()['total'];
     
+    // Get overall faculty rating
+    $overall_rating_query = "
+        SELECT AVG(e.overall_rating) as overall_avg
+        FROM evaluations e
+        WHERE e.overall_rating IS NOT NULL
+    ";
+    $overall_rating_result = $conn->query($overall_rating_query);
+    $overall_rating_row = $overall_rating_result->fetch_assoc();
+    $overall_rating = $overall_rating_row ? round($overall_rating_row['overall_avg'], 2) : 0;
+    
     // Get faculty ratings for dashboard
     $ratings_query = "
         SELECT 
@@ -75,6 +85,7 @@ try {
             'totalFaculty' => $total_faculty,
             'totalStudents' => $total_students,
             'totalEvaluations' => $total_evaluations,
+            'overallRating' => $overall_rating,
             'ratings' => $ratings,
             'departments' => $departments
         ]

@@ -332,6 +332,74 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 @keyframes fadeDrop{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
 
 /* ============================================
+   Dashboard Animations
+   ============================================ */
+@keyframes slideInFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Staggered animations for dashboard cards */
+.dashboard-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.dashboard-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dashboard-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.dashboard-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.dashboard-card:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+/* Icon animations */
+.icon-box {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.dashboard-card:hover .icon-box {
+  animation: none;
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Number counter animation */
+.dashboard-value {
+  animation: slideInFadeUp 0.8s cubic-bezier(.4,0,.2,1) 0.6s both;
+}
+
+/* ============================================
    Section Components
    ============================================ */
 .section {
@@ -478,14 +546,17 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   padding: var(--spacing-lg);
   border-radius: 8px; /* Reduced radius from default 14px */
   box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
   position: relative;
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: slideInFadeUp 0.5s cubic-bezier(.4,0,.2,1) forwards;
 }
 
 .student-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0,0,0,.15);
 }
 
 .stat-content {
@@ -541,8 +612,26 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 
 /* Total Students Card - Blue theme */
 .student-stat-card.total-students {
-  background: #0284c7;
+  background-image:url('polygon-scatter-haikei.png');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  position:relative;
   border-left: none;
+}
+.student-stat-card.total-students::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(2,132,199,0.8);
+  z-index:1;
+}
+.student-stat-card.total-students .stat-content {
+  position:relative;
+  z-index:2;
 }
 
 .student-stat-card.total-students .stat-icon {
@@ -555,8 +644,26 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 
 /* Active Students Card - Green theme */
 .student-stat-card.active-students {
-  background: #059669;
+  background-image:url('polygon-scatter-haikei.png');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  position:relative;
   border-left: none;
+}
+.student-stat-card.active-students::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(5,150,105,0.8);
+  z-index:1;
+}
+.student-stat-card.active-students .stat-content {
+  position:relative;
+  z-index:2;
 }
 
 .student-stat-card.active-students .stat-icon {
@@ -569,8 +676,26 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 
 /* Regular Students Card - Purple theme */
 .student-stat-card.regular-students {
-  background: #7c3aed;
+  background-image:url('polygon-scatter-haikei.png');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  position:relative;
   border-left: none;
+}
+.student-stat-card.regular-students::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(124,58,237,0.8);
+  z-index:1;
+}
+.student-stat-card.regular-students .stat-content {
+  position:relative;
+  z-index:2;
 }
 
 .student-stat-card.regular-students .stat-icon {
@@ -583,8 +708,26 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 
 /* Irregular Students Card - Orange theme */
 .student-stat-card.irregular-students {
-  background: #ea580c;
+  background-image:url('polygon-scatter-haikei.png');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  position:relative;
   border-left: none;
+}
+.student-stat-card.irregular-students::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(234,88,12,0.8);
+  z-index:1;
+}
+.student-stat-card.irregular-students .stat-content {
+  position:relative;
+  z-index:2;
 }
 
 .student-stat-card.irregular-students .stat-icon {
@@ -593,6 +736,43 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 
 .student-stat-card.irregular-students .stat-icon i {
   color: #ffffff;
+}
+
+/* Staggered animations for student stat cards */
+.student-stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.student-stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.student-stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.student-stat-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Icon animations for student stat cards */
+.student-stat-card .stat-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.student-stat-card:hover .stat-icon {
+  animation: none;
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Number animations for student stat cards */
+.student-stat-card .stat-number {
+  animation: slideInFadeUp 0.7s cubic-bezier(.4,0,.2,1) 0.3s both;
+  transition: all 0.3s ease;
+}
+
+.student-stat-card:hover .stat-number {
+  transform: scale(1.05);
 }
 
 /* Responsive design */
@@ -634,22 +814,26 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   flex-wrap: wrap;
   gap: var(--spacing-sm);
   margin-bottom: 20px;
+  justify-content: center;
 }
 
 .dashboard-card {
-  flex: 1 1 calc(35% - var(--spacing-sm));
-  min-width: 18rem;
+  flex: 1 1 calc(24% - var(--spacing-sm));
+  min-width: 13rem;
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 14px;
   box-shadow: 0 8px 20px rgba(0,0,0,.08);
   border-left: 6px solid transparent;
-  transition: transform .25s ease, box-shadow .25s ease;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  animation: slideInFadeUp 0.6s cubic-bezier(.4,0,.2,1) forwards;
 }
 
 /* Center border lines for dashboard cards */
@@ -723,8 +907,9 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 }
 
 .dashboard-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0,0,0,.12);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+  border-left-width: 8px;
 }
 
 /* Faculty card: extremely light blue background */
@@ -735,15 +920,15 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 /* Students card: extremely light green background */
 .dashboard-card.students {
   background: linear-gradient(135deg, #f8fafc, #f0fdf4);
-  flex: 1 1 calc(20% - var(--spacing-sm));
-  min-width: 12rem;
+  flex: 1 1 calc(24% - var(--spacing-sm));
+  min-width: 13rem;
 }
 
 /* Evaluations card: extremely light violet background */
 .dashboard-card.evaluations {
   background: linear-gradient(135deg, #f8fafc, #faf5ff);
-  flex: 1 1 calc(20% - var(--spacing-sm));
-  min-width: 12rem;
+  flex: 1 1 calc(24% - var(--spacing-sm));
+  min-width: 13rem;
 }
 
 /* Period card: white background - keep original size */
@@ -781,6 +966,12 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   margin: var(--spacing-sm) 0;
   color: #0f172a;
   text-shadow: 0 2px 4px rgba(0,0,0,.08);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover .dashboard-value {
+  transform: scale(1.05);
+  color: #0ea5e9;
 }
 
 .dashboard-card span {
@@ -833,6 +1024,33 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   color: #ffffff;
 }
 
+/* Overall Ratings card - Orange/Yellow border lines */
+.dashboard-card.overall-ratings::before,
+.dashboard-card.overall-ratings::after {
+  background: linear-gradient(to bottom, 
+    transparent, 
+    rgba(251, 146, 60, 0.4) 20%, 
+    rgba(245, 158, 11, 0.4) 80%, 
+    transparent
+  );
+}
+
+/* Overall Ratings card: extremely light orange background */
+.dashboard-card.overall-ratings {
+  background: linear-gradient(135deg, #f8fafc, #fffbeb);
+  flex: 1 1 calc(24% - var(--spacing-sm));
+  min-width: 13rem;
+}
+
+/* Overall Ratings card icon: orange/yellow background */
+.dashboard-card.overall-ratings .icon-box {
+  background: linear-gradient(135deg, #fb923c, #f59e0b);
+  color: #ffffff;
+}
+.dashboard-card.overall-ratings .icon-box i {
+  color: #ffffff;
+}
+
 /* Period Specific */
 .dashboard-card.period .dashboard-content {
   flex-direction: column;
@@ -843,7 +1061,14 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 /* Rating Distribution card styling */
 .dashboard-card.rating-distribution {
   background: linear-gradient(135deg, #ffffff, #fafafa);
-  border-left: 6px solid #8b5cf6;
+  flex: 1 1 calc(10% - var(--spacing-sm)) !important;
+  min-width: 5rem !important;
+}
+
+/* Override dashboard-row-2 styling for rating distribution cards */
+.dashboard-row-2 .dashboard-card.rating-distribution {
+  flex: 1 1 calc(10% - var(--spacing-sm)) !important;
+  min-width: 5rem !important;
 }
 
 .dashboard-card.rating-distribution .dashboard-content {
@@ -867,19 +1092,27 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 .rating-chart-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: var(--spacing-md) 0;
+  width: 100%;
 }
 
 #ratingDistributionChart {
-  max-width: 280px;
-  max-height: 280px;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  display: block;
+  position: relative;
+  left: 20px;
 }
 
 .rating-legend {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  flex-direction: row;
+  gap: var(--spacing-md);
   padding: var(--spacing-md) 0;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .rating-legend .legend-item {
@@ -888,7 +1121,6 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   gap: var(--spacing-sm);
   font-size: 0.875rem;
   color: #374151;
-  justify-content: center;
 }
 
 .rating-legend .legend-color {
@@ -903,7 +1135,7 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 }
 
 .rating-legend .legend-color.very-good {
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  background: #ab7dfa;
 }
 
 .rating-legend .legend-color.good {
@@ -911,7 +1143,7 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
 }
 
 .rating-legend .legend-color.fair {
-  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  background: #ffe16a;
 }
 
 .rating-legend .legend-color.poor {
@@ -1854,9 +2086,11 @@ table.evaluation-table .view-btn:hover {
   border-bottom:1px solid var(--border);}
 .report-title h2{margin:0;font-size:1.75rem;line-height:1.2;color:var(--blue-900);font-weight:800;letter-spacing:.4px;}
 .report-title p{margin:8px 0 0;color:var(--slate-500);font-size:.98rem;font-weight:500;}
-.dashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px -5px;}
-.dashboard-row-2{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:0 -5px 20px -5px;margin-top:20px;}
-.period-container{grid-column:1;min-width:0;}
+.dashboard-row-2{display:flex;flex-direction:column;gap:var(--spacing-sm);margin-top:20px;align-items:flex-start;}
+.dashboard-row-2 .dashboard-card{flex:1 1 calc(8% - var(--spacing-sm));min-width:4rem;}
+.dashboard-row-2 .dashboard-card.rating-distribution{flex:1 1 calc(8% - var(--spacing-sm)) !important;min-width:4rem !important;}
+.dashboard-row-2 .period-container{flex:1 1 calc(8% - var(--spacing-sm));min-width:4rem;}
+.dashboard-row-2 .dashboard-card.period{flex:1 1 calc(8% - var(--spacing-sm)) !important;min-width:4rem !important;}
 .filter-row{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr)) minmax(220px,1.2fr) auto;gap:14px;align-items:end;}
 .filter-row select,.filter-row input{width:100%;min-width:0;height:48px;padding:0 14px;border:1px solid var(--slate-200);border-radius:14px;outline:none;
   background:#fff;color:var(--slate-900);font-size:.95rem;box-sizing:border-box;transition:.2s;}
