@@ -13,7 +13,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
 /* =========================
-   ADD FACULTY
+   ADD NEW FACULTY
 ========================= */
 if ($action === "add") {
 

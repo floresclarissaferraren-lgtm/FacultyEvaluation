@@ -136,7 +136,7 @@ function assignStudentSubjects(mysqli $conn, int $student_id, string $program, s
 }
 
 /* =========================
-   ADD STUDENT
+   ADD NEW STUDENT
 ========================= */
 if ($action === "add") {
 

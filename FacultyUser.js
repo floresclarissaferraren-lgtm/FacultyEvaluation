@@ -31,10 +31,12 @@ document.getElementById("logoutModal").addEventListener("click", e => {
 });
 
 function showPasswordForm(){
-  document.getElementById("passwordForm").style.display="flex";
+  document.body.classList.add("modal-open");
+  document.getElementById("passwordForm").classList.add("show");
 }
 function closePasswordForm(){
-  document.getElementById("passwordForm").style.display="none";
+  document.body.classList.remove("modal-open");
+  document.getElementById("passwordForm").classList.remove("show");
 }
 function showProfile(){
   // Close dropdown first
@@ -47,48 +49,92 @@ function showProfile(){
   const studentYearLevel = document.getElementById("studentYearLevel")?.value;
   const studentProgram = document.getElementById("studentProgram")?.value;
   
-  // Create profile modal content
-  const profileContent = `
-    <div class="profile-header">
-      <div class="profile-icon">
-        <i class="ph ph-user-circle"></i>
+  // Fetch additional student data from database
+  fetchStudentProfileData(studentId).then(additionalData => {
+    // Create profile modal content with real data
+    const profileContent = `
+      <div class="profile-header">
+        <h3>Student Profile</h3>
       </div>
-      <h3>Student Profile</h3>
-    </div>
-    <div class="profile-info">
-      <p><strong>Full Name:</strong> ${studentName || 'N/A'}</p>
-      <p><strong>Student Number:</strong> ${studentNumber || 'N/A'}</p>
-      <p><strong>Year Level:</strong> ${studentYearLevel || 'N/A'}</p>
-      <p><strong>Program:</strong> ${studentProgram || 'N/A'}</p>
-    </div>
-    <div class="profile-buttons">
-      <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
-    </div>
-  `;
-  
-  // Create modal if it doesn't exist
-  let profileModal = document.getElementById("profileModal");
-  if (!profileModal) {
-    profileModal = document.createElement("div");
-    profileModal.id = "profileModal";
-    profileModal.className = "profileform";
-    document.body.appendChild(profileModal);
-  }
-  
-  profileModal.innerHTML = `
-    <div class="logout-content">
-      ${profileContent}
-    </div>
-  `;
-  
-  profileModal.style.display = "flex";
-  
-  // Add click outside to close functionality
-  profileModal.addEventListener('click', function(event) {
-    if (event.target === profileModal) {
-      closeProfileModal();
+      <div class="profile-body">
+        <div class="profile-header-info">
+          <div class="profile-avatar">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Profile Picture">
+          </div>
+          <div class="profile-name-section">
+            <h4>${studentName || 'Student'}</h4>
+            <p>Student</p>
+          </div>
+        </div>
+        <div class="profile-fields">
+          <div class="field-group">
+            <div class="field-label">Student ID</div>
+            <div class="field-value">${studentNumber || 'N/A'}</div>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Program</div>
+            <div class="field-value">${studentProgram || 'N/A'}</div>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Year Level</div>
+            <div class="field-value">${studentYearLevel || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="profile-buttons">
+        <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
+      </div>
+    `;
+    
+    // Create modal if it doesn't exist
+    let profileModal = document.getElementById("profileModal");
+    if (!profileModal) {
+      profileModal = document.createElement("div");
+      profileModal.id = "profileModal";
+      profileModal.className = "profileform";
+      document.body.appendChild(profileModal);
     }
+    
+    profileModal.innerHTML = `
+      <div class="logout-content">
+        ${profileContent}
+      </div>
+    `;
+    
+    profileModal.style.display = "flex";
+    
+    // Add click outside to close functionality
+    profileModal.addEventListener('click', function(event) {
+      if (event.target === profileModal) {
+        closeProfileModal();
+      }
+    });
+  }).catch(error => {
+    console.error('Error fetching student profile data:', error);
   });
+}
+
+// Function to fetch additional student profile data from database
+async function fetchStudentProfileData(studentId) {
+  try {
+    const response = await fetch('get_student_profile.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `student_id=${studentId}`
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch student profile data');
+    }
+    
+    const data = await response.json();
+    return data.success ? data.data : {};
+  } catch (error) {
+    console.error('Error:', error);
+    return {};
+  }
 }
 
 window.closeProfileModal = () => {
@@ -166,31 +212,30 @@ function togglePassword(id, icon) {
 async function showEvaluateSection() {
   document.getElementById("mainPage").style.display = "none";
   document.getElementById("evaluateSection").style.display = "block";
-  document.getElementById("ratingLegends").style.display = "block";
-  document.getElementById("evaluationContainer").style.display = "block";
+  document.getElementById("facultyCards").style.display = "block";
+  document.getElementById("evaluationContainer").style.display = "none";
 
-  await loadStudentFacultyDropdown();
-  loadFacultyCategories(); 
+  await loadStudentFacultyCards();
 }
 function goBackToMain() {
   document.getElementById("evaluateSection").style.display = "none";
-  document.getElementById("ratingLegends").style.display = "none";
   document.getElementById("evaluationContainer").style.display = "none";
+  document.getElementById("facultyCards").style.display = "none";
   document.getElementById("mainPage").style.display = "flex";
 }
 // ================= LOAD CATEGORIES + QUESTIONS =================
 let currentCriteria = 0;
 let criteriaTables = [];
 
-async function loadStudentFacultyDropdown() {
+async function loadStudentFacultyCards() {
   const studentId = document.getElementById('studentId')?.value.trim();
   const yearLevel = document.getElementById('studentYearLevel')?.value.trim();
-  const dropdown = document.getElementById('facultyDropdown');
+  const container = document.getElementById('facultyContainer');
 
-  if (!dropdown) return;
+  if (!container) return;
 
   if (!studentId && !yearLevel) {
-    dropdown.innerHTML = '<option value="">-- No faculty available --</option>';
+    container.innerHTML = '<p class="no-faculty">No faculty available</p>';
     return;
   }
 
@@ -202,36 +247,69 @@ async function loadStudentFacultyDropdown() {
     const res = await fetch(`getFaculty.php?${params.toString()}`);
     const facultyList = await res.json();
 
-    dropdown.innerHTML = '';
+    container.innerHTML = '';
 
     if (Array.isArray(facultyList) && facultyList.length > 0) {
-      dropdown.innerHTML = '<option value="">-- Select Faculty --</option>';
       facultyList.forEach(faculty => {
         const subjectLabels = Array.isArray(faculty.subjects)
           ? faculty.subjects.map(sub => sub.subject_code || sub.subject_desc).join(', ')
           : '';
 
-        const labelParts = [
+        const nameParts = [
           faculty.firstname || '',
           faculty.lastname || '',
           faculty.suffix ? faculty.suffix : ''
         ].filter(Boolean);
 
-        const label = `${labelParts.join(' ')}${subjectLabels ? ' (' + subjectLabels + ')' : ''}`;
+        const fullName = nameParts.join(' ');
 
-        const option = document.createElement('option');
-        option.value = faculty.id;
-        option.textContent = label;
-        option.dataset.subjects = subjectLabels;
-        dropdown.appendChild(option);
+        const card = document.createElement('div');
+        card.className = 'faculty-card';
+        card.onclick = () => selectFaculty(faculty.id, fullName, subjectLabels);
+        
+        card.innerHTML = `
+          <div class="faculty-header">
+            <div class="faculty-icon">
+              <i class="ph ph-user-circle"></i>
+            </div>
+            <div class="faculty-name-bg">
+              <h3 class="faculty-name">${fullName}</h3>
+            </div>
+          </div>
+          <div class="faculty-info">
+            <p class="faculty-subjects-label">Subjects:</p>
+            <div class="faculty-subjects">${subjectLabels || 'No subjects assigned'}</div>
+          </div>
+          <div class="evaluate-action">
+            <button class="evaluate-faculty-btn">Evaluate</button>
+          </div>
+        `;
+        
+        container.appendChild(card);
       });
     } else {
-      dropdown.innerHTML = `<option value="">-- No faculty available for ${yearLevel} --</option>`;
+      container.innerHTML = `<p class="no-faculty">No faculty available for ${yearLevel}</p>`;
     }
   } catch (err) {
-    console.error('Error loading faculty dropdown:', err);
-    dropdown.innerHTML = '<option value="">-- Unable to load faculty --</option>';
+    console.error('Error loading faculty cards:', err);
+    container.innerHTML = '<p class="no-faculty">Unable to load faculty</p>';
   }
+}
+
+function selectFaculty(facultyId, facultyName, subjects) {
+  // Store selected faculty data
+  window.selectedFaculty = {
+    id: facultyId,
+    name: facultyName,
+    subjects: subjects
+  };
+  
+  // Hide faculty cards and show evaluation form
+  document.getElementById('facultyCards').style.display = 'none';
+  document.getElementById('evaluationContainer').style.display = 'block';
+  
+  // Load evaluation categories and questions
+  loadFacultyCategories();
 }
 
 async function loadFacultyCategories() {
@@ -249,20 +327,29 @@ async function loadFacultyCategories() {
       contentContainer.appendChild(container);
     }
 
-    // Create pagination container
-    const paginationContainer = document.createElement("div");
-    paginationContainer.className = "pagination-container";
-    paginationContainer.innerHTML = `
-      <div class="pagination-buttons">
-        <button class="pagination-btn arrow-left" onclick="previousCriteria()" id="prevBtn">
-          Previous
-        </button>
-        <button class="pagination-btn arrow-right" onclick="nextCriteria()" id="nextBtn">
-          Next
-        </button>
+    // Create main evaluation container with header
+    const mainEvaluationContainer = document.createElement("div");
+    mainEvaluationContainer.className = "main-evaluation-container";
+    
+    // Create header section
+    const headerSection = document.createElement("div");
+    headerSection.className = "evaluation-header-section";
+    headerSection.innerHTML = `
+      <h2 class="performance-evaluation-title">Performance Evaluation</h2>
+      <div class="rating-legends-mini">
+        <ul>
+          <li><span class="dot dot5"></span>5 - Outstanding</li>
+          <li><span class="dot dot4"></span>4 - Very Good</li>
+          <li><span class="dot dot3"></span>3 - Good</li>
+          <li><span class="dot dot2"></span>2 - Fair</li>
+          <li><span class="dot dot1"></span>1 - Poor</li>
+        </ul>
       </div>
-      <div class="pagination-info" id="pageInfo">1 / ${categories.length}</div>
     `;
+    
+    // Create form content area
+    const formContentArea = document.createElement("div");
+    formContentArea.className = "evaluation-form-area";
 
     criteriaTables = [];
     currentCriteria = 0;
@@ -289,8 +376,9 @@ async function loadFacultyCategories() {
       console.log("Questions for", c.id, questions);
 
       if (Array.isArray(questions) && questions.length > 0) {
-        questions.forEach(q => {
+        questions.forEach((q, index) => {
           const tr = document.createElement("tr");
+          tr.className = index % 2 === 0 ? "row-even" : "row-odd";
           tr.innerHTML = `
             <td class="question-list">${q.question_text}</td>
             <td><input type="radio" name="q_${q.id}" value="5"></td>
@@ -307,11 +395,11 @@ async function loadFacultyCategories() {
         tbody.appendChild(tr);
       }
 
-      container.appendChild(table);
+      formContentArea.appendChild(table);
       criteriaTables.push(table);
     }
     
-    // Add feedback and submit button container (hidden initially)
+    // Add feedback container (hidden initially)
     const feedbackSubmitContainer = document.createElement("div");
     feedbackSubmitContainer.id = "feedbackSubmitContainer";
     feedbackSubmitContainer.style.display = "none";
@@ -324,9 +412,29 @@ async function loadFacultyCategories() {
       </div>
     `;
     
-    // Add feedback container first, then pagination
-    container.appendChild(feedbackSubmitContainer);
-    container.appendChild(paginationContainer);
+    formContentArea.appendChild(feedbackSubmitContainer);
+    
+    // Create navigation section
+    const navigationSection = document.createElement("div");
+    navigationSection.className = "evaluation-navigation";
+    navigationSection.innerHTML = `
+      <div class="pagination-buttons">
+        <button class="pagination-btn arrow-left" onclick="previousCriteria()" id="prevBtn">
+          Previous
+        </button>
+        <button class="pagination-btn arrow-right" onclick="nextCriteria()" id="nextBtn">
+          Next
+        </button>
+      </div>
+      <div class="pagination-info" id="pageInfo">1 / ${categories.length}</div>
+    `;
+    
+    // Assemble the main container
+    mainEvaluationContainer.appendChild(headerSection);
+    mainEvaluationContainer.appendChild(formContentArea);
+    mainEvaluationContainer.appendChild(navigationSection);
+    
+    container.appendChild(mainEvaluationContainer);
     
     updatePaginationButtons();
     
@@ -389,8 +497,7 @@ function submitEvaluation() {
   }
 
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
-  const facultyDropdown = document.getElementById('facultyDropdown');
-  const facultyId = facultyDropdown ? facultyDropdown.value : '';
+  const facultyId = window.selectedFaculty?.id || '';
 
   if (!facultyId) {
     alert('Please select a faculty member to evaluate.');
@@ -413,7 +520,7 @@ function submitEvaluation() {
     return;
   }
 
-  const facultyLabel = facultyDropdown.options[facultyDropdown.selectedIndex]?.text || '';
+  const facultyLabel = window.selectedFaculty?.name || '';
   const submission = {
     student_id: studentId,
     faculty_id: facultyId,
@@ -439,8 +546,8 @@ function submitEvaluation() {
       const fb = document.getElementById('studentFeedback');
       if (fb) fb.value = '';
       
-      // Refresh faculty dropdown to remove evaluated faculty
-      await loadStudentFacultyDropdown();
+      // Refresh faculty cards to remove evaluated faculty
+      await loadStudentFacultyCards();
       
       // Reset to first criteria page
       currentCriteria = 0;
@@ -455,3 +562,14 @@ function submitEvaluation() {
       updatePaginationButtons();
     });
 }
+
+// Add event listener for password form back button
+document.addEventListener("DOMContentLoaded", function() {
+  const backBtn = document.getElementById("closePasswordForm");
+  if (backBtn) {
+    backBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      closePasswordForm();
+    });
+  }
+});

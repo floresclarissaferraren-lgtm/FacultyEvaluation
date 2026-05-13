@@ -81,14 +81,14 @@ try {
                         'Overall Performance' as category,
                         AVG(e.overall_rating) as average_score,
                         CASE 
-                            WHEN AVG(e.overall_rating) >= 4.5 THEN 'Excellent'
+                            WHEN AVG(e.overall_rating) >= 4.5 THEN 'Outstanding'
                             WHEN AVG(e.overall_rating) >= 3.5 THEN 'Very Good'
                             WHEN AVG(e.overall_rating) >= 2.5 THEN 'Good'
                             WHEN AVG(e.overall_rating) >= 1.5 THEN 'Fair'
                             ELSE 'Poor'
                         END as rating,
                         CASE 
-                            WHEN AVG(e.overall_rating) >= 4.5 THEN 'excellent'
+                            WHEN AVG(e.overall_rating) >= 4.5 THEN 'outstanding'
                             WHEN AVG(e.overall_rating) >= 3.5 THEN 'very-good'
                             WHEN AVG(e.overall_rating) >= 2.5 THEN 'good'
                             WHEN AVG(e.overall_rating) >= 1.5 THEN 'fair'

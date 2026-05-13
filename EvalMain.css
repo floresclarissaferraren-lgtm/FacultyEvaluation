@@ -163,17 +163,271 @@ footer{padding:20px;text-align:center;background:#0f172a;color:#cbd5f5;font-size
   .StudentForm-right h2{font-size:24px}
 }
 
-/* LOGIN FORMS =====================================================================================================================================*/ 
+/* MODERN LOGIN FORM DESIGN ===================================================================================================================================== */ 
 
 body.modal-open{overflow:hidden}
-.LoginForm{display:none;position:fixed;inset:0;background:#fff;justify-content:center;align-items:center;z-index:9999;opacity:0;transition:.3s}
+.LoginForm{display:none;position:fixed;inset:0;background:linear-gradient(135deg, #e6f2ff 0%, #f0f8ff 100%);justify-content:center;align-items:center;z-index:9999;opacity:0;transition:.3s}
 .LoginForm.show{display:flex;opacity:1}
-.LoginForm-content{background:#f2f8ff;border-radius:16px;width:100%;max-width:450px;padding:35px 30px;text-align:center;box-shadow:0 12px 30px rgba(0,0,50,.2);position:relative;color:#1a3c6c;transform:translateY(-40px);animation:slideDown .4s ease}
-.LoginForm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.logo{height:70px}
-.back-btn{background:0;border:0;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:5px;color:#1a3c6c;margin-top:-20px;transition:.2s}
-.back-btn:hover{color:#4a6fa5}
-.LoginForm-content h2{font-size:28px;font-weight:700;margin:-20px 0 12px}
+.LoginForm-content{
+  background:linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border-radius:24px;
+  width:100%;
+  max-width:480px;
+  padding:30px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(59, 130, 246, 0.15);
+  position:relative;
+  color:#1e293b;
+  transform:translateY(-40px);
+  animation:slideDown .5s ease;
+  overflow:hidden;
+  border:1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Decorative wave backgrounds */
+.wave-bg{
+  position:absolute;
+  border-radius:50%;
+  background:linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+  pointer-events:none;
+}
+.wave-1{
+  width:200px;
+  height:200px;
+  top:-100px;
+  right:-100px;
+  animation:float-wave 8s ease-in-out infinite;
+}
+.wave-2{
+  width:150px;
+  height:150px;
+  bottom:-75px;
+  left:-75px;
+  animation:float-wave 6s ease-in-out infinite reverse;
+}
+.wave-3{
+  width:100px;
+  height:100px;
+  top:20px;
+  left:20px;
+  animation:float-wave 7s ease-in-out infinite 2s;
+}
+
+@keyframes float-wave{
+  0%, 100%{transform:translate(0, 0) scale(1);}
+  33%{transform:translate(20px, -10px) scale(1.05);}
+  66%{transform:translate(-10px, 15px) scale(0.95);}
+}
+
+.LoginForm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.logo{height:80px}
+.back-btn{background:rgba(255,255,255,0.8);border:1px solid rgba(59,130,246,0.2);border-radius:12px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:5px;color:#3b82f6;padding:8px 12px;margin-top:-20px;transition:.2s}
+.back-btn:hover{background:#3b82f6;color:#fff;transform:translateY(-2px)}
+
+/* Modern login form container */
+.login-form-container{
+  position:relative;
+  z-index:1;
+}
+
+.login-title{
+  font-size:32px;
+  font-weight:800;
+  margin:0 0 12px 0;
+  color:#1e293b;
+  letter-spacing:-0.5px;
+}
+
+.login-description{
+  font-size:14px;
+  color:#64748b;
+  margin:0 0 20px 0;
+  line-height:1.5;
+  max-width:320px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* Modern input groups */
+.modern-login-form{
+  text-align:left;
+}
+
+.modern-input-group{
+  position:relative;
+  margin-bottom:16px;
+}
+
+.modern-input-group input{
+  width:100%;
+  padding:16px 20px 16px 20px;
+  border:2px solid #e2e8f0;
+  border-radius:16px;
+  font-size:15px;
+  color:#1e293b;
+  background:#ffffff;
+  transition:all .3s ease;
+  font-weight:500;
+}
+
+.modern-input-group.has-icon input{
+  padding:16px 50px 16px 20px;
+}
+
+.modern-input-group.has-toggle input{
+  padding:16px 50px 16px 20px;
+}
+
+.modern-input-group input::placeholder{
+  color:#94a3b8;
+  font-weight:400;
+}
+
+.modern-input-group input:focus{
+  border-color:#3b82f6;
+  outline:0;
+  box-shadow:0 0 0 4px rgba(59, 130, 246, 0.1);
+  transform:translateY(-1px);
+}
+
+.input-icon{
+  position:absolute;
+  right:16px;
+  top:40%;
+  transform:translateY(-50%);
+  color:#94a3b8;
+  font-size:20px;
+  pointer-events:none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modern-input-group input:focus + .input-icon{
+  color:#3b82f6;
+}
+
+.password-toggle{
+  position:absolute;
+  right:16px;
+  top:40%;
+  transform:translateY(-50%);
+  color:#94a3b8;
+  font-size:20px;
+  cursor:pointer;
+  transition:color .2s ease;
+  pointer-events:auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover{
+  color:#3b82f6;
+}
+
+.modern-input-group input:focus ~ .password-toggle{
+  color:#3b82f6;
+}
+
+/* Hide browser's default password reveal icon for modern inputs */
+.modern-input-group input[type="password"]::-ms-reveal,
+.modern-input-group input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+.modern-input-group input[type="password"]::-webkit-credentials-auto-fill-button,
+.modern-input-group input[type="password"]::-webkit-password-toggle {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Form links */
+.form-links{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.forgot-link{
+  color:#3b82f6;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:500;
+  transition:all .2s ease;
+}
+
+.forgot-link:hover{
+  color:#2563eb;
+  text-decoration:underline;
+}
+
+/* Modern login button */
+.modern-login-btn{
+  width:100%;
+  background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color:#ffffff;
+  border:0;
+  padding:18px 24px;
+  border-radius:16px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .3s ease;
+  box-shadow:0 8px 25px rgba(59, 130, 246, 0.3);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:0;
+}
+
+.modern-login-btn:hover{
+  background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform:translateY(-2px);
+  box-shadow:0 12px 35px rgba(59, 130, 246, 0.4);
+}
+
+.modern-login-btn:active{
+  transform:translateY(0);
+}
+
+/* Create account section */
+.create-account-section{
+  text-align:center;
+  padding-top:20px;
+  border-top:1px solid #e2e8f0;
+}
+
+.no-account{
+  color:#64748b;
+  font-size:14px;
+  margin:0 0 8px 0;
+}
+
+.create-account-link{
+  color:#3b82f6;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  transition:all .2s ease;
+}
+
+.create-account-link:hover{
+  color:#2563eb;
+  text-decoration:underline;
+}
+
+/* Error messages */
+.error-message {
+  color: #ef4444;
+  font-size: 0.85em;
+  margin-top: 6px;
+  min-height: 18px;
+  display: block;
+  text-align: left;
+  padding-left: 0;
+}
+
+/* Legacy styles for forgot password form */
 .LoginForm-subtitle{display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;color:#1a3c6c;margin-bottom:15px}
 .LoginForm-subtitle span{flex:1;height:1px;background:#1a3c6c}
 .input-group {
@@ -290,5 +544,183 @@ select {
 .modal-body::-webkit-scrollbar-thumb:hover,
 .form-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* LOADING STATES =====================================================================================================================================*/
+.StudentLogin-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.StudentLogin-btn.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* FULL-SCREEN SKELETON LOADER =====================================================================================================================================*/
+#fullscreen-spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  backdrop-filter: blur(5px);
+}
+
+#fullscreen-spinner.hidden {
+  display: none;
+}
+
+.skeleton-loader {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+}
+
+.skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 0 20px;
+}
+
+.skeleton-logo {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+.skeleton-nav-items {
+  display: flex;
+  gap: 30px;
+}
+
+.skeleton-nav-item {
+  width: 80px;
+  height: 24px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 6px;
+}
+
+.skeleton-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.skeleton-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.skeleton-title {
+  width: 60%;
+  height: 24px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.skeleton-text {
+  width: 100%;
+  height: 16px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.skeleton-text.short {
+  width: 70%;
+}
+
+.skeleton-form {
+  grid-column: 1 / -1;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.skeleton-input {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.skeleton-button {
+  width: 100%;
+  height: 55px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .skeleton-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .skeleton-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .skeleton-nav-items {
+    gap: 15px;
+  }
+  
+  .skeleton-nav-item {
+    width: 60px;
+  }
+}  margin: 0;
+  letter-spacing: 0.5px;
 }
 

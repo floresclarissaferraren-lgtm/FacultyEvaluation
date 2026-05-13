@@ -14,10 +14,12 @@ function confirmLogout(){
   window.location.href = "EvalMain.php";}
 
 function showPasswordForm(){
-  document.getElementById("passwordForm").style.display = "flex";}
+  document.body.classList.add("modal-open");
+  document.getElementById("passwordForm").classList.add("show");}
 
 function closePasswordForm(){
-  document.getElementById("passwordForm").style.display = "none";}
+  document.body.classList.remove("modal-open");
+  document.getElementById("passwordForm").classList.remove("show");}
 
 function showProfile(){
   // Close dropdown first
@@ -28,47 +30,88 @@ function showProfile(){
   const facultyName = document.getElementById("facultyName")?.value;
   const facultyEmail = document.getElementById("facultyEmail")?.value;
   
-  // Create profile modal content
-  const profileContent = `
-    <div class="profile-header">
-      <div class="profile-icon">
-        <i class="ph ph-user-circle"></i>
+  // Fetch additional faculty data from database
+  fetchFacultyProfileData(facultyId).then(additionalData => {
+    // Create profile modal content with real data
+    const profileContent = `
+      <div class="profile-header">
+        <h3>Your Profile</h3>
       </div>
-      <h3>Faculty Profile</h3>
-    </div>
-    <div class="profile-info">
-      <p><strong>Full Name:</strong> ${facultyName || 'N/A'}</p>
-      <p><strong>Faculty ID:</strong> ${facultyId || 'N/A'}</p>
-      <p><strong>Email:</strong> ${facultyEmail || 'N/A'}</p>
-    </div>
-    <div class="profile-buttons">
-      <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
-    </div>
-  `;
-  
-  // Create modal if it doesn't exist
-  let profileModal = document.getElementById("profileModal");
-  if (!profileModal) {
-    profileModal = document.createElement("div");
-    profileModal.id = "profileModal";
-    profileModal.className = "profileform";
-    document.body.appendChild(profileModal);
-  }
-  
-  profileModal.innerHTML = `
-    <div class="logout-content">
-      ${profileContent}
-    </div>
-  `;
-  
-  profileModal.style.display = "flex";
-  
-  // Add click outside to close functionality
-  profileModal.addEventListener('click', function(event) {
-    if (event.target === profileModal) {
-      closeProfileModal();
+      <div class="profile-body">
+        <div class="profile-header-info">
+          <div class="profile-avatar">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Profile Picture">
+          </div>
+          <div class="profile-name-section">
+            <h4>${facultyName || 'Faculty'}</h4>
+            <p>Faculty Instructor</p>
+          </div>
+        </div>
+        <div class="profile-fields">
+          <div class="field-group">
+            <div class="field-label">Email</div>
+            <div class="field-value">${facultyEmail || 'N/A'}</div>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Faculty ID</div>
+            <div class="field-value">${facultyId || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="profile-buttons">
+        <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
+      </div>
+    `;
+    
+    // Create modal if it doesn't exist
+    let profileModal = document.getElementById("profileModal");
+    if (!profileModal) {
+      profileModal = document.createElement("div");
+      profileModal.id = "profileModal";
+      profileModal.className = "profileform";
+      document.body.appendChild(profileModal);
     }
+    
+    profileModal.innerHTML = `
+      <div class="logout-content">
+        ${profileContent}
+      </div>
+    `;
+    
+    profileModal.style.display = "flex";
+    
+    // Add click outside to close functionality
+    profileModal.addEventListener('click', function(event) {
+      if (event.target === profileModal) {
+        closeProfileModal();
+      }
+    });
+  }).catch(error => {
+    console.error('Error fetching faculty profile data:', error);
   });
+}
+
+// Function to fetch additional faculty profile data from database
+async function fetchFacultyProfileData(facultyId) {
+  try {
+    const response = await fetch('get_faculty_profile.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `faculty_id=${facultyId}`
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch faculty profile data');
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    return {};
+  }
 }
 
 window.closeProfileModal = () => {
@@ -215,70 +258,66 @@ function showEvaluationReport() {
   })
   .then(response => response.json())
   .then(data => {
-    if (data.success) {
-      const reportContent = `
-        <div class="report-content">
-          <div class="report-header">
-            <div class="header-left">
-              <img src="logo.png" alt="College Logo" class="college-logo">
-              <div class="college-info">
-                <h2>Granby Colleges of Science and Technology</h2>
-                <p class="report-subtitle">Faculty Evaluation Report</p>
-              </div>
+    // Always show the modal with back button
+    const reportContent = `
+      <div class="report-content">
+        <div class="report-header">
+          <div class="header-left">
+            <img src="logo.png" alt="College Logo" class="college-logo">
+            <div class="college-info">
+              <h2>Granby Colleges of Science and Technology</h2>
+              <p class="report-subtitle">Faculty Evaluation Report</p>
             </div>
-            <button class="close-report-btn" onclick="closeEvaluationReport()">
-              <i class="ph ph-x"></i>
+          </div>
+          <button class="close-report-btn" onclick="closeEvaluationReport()">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        
+        <div class="report-body">
+          <div class="faculty-details">
+            <div class="detail-item">
+              <label>Name:</label>
+              <span>${facultyName || 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <label>Faculty ID:</label>
+              <span>${facultyId || 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <label>Overall Rating:</label>
+              <span>${data.success ? (data.overall_rating || '0.00') : '0.00'} / 5.00</span>
+            </div>
+            <div class="detail-item">
+              <label>Total Student Responses:</label>
+              <span>${data.success ? (data.total_responses || '0') : '0'}</span>
+            </div>
+          </div>
+          <div class="report-footer">
+            <button class="download-pdf-btn" onclick="downloadEvaluationReport()">
+              <i class="ph ph-download"></i> Download PDF
             </button>
           </div>
-          
-          
-            <div class="report-body">
-            <div class="faculty-details">
-              <div class="detail-item">
-                <label>Name:</label>
-                <span>${facultyName || 'N/A'}</span>
-              </div>
-              <div class="detail-item">
-                <label>Faculty ID:</label>
-                <span>${facultyId || 'N/A'}</span>
-              </div>
-              <div class="detail-item">
-                <label>Overall Rating:</label>
-                <span>${data.overall_rating || '0.00'} / 5.00</span>
-              </div>
-              <div class="detail-item">
-                <label>Total Student Responses:</label>
-                <span>${data.total_responses || '0'}</span>
-              </div>
-            </div>
-            <div class="report-footer">
-              <button class="download-pdf-btn" onclick="downloadEvaluationReport()">
-                <i class="ph ph-download"></i> Download PDF
-              </button>
-            </div>
-          </div>
         </div>
-      `;
-      
-      reportModal.innerHTML = reportContent;
-      reportModal.style.display = "flex";
-      
-      // Add click outside to close functionality
-      reportModal.addEventListener('click', function(event) {
-        if (event.target === reportModal) {
-          closeEvaluationReport();
-        }
-      });
-      
-      // Store data for PDF download
-      reportModal.dataset.facultyName = facultyName || 'N/A';
-      reportModal.dataset.facultyId = facultyId || 'N/A';
-      reportModal.dataset.totalResponses = data.total_responses || 0;
-      reportModal.dataset.overallRating = data.overall_rating || '0.00';
-      reportModal.dataset.feedback = data.feedback || 'No feedback available';
-    } else {
-      alert("Failed to load evaluation report: " + (data.message || "Unknown error"));
-    }
+      </div>
+    `;
+    
+    reportModal.innerHTML = reportContent;
+    reportModal.style.display = "flex";
+    
+    // Add click outside to close functionality
+    reportModal.addEventListener('click', function(event) {
+      if (event.target === reportModal) {
+        closeEvaluationReport();
+      }
+    });
+    
+    // Store data for PDF download
+    reportModal.dataset.facultyName = facultyName || 'N/A';
+    reportModal.dataset.facultyId = facultyId || 'N/A';
+    reportModal.dataset.totalResponses = data.success ? (data.total_responses || 0) : 0;
+    reportModal.dataset.overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
+    reportModal.dataset.feedback = data.success ? (data.feedback || 'No feedback available') : 'No feedback available';
   })
   .catch(error => {
     console.error("Error fetching evaluation report:", error);
@@ -345,5 +384,16 @@ function closeEvaluationReport() {
     modal.style.display = "none";
   }
 }
+
+// Add event listener for password form back button
+document.addEventListener("DOMContentLoaded", function() {
+  const backBtn = document.getElementById("closePasswordForm");
+  if (backBtn) {
+    backBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      closePasswordForm();
+    });
+  }
+});
 
 document.addEventListener("DOMContentLoaded", loadFacultyStats);

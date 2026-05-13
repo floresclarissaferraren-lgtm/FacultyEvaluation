@@ -51,7 +51,7 @@ $conn->close();
 
 <div class="navbar">
   <div class="brand"> 
-    <i class="ph ph-graduation-cap"></i>
+    <img src="schoollogo.png" alt="Logo" class="navbar-logo">
     <span class="logo-text main-title">Faculty Evaluation System</span>
   </div>
   <div class="user-menu">
@@ -82,50 +82,68 @@ $conn->close();
   </div>
 </div>
 
-<div id="passwordForm" class="passwordForm">
-  <div class="password-box">
-    <div class="password-icon-container">
-      <div class="password-icon-circle">
-        <i class="ph ph-lock password-icon"></i>
-      </div>
-      <div class="password-title">Change Password</div>
+<div id="passwordForm" class="LoginForm">
+  <div class="LoginForm-content">
+
+  <div class="wave-bg wave-1"></div>
+    <div class="wave-bg wave-2"></div>
+    <div class="wave-bg wave-3"></div>
+    
+    <div class="LoginForm-header">
+      <img src="logo.png" class="logo">
+      <div class="back-btn" id="closePasswordForm">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
-
-    <div class="password-body">
-      <div class="password-field">
-        <input id="oldPass" type="password" placeholder="Old Password">
-        <i class="ph ph-eye-slash toggle" onclick="togglePassword('oldPass', this)"></i>
-      </div>
-      <div class="password-field">
-        <input id="newPass" type="password" placeholder="New Password">
-        <i class="ph ph-eye-slash toggle" onclick="togglePassword('newPass', this)"></i>
-      </div>
-      <div class="password-field">
-        <input id="confirmPass" type="password" placeholder="Confirm Password">
-        <i class="ph ph-eye-slash toggle" onclick="togglePassword('confirmPass', this)"></i>
-      </div>
-    </div>
-
-    <!-- Hidden fields to store student info -->
-    <input type="hidden" id="studentId" value="<?php echo htmlspecialchars($student_id); ?>">
-    <input type="hidden" id="studentName" value="<?php echo htmlspecialchars($studentName); ?>">
-    <input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars($studentNumber); ?>">
-    <input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
-    <input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
-
-    <div class="password-actions">
-      <button class="cancel-btn" onclick="closePasswordForm()">Cancel</button>
-      <button class="update-btn" onclick="updatePassword()">Update</button>
+    
+    <div class="login-form-container">
+      <h2 class="login-title">Change Password</h2>
+      <p class="login-description">Update your account password</p>
+      
+      <form id="passwordChangeForm" class="modern-login-form">
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="oldPass" placeholder="Old Password" required>
+          <div class="password-toggle" onclick="togglePassword('oldPass', this)">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="oldPassError" class="error-message"></small>
+        </div>
+        
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="newPass" placeholder="New Password" required>
+          <div class="password-toggle" onclick="togglePassword('newPass', this)">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="newPassError" class="error-message"></small>
+        </div>
+        
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="confirmPass" placeholder="Confirm Password" required>
+          <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="confirmPassError" class="error-message"></small>
+        </div>
+        
+        <button type="button" class="modern-login-btn" onclick="updatePassword()">Update Password</button>
+      </form>
     </div>
   </div>
 </div>
+
+<input type="hidden" id="studentId" value="<?php echo htmlspecialchars($student_id); ?>">
+<input type="hidden" id="studentName" value="<?php echo htmlspecialchars($studentName); ?>">
+<input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars($studentNumber); ?>">
+<input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
+<input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
 
 
 <!-- Main Page ======================================================================================-->
 
 <div class="content-container">
   <div class="main-box" id="mainPage">
-    <div class="main-content">
+    <div class="main-left">
+      <img src="OIP.png" alt="Welcome Image" class="main-img">
+    </div>
+    <div class="main-right">
       <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
       <div class="academic-year">Academic Year: 2025–2026 • 2nd Semester</div>
       <div class="academic-year">Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
@@ -141,31 +159,21 @@ $conn->close();
       <div class="eval-header">
         <div class="title-subtitle">
           <h1>Faculty Evaluation</h1>
-          <!-- Header Section 
-          <div class="academic-year-eval"><i class="fas fa-calendar-alt"></i> Academic Year: 2025–2026 • 2nd Semester</div> -->
+          <p class="eval-description">Please provide your honest feedback about your faculty's teaching performance. Your responses will help improve the quality of education.</p>
         </div>
-        <button class="back-btn" onclick="goBackToMain()"><i class="ph ph-arrow-left"></i> Back</button>
       </div>
-
-      <div class="faculty-select">
-        <label for="facultyDropdown">Select Faculty:</label>
-        <select id="facultyDropdown" class="faculty-dropdown"><option value="">-- No faculty available --</option></select>
+      <div class="eval-actions">
+        <button class="back-btn" onclick="goBackToMain()"><i class="ph ph-arrow-left"></i> Back</button>
       </div>
     </div>
   </div>
-
-  <!-- Rating Legends Box ======================================================================================-->
-  <div class="rating-legends" id="ratingLegends" style="display:none;">
-    <h2>Rating Legends</h2>
-    <ul>
-      <li><span class="dot dot5"></span> 5 - Strongly Agree</li>
-      <li><span class="dot dot4"></span> 4 - Agree</li>
-      <li><span class="dot dot3"></span> 3 - Neutral</li>
-      <li><span class="dot dot2"></span> 2 - Disagree</li>
-      <li><span class="dot dot1"></span> 1 - Strongly Disagree</li>
-    </ul>
+  
+  <!-- Faculty Cards Section======================================================================================-->
+  <div class="faculty-cards" id="facultyCards" style="display:none;">
+    <div id="facultyContainer" class="faculty-container">
+    </div>
   </div>
-<!-- Evaluation Form ======================================================================================-->
+  <!-- Evaluation Form ======================================================================================-->
   <div id="evaluationContainer" style="display:none"></div>
 </div>
 

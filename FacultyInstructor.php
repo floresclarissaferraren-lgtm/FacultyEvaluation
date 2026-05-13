@@ -46,7 +46,7 @@ $stmt->close();
 
 <div class="navbar">
   <div class="brand">
-    <i class="ph ph-graduation-cap"></i>
+    <img src="schoollogo.png" alt="Logo" class="navbar-logo">
     <span class="logo-text main-title">Faculty Evaluation System</span>
   </div>
 
@@ -74,7 +74,7 @@ $stmt->close();
 
 <div class="main-box" id="mainPage">
   <div class="main-left">
-    <img src="schoollogo.png" alt="School Logo" class="main-img">
+    <img src="OIP.png" alt="Welcome Image" class="main-img">
   </div>
   <div class="main-right">
     <h1>Welcome, <?php echo htmlspecialchars($faculty_name); ?></h1>
@@ -102,52 +102,69 @@ $stmt->close();
   </div>
 </div>
 
-<div id="passwordForm" class="passwordForm">
-  <div class="password-box">
-    <div class="password-icon-container">
-      <div class="password-icon-circle">
-        <i class="ph ph-lock-key"></i>
-      </div>
-      <div class="password-title">Change Password</div>
+<div id="passwordForm" class="LoginForm">
+  <div class="LoginForm-content">
+    <!-- Decorative waves background -->
+    <div class="wave-bg wave-1"></div>
+    <div class="wave-bg wave-2"></div>
+    <div class="wave-bg wave-3"></div>
+    
+    <div class="LoginForm-header">
+      <img src="logo.png" class="logo">
+      <div class="back-btn" id="closePasswordForm">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
-
-    <div class="password-body">
-      <div class="password-field">
-        <input id="oldPass" type="password" placeholder="Old Password">
-        <i class="ph ph-eye-slash toggle" onclick="togglePassword('oldPass', this)"></i>
-      </div>
-      <div class="password-field">
-        <input id="newPass" type="password" placeholder="New Password">
-        <i class="ph ph-eye-slash toggle" onclick="togglePassword('newPass', this)"></i>
-      </div>
-      <div class="password-field">
-        <input id="confirmPass" type="password" placeholder="Confirm Password">
-        <i class="ph ph-eye-slash toggle" onclick="togglePassword('confirmPass', this)"></i>
-      </div>
-    </div>
-
-    <input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
-    <input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars($faculty_id); ?>">
-    <input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
-    <input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
-
-    <div class="password-actions">
-      <button class="cancel-btn" onclick="closePasswordForm()">Cancel</button>
-      <button class="update-btn" onclick="updatePassword()">Update</button>
+    
+    <div class="login-form-container">
+      <h2 class="login-title">Change Password</h2>
+      <p class="login-description">Update your account password</p>
+      
+      <form id="passwordChangeForm" class="modern-login-form">
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="oldPass" placeholder="Old Password" required>
+          <div class="password-toggle" onclick="togglePassword('oldPass', this)">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="oldPassError" class="error-message"></small>
+        </div>
+        
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="newPass" placeholder="New Password" required>
+          <div class="password-toggle" onclick="togglePassword('newPass', this)">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="newPassError" class="error-message"></small>
+        </div>
+        
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="confirmPass" placeholder="Confirm Password" required>
+          <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="confirmPassError" class="error-message"></small>
+        </div>
+        
+        <button type="button" class="modern-login-btn" onclick="updatePassword()">Update Password</button>
+      </form>
     </div>
   </div>
 </div>
 
+<!-- Hidden fields -->
+<input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
+<input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars($faculty_id); ?>">
+<input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
+<input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
+
 <!-- Faculty Info Box -->
 <div class="faculty-box">
-  <div class="faculty-header">
+  <div class="faculty-info-header">
     <div class="faculty-info">
-      <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?>:</span>
       <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
+      <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
     <button class="report-btn" onclick="showEvaluationReport()">Generate Report</button>
   </div>
-
+  
   <div class="faculty-cards">
     <div class="card">
       <div class="card-info">
@@ -167,7 +184,6 @@ $stmt->close();
         <span class="card-value" id="totalResponsesValue">0</span>
       </div>
     </div>
-  </div>
 </div>
 
 

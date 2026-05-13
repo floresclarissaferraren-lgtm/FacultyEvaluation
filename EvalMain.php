@@ -102,42 +102,107 @@
 <!-- LOGIN ==============================================================================================================-->
 <div class="LoginForm" id="loginModal">
   <div class="LoginForm-content">
+    <!-- Decorative waves background -->
+    <div class="wave-bg wave-1"></div>
+    <div class="wave-bg wave-2"></div>
+    <div class="wave-bg wave-3"></div>
+    
     <div class="LoginForm-header">
       <img src="logo.png" class="logo">
       <div class="back-btn" id="closeLogin">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
-    <h2>Login</h2>
-    <p class="LoginForm-subtitle"><span></span>Enter your credentials<span></span></p>
-    <form id="loginForm">
-      <div class="input-group">
-        <i class="ph ph-user"></i>
-        <input type="text" id="username" placeholder="Username/ID" required>
-        <small id="usernameError" class="error-message"></small>
-      </div>
-      <div class="input-group">
-        <i class="ph ph-lock"></i>
-        <input type="password" id="password" placeholder="Password" required>
-        <i class="ph ph-eye-slash" id="togglePassword"></i>
-        <small id="passwordError" class="error-message"></small>
-      </div>
-      <a href="#" id="openForgot" class="StudentLogin-link">Forgot Password?</a>
-      <button type="submit" class="StudentLogin-btn">Login</button>
-    </form>
+    
+    <div class="login-form-container">
+      <h2 class="login-title">Login Account</h2>
+      <p class="login-description">Login your account</p>
+      
+      <form id="loginForm" class="modern-login-form">
+        <div class="modern-input-group has-icon">
+          <input type="text" id="username" placeholder="Enter your ID" required>
+          <div class="input-icon">
+            <i class="ph ph-envelope"></i>
+          </div>
+          <small id="usernameError" class="error-message"></small>
+        </div>
+        
+        <div class="modern-input-group has-toggle">
+          <input type="password" id="password" placeholder="Password" required>
+          <div class="password-toggle" id="togglePassword">
+            <i class="ph ph-eye-slash"></i>
+          </div>
+          <small id="passwordError" class="error-message"></small>
+        </div>
+        
+        <div class="form-links">
+          <a href="#" id="openForgot" class="forgot-link">Forgot Password?</a>
+        </div>
+        
+        <button type="submit" class="modern-login-btn">Login Account</button>
+      </form>
+    </div>
   </div>
 </div>
 
 <!-- FORGOT PASSWORD ==============================================================================================================-->
 <div class="LoginForm" id="forgotModal">
-<div class="LoginForm-content">
-<div class="LoginForm-header"><img src="logo.png" class="logo"><div class="back-btn" id="closeForgot">
-    Back<i class="ph ph-arrow-up-right"></i></div></div>
-<h2>Reset Password</h2>
-<p class="LoginForm-subtitle"><span></span>Enter your email to reset<span></span></p>
-<form id="forgotForm">
-<div class="input-group"><i class="ph ph-envelope"></i><input type="email" id="resetEmail" placeholder="Email" required></div>
-<button type="submit" class="StudentLogin-btn">Submit</button>
-</form>
+  <div class="LoginForm-content">
+    <!-- Decorative waves background -->
+    <div class="wave-bg wave-1"></div>
+    <div class="wave-bg wave-2"></div>
+    <div class="wave-bg wave-3"></div>
+    
+    <div class="LoginForm-header">
+      <img src="logo.png" class="logo">
+      <div class="back-btn" id="closeForgot">Back<i class="ph ph-arrow-up-right"></i></div>
+    </div>
+    
+    <div class="login-form-container">
+      <h2 class="login-title">Reset Password</h2>
+      <p class="login-description">Enter your email to reset</p>
+      
+      <form id="forgotForm" class="modern-login-form">
+        <div class="modern-input-group has-icon">
+          <input type="email" id="resetEmail" placeholder="Email" required>
+          <div class="input-icon">
+            <i class="ph ph-envelope"></i>
+          </div>
+          <small id="resetEmailError" class="error-message"></small>
+        </div>
+        
+        <button type="submit" class="modern-login-btn">Submit</button>
+      </form>
+    </div>
+  </div>
 </div>
+
+<div id="fullscreen-spinner" class="hidden">
+  <div class="skeleton-loader">
+    <div class="skeleton-header">
+      <div class="skeleton-logo"></div>
+      <div class="skeleton-nav-items">
+        <div class="skeleton-nav-item"></div>
+        <div class="skeleton-nav-item"></div>
+        <div class="skeleton-nav-item"></div>
+      </div>
+    </div>
+    <div class="skeleton-content">
+      <div class="skeleton-card">
+        <div class="skeleton-title"></div>
+        <div class="skeleton-text"></div>
+        <div class="skeleton-text short"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-title"></div>
+        <div class="skeleton-text"></div>
+        <div class="skeleton-text"></div>
+      </div>
+      <div class="skeleton-form">
+        <div class="skeleton-input"></div>
+        <div class="skeleton-input"></div>
+        <div class="skeleton-button"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="EvalMain.js?v=<?php echo time(); ?>"></script>

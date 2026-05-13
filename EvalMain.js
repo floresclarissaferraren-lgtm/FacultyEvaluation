@@ -91,6 +91,11 @@ if (loginForm) {
 
     if (hasError) return;
 
+    const fullscreenSpinner = document.getElementById('fullscreen-spinner');
+    
+    // Show full-page loading spinner
+    fullscreenSpinner.classList.remove('hidden');
+
     try {
       const formData = new FormData();
       formData.append('username', username);
@@ -99,22 +104,51 @@ if (loginForm) {
       const res = await fetch('multi_login.php', { method: 'POST', body: formData });
       const data = await res.json();
 
+      // Add minimum display time of 3 seconds so users can see the spinner
+      const minDisplayTime = 3000;
+      const startTime = Date.now();
+      
       if (data.success) {
         if (data.role === 'student') {
-          window.location.href = 'FacultyUser.php';
+          // Wait for minimum display time before redirecting
+          const elapsedTime = Date.now() - startTime;
+          if (elapsedTime < minDisplayTime) {
+            setTimeout(() => {
+              window.location.href = 'FacultyUser.php';
+            }, minDisplayTime - elapsedTime);
+          } else {
+            window.location.href = 'FacultyUser.php';
+          }
         } else if (data.role === 'faculty') {
-          window.location.href = 'FacultyInstructor.php';
+          const elapsedTime = Date.now() - startTime;
+          if (elapsedTime < minDisplayTime) {
+            setTimeout(() => {
+              window.location.href = 'FacultyInstructor.php';
+            }, minDisplayTime - elapsedTime);
+          } else {
+            window.location.href = 'FacultyInstructor.php';
+          }
         } else if (data.role === 'admin') {
-          window.location.href = 'FacultyAdmin.php';
+          const elapsedTime = Date.now() - startTime;
+          if (elapsedTime < minDisplayTime) {
+            setTimeout(() => {
+              window.location.href = 'FacultyAdmin.php';
+            }, minDisplayTime - elapsedTime);
+          } else {
+            window.location.href = 'FacultyAdmin.php';
+          }
         } else {
           document.getElementById('passwordError').textContent = 'Login successful, but role is unknown.';
+          fullscreenSpinner.classList.add('hidden');
         }
       } else {
         document.getElementById('passwordError').textContent = data.message || 'Login failed';
+        fullscreenSpinner.classList.add('hidden');
       }
     } catch (err) {
       console.error('Login error:', err);
       document.getElementById('passwordError').textContent = 'An error occurred. Please try again.';
+      fullscreenSpinner.classList.add('hidden');
     }
   });
 }
@@ -230,14 +264,15 @@ function setupPasswordToggle(inputId, toggleId) {
 
   if (input && toggle) {
     toggle.addEventListener('click', () => {
+      const icon = toggle.querySelector('i');
       if (input.type === 'password') {
         input.type = 'text';
-        toggle.classList.remove('fa-eye-slash');
-        toggle.classList.add('fa-eye');
+        icon.classList.remove('ph-eye-slash');
+        icon.classList.add('ph-eye');
       } else {
         input.type = 'password';
-        toggle.classList.remove('fa-eye');
-        toggle.classList.add('fa-eye-slash');
+        icon.classList.remove('ph-eye');
+        icon.classList.add('ph-eye-slash');
       }
     });
   }

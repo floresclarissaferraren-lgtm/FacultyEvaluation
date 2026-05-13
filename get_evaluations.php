@@ -55,7 +55,7 @@ try {
 
 function getRatingLabel($score) {
     if ($score == 0) return 'N/A';
-    if ($score >= 4.5) return 'Excellent';
+    if ($score >= 4.5) return 'Outstanding';
     if ($score >= 3.5) return 'Very Good';
     if ($score >= 2.5) return 'Good';
     if ($score >= 1.5) return 'Fair';
@@ -64,7 +64,7 @@ function getRatingLabel($score) {
 
 function getRatingClass($score) {
     if ($score == 0) return 'na';
-    if ($score >= 4.5) return 'excellent';
+    if ($score >= 4.5) return 'outstanding';
     if ($score >= 3.5) return 'very-good';
     if ($score >= 2.5) return 'good';
     if ($score >= 1.5) return 'fair';

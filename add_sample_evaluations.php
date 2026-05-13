@@ -31,7 +31,7 @@ if ($faculty_result && $faculty_result->num_rows > 0) {
     
     // Add sample evaluation data
     $sample_evaluations = [
-        ['student_id' => 1, 'overall_rating' => 4.5, 'feedback' => 'Excellent teaching!'],
+        ['student_id' => 1, 'overall_rating' => 4.5, 'feedback' => 'Outstanding teaching!'],
         ['student_id' => 2, 'overall_rating' => 4.2, 'feedback' => 'Very good instructor'],
         ['student_id' => 3, 'overall_rating' => 3.8, 'feedback' => 'Good teaching style'],
         ['student_id' => 4, 'overall_rating' => 4.7, 'feedback' => 'Outstanding professor'],
@@ -76,7 +76,7 @@ if ($faculty_result && $faculty_result->num_rows > 0) {
     
     // Determine status
     $avg_rating = floatval($summary['avg_rating']);
-    if ($avg_rating >= 4.5) $status = 'Excellent';
+    if ($avg_rating >= 4.5) $status = 'Outstanding';
     elseif ($avg_rating >= 3.5) $status = 'Very Good';
     elseif ($avg_rating >= 2.5) $status = 'Good';
     elseif ($avg_rating >= 1.5) $status = 'Fair';

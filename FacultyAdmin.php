@@ -36,8 +36,13 @@ include 'totalstudents_dashcount.php';
   <div class="user-menu">
 
     <div class="admin-box" id="dropdownToggle">
-      <i class="ph ph-user" style="font-size: 24px; color: #1e293b;"></i>
-      <span style="font-size: 14px;">Administrator</span>
+      <div class="admin-icon">
+        <span>SA</span>
+      </div>
+      <div class="admin-text">
+        <span class="admin-title">System Administrator</span>
+        <span class="admin-subtitle">admin</span>
+      </div>
       <i class="ph ph-caret-down"></i>
     </div>
 
@@ -98,41 +103,62 @@ include 'totalstudents_dashcount.php';
   <!-- Menu -->
   <nav class="sidebar-menu">
 
-    <a href="#" data-section="dashboard-section"
-       onclick="showSection('dashboard-section', event)">
-      <i class="ph ph-house"></i>
-      <span>Dashboard</span>
-    </a>
+    <!-- Main Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <span>Main</span>
+      </div>
+      <div class="menu-items">
+        <a href="#" data-section="dashboard-section"
+           onclick="showSection('dashboard-section', event)">
+          <i class="ph ph-chart-line"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+    </div>
 
-    <a href="#" data-section="programs-section"
-       onclick="showSection('programs-section', event)">
-      <i class="ph ph-book"></i>
-      <span>Program Management</span>
-    </a>
+    <!-- Management Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <span>Management</span>
+      </div>
+      <div class="menu-items">
+        <a href="#" data-section="programs-section"
+           onclick="showSection('programs-section', event)">
+          <i class="ph ph-book"></i>
+          <span>Program</span>
+        </a>
+        <a href="#" data-section="faculties-section"
+           onclick="showSection('faculties-section', event)">
+          <i class="ph ph-chalkboard-teacher"></i>
+          <span>Faculty</span>
+        </a>
+        <a href="#" data-section="students-section"
+           onclick="showSection('students-section', event)">
+          <i class="ph ph-graduation-cap"></i>
+          <span>Students</span>
+        </a>
+        <a href="#" data-section="criteria-section"
+           onclick="showSection('criteria-section', event)">
+          <i class="ph ph-list-checks"></i>
+          <span>Evaluation Criteria</span>
+        </a>
+      </div>
+    </div>
 
-    <a href="#" data-section="faculties-section"
-       onclick="showSection('faculties-section', event)">
-      <i class="ph ph-chalkboard-teacher"></i>
-      <span>Faculty Management</span>
-    </a>
-
-    <a href="#" data-section="students-section"
-       onclick="showSection('students-section', event)">
-      <i class="ph ph-graduation-cap"></i>
-      <span>Student Management</span>
-    </a>
-
-    <a href="#" data-section="criteria-section"
-       onclick="showSection('criteria-section', event)">
-      <i class="ph ph-list-checks"></i>
-      <span>Evaluation Criteria</span>
-    </a>
-
-    <a href="#" data-section="report-section"
-       onclick="showSection('report-section', event)">
-      <i class="ph ph-chart-bar"></i>
-      <span>Report</span>
-    </a>
+    <!-- Analytics Section -->
+    <div class="menu-section">
+      <div class="menu-header">
+        <span>Analytics</span>
+      </div>
+      <div class="menu-items">
+        <a href="#" data-section="report-section"
+           onclick="showSection('report-section', event)">
+          <i class="ph ph-file-text"></i>
+          <span>Reports</span>
+        </a>
+      </div>
+    </div>
 
   </nav>
   
