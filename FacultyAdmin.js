@@ -987,8 +987,11 @@ addManageBtn?.addEventListener("click", () => {
     addClassModal.style.position = "fixed";
     addClassModal.dataset.isEditing = "false";
     delete addClassModal.dataset.editId;
+    delete addClassModal.dataset.existingAssignments;
+    delete addClassModal.dataset.existingSubjectIds;
     document.getElementById("class-year").selectedIndex = 0;
     document.getElementById("class-block").value = "";
+    document.getElementById("class-semester").selectedIndex = 0;
     document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
@@ -1344,18 +1347,19 @@ function loadClasses() {
       classesTableBody.innerHTML = "";
 
       if (!data || data.length === 0) {
-        classesTableBody.innerHTML = "<tr><td colspan='4'>No classes found for this program</td></tr>";
+        classesTableBody.innerHTML = "<tr><td colspan='5'>No classes found for this program</td></tr>";
         return;
       }
 
       data.forEach(c => {
         const row = document.createElement("tr");
         row.dataset.id = c.id;
-        row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()}`;
+        row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()} ${(c.semester || "").toLowerCase()}`;
 
         row.innerHTML = `
           <td>${c.block}</td>
           <td>${c.year_level}</td>
+          <td>${c.semester || "1st Semester"}</td>
           <td><span class="status-badge active">Loading...</span></td>
           <td class="action-cell">
             <div class="action-buttons">
@@ -1397,9 +1401,12 @@ function loadClasses() {
           addClassModal.style.position = "fixed";
           addClassModal.dataset.isEditing = "true";
           addClassModal.dataset.editId = c.id;
+          addClassModal.dataset.existingAssignments = "{}";
+          addClassModal.dataset.existingSubjectIds = "[]";
 
           document.getElementById("class-year").value = c.year_level;
           document.getElementById("class-block").value = c.block || "";
+          document.getElementById("class-semester").value = c.semester || "1st Semester";
           document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Loading subjects...</small>';
 
           const facultyBox = document.getElementById("faculty-list");
@@ -1413,7 +1420,12 @@ function loadClasses() {
               .then(res => res.json())
               .then(subjects => {
                 if (!Array.isArray(subjects)) return;
+                const existingAssignments = {};
+                const existingSubjectIds = [];
                 subjects.forEach(subject => {
+                  const sid = String(subject.subject_id);
+                  existingSubjectIds.push(sid);
+                  existingAssignments[sid] = Number(subject.faculty_id) || 0;
                   const checkbox = document.querySelector(`#subject-checkbox-list input[type='checkbox'][value='${subject.subject_id}']`);
                   if (checkbox) {
                     checkbox.checked = true;
@@ -1421,6 +1433,8 @@ function loadClasses() {
                     loadFacultyBySubject(subject.subject_id, labelText, true, subject.faculty_id);
                   }
                 });
+                addClassModal.dataset.existingAssignments = JSON.stringify(existingAssignments);
+                addClassModal.dataset.existingSubjectIds = JSON.stringify(existingSubjectIds);
               })
               .catch(err => {
                 console.error("Error loading class edit subjects:", err);
@@ -1439,7 +1453,7 @@ function loadClasses() {
     .catch(err => {
       console.error("Error loading classes:", err);
       if (classesTableBody) {
-        classesTableBody.innerHTML = `<tr><td colspan='4'>Error loading classes: ${err.message}</td></tr>`;
+        classesTableBody.innerHTML = `<tr><td colspan='5'>Error loading classes: ${err.message}</td></tr>`;
       }
     });
 }
@@ -1478,14 +1492,23 @@ document.getElementById("addClassModal")?.querySelector(".close-btn")?.addEventL
 saveClassBtn?.addEventListener("click", () => {
   const year = document.getElementById("class-year").value.trim();
   const block = document.getElementById("class-block").value.trim();
+  const semester = document.getElementById("class-semester").value.trim();
   const addClassModalEl = document.getElementById("addClassModal");
 
-  if (!year || !block) return alert("Fill all fields");
+  if (!year || !block || !semester) return alert("Fill all fields");
   if (!currentProgramId) return alert("Select program first");
 
+  const isEditing = addClassModalEl.dataset.isEditing === "true";
+  const editId = addClassModalEl.dataset.editId;
+  const existingAssignments = JSON.parse(addClassModalEl.dataset.existingAssignments || "{}");
+  const existingSubjectIds = JSON.parse(addClassModalEl.dataset.existingSubjectIds || "[]");
   const checked = [...document.querySelectorAll("#subject-checkbox-list input:checked")]
-    .map(cb => cb.value);
+    .map(cb => String(cb.value));
 
+  // Preserve original subjects if edit screen still loading and user did not uncheck anything
+  if (isEditing && checked.length === 0 && existingSubjectIds.length > 0) {
+    checked.push(...existingSubjectIds);
+  }
   if (checked.length === 0) return alert("Select at least one subject");
 
   const assignments = {};
@@ -1493,16 +1516,15 @@ saveClassBtn?.addEventListener("click", () => {
     const select = document.querySelector(`#faculty-list select[data-subject-id="${subjectId}"]`);
     if (select && select.value) {
       assignments[subjectId] = select.value;
+    } else if (isEditing && Object.prototype.hasOwnProperty.call(existingAssignments, subjectId)) {
+      assignments[subjectId] = existingAssignments[subjectId];
     } else {
       assignments[subjectId] = 0; // No faculty assigned yet
     }
   });
 
-  const isEditing = addClassModalEl.dataset.isEditing === "true";
-  const editId = addClassModalEl.dataset.editId;
-
   const action = isEditing ? "edit" : "add";
-  let body = `action=${action}&program_id=${currentProgramId}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
+  let body = `action=${action}&program_id=${currentProgramId}&year_level=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}&block=${encodeURIComponent(block)}`;
   body += `&subjects=${encodeURIComponent(JSON.stringify(checked))}`;
   body += `&faculty_assignments=${encodeURIComponent(JSON.stringify(assignments))}`;
   
@@ -1534,8 +1556,15 @@ saveClassBtn?.addEventListener("click", () => {
       // Clear editing state
       delete addClassModalEl.dataset.editId;
       delete addClassModalEl.dataset.isEditing;
+      delete addClassModalEl.dataset.existingAssignments;
+      delete addClassModalEl.dataset.existingSubjectIds;
     } else {
-      showNotification("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"), "#f44336", 5000);
+      const msg = (res.message || "").toLowerCase();
+      if (msg.includes("already exist in this section") || msg.includes("already exists in this section")) {
+        showNotification("The faculty or subject already exist in this section", "#f44336", 3500);
+      } else {
+        showNotification("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"), "#f44336", 5000);
+      }
     }
   })
   .catch(err => {
@@ -1752,7 +1781,12 @@ function saveSubjectAssignment() {
           const className = classModal.querySelector("#viewClassName").textContent;
           showClassSubjectsModal(classId, className, ""); // This will refresh the modal
         } else {
-          showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
+          const assignMsg = (addRes.message || "").toLowerCase();
+          if (assignMsg.includes("already exist in this section") || assignMsg.includes("already exists in this section")) {
+            showNotification("The faculty or subject already exist in this section", "#f44336", 3500);
+          } else {
+            showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
+          }
         }
       })
       .catch(err => {
@@ -2192,35 +2226,72 @@ function loadEvaluations() {
     });
 }
 
-function generateEvaluationReport() {
-  const tbody = document.getElementById("evaluationTableBody");
-  const rows = tbody.getElementsByTagName("tr");
-  
-  if (rows.length === 0) {
-    showNotification("No evaluation data available to generate report", "#f59e0b", 3000);
-    return;
-  }
-  
-  // Get current search filter
-  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
-  
-  // Filter rows based on search
-  const filteredRows = Array.from(rows).filter(row => {
-    if (searchTerm === "") return true;
-    return row.textContent.toLowerCase().includes(searchTerm);
-  });
-  
-  if (filteredRows.length === 0) {
-    showNotification("No matching results found", "#f59e0b", 3000);
-    return;
-  }
-  
-  // Generate report content
-  let reportContent = generateReportContent(filteredRows);
-  
-  // Create and download the report
-  downloadReport(reportContent, "faculty_evaluation_report.csv");
+function buildEvaluationReportPdfUrl(downloadMode = false) {
+  const searchInput = document.getElementById("searchInput");
+  const search = encodeURIComponent((searchInput?.value || "").trim());
+  const mode = downloadMode ? "download" : "view";
+  return `generate_evaluation_summary_pdf.php?mode=${mode}&search=${search}&t=${Date.now()}`;
 }
+
+function generateEvaluationReport() {
+  const url = buildEvaluationReportPdfUrl(true);
+  fetch(url, { cache: "no-store" })
+    .then(async (res) => {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.toLowerCase().includes("application/pdf")) {
+        const text = await res.text();
+        throw new Error(text || "Server did not return a PDF file.");
+      }
+      return res.blob();
+    })
+    .then((blob) => {
+      const filename = `Faculty_Performance_Summary_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const downloadUrl = URL.createObjectURL(blob);
+
+      // Download only (no auto-open)
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 60000);
+    })
+    .catch((err) => {
+      console.error("Generate report error:", err);
+      showNotification("Failed to generate PDF report: " + err.message, "#f44336", 5000);
+    });
+}
+
+function viewEvaluationReportPDF() {
+  const url = buildEvaluationReportPdfUrl(false);
+  window.open(url, "_blank");
+}
+
+function downloadEvaluationReportPDF() {
+  const url = buildEvaluationReportPdfUrl(true);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Ensure admin Generate Report is callable from inline HTML and click bindings
+window.generateEvaluationReport = generateEvaluationReport;
+document.addEventListener("DOMContentLoaded", function () {
+  const reportBtn = document.querySelector(".generate-report-btn");
+  if (reportBtn) {
+    reportBtn.onclick = function (e) {
+      e.preventDefault();
+      generateEvaluationReport();
+    };
+  }
+});
 
 function generateReportContent(rows) {
   let content = "Faculty Name,Faculty ID,Overall Rating,Responses,Status\n";
@@ -2460,6 +2531,26 @@ function loadDashboardStats() {
           }, 500);
         }
         if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.totalEvaluations;
+
+        // Update evaluation progress bar: stay at 0 until there are submissions
+        const progressFillEl = document.getElementById("evaluationProgressFill");
+        const progressTextEl = document.getElementById("evaluationProgressText");
+        if (progressFillEl && progressTextEl) {
+          const totalEvaluations = Number(data.data.totalEvaluations) || 0;
+          const totalStudents = Number(data.data.totalStudents) || 0;
+
+          if (totalEvaluations <= 0 || totalStudents <= 0) {
+            progressFillEl.style.width = "0%";
+            progressTextEl.textContent = "No submissions yet";
+          } else {
+            const progressPercent = Math.min(
+              100,
+              Math.round((totalEvaluations / totalStudents) * 100)
+            );
+            progressFillEl.style.width = `${progressPercent}%`;
+            progressTextEl.textContent = `${totalEvaluations} submitted`;
+          }
+        }
         
         // Update overall faculty rating
         const overallRatingEl = document.getElementById("overallRating");
@@ -2479,30 +2570,35 @@ function loadDashboardStats() {
         
         // Update faculty ratings table
         const ratingsBody = document.getElementById("ratings-body");
-        ratingsBody.innerHTML = "";
-        
-        data.data.ratings.forEach(rating => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${rating.name}</td>
-            <td>${rating.rating}</td>
-          `;
-          ratingsBody.appendChild(row);
-        });
+        if (ratingsBody) {
+          ratingsBody.innerHTML = "";
+          data.data.ratings.forEach(rating => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${rating.name}</td>
+              <td>${rating.rating}</td>
+            `;
+            ratingsBody.appendChild(row);
+          });
+        }
         
         // Update faculty ranking table
         const rankingBody = document.getElementById("ranking-body");
-        rankingBody.innerHTML = "";
-        
-        data.data.ratings.forEach((rating, index) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${rating.name}</td>
-            <td>${rating.rating}</td>
-          `;
-          rankingBody.appendChild(row);
-        });
+        if (rankingBody) {
+          rankingBody.innerHTML = "";
+          data.data.ratings.forEach((rating, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${rating.name}</td>
+              <td>${rating.rating}</td>
+            `;
+            rankingBody.appendChild(row);
+          });
+        }
+
+        // Update Top 5 Faculty Performance bar chart
+        updateTopPerformanceChart(data.data.ratings || []);
         
         // Update department graph (if canvas exists)
         updateDepartmentGraph(data.data.departments);
@@ -2548,6 +2644,71 @@ function updateDepartmentGraph(departments) {
     
     // Draw count
     ctx.fillText(dept.count, x + barWidth/2, y - 5);
+  });
+}
+
+function updateTopPerformanceChart(ratings) {
+  const canvas = document.getElementById("topPerformanceChart");
+  if (!canvas) return;
+  const wrapper = canvas.closest(".top-performance-chart-wrapper");
+
+  const topFive = (ratings || []).slice(0, 5);
+
+  if (window.topPerformanceChartInstance) {
+    window.topPerformanceChartInstance.destroy();
+  }
+
+  const chartSource = topFive.length > 0 ? topFive : [
+    { name: "Prof. Santos", rating: 4.8 },
+    { name: "Prof. Reyes", rating: 4.7 },
+    { name: "Prof. Cruz", rating: 4.6 },
+    { name: "Prof. Garcia", rating: 4.5 },
+    { name: "Prof. Dela Rosa", rating: 4.4 }
+  ];
+
+  const finalLabels = chartSource.map(item => item.name);
+  const finalValues = chartSource.map(item => Number(item.rating) || 0);
+
+  if (wrapper && !wrapper.querySelector("#topPerformanceChart")) {
+    wrapper.innerHTML = '<canvas id="topPerformanceChart" height="220"></canvas>';
+  }
+  const chartCanvas = document.getElementById("topPerformanceChart");
+  if (!chartCanvas) return;
+
+  window.topPerformanceChartInstance = new Chart(chartCanvas, {
+    type: "bar",
+    data: {
+      labels: finalLabels,
+      datasets: [{
+        label: "Average Rating",
+        data: finalValues,
+        backgroundColor: "#0ea5e9",
+        borderColor: "#0284c7",
+        borderWidth: 1,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          min: 0,
+          max: 5,
+          ticks: { stepSize: 1 }
+        },
+        x: {
+          ticks: {
+            maxRotation: 30,
+            minRotation: 0
+          }
+        }
+      }
+    }
   });
 }
 

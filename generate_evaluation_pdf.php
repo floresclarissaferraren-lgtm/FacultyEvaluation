@@ -1,18 +1,5 @@
 <?php
-session_start();
 include 'connect.php';
-
-// Allow both admin and faculty to access PDF generation
-if (!isset($_SESSION['role'])) {
-    http_response_code(403);
-    exit('Unauthorized access - No session found');
-}
-
-// Check if user is either admin or faculty
-if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'faculty') {
-    http_response_code(403);
-    exit('Unauthorized access - Invalid role');
-}
 
 // Get JSON data
 $data = json_decode(file_get_contents('php://input'), true);

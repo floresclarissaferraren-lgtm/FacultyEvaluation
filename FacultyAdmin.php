@@ -219,7 +219,7 @@ include 'totalstudents_dashcount.php';
 
   </div>
   
-  <!-- Second Row - Rating Distribution and Period Cards -->
+  <!-- Second Row -->
   <div class="dashboard-row-2">
     <!-- Rating Distribution Card -->
     <div class="dashboard-card rating-distribution">
@@ -255,6 +255,21 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
 
+    <div class="dashboard-card top-performance">
+      <div class="dashboard-content">
+        <div class="rating-header">
+          <h3>Top 5 Faculty Performance</h3>
+        </div>
+        <div class="top-performance-chart-wrapper">
+          <canvas id="topPerformanceChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Third Row -->
+  <div class="dashboard-row-3">
     <div class="period-container">
       <div class="dashboard-card period">
         <div class="dashboard-content">
@@ -266,6 +281,23 @@ include 'totalstudents_dashcount.php';
           <div class="period-actions">
             <button class="btn-close">Close</button>
             <button class="btn-manage">Manage</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-card evaluation-progress">
+      <div class="dashboard-content">
+        <div class="rating-header">
+          <h3>Evaluation Progress</h3>
+        </div>
+        <div class="progress-list">
+          <div class="progress-item">
+            <div class="progress-label-row">
+              <span>Submitted Evaluations</span>
+              <small id="evaluationProgressText">No submissions yet</small>
+            </div>
+            <div class="progress-track"><div id="evaluationProgressFill" class="progress-fill submitted" style="width:0%;"></div></div>
           </div>
         </div>
       </div>
@@ -404,7 +436,7 @@ include 'totalstudents_dashcount.php';
     <div id="classes" class="table-wrapper" style="display:none;">
       <div class="table-scroll-container">
         <table class="classes-table"><thead><tr>
-          <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
+          <th>Section Name</th><th>Year Level</th><th>Semester</th><th>Status</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
@@ -460,6 +492,14 @@ include 'totalstudents_dashcount.php';
         <div>
           <label for="class-block"><i class="ph ph-hash"></i> Section</label>
           <input type="text" id="class-block">
+        </div>
+        <div>
+          <label for="class-semester"><i class="ph ph-calendar-check"></i> Semester</label>
+          <select id="class-semester">
+            <option value="">Select Semester</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+          </select>
         </div>
       </div>
       <div class="section-box">
@@ -924,7 +964,11 @@ include 'totalstudents_dashcount.php';
   <div class="section-header">
     <div class="header-title-section">
     </div>
-    <div class="header-actions">
+    <div class="header-actions" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding-right:0; margin-left:0;">
+      <span style="font-size: 15px; color: #64748b; display:flex; align-items:center; gap:8px;">
+        <i class="ph ph-info"></i>
+        This section shows the list of criteria used for evaluating faculty performance.
+      </span>
       <button id="addCategoryBtn" class="add-program-btn button-gradient">
         <i class="ph ph-plus"></i> Add Category
       </button>

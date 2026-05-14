@@ -5,6 +5,13 @@ header("Content-Type: application/json");
 
 $action = $_REQUEST['action'] ?? "";
 
+function ensureSemesterColumn(mysqli $conn): void {
+    $check = $conn->query("SHOW COLUMNS FROM add_classes LIKE 'semester'");
+    if ($check && $check->num_rows === 0) {
+        $conn->query("ALTER TABLE add_classes ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER year_level");
+    }
+}
+
 function classYearVariants(string $classYear): array {
     $variants = [trim($classYear)];
     if (preg_match('/^(\d+)/', $classYear, $m)) {
@@ -304,14 +311,16 @@ if ($action === "get") {
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         program_id int(11) NOT NULL,
         year_level varchar(20) NOT NULL,
+        semester varchar(20) NOT NULL DEFAULT '1st Semester',
         block varchar(10) NOT NULL
     )");
+    ensureSemesterColumn($conn);
     
     $stmt = $conn->prepare("
-        SELECT id, year_level, block
+        SELECT id, year_level, semester, block
         FROM add_classes
         WHERE program_id = ?
-        ORDER BY year_level ASC, block ASC
+        ORDER BY year_level ASC, semester ASC, block ASC
     ");
     
     if ($stmt) {
@@ -339,6 +348,7 @@ if ($action === "add") {
     $program_id = $_POST['program_id'] ?? null;
     $section_name = $_POST['section_name'] ?? "";
     $year_level = $_POST['year_level'] ?? "";
+    $semester = $_POST['semester'] ?? "";
     $block = $_POST['block'] ?? "";
     
     $subjects = [];
@@ -357,18 +367,18 @@ if ($action === "add") {
         }
     }
     
-    error_log("ADD CLASS - Parsed data: program_id=$program_id, section_name=$section_name, year_level=$year_level, block=$block");
+    error_log("ADD CLASS - Parsed data: program_id=$program_id, section_name=$section_name, year_level=$year_level, semester=$semester, block=$block");
     error_log("ADD CLASS - Subjects: " . print_r($subjects, true));
     error_log("ADD CLASS - Faculty assignments: " . print_r($faculty_assignments, true));
     
-    if (!$program_id || !$year_level || !$block || empty($subjects)) {
+    if (!$program_id || !$year_level || !$semester || !$block || empty($subjects)) {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
         exit;
     }
     
     // Check for duplicate class (same year level and section in same program)
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ?");
-    $check_stmt->bind_param("iss", $program_id, $year_level, $block);
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND semester = ? AND block = ?");
+    $check_stmt->bind_param("isss", $program_id, $year_level, $semester, $block);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
@@ -377,7 +387,7 @@ if ($action === "add") {
     if ($row['count'] > 0) {
         echo json_encode([
             "status" => "error", 
-            "message" => "A class with the same year level and section already exists in this program."
+            "message" => "The faculty or subject already exist in this section"
         ]);
         exit;
     }
@@ -387,8 +397,10 @@ if ($action === "add") {
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         program_id int(11) NOT NULL,
         year_level varchar(20) NOT NULL,
+        semester varchar(20) NOT NULL DEFAULT '1st Semester',
         block varchar(10) NOT NULL
     )");
+    ensureSemesterColumn($conn);
     
     $conn->query("CREATE TABLE IF NOT EXISTS class_subjects (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -403,8 +415,8 @@ if ($action === "add") {
     try {
         error_log("ADD CLASS - Starting transaction");
         
-        $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, block) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $program_id, $year_level, $block);
+        $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, semester, block) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isss", $program_id, $year_level, $semester, $block);
         $stmt->execute();
         $class_id = $stmt->insert_id;
         $stmt->close();
@@ -448,6 +460,7 @@ if ($action === "edit") {
     $program_id = $_POST['program_id'] ?? null;
     $section_name = $_POST['section_name'] ?? "";
     $year_level = $_POST['year_level'] ?? "";
+    $semester = $_POST['semester'] ?? "";
     $block = $_POST['block'] ?? "";
     
     $subjects = [];
@@ -466,14 +479,14 @@ if ($action === "edit") {
         }
     }
     
-    if (!$id || !$program_id || !$year_level || !$block || empty($subjects)) {
+    if (!$id || !$program_id || !$year_level || !$semester || !$block || empty($subjects)) {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
         exit;
     }
     
     // Check for duplicate class (same year level and section in same program), excluding current class
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND id != ?");
-    $check_stmt->bind_param("issi", $program_id, $year_level, $block, $id);
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND semester = ? AND block = ? AND id != ?");
+    $check_stmt->bind_param("isssi", $program_id, $year_level, $semester, $block, $id);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
@@ -482,7 +495,7 @@ if ($action === "edit") {
     if ($row['count'] > 0) {
         echo json_encode([
             "status" => "error", 
-            "message" => "A class with the same year level and section already exists in this program."
+            "message" => "The faculty or subject already exist in this section"
         ]);
         exit;
     }
@@ -491,8 +504,9 @@ if ($action === "edit") {
     
     try {
         // Update class
-        $stmt = $conn->prepare("UPDATE add_classes SET program_id = ?, year_level = ?, block = ? WHERE id = ?");
-        $stmt->bind_param("issi", $program_id, $year_level, $block, $id);
+        ensureSemesterColumn($conn);
+        $stmt = $conn->prepare("UPDATE add_classes SET program_id = ?, year_level = ?, semester = ?, block = ? WHERE id = ?");
+        $stmt->bind_param("isssi", $program_id, $year_level, $semester, $block, $id);
         $stmt->execute();
         $stmt->close();
         
@@ -537,6 +551,27 @@ if ($action === "add_subject_to_class") {
         echo json_encode(["status" => "error", "message" => "Missing class ID or subject ID"]);
         exit;
     }
+
+    // Prevent duplicate subject or duplicate faculty assignment in the same section/class
+    $dup_stmt = $conn->prepare("
+        SELECT id
+        FROM class_subjects
+        WHERE class_id = ?
+          AND (subject_id = ? OR (faculty_id = ? AND ? != 0))
+        LIMIT 1
+    ");
+    $dup_stmt->bind_param("iiii", $class_id, $subject_id, $faculty_id, $faculty_id);
+    $dup_stmt->execute();
+    $dup_res = $dup_stmt->get_result();
+    if ($dup_res && $dup_res->num_rows > 0) {
+        $dup_stmt->close();
+        echo json_encode([
+            "status" => "error",
+            "message" => "The faculty or subject already exist in this section"
+        ]);
+        exit;
+    }
+    $dup_stmt->close();
     
     $stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
     $stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);

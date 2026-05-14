@@ -18,7 +18,7 @@
 }
 /* RESET / BASE */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,Helvetica,sans-serif;background:#f0f8ff;}
+body{font-family:Arial,Helvetica,sans-serif;background:#e9ecee;}
 
 /* PROGRAMS CARD LAYOUT */
 .programs-container-box {
@@ -577,6 +577,12 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   flex-wrap: wrap;
 }
 
+/* Lift table/search/add box closer to stats cards (Faculty + Students only) */
+#faculties-section .table-wrapper,
+#students-section .table-wrapper{
+  margin-top: -8px;
+}
+
 .student-stat-card {
   flex: 1;
   min-width: 200px;
@@ -1114,15 +1120,78 @@ body:has(.sidebar.collapsed) .navbar{left:85px !important;width:calc(100% - 85px
   gap: var(--spacing-lg);
 }
 
+.dashboard-card.top-performance {
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.dashboard-card.top-performance .dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.dashboard-card.top-performance .rating-header,
+.dashboard-card.evaluation-progress .rating-header{
+  margin-top: -6px;
+}
+
+.dashboard-card.top-performance .rating-header{
+  margin-top: -14px;
+}
+
+/* Refined dashboard panel design (borderless cards) */
+.dashboard-card.rating-distribution,
+.dashboard-card.top-performance,
+.dashboard-card.period,
+.dashboard-card.evaluation-progress{
+  border: none !important;
+  border-left: none !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+  border-radius: 16px;
+}
+
+.dashboard-card.rating-distribution::before,
+.dashboard-card.rating-distribution::after,
+.dashboard-card.top-performance::before,
+.dashboard-card.top-performance::after,
+.dashboard-card.period::before,
+.dashboard-card.period::after,
+.dashboard-card.evaluation-progress::before,
+.dashboard-card.evaluation-progress::after{
+  display:none !important;
+}
+
+.dashboard-card.rating-distribution{
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.dashboard-card.top-performance{
+  background: linear-gradient(145deg, #ffffff 0%, #f6fbff 100%);
+}
+
+.dashboard-card.period{
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.top-performance-chart-wrapper {
+  width: 100%;
+  min-height: 240px;
+}
+
+#topPerformanceChart {
+  width: 100% !important;
+  height: 240px !important;
+}
+
 .rating-header {
-  text-align: center;
+  text-align: left;
   margin-bottom: var(--spacing-md);
 }
 
 .rating-header h3 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #94a3b8;
   margin: 0;
 }
 
@@ -2007,11 +2076,11 @@ table.evaluation-table .view-btn:hover {
   outline:none;color:var(--neutral-900)}
 #addFacultyModal input{margin-top:var(--spacing-xs);padding:var(--spacing-md);border:2px solid #d1d5db;border-radius:8px;
   font-size:.875rem;width:100%;background:#fff;transition:all .2s ease;box-sizing:border-box;outline:none;color:var(--neutral-900)}
-#class-year,#class-block{margin-top:var(--spacing-xs);padding:var(--spacing-md);border:2px solid #d1d5db;border-radius:8px;
+#class-year,#class-semester,#class-block{margin-top:var(--spacing-xs);padding:var(--spacing-md);border:2px solid #d1d5db;border-radius:8px;
   font-size:.875rem;width:100%;background:#fff;transition:all .2s ease;box-sizing:border-box;outline:none;color:var(--neutral-900)}
 #addFacultyModal input:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
 #addStudentModal input:focus,#addStudentModal select:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
-#class-year:focus,#class-block:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
+#class-year:focus,#class-semester:focus,#class-block:focus{border-color:var(--primary-600);box-shadow:0 0 0 4px rgba(37,99,235,.1);transform:translateY(-1px)}
 #addCategoryModal .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
 #addCategoryModal .form-row label{font-size:.85rem;font-weight:700;color:var(--slate-500);margin:0;}
 
@@ -2123,11 +2192,96 @@ table.evaluation-table .view-btn:hover {
   border-bottom:1px solid var(--border);}
 .report-title h2{margin:0;font-size:1.75rem;line-height:1.2;color:var(--blue-900);font-weight:800;letter-spacing:.4px;}
 .report-title p{margin:8px 0 0;color:var(--slate-500);font-size:.98rem;font-weight:500;}
-.dashboard-row-2{display:flex;flex-direction:column;gap:var(--spacing-sm);margin-top:20px;align-items:flex-start;}
-.dashboard-row-2 .dashboard-card{flex:1 1 calc(8% - var(--spacing-sm));min-width:4rem;}
-.dashboard-row-2 .dashboard-card.rating-distribution{flex:1 1 calc(8% - var(--spacing-sm)) !important;min-width:4rem !important;}
-.dashboard-row-2 .period-container{flex:1 1 calc(8% - var(--spacing-sm));min-width:4rem;}
-.dashboard-row-2 .dashboard-card.period{flex:1 1 calc(8% - var(--spacing-sm)) !important;min-width:4rem !important;}
+.dashboard-row-2,
+.dashboard-row-3{
+  display:grid;
+  grid-template-columns: 1.5fr 2.5fr;
+  gap:var(--spacing-sm);
+  margin-top:20px;
+  align-items:stretch;
+}
+.dashboard-row-2 .dashboard-card,
+.dashboard-row-3 .dashboard-card,
+.dashboard-row-3 .period-container{min-width:0;width:100%;}
+
+.dashboard-row-2 .dashboard-card.rating-distribution{
+  min-width:0 !important;
+}
+.dashboard-row-2 .dashboard-card.top-performance{
+  min-width:0 !important;
+}
+
+.dashboard-row-3{
+  margin-top:12px;
+}
+
+.dashboard-row-3 .dashboard-card.period{
+  min-width:0 !important;
+}
+
+.dashboard-card.evaluation-progress{
+  background: linear-gradient(135deg, #ffffff, #f7fbff);
+}
+
+.progress-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.progress-item{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding: 10px 12px;
+  background: #f8fbff;
+  border-radius: 12px;
+}
+
+.progress-label-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:0.9rem;
+  color:#334155;
+}
+
+.progress-track{
+  width:100%;
+  height:12px;
+  border-radius:999px;
+  background:#dbeafe;
+  overflow:hidden;
+}
+
+.progress-fill{
+  height:100%;
+  border-radius:999px;
+}
+
+.progress-fill.submitted{background:linear-gradient(90deg,#0ea5e9,#0284c7);}
+.period-box{
+  border: none;
+  background: #eef6ff;
+  color:#1e3a8a;
+  font-weight: 600;
+}
+
+.system-status{
+  border: none;
+  background: #ecfdf3;
+}
+
+.period-actions button{
+  box-shadow:none;
+}
+
+@media (max-width: 1100px){
+  .dashboard-row-2,
+  .dashboard-row-3{
+    grid-template-columns: 1fr;
+  }
+}
 .filter-row{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr)) minmax(220px,1.2fr) auto;gap:14px;align-items:end;}
 .filter-row select,.filter-row input{width:100%;min-width:0;height:48px;padding:0 14px;border:1px solid var(--slate-200);border-radius:14px;outline:none;
   background:#fff;color:var(--slate-900);font-size:.95rem;box-sizing:border-box;transition:.2s;}
@@ -2460,11 +2614,60 @@ div#report-section .evaluation-table .badge.na {
 .form-row input{width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:14px}
 .form-row input:focus,.form-row select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
 
+/* Add Class modal layout refinements */
+#addClassModal{
+  align-items:center !important;
+  justify-content:center !important;
+  padding:20px !important;
+}
+#addClassModal .modal-content{
+  width:min(550px, 94vw) !important;
+  max-width:550px !important;
+  max-height:calc(100vh - 120px) !important;
+  margin:0 auto !important;
+  display:flex;
+  flex-direction:column;
+}
+#addClassModal .modal-body{
+  overflow-y:auto !important;
+  max-height:calc(100vh - 210px) !important;
+  padding:22px 24px !important;
+}
+#addClassModal .form-row{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:16px;
+  align-items:end;
+  margin-bottom:18px;
+}
+#addClassModal .form-row > div{
+  min-width:0;
+}
+#addClassModal .form-row label{
+  margin-bottom:8px;
+}
+#addClassModal .form-row select,
+#addClassModal .form-row input{
+  min-width:0 !important;
+  width:100%;
+  height:62px;
+}
+#addClassModal #faculty-list{
+  max-height:230px !important;
+  overflow-y:auto !important;
+}
+
+@media (max-width: 900px){
+  #addClassModal .form-row{
+    grid-template-columns:1fr;
+  }
+}
+
 /* ============================================
    Modern Clean Content Refresh
    ============================================ */
 body{
-  background:#ffffff;
+  background:#e9ecee;
 }
 
 main{
