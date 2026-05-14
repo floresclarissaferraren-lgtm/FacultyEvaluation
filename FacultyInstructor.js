@@ -35,7 +35,7 @@ function showProfile(){
     // Create profile modal content with real data
     const profileContent = `
       <div class="profile-header">
-        <h3>Your Profile</h3>
+        <h3>Faculty Profile</h3>
       </div>
       <div class="profile-body">
         <div class="profile-header-info">

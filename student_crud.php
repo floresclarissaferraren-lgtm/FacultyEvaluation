@@ -11,6 +11,11 @@ if ($checkStudentTypeColumn && $checkStudentTypeColumn->num_rows === 0) {
     $conn->query("ALTER TABLE add_students ADD COLUMN student_type VARCHAR(20) DEFAULT 'regular' AFTER section");
 }
 
+$checkStudentStatusColumn = $conn->query("SHOW COLUMNS FROM add_students LIKE 'status'");
+if ($checkStudentStatusColumn && $checkStudentStatusColumn->num_rows === 0) {
+    $conn->query("ALTER TABLE add_students ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active' AFTER student_type");
+}
+
 function resolveProgramId(mysqli $conn, string $program): int {
     $program = trim($program);
     if ($program === '') {
@@ -175,16 +180,17 @@ if ($action === "add") {
 
     $password = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 8);
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    $defaultStatus = 'active';
 
     $yearlevelValue = $student_type === 'irregular' ? 'irregular' : $yearlevel;
     $stmt = $conn->prepare("
         INSERT INTO add_students 
-        (student_number,email,firstname,lastname,suffix,yearlevel,program,section,student_type,password)
-        VALUES (?,?,?,?,?,?,?,?,?,?)
+        (student_number,email,firstname,lastname,suffix,yearlevel,program,section,student_type,status,password)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
     ");
 
     $stmt->bind_param(
-        "ssssssssss",
+        "sssssssssss",
         $student_number,
         $email,
         $firstname,
@@ -194,6 +200,7 @@ if ($action === "add") {
         $program,
         $section,
         $student_type,
+        $defaultStatus,
         $hashedPassword
     );
 
@@ -317,6 +324,36 @@ elseif ($action === "delete") {
     $conn->query("DELETE FROM add_students WHERE id=$id");
 
     echo json_encode(["success"=>true,"message"=>"Student deleted"]);
+}
+
+/* =========================
+   UPDATE STUDENT STATUS
+========================= */
+elseif ($action === "update_status") {
+
+    $id = intval($data['id'] ?? 0);
+    $status = strtolower(trim($data['status'] ?? ''));
+
+    if (!$id) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
+
+    if (!in_array($status, ["active", "inactive"], true)) {
+        echo json_encode(["success" => false, "message" => "Invalid status"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("UPDATE add_students SET status = ? WHERE id = ?");
+    $stmt->bind_param("si", $status, $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(["success" => true, "message" => "Student status updated successfully"]);
+    } else {
+        echo json_encode(["success" => false, "message" => $stmt->error]);
+    }
+
+    $stmt->close();
 }
 
 $conn->close();

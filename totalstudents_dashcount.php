@@ -57,7 +57,7 @@ function getStudentStatistics($conn) {
 $totalFacultyCount = getTotalCount($conn, 'add_faculties');
 $totalStudentsCount = getTotalCount($conn, 'add_students');
 $totalEvaluationsCount = 0;
-$totalProgramsCount = getTotalCount($conn, 'add_program');
+$totalProgramsCount = getTotalCount($conn, 'add_programs');
 
 function getFacultyStatistics($conn) {
     $stats = [];

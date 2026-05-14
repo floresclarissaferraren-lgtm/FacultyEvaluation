@@ -349,7 +349,7 @@ include 'totalstudents_dashcount.php';
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="program-search" placeholder="Search program..."/>
         </div>
-        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add New Program</button>
+        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add Program</button>
       </div>
     </div>
 
@@ -823,7 +823,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -831,7 +831,7 @@ include 'totalstudents_dashcount.php';
   </div>
 </div>
 
-<!-- Add Student Modal binago-->
+<!-- Add Student Modal-->
 <div id="addStudentModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">

@@ -1882,7 +1882,7 @@ function loadFaculty() {
             <label class="status-toggle">
               <input type="checkbox" class="status-checkbox" data-faculty-id="${f.id}" ${f.status === 'active' ? 'checked' : ''}>
               <span class="status-slider"></span>
-              <span class="status-text">${f.status === 'active' ? 'Active' : 'Inactive'}</span>
+              <span class="status-text" aria-label="${f.status === 'active' ? 'Active' : 'Inactive'}"></span>
             </label>
           </td>
           <td class="action-cell"><div class="action-buttons">
@@ -1977,7 +1977,8 @@ function loadFaculty() {
             
             const result = await response.json();
             if (result.success) {
-              statusText.textContent = newStatus === 'active' ? 'Active' : 'Inactive';
+              row.dataset.status = newStatus;
+              statusText.setAttribute("aria-label", newStatus === 'active' ? 'Active' : 'Inactive');
               showNotification(`Faculty status updated to ${newStatus}`, "#4caf50");
             } else {
               e.target.checked = !e.target.checked; // Revert checkbox
@@ -2153,7 +2154,7 @@ function filterFaculty() {
     
     // Check status filter - status is in the .status-text span within column 4
     if (statusFilter && statusFilter !== "") {
-      const statusText = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+      const statusText = (r.dataset.status || statusCell?.getAttribute("aria-label") || "").trim().toLowerCase();
       matchesStatus = statusText === statusFilter.toLowerCase();
     }
     
@@ -2904,7 +2905,7 @@ function loadStudents(){
       // Check for error response from PHP
       if (data.error) {
         console.error("Database error:", data.error);
-        studentTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: red;">Error loading students</td></tr>';
+        studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: red;">Error loading students</td></tr>';
         return;
       }
       
@@ -2913,7 +2914,7 @@ function loadStudents(){
       // Check if data is empty or not an array
       if (!data || !Array.isArray(data) || data.length === 0) {
         console.log("No students found");
-        studentTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No students found</td></tr>';
+        studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No students found</td></tr>';
         return;
       }
       
@@ -2923,6 +2924,7 @@ function loadStudents(){
         const row = document.createElement("tr");
         row.dataset.id = stu.id;
         row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
+        row.dataset.status = (stu.status || "active").toLowerCase();
         row.innerHTML = `
           <td>${stu.student_number || ''}</td>
           <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix||""}</div>
@@ -2930,6 +2932,13 @@ function loadStudents(){
           </td>
           <td><div>${stu.yearlevel === 'irregular' ? 'irregular' : (stu.yearlevel || '') + (stu.section || '')}</div>
               <small style="color:#6b7280;">${getProgramName(stu.program)}</small>
+          </td>
+          <td>
+            <label class="status-toggle">
+              <input type="checkbox" class="status-checkbox student-status-checkbox" data-student-id="${stu.id}" ${(stu.status || 'active').toLowerCase() === 'active' ? 'checked' : ''}>
+              <span class="status-slider"></span>
+              <span class="status-text" aria-label="${(stu.status || 'active').toLowerCase() === 'active' ? 'Active' : 'Inactive'}"></span>
+            </label>
           </td>
           <td class="action-cell">
             <div class="action-buttons">
@@ -3118,6 +3127,41 @@ function loadStudents(){
           };
         } else {
           console.error("Edit button not found for student row:", stu);
+        }
+
+        const statusCheckbox = row.querySelector(".student-status-checkbox");
+        const statusText = row.querySelector(".status-text");
+        if (statusCheckbox && statusText) {
+          statusCheckbox.addEventListener("change", async (e) => {
+            const newStatus = e.target.checked ? "active" : "inactive";
+            const studentId = e.target.dataset.studentId;
+
+            try {
+              const response = await fetch("student_crud.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "update_status",
+                  id: studentId,
+                  status: newStatus
+                })
+              });
+
+              const result = await response.json();
+              if (result.success) {
+                row.dataset.status = newStatus;
+                statusText.setAttribute("aria-label", newStatus === "active" ? "Active" : "Inactive");
+                showNotification(`Student status updated to ${newStatus}`, "#4caf50");
+              } else {
+                e.target.checked = !e.target.checked;
+                showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
+              }
+            } catch (error) {
+              e.target.checked = !e.target.checked;
+              console.error("Student status update error:", error);
+              showNotification("Error updating student status", "#f44336");
+            }
+          });
         }
         
         // View Subjects
