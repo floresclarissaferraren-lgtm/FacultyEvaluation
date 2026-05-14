@@ -804,6 +804,17 @@ include 'totalstudents_dashcount.php';
             <option value="">All Programs</option>
           </select>
         </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-graduation-cap" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
+          <select id="student-yearlevel-filter" class="program-dropdown">
+            <option value="">All Year Levels</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+            <option value="irregular">Irregular</option>
+          </select>
+        </div>
       </div>
       <div class="header-actions">
         <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>

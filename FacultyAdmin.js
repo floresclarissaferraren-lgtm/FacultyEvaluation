@@ -2742,6 +2742,15 @@ function getFormattedYearLevel(yearLevel) {
   return `${year}${suffix} Year`;
 }
 
+function normalizeStudentYearlevel(yearLevel) {
+  const value = (yearLevel || "").toString().trim().toLowerCase();
+  if (!value) return "";
+  if (value === "irregular") return "irregular";
+
+  const year = parseInt(value, 10);
+  return Number.isNaN(year) ? value : year.toString();
+}
+
 // Function to get program name from program ID
 function getProgramName(programId) {
   if (!programId) return '';
@@ -2913,6 +2922,7 @@ function loadStudents(){
         console.log("Student subjects:", stu.subjects);
         const row = document.createElement("tr");
         row.dataset.id = stu.id;
+        row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
         row.innerHTML = `
           <td>${stu.student_number || ''}</td>
           <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix||""}</div>
@@ -3137,6 +3147,7 @@ function loadStudents(){
       // Search functionality
       const searchInput = document.getElementById("student-search");
       const programFilter = document.getElementById("student-program-filter");
+      const yearlevelFilter = document.getElementById("student-yearlevel-filter");
       
       if(searchInput) {
         searchInput.oninput = e => {
@@ -3146,14 +3157,36 @@ function loadStudents(){
       
       if(programFilter) {
         programFilter.onchange = e => {
+          setStudentFilterActiveStates();
           filterStudents();
         };
+      }
+
+      if(yearlevelFilter) {
+        yearlevelFilter.onchange = e => {
+          setStudentFilterActiveStates();
+          filterStudents();
+        };
+      }
+
+      setStudentFilterActiveStates();
+
+      function setStudentFilterActiveStates() {
+        [programFilter, yearlevelFilter].forEach(filter => {
+          if (!filter) return;
+
+          const wrapper = filter.closest(".program-filter-wrapper");
+          if (!wrapper) return;
+
+          wrapper.classList.toggle("is-active", filter.value !== "");
+        });
       }
       
       // Combined filter function
       function filterStudents() {
         const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
         const selectedProgram = programFilter ? programFilter.value : "";
+        const selectedYearlevel = yearlevelFilter ? yearlevelFilter.value.toLowerCase() : "";
         
         [...studentTbody.rows].forEach(row => {
           // Get ID and name only (columns 1 and 2)
@@ -3163,6 +3196,7 @@ function loadStudents(){
           
           let matchesSearch = true;
           let matchesProgram = true;
+          let matchesYearlevel = true;
           
           // Check search term against ID and name only
           if (searchTerm) {
@@ -3176,9 +3210,13 @@ function loadStudents(){
             const programText = programCell ? programCell.textContent.trim() : "";
             matchesProgram = programText === selectedProgram;
           }
+
+          if (selectedYearlevel && selectedYearlevel !== "") {
+            matchesYearlevel = (row.dataset.yearlevel || "") === selectedYearlevel;
+          }
           
-          // Show row only if both conditions are met
-          row.style.display = (matchesSearch && matchesProgram) ? "" : "none";
+          // Show row only if all conditions are met
+          row.style.display = (matchesSearch && matchesProgram && matchesYearlevel) ? "" : "none";
         });
       }
     })
