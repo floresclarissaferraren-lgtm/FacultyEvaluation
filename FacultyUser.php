@@ -150,6 +150,7 @@ $conn->close();
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>
       <button class="evaluate-btn" onclick="showEvaluateSection()">Evaluate Now</button>
+<button class="history-btn" onclick="showEvaluationHistory()"><i class="ph ph-clock-counter-clockwise"></i> View History</button>
     </div>
   </div>
 

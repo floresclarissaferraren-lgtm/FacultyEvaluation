@@ -649,3 +649,106 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
+
+// ================= EVALUATION HISTORY =================
+async function showEvaluationHistory() {
+  const studentId = document.getElementById('studentId')?.value.trim();
+  
+  if (!studentId) {
+    alert('Student ID not found');
+    return;
+  }
+  
+  try {
+    const response = await fetch('get_student_evaluation_history.php');
+    const data = await response.json();
+    
+    if (!data.success) {
+      alert(data.message || 'Failed to load evaluation history');
+      return;
+    }
+    
+    displayEvaluationHistory(data.data);
+  } catch (error) {
+    console.error('Error fetching evaluation history:', error);
+    alert('Error loading evaluation history');
+  }
+}
+
+function displayEvaluationHistory(history) {
+  let historyModal = document.getElementById('historyModal');
+  if (!historyModal) {
+    historyModal = document.createElement('div');
+    historyModal.id = 'historyModal';
+    historyModal.className = 'historyform';
+    document.body.appendChild(historyModal);
+  }
+  
+  let historyContent = '';
+  
+  if (history.length === 0) {
+    historyContent = `
+      <div class="history-content">
+        <div class="history-header">
+          <h3>Evaluation History</h3>
+          <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
+        </div>
+        <div class="history-body">
+          <p class="no-history">No evaluations submitted yet.</p>
+        </div>
+      </div>
+    `;
+  } else {
+    const historyItems = history.map(item => `
+      <div class="history-item">
+        <div class="history-faculty">
+          <i class="ph ph-user-circle"></i>
+          <span class="faculty-name">${item.faculty_name}</span>
+        </div>
+        <div class="history-details">
+          <div class="history-rating">
+            <span class="rating-label">${item.rating_label}</span>
+            <span class="rating-score">${item.overall_rating}/5.00</span>
+          </div>
+          <div class="history-date">${item.date_evaluated}</div>
+        </div>
+        ${item.feedback ? `<div class="history-feedback"><strong>Feedback:</strong> ${item.feedback}</div>` : ''}
+      </div>
+    `).join('');
+    
+    historyContent = `
+      <div class="history-content">
+        <div class="history-header">
+          <h3>Evaluation History</h3>
+          <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
+        </div>
+        <div class="history-body">
+          <div class="history-list">
+            ${historyItems}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  historyModal.innerHTML = `
+    <div class="logout-content">
+      ${historyContent}
+    </div>
+  `;
+  
+  historyModal.style.display = 'flex';
+  
+  historyModal.addEventListener('click', function(event) {
+    if (event.target === historyModal) {
+      closeHistoryModal();
+    }
+  });
+}
+
+function closeHistoryModal() {
+  const historyModal = document.getElementById('historyModal');
+  if (historyModal) {
+    historyModal.style.display = 'none';
+  }
+}
