@@ -76,27 +76,51 @@ try {
         )
     ");
 
-    // Get evaluation details by category (simplified version using overall ratings)
+    // Get all feedback comments for this faculty.
+    $feedback_query = "SELECT feedback
+                    FROM evaluations
+                    WHERE faculty_id = ?
+                    AND feedback IS NOT NULL
+                    AND TRIM(feedback) != ''
+                    ORDER BY updated_at DESC, created_at DESC";
+    $feedback_stmt = $conn->prepare($feedback_query);
+    $feedback_stmt->bind_param("i", $faculty_id);
+    $feedback_stmt->execute();
+    $feedback_result = $feedback_stmt->get_result();
+
+    $feedback_comments = [];
+    while ($feedback_row = $feedback_result->fetch_assoc()) {
+        $feedback_comments[] = trim($feedback_row['feedback']);
+    }
+    $feedback_stmt->close();
+
+    $all_feedback = empty($feedback_comments) ? 'No feedback available' : implode("\n\n", $feedback_comments);
+
+    // Get evaluation details by category.
     $details_query = "SELECT 
-                        'Overall Performance' as category,
-                        AVG(e.overall_rating) as average_score,
+                        c.category_name as category,
+                        AVG(ea.rating) as average_score,
                         CASE 
-                            WHEN AVG(e.overall_rating) >= 4.5 THEN 'Outstanding'
-                            WHEN AVG(e.overall_rating) >= 3.5 THEN 'Very Good'
-                            WHEN AVG(e.overall_rating) >= 2.5 THEN 'Good'
-                            WHEN AVG(e.overall_rating) >= 1.5 THEN 'Fair'
+                            WHEN AVG(ea.rating) >= 4.5 THEN 'Outstanding'
+                            WHEN AVG(ea.rating) >= 3.5 THEN 'Very Good'
+                            WHEN AVG(ea.rating) >= 2.5 THEN 'Good'
+                            WHEN AVG(ea.rating) >= 1.5 THEN 'Fair'
                             ELSE 'Poor'
                         END as rating,
                         CASE 
-                            WHEN AVG(e.overall_rating) >= 4.5 THEN 'outstanding'
-                            WHEN AVG(e.overall_rating) >= 3.5 THEN 'very-good'
-                            WHEN AVG(e.overall_rating) >= 2.5 THEN 'good'
-                            WHEN AVG(e.overall_rating) >= 1.5 THEN 'fair'
+                            WHEN AVG(ea.rating) >= 4.5 THEN 'outstanding'
+                            WHEN AVG(ea.rating) >= 3.5 THEN 'very-good'
+                            WHEN AVG(ea.rating) >= 2.5 THEN 'good'
+                            WHEN AVG(ea.rating) >= 1.5 THEN 'fair'
                             ELSE 'poor'
                         END as rating_class
                     FROM evaluations e
+                    INNER JOIN evaluation_answers ea ON ea.evaluation_id = e.id
+                    INNER JOIN add_questions q ON q.id = ea.question_id
+                    INNER JOIN add_categories c ON c.id = q.category_id
                     WHERE e.faculty_id = ?
-                    GROUP BY e.faculty_id";
+                    GROUP BY c.id, c.category_name
+                    ORDER BY c.section_number ASC, c.id ASC";
     
     $details_stmt = $conn->prepare($details_query);
     $details_stmt->bind_param("i", $faculty_id);
@@ -109,9 +133,11 @@ try {
             'category' => $detail['category'],
             'average_score' => number_format($detail['average_score'], 2),
             'rating' => $detail['rating'],
-            'rating_class' => $detail['rating_class']
+            'rating_class' => $detail['rating_class'],
+            'all_feedback' => $all_feedback
         ];
     }
+    $details_stmt->close();
     
     // No sample data - use only real evaluation records
     
@@ -122,7 +148,9 @@ try {
         'faculty_id' => $faculty['faculty_id'],
         'overall_rating' => $overall_data['overall_rating'] ? number_format($overall_data['overall_rating'], 2) : '0.00',
         'total_responses' => $overall_data['total_responses'] ?: 0,
-        'evaluation_details' => $evaluation_details
+        'evaluation_details' => $evaluation_details,
+        'all_feedback' => $all_feedback,
+        'feedback_comments' => $feedback_comments
     ];
     
     echo json_encode([

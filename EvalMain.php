@@ -87,13 +87,6 @@
       <div class="info-box"><i class="ph ph-phone"></i><p>+63 912 345 6789</p></div>
       <div class="info-box"><i class="ph ph-envelope"></i><p>support@granbycollege.edu</p></div>
     </div>
-    <form class="contact-form">
-      <input type="text" placeholder="Your Name" required>
-      <input type="email" placeholder="Your Email" required>
-      <textarea placeholder="Your Message" rows="5"></textarea>
-      <button type="submit" class="send-btn"><i class="ph ph-paper-plane-right"></i> Send Message</button>
-    </form>
-  </div>
 </section>
 
 <footer>© 2026 Faculty Evaluation System | All Rights Reserved</footer>

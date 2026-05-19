@@ -210,6 +210,19 @@ function togglePassword(id, icon) {
 // ================= switch section =================
 
 async function showEvaluateSection() {
+  try {
+    const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const status = await statusRes.json();
+    if (!status || !status.success || !status.evaluation_open) {
+      alert("Evaluation is closed");
+      return;
+    }
+  } catch (_) {
+    // If status check fails, be safe and block entry.
+    alert("Evaluation is closed");
+    return;
+  }
+
   document.getElementById("mainPage").style.display = "none";
   document.getElementById("evaluateSection").style.display = "block";
   document.getElementById("facultyCards").style.display = "block";
@@ -233,6 +246,16 @@ async function loadStudentFacultyCards() {
   const container = document.getElementById('facultyContainer');
 
   if (!container) return;
+
+  // Block evaluate when evaluation is closed
+  let evaluationOpen = false;
+  try {
+    const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const status = await statusRes.json();
+    evaluationOpen = !!(status && status.success && status.evaluation_open);
+  } catch (_) {
+    evaluationOpen = false;
+  }
 
   if (!studentId && !yearLevel) {
     container.innerHTML = '<p class="no-faculty">No faculty available</p>';
@@ -265,8 +288,11 @@ async function loadStudentFacultyCards() {
 
         const card = document.createElement('div');
         card.className = 'faculty-card';
-        card.onclick = () => selectFaculty(faculty.id, fullName, subjectLabels);
-        
+        card.onclick = () => {
+          if (!evaluationOpen) return alert("Evaluation is closed");
+          selectFaculty(faculty.id, fullName, subjectLabels);
+        };
+         
         card.innerHTML = `
           <div class="faculty-header">
             <div class="faculty-icon">
@@ -281,7 +307,7 @@ async function loadStudentFacultyCards() {
             <div class="faculty-subjects">${subjectLabels || 'No subjects assigned'}</div>
           </div>
           <div class="evaluate-action">
-            <button class="evaluate-faculty-btn">Evaluate</button>
+            <button class="evaluate-faculty-btn" ${evaluationOpen ? "" : "disabled"}>Evaluate</button>
           </div>
         `;
         
@@ -408,11 +434,69 @@ async function loadFacultyCategories() {
         <div class="feedback-box">
           <label for="studentFeedback">OPTIONAL COMMENTS</label>
           <textarea id="studentFeedback" placeholder="Type your feedback here..."></textarea>
+          <div class="feedback-badwords-msg" id="feedbackBadwordsMsg" aria-live="polite">
+            Bad words is not allowed
+          </div>
         </div>
       </div>
     `;
     
     formContentArea.appendChild(feedbackSubmitContainer);
+
+    // Bad words filtering for feedback
+    const feedbackTextarea = document.getElementById("studentFeedback");
+    const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
+    const badWordsList = [
+      "putangina",
+      "puta",
+      "tangina",
+      "tang ina",
+      "gago",
+      "tanga",
+      "bobo",
+      "ulol",
+      "tarantado",
+      "inutil",
+      "leche",
+      "bwiset",
+      "bwisit",
+      "punyeta",
+      "fuck you",
+      "fuck",
+      "shit",
+      "bitch",
+      "asshole",
+      "dick",
+      "cunt",
+      "faggot",
+      "nigger"
+    ];
+
+    function normalizeFeedbackText(text) {
+      return (" " + String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() + " ");
+    }
+
+    function feedbackHasBadWords(text) {
+      const normalized = normalizeFeedbackText(text);
+      return badWordsList.some(w => normalized.includes(` ${w} `));
+    }
+
+    function setFeedbackBadwordsState(hasBadWords) {
+      const feedbackBox = document.querySelector(".feedback-box");
+      if (feedbackBox) feedbackBox.classList.toggle("has-badwords", hasBadWords);
+      if (badwordsMsg) badwordsMsg.style.display = hasBadWords ? "block" : "none";
+    }
+
+    if (feedbackTextarea) {
+      setFeedbackBadwordsState(false);
+      feedbackTextarea.addEventListener("input", () => {
+        setFeedbackBadwordsState(feedbackHasBadWords(feedbackTextarea.value));
+      });
+    }
     
     // Create navigation section
     const navigationSection = document.createElement("div");
@@ -498,6 +582,24 @@ function submitEvaluation() {
 
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
   const facultyId = window.selectedFaculty?.id || '';
+  const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
+
+  // Prevent submission when feedback has bad words
+  const normalizedFeedback = (" " + feedbackText.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ");
+  const hasBadWords = [
+    "putangina","puta","tangina","tang ina","gago","tanga","bobo","ulol","tarantado","inutil","leche","bwiset","bwisit","punyeta",
+    "fuck you","fuck","shit","bitch","asshole","dick","cunt","faggot","nigger"
+  ].some(w => normalizedFeedback.includes(` ${w} `));
+
+  if (hasBadWords) {
+    const feedbackBox = document.querySelector(".feedback-box");
+    const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
+    if (feedbackBox) feedbackBox.classList.add("has-badwords");
+    if (badwordsMsg) badwordsMsg.style.display = "block";
+    alert("Bad words is not allowed");
+    updatePaginationButtons();
+    return;
+  }
 
   if (!facultyId) {
     alert('Please select a faculty member to evaluate.');
@@ -526,11 +628,12 @@ function submitEvaluation() {
     faculty_id: facultyId,
     faculty_name: facultyLabel,
     answers: data,
-    feedback: document.getElementById('studentFeedback')?.value.trim() || ''
+    feedback: feedbackText
   };
 
   fetch("submit_evaluation.php", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(submission)
   })

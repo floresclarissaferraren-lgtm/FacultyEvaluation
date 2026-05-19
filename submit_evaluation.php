@@ -3,6 +3,26 @@ session_start();
 header("Content-Type: application/json");
 include "connect.php";
 
+$conn->query("
+    CREATE TABLE IF NOT EXISTS evaluation_settings (
+        id INT(11) NOT NULL PRIMARY KEY,
+        evaluation_open TINYINT(1) NOT NULL DEFAULT 0,
+        active_period_id INT(11) NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_active_period (active_period_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+");
+$conn->query("INSERT IGNORE INTO evaluation_settings (id, evaluation_open, active_period_id) VALUES (1, 0, NULL)");
+$settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
+$settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
+$evaluationOpen = $settings ? intval($settings["evaluation_open"]) === 1 : false;
+$activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
+
+if (!$evaluationOpen || $activePeriodId <= 0) {
+    echo json_encode(["success" => false, "message" => "Evaluation is closed"]);
+    exit;
+}
+
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
     exit;
@@ -17,6 +37,42 @@ $feedback = trim($payload['feedback'] ?? '');
 if ($faculty_id <= 0 || !is_array($answers) || empty($answers)) {
     echo json_encode(["success" => false, "message" => "Invalid evaluation payload"]);
     exit;
+}
+
+// Block feedback that contains bad words (server-side enforcement).
+if ($feedback !== '') {
+    $badWords = [
+        "putangina",
+        "puta",
+        "tangina",
+        "tang ina",
+        "gago",
+        "tanga",
+        "bobo",
+        "ulol",
+        "tarantado",
+        "inutil",
+        "leche",
+        "bwiset",
+        "bwisit",
+        "punyeta",
+        "fuck you",
+        "fuck",
+        "shit",
+        "bitch",
+        "asshole",
+        "dick",
+        "cunt",
+        "faggot",
+        "nigger"
+    ];
+    $normalized = ' ' . preg_replace('/\s+/', ' ', trim(preg_replace('/[^a-z0-9]+/i', ' ', strtolower($feedback)))) . ' ';
+    foreach ($badWords as $w) {
+        if (strpos($normalized, ' ' . $w . ' ') !== false) {
+            echo json_encode(["success" => false, "message" => "Bad words is not allowed"]);
+            exit;
+        }
+    }
 }
 
 // Ensure evaluation tables exist.

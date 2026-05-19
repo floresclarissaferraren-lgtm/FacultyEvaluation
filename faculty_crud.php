@@ -12,6 +12,11 @@ function generateRandomPassword($length = 8) {
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
+$checkFacultyStatusColumn = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'status'");
+if ($checkFacultyStatusColumn && $checkFacultyStatusColumn->num_rows === 0) {
+    $conn->query("ALTER TABLE add_faculties ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
+}
+
 /* =========================
    ADD NEW FACULTY
 ========================= */
@@ -243,10 +248,12 @@ elseif ($action === "update_status") {
     $id = intval($data['id'] ?? 0);
     $status = $data['status'] ?? '';
 
-    if (!$id || !in_array($status, ['active', 'inactive'])) {
+    $allowedStatuses = ['active', 'inactive', 'on leave'];
+    if (!$id || !in_array(strtolower(trim($status)), $allowedStatuses, true)) {
         echo json_encode(["success"=>false,"message"=>"Invalid ID or status"]);
         exit;
     }
+    $status = strtolower(trim($status));
 
     $stmt = $conn->prepare("UPDATE add_faculties SET status = ? WHERE id = ?");
     $stmt->bind_param("si", $status, $id);

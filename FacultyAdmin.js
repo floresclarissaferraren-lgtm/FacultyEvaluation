@@ -190,7 +190,7 @@ window.showSection = (id, e) => {
   if (id === "criteria-section") loadCategories?.();
   if (id === "report-section") loadEvaluations?.();
   if (id === "students-section") loadStudents?.();
-  if (id === "subjects-section") loadAllSubjects?.();
+  if (id === "subjects-section") loadSubjectsMainTable?.();
 
   // =========================
   // Dashboard details toggle
@@ -266,16 +266,17 @@ const confirmDelete = () => {
   
   if (!deleteTarget || !deleteType) return closeDeleteModal();
 
-const cfg = {
-  faculty: { url: "deleteFaculty.php", key: "faculty_id", type: "form" },
-  program: { url: "deleteProgram.php", key: "program_code", type: "form" },
-  category: { url: "delete_category.php", key: "category_id", type: "form" },   
-  question: { url: "delete_question.php", key: "question_id", type: "form" },
-  student: { url: "student_crud.php", key: "id", type: "json" }, // student uses JSON
-  subject: { url: "subject_crud.php", key: "id", type: "form" }, // subject uses form
-  class: { url: "classes_crud.php", key: "id", type: "form" }, // class uses form
-  class_subject: { url: "classes_crud.php", key: "custom", type: "form" } // class subject uses custom handling
-}[deleteType];
+ const cfg = {
+   faculty: { url: "deleteFaculty.php", key: "faculty_id", type: "form" },
+   program: { url: "deleteProgram.php", key: "program_code", type: "form" },
+   category: { url: "delete_category.php", key: "category_id", type: "form" },   
+   question: { url: "delete_question.php", key: "question_id", type: "form" },
+   student: { url: "student_crud.php", key: "id", type: "json" }, // student uses JSON
+   subject: { url: "subject_crud.php", key: "id", type: "form" }, // subject uses form
+   class: { url: "classes_crud.php", key: "id", type: "form" }, // class uses form
+   class_subject: { url: "classes_crud.php", key: "custom", type: "form" }, // class subject uses custom handling
+   period: { url: "periods_api.php?action=delete", key: "id", type: "json_period" }
+ }[deleteType];
 
 if (!cfg) return closeDeleteModal();
 
@@ -291,15 +292,24 @@ if (deleteType === "class_subject") {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body
   };
-} else if (cfg.type === "json") {
-  // For students, send JSON with action + id
-  const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
-  fetchOptions = {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "delete", id: val })
-  };
-} else {
+ } else if (cfg.type === "json_period") {
+   const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
+   fetchOptions = {
+     method: "POST",
+     credentials: "same-origin",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ id: val })
+   };
+ } else if (cfg.type === "json") {
+   // For students, send JSON with action + id
+   const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
+   fetchOptions = {
+     method: "POST",
+     credentials: "same-origin",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ action: "delete", id: val })
+   };
+ } else {
   // For other entities, send form-encoded
   const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
   let body = `${cfg.key}=${encodeURIComponent(val)}`;
@@ -309,12 +319,12 @@ if (deleteType === "class_subject") {
     body += `&action=delete`;
   }
   
-  fetchOptions = {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body
-  };
-}
+   fetchOptions = {
+     method: "POST",
+     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+     body: body
+   };
+ }
 
 fetch(cfg.url, fetchOptions)
   .then(r => r.json())
@@ -323,6 +333,10 @@ fetch(cfg.url, fetchOptions)
       if (deleteType === "class_subject") {
         // Remove the subject card from DOM
         deleteTarget.subjectCard.remove();
+      } else if (deleteType === "period") {
+        deleteTarget.closest("tr")?.remove();
+        loadPeriods?.();
+        refreshPeriodCard?.();
       } else {
         deleteTarget.remove();
       }
@@ -331,12 +345,16 @@ fetch(cfg.url, fetchOptions)
       
       // Refresh subjects list after successful deletion
       if (deleteType === "subject") {
-        loadAllSubjects();
+        loadSubjectsMainTable?.();
+        loadSubjects?.();
       }
       
       // Refresh classes list after successful deletion
       if (deleteType === "class") {
         loadClasses();
+      }
+      if (deleteType === "faculty" || deleteType === "student") {
+        refreshSectionStats();
       }
       
       if (deleteType === "student") {
@@ -760,6 +778,13 @@ setupAllModalsClickOutside();
 const addSubjectMainModal = document.getElementById("addSubjectMainModal"),
       saveMainSubjectBtn = document.getElementById("save-main-subject-btn"),
       subjectsMainTbody = document.getElementById("subjects-main-tbody");
+let subjectsMainData = [];
+let selectedClassSemester = "";
+try {
+  selectedClassSemester = localStorage.getItem("selectedClassSemester") || "";
+} catch (err) {
+  selectedClassSemester = "";
+}
 
 function initAddSubjectMainBtn() {
   const addBtn = document.querySelector(".add-subject-main-btn");
@@ -770,6 +795,7 @@ function initAddSubjectMainBtn() {
       document.getElementById("main-subject-code").value = "";
       document.getElementById("main-subject-desc").value = "";
       document.getElementById("main-program-select").selectedIndex = 0;
+      document.getElementById("main-semester-select").selectedIndex = 0;
       document.getElementById("main-year-select").selectedIndex = 0;
       
       // Load programs for dropdown
@@ -820,9 +846,10 @@ saveMainSubjectBtn?.addEventListener("click",()=>{
   const code = document.getElementById("main-subject-code").value.trim(),
         desc = document.getElementById("main-subject-desc").value.trim(),
         program = document.getElementById("main-program-select").value,
+        semester = document.getElementById("main-semester-select").value,
         year = document.getElementById("main-year-select").value;
   
-  if(!code||!desc||!program||!year){
+  if(!code||!desc||!program||!semester||!year){
     alert("Please fill all fields");
     return;
   }
@@ -830,13 +857,13 @@ saveMainSubjectBtn?.addEventListener("click",()=>{
   fetch("subject_crud.php",{
     method:"POST",
     headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:`action=add&program_id=${program}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&year_level=${encodeURIComponent(year)}`
+    body:`action=add&program_id=${program}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`
   })
   .then(r=>r.json())
   .then(res=>{
     if(res.status === "success"){
       addSubjectMainModal.style.display = "none";
-      loadAllSubjects();
+      loadSubjectsMainTable();
       showNotification("Subject added successfully!", "#4caf50");
     }else{
       alert("Error: " + (res.message || "Failed to add subject"));
@@ -849,14 +876,36 @@ saveMainSubjectBtn?.addEventListener("click",()=>{
 });
 
 // LOAD ALL SUBJECTS
-function loadAllSubjects(){
+function loadSubjectsMainTable(){
   fetch("subject_crud.php?action=get_all")
     .then(r=>r.json())
     .then(data=>{
+      subjectsMainData = Array.isArray(data) ? data : [];
+      renderSubjectsMainTable();
+    })
+    .catch(err=>{
+      console.error("Error loading subjects:", err);
+      subjectsMainTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">Error loading subjects</td></tr>';
+    });
+}
+
+function renderSubjectsMainTable(){
+      if (!subjectsMainTbody) return;
+      const searchTerm = (document.getElementById("subjects-search")?.value || "").toLowerCase().trim();
+      const yearFilter = document.getElementById("subjects-year-filter")?.value || "";
+      const data = subjectsMainData.filter(s => {
+        const matchesSearch = !searchTerm ||
+          String(s.subject_code || "").toLowerCase().includes(searchTerm) ||
+          String(s.subject_desc || "").toLowerCase().includes(searchTerm) ||
+          String(s.program_name || "").toLowerCase().includes(searchTerm);
+        const matchesYear = !yearFilter || String(s.year_level || "") === yearFilter;
+        return matchesSearch && matchesYear;
+      });
+
       subjectsMainTbody.innerHTML = "";
       
       if(!data || data.length === 0){
-        subjectsMainTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No subjects found</td></tr>';
+        subjectsMainTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No subjects found</td></tr>';
         return;
       }
       
@@ -867,6 +916,7 @@ function loadAllSubjects(){
           <td>${s.subject_code}</td>
           <td>${s.subject_desc}</td>
           <td>${s.program_name || 'N/A'}</td>
+          <td>${s.semester || ''}</td>
           <td>${s.year_level}</td>
           <td class="action-cell">
             <div class="action-buttons">
@@ -889,20 +939,84 @@ function loadAllSubjects(){
         
         subjectsMainTbody.appendChild(row);
       });
-    })
-    .catch(err=>{
-      console.error("Error loading subjects:", err);
-      subjectsMainTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading subjects</td></tr>';
-    });
 }
 
-// SEARCH SUBJECTS
-document.getElementById("subjects-search")?.addEventListener("input",e=>{
-  const term = e.target.value.toLowerCase();
-  const rows = subjectsMainTbody.querySelectorAll("tr");
-  rows.forEach(r=>{
-    r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none";
+["subjects-search", "subjects-year-filter"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input", renderSubjectsMainTable);
+  document.getElementById(id)?.addEventListener("change", renderSubjectsMainTable);
+});
+
+function syncClassSemesterSetting() {
+  ["class-semester-setting", "manage-class-semester-setting"].forEach(id => {
+    const select = document.getElementById(id);
+    if (select) select.value = selectedClassSemester;
   });
+}
+
+syncClassSemesterSetting();
+document.addEventListener("DOMContentLoaded", syncClassSemesterSetting);
+
+function handleSetClassSemester(semester) {
+  if (!semester) return showNotification("Please select semester first", "#f44336");
+  selectedClassSemester = semester;
+  try {
+    localStorage.setItem("selectedClassSemester", semester);
+  } catch (err) {}
+  syncClassSemesterSetting();
+  showNotification(`Add Classes will show ${semester} subjects only`, "#4caf50");
+
+  const classYear = document.getElementById("class-year")?.value || "";
+  if (document.getElementById("addClassModal")?.style.display !== "none" && classYear) {
+    const facultyBox = document.getElementById("faculty-list");
+    if (facultyBox) {
+      facultyBox.dataset.facultyData = JSON.stringify({});
+      facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+    }
+    loadSubjectsByYear(classYear);
+  }
+}
+
+// Toggle semester dropdown visibility
+function toggleSemesterDropdown(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  if (dropdown) {
+    const isVisible = dropdown.style.display === "block";
+    dropdown.style.display = isVisible ? "none" : "block";
+  }
+}
+
+// Close all semester dropdowns
+function closeAllSemesterDropdowns() {
+  document.querySelectorAll(".semester-dropdown").forEach(dropdown => {
+    dropdown.style.display = "none";
+  });
+}
+
+document.getElementById("set-class-semester-btn")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  closeAllSemesterDropdowns();
+  toggleSemesterDropdown("semester-dropdown");
+});
+
+document.getElementById("manage-set-class-semester-btn")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  closeAllSemesterDropdowns();
+  toggleSemesterDropdown("manage-semester-dropdown");
+});
+
+// Handle semester option clicks
+document.querySelectorAll(".semester-option").forEach(option => {
+  option.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const semester = e.target.dataset.value;
+    handleSetClassSemester(semester);
+    closeAllSemesterDropdowns();
+  });
+});
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", () => {
+  closeAllSemesterDropdowns();
 });
 
 // CLOSE MODAL
@@ -976,6 +1090,7 @@ addManageBtn?.addEventListener("click", () => {
     addSubjectModal.style.position = "fixed";
     document.getElementById("subject-code").value = "";
     document.getElementById("subject-desc").value = "";
+    document.getElementById("subject-semester").selectedIndex = 0;
     document.getElementById("subject-year").selectedIndex = 0;
     isEditingSubject = false;
     editSubjectId = null;
@@ -991,7 +1106,6 @@ addManageBtn?.addEventListener("click", () => {
     delete addClassModal.dataset.existingSubjectIds;
     document.getElementById("class-year").selectedIndex = 0;
     document.getElementById("class-block").value = "";
-    document.getElementById("class-semester").selectedIndex = 0;
     document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
@@ -1012,17 +1126,20 @@ function loadSubjects() {
 
       // Check if no data or empty array
       if (!data || data.length === 0) {
-        subjectsTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No Subject found for this program</td></tr>';
+        subjectsTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No Subject found for this program</td></tr>';
         return;
       }
 
       data.forEach(s => {
         const row = document.createElement("tr");
         row.dataset.id = s.id;
+        row.dataset.semester = s.semester || "";
+        row.dataset.year = s.year_level || "";
 
         row.innerHTML = `
           <td>${s.subject_code}</td>
           <td>${s.subject_desc}</td>
+          <td>${s.semester || ''}</td>
           <td>${s.year_level}</td>
           <td class="action-cell">
             <div class="action-buttons">
@@ -1050,6 +1167,13 @@ function loadSubjects() {
 
           document.getElementById("subject-code").value = s.subject_code;
           document.getElementById("subject-desc").value = s.subject_desc;
+          const semesterSelect = document.getElementById("subject-semester");
+          for (let i = 0; i < semesterSelect.options.length; i++) {
+            if (semesterSelect.options[i].value === (s.semester || "1st Semester")) {
+              semesterSelect.selectedIndex = i;
+              break;
+            }
+          }
           
           // Set dropdown value for year level
           const yearSelect = document.getElementById("subject-year");
@@ -1073,26 +1197,45 @@ function loadSubjects() {
 
         subjectsTableBody.appendChild(row);
       });
-      applyManageSearchFilter();
+      applyManageSubjectFilters();
     });
 }
+
+function applyManageSubjectFilters() {
+  const searchTerm = (document.getElementById("manage-subjects-search")?.value || manageSearchInput?.value || "").toLowerCase().trim();
+  const semester = document.getElementById("manage-subjects-semester-filter")?.value || "";
+  const year = document.getElementById("manage-subjects-year-filter")?.value || "";
+
+  [...subjectsTableBody.rows].forEach(row => {
+    const matchesSearch = !searchTerm || row.textContent.toLowerCase().includes(searchTerm);
+    const matchesSemester = !semester || row.dataset.semester === semester;
+    const matchesYear = !year || row.dataset.year === year;
+    row.style.display = (matchesSearch && matchesSemester && matchesYear) ? "" : "none";
+  });
+}
+
+["manage-subjects-search", "manage-subjects-semester-filter", "manage-subjects-year-filter"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input", applyManageSubjectFilters);
+  document.getElementById(id)?.addEventListener("change", applyManageSubjectFilters);
+});
 
 // ========================= SAVE SUBJECT =========================
 saveSubjectBtn?.addEventListener("click", () => {
   const code = document.getElementById("subject-code").value.trim(),
         desc = document.getElementById("subject-desc").value.trim(),
+        semester = document.getElementById("subject-semester").value.trim(),
         year = document.getElementById("subject-year").value.trim();
 
-  console.log("Saving subject:", { code, desc, year, currentProgramId, isEditingSubject });
+  console.log("Saving subject:", { code, desc, semester, year, currentProgramId, isEditingSubject });
 
-  if (!code || !desc || !year) return alert("Fill all fields");
+  if (!code || !desc || !semester || !year) return alert("Fill all fields");
   if (!currentProgramId) return alert("Select program first");
 
   const url = "subject_crud.php";
 
   const body = isEditingSubject
-    ? `action=edit&id=${editSubjectId}&subject_code=${code}&subject_desc=${desc}&year_level=${year}`
-    : `action=add&program_id=${currentProgramId}&subject_code=${code}&subject_desc=${desc}&year_level=${year}`;
+    ? `action=edit&id=${editSubjectId}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`
+    : `action=add&program_id=${currentProgramId}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`;
 
   console.log("Sending to:", url);
   console.log("Body:", body);
@@ -1130,9 +1273,10 @@ function loadSubjectsByYear(yearLevel, callback = null) {
   const box = document.getElementById("subject-checkbox-list");
   box.innerHTML = "Loading...";
 
-  console.log(`Fetching subjects for program_id: ${currentProgramId}, year_level: ${yearLevel}`);
+  console.log(`Fetching subjects for program_id: ${currentProgramId}, year_level: ${yearLevel}, semester: ${selectedClassSemester || "all"}`);
 
-  fetch(`classes_crud.php?action=get_subjects_by_program_year&program_id=${currentProgramId}&year_level=${yearLevel}`)
+  const semesterParam = selectedClassSemester ? `&semester=${encodeURIComponent(selectedClassSemester)}` : "";
+  fetch(`classes_crud.php?action=get_subjects_by_program_year&program_id=${currentProgramId}&year_level=${encodeURIComponent(yearLevel)}${semesterParam}`)
     .then(res => {
       console.log("Response status:", res.status);
       return res.json();
@@ -1143,13 +1287,34 @@ function loadSubjectsByYear(yearLevel, callback = null) {
       box.innerHTML = "";
 
       if (!data || data.length === 0) {
-        box.innerHTML = `<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>No subjects found for year ${yearLevel}</small>`;
+        const semesterText = selectedClassSemester ? ` in ${selectedClassSemester}` : "";
+        box.innerHTML = `<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>No subjects found for year ${yearLevel}${semesterText}</small>`;
+        if (selectedClassSemester) {
+          const clearBtn = document.createElement("button");
+          clearBtn.type = "button";
+          clearBtn.className = "clear-semester-filter-btn";
+          clearBtn.textContent = "Show all semesters";
+          clearBtn.addEventListener("click", () => {
+            selectedClassSemester = "";
+            try {
+              localStorage.removeItem("selectedClassSemester");
+            } catch (err) {}
+            syncClassSemesterSetting();
+            loadSubjectsByYear(yearLevel, callback);
+          });
+          box.appendChild(clearBtn);
+        }
         if (typeof callback === "function") callback([]);
         return;
       }
 
       // Clear existing content but keep the header
       box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4>';
+      if (selectedClassSemester) {
+        const note = document.createElement("small");
+        note.textContent = `Showing ${selectedClassSemester} subjects only`;
+        box.appendChild(note);
+      }
       
       data.forEach(sub => {
         const label = document.createElement("label");
@@ -1354,12 +1519,11 @@ function loadClasses() {
       data.forEach(c => {
         const row = document.createElement("tr");
         row.dataset.id = c.id;
-        row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()} ${(c.semester || "").toLowerCase()}`;
+        row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()}`;
 
         row.innerHTML = `
           <td>${c.block}</td>
           <td>${c.year_level}</td>
-          <td>${c.semester || "1st Semester"}</td>
           <td><span class="status-badge active">Loading...</span></td>
           <td class="action-cell">
             <div class="action-buttons">
@@ -1406,7 +1570,6 @@ function loadClasses() {
 
           document.getElementById("class-year").value = c.year_level;
           document.getElementById("class-block").value = c.block || "";
-          document.getElementById("class-semester").value = c.semester || "1st Semester";
           document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Loading subjects...</small>';
 
           const facultyBox = document.getElementById("faculty-list");
@@ -1465,6 +1628,14 @@ function applyManageSearchFilter() {
   const subjectsVisible = document.getElementById("subjects")?.style.display !== "none";
   const targetTbody = subjectsVisible ? subjectsTableBody : classesTableBody;
   if (!targetTbody) return;
+  if (subjectsVisible && (
+    document.getElementById("manage-subjects-search") ||
+    document.getElementById("manage-subjects-semester-filter") ||
+    document.getElementById("manage-subjects-year-filter")
+  )) {
+    applyManageSubjectFilters();
+    return;
+  }
   [...targetTbody.rows].forEach((row) => {
     if (!term) {
       row.style.display = "";
@@ -1492,10 +1663,9 @@ document.getElementById("addClassModal")?.querySelector(".close-btn")?.addEventL
 saveClassBtn?.addEventListener("click", () => {
   const year = document.getElementById("class-year").value.trim();
   const block = document.getElementById("class-block").value.trim();
-  const semester = document.getElementById("class-semester").value.trim();
   const addClassModalEl = document.getElementById("addClassModal");
 
-  if (!year || !block || !semester) return alert("Fill all fields");
+  if (!year || !block) return alert("Fill all fields");
   if (!currentProgramId) return alert("Select program first");
 
   const isEditing = addClassModalEl.dataset.isEditing === "true";
@@ -1524,7 +1694,7 @@ saveClassBtn?.addEventListener("click", () => {
   });
 
   const action = isEditing ? "edit" : "add";
-  let body = `action=${action}&program_id=${currentProgramId}&year_level=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}&block=${encodeURIComponent(block)}`;
+  let body = `action=${action}&program_id=${currentProgramId}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
   body += `&subjects=${encodeURIComponent(JSON.stringify(checked))}`;
   body += `&faculty_assignments=${encodeURIComponent(JSON.stringify(assignments))}`;
   
@@ -1818,6 +1988,142 @@ const closeModal=m=>m.style.display="none";
 // ================= Faculty ==========================================================================================
 const facultyTbody = document.querySelector("#faculties-section tbody");
 
+function normalizeStatusValue(status) {
+  return String(status || "active").trim().toLowerCase();
+}
+
+function statusLabel(status) {
+  const normalized = normalizeStatusValue(status);
+  if (normalized === "on leave") return "On Leave";
+  return normalized === "inactive" ? "Inactive" : "Active";
+}
+
+function statusPillHtml(status) {
+  const normalized = normalizeStatusValue(status);
+  const cssStatus = normalized.replace(/\s+/g, "-");
+  return `<span class="inline-status ${cssStatus}"><span class="status-dot"></span><span>${statusLabel(normalized)}</span></span>`;
+}
+
+function statusMenuHtml(type, currentStatus) {
+  const options = type === "faculty" ? ["active", "inactive", "on leave"] : ["active", "inactive"];
+  const current = normalizeStatusValue(currentStatus);
+  return `
+    <div class="status-action-menu">
+      <button class="settings-btn" title="Change Status"><i class="ph ph-gear-six"></i></button>
+      <div class="status-dropdown-menu">
+        ${options.map(status => `
+          <button type="button" class="status-option ${current === status ? "selected" : ""}" data-status="${status}">
+            ${statusLabel(status)}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function restoreStatusDropdown(menu) {
+  const dropdown = menu.querySelector(".status-dropdown-menu") || document.body.querySelector(`.status-dropdown-menu.floating[data-owner-menu="${menu.dataset.statusMenuId}"]`);
+  if (!dropdown) return;
+
+  dropdown.classList.remove("floating");
+  dropdown.style.left = "";
+  dropdown.style.top = "";
+  dropdown.style.width = "";
+  dropdown.style.visibility = "";
+  dropdown.removeAttribute("data-owner-menu");
+
+  if (dropdown.parentElement !== menu) {
+    menu.appendChild(dropdown);
+  }
+}
+
+function closeStatusMenus(exceptMenu = null) {
+  document.querySelectorAll(".status-action-menu.open").forEach(menu => {
+    if (menu !== exceptMenu) {
+      restoreStatusDropdown(menu);
+      menu.classList.remove("open");
+    }
+  });
+}
+
+function positionStatusMenu(statusMenu) {
+  const dropdown = statusMenu.querySelector(".status-dropdown-menu");
+  const trigger = statusMenu.querySelector(".settings-btn");
+  if (!dropdown || !trigger) return;
+
+  if (!statusMenu.dataset.statusMenuId) {
+    statusMenu.dataset.statusMenuId = `status-menu-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  dropdown.classList.add("floating");
+  dropdown.dataset.ownerMenu = statusMenu.dataset.statusMenuId;
+  dropdown.style.left = "0px";
+  dropdown.style.top = "0px";
+  dropdown.style.width = "";
+  dropdown.style.visibility = "hidden";
+  document.body.appendChild(dropdown);
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const menuRect = dropdown.getBoundingClientRect();
+  const gutter = 8;
+  const left = Math.min(
+    Math.max(gutter, triggerRect.right - menuRect.width),
+    window.innerWidth - menuRect.width - gutter
+  );
+  let top = triggerRect.bottom + 6;
+
+  if (top + menuRect.height > window.innerHeight - gutter) {
+    top = Math.max(gutter, triggerRect.top - menuRect.height - 6);
+  }
+
+  dropdown.style.left = `${left}px`;
+  dropdown.style.top = `${top}px`;
+  dropdown.style.visibility = "";
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".status-action-menu") && !e.target.closest(".status-dropdown-menu")) {
+    closeStatusMenus();
+  }
+});
+
+window.addEventListener("scroll", () => closeStatusMenus(), true);
+window.addEventListener("resize", () => closeStatusMenus());
+
+function refreshSectionStats() {
+  fetch("get_section_stats.php?cb=" + Date.now(), { cache: "no-store" })
+    .then(r => r.json())
+    .then(res => {
+      if (!res.success || !res.data) return;
+      const faculty = res.data.faculty || {};
+      const students = res.data.students || {};
+
+      const setText = (selector, value) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value ?? 0;
+      };
+
+      setText(".faculty-stat-card.total-faculty .stat-number", faculty.total_faculty);
+      setText(".faculty-stat-card.active-faculty .stat-number", faculty.active_faculty);
+      setText(".faculty-stat-card.pending-evaluation .stat-number", faculty.pending_evaluation);
+      setText(".student-stat-card.total-students .stat-number", students.total_students);
+      setText(".student-stat-card.active-students .stat-number", students.active_students);
+      setText(".student-stat-card.regular-students .stat-number", students.regular_students);
+      setText(".student-stat-card.irregular-students .stat-number", students.irregular_students);
+    })
+    .catch(err => console.error("Error refreshing section stats:", err));
+}
+
+async function updateStatus(type, id, status) {
+  const url = type === "faculty" ? "faculty_crud.php" : "student_crud.php";
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "update_status", id, status })
+  });
+  return response.json();
+}
+
 // ------------------- Load Faculty -------------------
 function loadFaculty() {
   console.log("Loading faculty data...");
@@ -1837,7 +2143,7 @@ function loadFaculty() {
       
       // Check if no data or empty array
       if (!data || data.length === 0) {
-        facultyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No faculty found</td></tr>';
+        facultyTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No faculty found</td></tr>';
         return;
       }
       
@@ -1850,7 +2156,7 @@ function loadFaculty() {
         Object.assign(row.dataset, f);
         row.dataset.faculty_id = f.faculty_id;
         row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()}`;
-        row.dataset.status = (f.status || "").toLowerCase();
+        row.dataset.status = normalizeStatusValue(f.status);
 
         // Display subject codes or show "No subjects yet"
         console.log("Faculty subjects data:", f.subjects);
@@ -1865,30 +2171,25 @@ function loadFaculty() {
         console.log("Subjects display:", subjectsDisplay);
 
         row.innerHTML = `
+          <td>
+            ${f.photo ? `<img src="${f.photo}" class="table-avatar" alt="">` : `<div class="table-avatar placeholder"><i class="ph ph-user"></i></div>`}
+          </td>
           <td><strong>${f.faculty_id}</strong></td>
           <td>
-            <div style="display: flex; align-items: center; gap: 12px;">
-              ${f.photo ? `<img src="${f.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;"><i class="ph ph-user" style="color:#6b7280;"></i></div>`}
-              <div>
-                <div style="font-weight: 600; color: var(--primary-900);">${f.firstname} ${f.lastname} ${f.suffix||""}</div>
-                <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
-              </div>
+            <div>
+              <div style="font-weight: 600; color: var(--primary-900);">${f.firstname} ${f.lastname} ${f.suffix||""}</div>
+              <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
             </div>
           </td>
           <td>
             <span class="subject-count-badge">${f.subjects ? f.subjects.length : 0}</span>
           </td>
-          <td>
-            <label class="status-toggle">
-              <input type="checkbox" class="status-checkbox" data-faculty-id="${f.id}" ${f.status === 'active' ? 'checked' : ''}>
-              <span class="status-slider"></span>
-              <span class="status-text" aria-label="${f.status === 'active' ? 'Active' : 'Inactive'}"></span>
-            </label>
-          </td>
+          <td>${statusPillHtml(f.status)}</td>
           <td class="action-cell"><div class="action-buttons">
             <button class="view-btn"><i class="ph ph-eye"></i></button>
             <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
             <button class="delete-btn"><i class="ph ph-trash"></i></button>
+            ${statusMenuHtml("faculty", f.status)}
           </div></td>`;
 
         facultyTbody.appendChild(row);
@@ -1957,38 +2258,41 @@ function loadFaculty() {
           viewFacultySubjectsModal.style.position = "fixed";
         };
 
-        // STATUS TOGGLE --------------------
-        const statusCheckbox = row.querySelector(".status-checkbox");
-        const statusText = row.querySelector(".status-text");
-        statusCheckbox.addEventListener("change", async (e) => {
-          const newStatus = e.target.checked ? 'active' : 'inactive';
-          const facultyId = e.target.dataset.facultyId;
-          
-          try {
-            const response = await fetch("faculty_crud.php", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                action: "update_status",
-                id: facultyId,
-                status: newStatus
-              })
-            });
-            
-            const result = await response.json();
-            if (result.success) {
-              row.dataset.status = newStatus;
-              statusText.setAttribute("aria-label", newStatus === 'active' ? 'Active' : 'Inactive');
-              showNotification(`Faculty status updated to ${newStatus}`, "#4caf50");
-            } else {
-              e.target.checked = !e.target.checked; // Revert checkbox
-              showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
+        const statusMenu = row.querySelector(".status-action-menu");
+        statusMenu.querySelector(".settings-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          const willOpen = !statusMenu.classList.contains("open");
+          closeStatusMenus(statusMenu);
+          statusMenu.classList.toggle("open", willOpen);
+          if (willOpen) positionStatusMenu(statusMenu);
+          else restoreStatusDropdown(statusMenu);
+        });
+        statusMenu.querySelectorAll(".status-option").forEach(option => {
+          option.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const newStatus = option.dataset.status;
+            try {
+              const result = await updateStatus("faculty", f.id, newStatus);
+              if (result.success) {
+                row.dataset.status = newStatus;
+                row.querySelector("td:nth-child(5)").innerHTML = statusPillHtml(newStatus);
+                (option.closest(".status-dropdown-menu") || statusMenu).querySelectorAll(".status-option").forEach(btn => {
+                  btn.classList.toggle("selected", btn.dataset.status === newStatus);
+                });
+                restoreStatusDropdown(statusMenu);
+                statusMenu.classList.remove("open");
+                closeStatusMenus();
+                showNotification(`Faculty status updated to ${statusLabel(newStatus)}`, "#4caf50");
+                refreshSectionStats();
+                filterFaculty();
+              } else {
+                showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
+              }
+            } catch (error) {
+              console.error("Status update error:", error);
+              showNotification("Error updating status", "#f44336");
             }
-          } catch (error) {
-            e.target.checked = !e.target.checked; // Revert checkbox
-            console.error("Status update error:", error);
-            showNotification("Error updating status", "#f44336");
-          }
+          });
         });
 
         // DELETE --------------------
@@ -1996,6 +2300,7 @@ function loadFaculty() {
           deleteTarget = row;
           deleteType = "faculty";
           openDeleteModal("faculty", f.firstname + " " + f.lastname, row);};});})
+    .then(() => refreshSectionStats())
     .catch(err => console.error("Load error:", err));}
 
 // ADD BUTTON -------------------
@@ -2137,10 +2442,8 @@ function filterFaculty() {
   const statusFilter = document.getElementById("faculty-status-filter").value;
   
   [...facultyTbody.rows].forEach(r => {
-    // Get ID and name only (columns 1 and 2), status is in column 4
-    const idCell = r.querySelector("td:nth-child(1)");
-    const nameCell = r.querySelector("td:nth-child(2)");
-    const statusCell = r.querySelector("td:nth-child(4) .status-text");
+    const idCell = r.querySelector("td:nth-child(2)");
+    const nameCell = r.querySelector("td:nth-child(3)");
     
     let matchesSearch = true;
     let matchesStatus = true;
@@ -2152,9 +2455,9 @@ function filterFaculty() {
       matchesSearch = idText.includes(searchTerm) || nameText.includes(searchTerm);
     }
     
-    // Check status filter - status is in the .status-text span within column 4
+    // Check status filter against the row status value.
     if (statusFilter && statusFilter !== "") {
-      const statusText = (r.dataset.status || statusCell?.getAttribute("aria-label") || "").trim().toLowerCase();
+      const statusText = normalizeStatusValue(r.dataset.status);
       matchesStatus = statusText === statusFilter.toLowerCase();
     }
     
@@ -2333,6 +2636,51 @@ function downloadReport(content, filename) {
 // Global variable to store current faculty data for PDF
 let currentFacultyData = null;
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatFeedbackForHtml(feedback) {
+  const text = String(feedback || "No feedback available").trim() || "No feedback available";
+  return escapeHtml(text).replace(/\n/g, "<br>");
+}
+
+function renderEvaluationDetailsTable(reportData) {
+  const tbody = document.getElementById("reportEvaluationDetailsBody");
+  if (!tbody) return;
+
+  const details = Array.isArray(reportData.evaluation_details) ? reportData.evaluation_details : [];
+  const fallbackFeedback = reportData.all_feedback || "No feedback available";
+
+  if (details.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" style="padding: 14px; text-align: center; color: #6b7280;">No evaluation details available</td>
+      </tr>
+    `;
+    return;
+  }
+
+  const feedbackHtml = formatFeedbackForHtml(details[0]?.all_feedback || fallbackFeedback);
+
+  const feedbackCell = `<td rowspan="${details.length}" style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: left; color: #4b5563; font-size: 12px; line-height: 1.45; vertical-align: top;">${feedbackHtml}</td>`;
+
+  const rowsHtml = details.map((detail, index) => `
+    <tr>
+      <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: left; font-weight: 600; color: #374151;">${escapeHtml(detail.category)}</td>
+      <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: center; color: var(--primary-900); font-weight: 700;">${escapeHtml(detail.average_score || detail.overall_rating || "0.00")}</td>
+      ${index === 0 ? feedbackCell : ""}
+    </tr>
+  `).join("");
+
+  tbody.innerHTML = rowsHtml;
+}
+
 // Add event listener for PDF button when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   // Add click event listener to PDF button
@@ -2371,7 +2719,7 @@ function viewEvaluationDetails(facultyId) {
         if (ratingElement) ratingElement.textContent = data.data.overall_rating;
         if (responsesElement) responsesElement.textContent = data.data.total_responses;
         
-        // No table needed - just show cards
+        renderEvaluationDetailsTable(data.data);
         
         // Show modal
         const modal = document.getElementById('facultyReportModal');
@@ -2450,7 +2798,8 @@ function downloadFacultyReportPDF() {
     overallRating: currentFacultyData.overall_rating,
     totalResponses: currentFacultyData.total_responses,
     evaluationDetails: currentFacultyData.evaluation_details || [],
-    feedback: '' // No feedback for admin version
+    feedback: '',
+    allFeedback: currentFacultyData.all_feedback || 'No feedback available'
   };
   
   // Send to server for PDF generation
@@ -2497,7 +2846,7 @@ function downloadFacultyReportPDF() {
   });
 }
 
-// ========================= Dashboard Statistics =========================
+// ========================= Dashboard Statistics ======================================================================================================================================================
 function loadDashboardStats() {
   console.log("Loading dashboard stats...");
   fetch("get_dashboard_stats.php?cb=" + Date.now(), { cache: "no-store" })
@@ -2531,33 +2880,34 @@ function loadDashboardStats() {
             totalStudentsEl.style.backgroundColor = "";
           }, 500);
         }
-        if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.totalEvaluations;
+        if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.activeStudents;
 
         // Update evaluation progress bar: stay at 0 until there are submissions
         const progressFillEl = document.getElementById("evaluationProgressFill");
         const progressTextEl = document.getElementById("evaluationProgressText");
         if (progressFillEl && progressTextEl) {
-          const totalEvaluations = Number(data.data.totalEvaluations) || 0;
-          const totalStudents = Number(data.data.totalStudents) || 0;
+          const submittedEvaluations = Number(data.data.totalEvaluationsSubmitted) || 0;
+          const totalActiveStudents = Number(data.data.activeStudents) || 0;
 
-          if (totalEvaluations <= 0 || totalStudents <= 0) {
+          if (submittedEvaluations <= 0 || totalActiveStudents <= 0) {
             progressFillEl.style.width = "0%";
             progressTextEl.textContent = "No submissions yet";
           } else {
             const progressPercent = Math.min(
               100,
-              Math.round((totalEvaluations / totalStudents) * 100)
+              Math.round((submittedEvaluations / totalActiveStudents) * 100)
             );
             progressFillEl.style.width = `${progressPercent}%`;
-            progressTextEl.textContent = `${totalEvaluations} submitted`;
+            progressTextEl.textContent = `${submittedEvaluations} submitted`;
           }
         }
         
         // Update overall faculty rating
         const overallRatingEl = document.getElementById("overallRating");
-        if (overallRatingEl && data.data.overallRating) {
+        if (overallRatingEl && data?.data && data.data.overallRating !== undefined && data.data.overallRating !== null) {
           const oldValue = overallRatingEl.textContent;
-          overallRatingEl.textContent = data.data.overallRating;
+          const numericRating = Number(data.data.overallRating);
+          overallRatingEl.textContent = Number.isFinite(numericRating) ? numericRating.toFixed(2) : String(data.data.overallRating);
           console.log("Updated overallRating from", oldValue, "to:", data.data.overallRating);
           // Add visual feedback for rating change
           overallRatingEl.style.transition = "color 0.5s, transform 0.3s";
@@ -2660,11 +3010,11 @@ function updateTopPerformanceChart(ratings) {
   }
 
   const chartSource = topFive.length > 0 ? topFive : [
-    { name: "Prof. Santos", rating: 4.8 },
-    { name: "Prof. Reyes", rating: 4.7 },
-    { name: "Prof. Cruz", rating: 4.6 },
-    { name: "Prof. Garcia", rating: 4.5 },
-    { name: "Prof. Dela Rosa", rating: 4.4 }
+    { name: "Prof. 1", rating: 4.8 },
+    { name: "Prof. 2", rating: 4.7 },
+    { name: "Prof. 3", rating: 4.6 },
+    { name: "Prof. 4", rating: 4.5 },
+    { name: "Prof. 5", rating: 4.4 }
   ];
 
   const finalLabels = chartSource.map(item => item.name);
@@ -2830,26 +3180,68 @@ function loadStudentPrograms(){
 }
 
 // Load All Subjects for Faculty Form -------------------
+function facultySubjectSearchHtml() {
+  return `
+    <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
+    <div class="subject-filters">
+      <input type="text" id="faculty-subject-search" placeholder="Search subjects, program, year level..." class="subject-search-input">
+    </div>
+  `;
+}
+
+function facultySubjectSearchText(subject) {
+  return [
+    subject.subject_code,
+    subject.subject_desc,
+    subject.year_level,
+    `year ${subject.year_level || ""}`,
+    `${subject.year_level || ""} year`
+  ].join(" ").toLowerCase();
+}
+
+function renderFacultySubjectList(subjects) {
+  const subjectsList = document.getElementById("faculty-subjects-list");
+  if (!subjectsList) return;
+
+  if (!subjects || subjects.length === 0) {
+    subjectsList.innerHTML = `${facultySubjectSearchHtml()}<small>No subjects available</small>`;
+    return;
+  }
+
+  const rows = subjects.map(subject => `
+    <label class="subject-checkbox-item faculty-subject-item" data-search="${escapeHtml(facultySubjectSearchText(subject))}">
+      <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
+      <span class="checkmark"></span>
+      <span class="subject-info">
+        <span class="subject-code">${escapeHtml(subject.subject_code)}</span>
+        <span class="subject-desc">${escapeHtml(subject.subject_desc)}</span>
+        <span class="subject-year-level">${escapeHtml(subject.year_level || "")}</span>
+      </span>
+    </label>
+  `).join("");
+
+  subjectsList.innerHTML = `${facultySubjectSearchHtml()}<div class="faculty-subjects-checkboxes">${rows}</div>`;
+  attachFacultySubjectSearch();
+}
+
+function attachFacultySubjectSearch() {
+  const searchInput = document.getElementById("faculty-subject-search");
+  const subjectsList = document.getElementById("faculty-subjects-list");
+  if (!searchInput || !subjectsList) return;
+
+  searchInput.addEventListener("input", () => {
+    const term = searchInput.value.trim().toLowerCase();
+    subjectsList.querySelectorAll(".faculty-subject-item").forEach(item => {
+      item.style.display = !term || item.dataset.search.includes(term) ? "flex" : "none";
+    });
+  });
+}
+
 function loadAllFacultySubjects(){
   return fetch("subject_crud.php?action=get_all")
     .then(r => r.json())
     .then(data => {
-      const subjectsList = document.getElementById("faculty-subjects-list");
-      if (data.length === 0) {
-        subjectsList.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>No subjects available</small>';
-      } else {
-        let html = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4>';
-        data.forEach(subject => {
-          html += `
-            <label class="subject-checkbox-item">
-              <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
-              <span class="checkmark"></span>
-              ${subject.subject_code} - ${subject.subject_desc}
-            </label>
-          `;
-        });
-        subjectsList.innerHTML = html;
-      }
+      renderFacultySubjectList(data);
       return data;
     })
     .catch(err => {
@@ -2861,20 +3253,9 @@ function loadAllFacultySubjects(){
   const subjectsList = document.getElementById("faculty-subjects-list");
   loadAllFacultySubjects().then(data => {
     if (data.length === 0) {
-      subjectsList.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects found</p>';
+      subjectsList.innerHTML = `${facultySubjectSearchHtml()}<p style="color: #6b7280; font-size: 0.9em;">No subjects found</p>`;
     } else {
-      let html = '<div class="faculty-subjects-checkboxes">';
-      data.forEach(subject => {
-        html += `
-          <label class="subject-checkbox-item">
-            <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
-            <span class="checkmark"></span>
-            ${subject.subject_code} - ${subject.subject_desc}
-          </label>
-        `;
-      });
-      html += '</div>';
-      subjectsList.innerHTML = html;
+      renderFacultySubjectList(data);
     }
   })
   .catch(err => {
@@ -2933,18 +3314,13 @@ function loadStudents(){
           <td><div>${stu.yearlevel === 'irregular' ? 'irregular' : (stu.yearlevel || '') + (stu.section || '')}</div>
               <small style="color:#6b7280;">${getProgramName(stu.program)}</small>
           </td>
-          <td>
-            <label class="status-toggle">
-              <input type="checkbox" class="status-checkbox student-status-checkbox" data-student-id="${stu.id}" ${(stu.status || 'active').toLowerCase() === 'active' ? 'checked' : ''}>
-              <span class="status-slider"></span>
-              <span class="status-text" aria-label="${(stu.status || 'active').toLowerCase() === 'active' ? 'Active' : 'Inactive'}"></span>
-            </label>
-          </td>
+          <td>${statusPillHtml(stu.status)}</td>
           <td class="action-cell">
             <div class="action-buttons">
               <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
               <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
               <button class="delete-btn"><i class="ph ph-trash"></i></button>
+              ${statusMenuHtml("student", stu.status)}
             </div>
           </td>`;
 
@@ -3129,40 +3505,41 @@ function loadStudents(){
           console.error("Edit button not found for student row:", stu);
         }
 
-        const statusCheckbox = row.querySelector(".student-status-checkbox");
-        const statusText = row.querySelector(".status-text");
-        if (statusCheckbox && statusText) {
-          statusCheckbox.addEventListener("change", async (e) => {
-            const newStatus = e.target.checked ? "active" : "inactive";
-            const studentId = e.target.dataset.studentId;
-
+        const statusMenu = row.querySelector(".status-action-menu");
+        statusMenu.querySelector(".settings-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          const willOpen = !statusMenu.classList.contains("open");
+          closeStatusMenus(statusMenu);
+          statusMenu.classList.toggle("open", willOpen);
+          if (willOpen) positionStatusMenu(statusMenu);
+          else restoreStatusDropdown(statusMenu);
+        });
+        statusMenu.querySelectorAll(".status-option").forEach(option => {
+          option.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const newStatus = option.dataset.status;
             try {
-              const response = await fetch("student_crud.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  action: "update_status",
-                  id: studentId,
-                  status: newStatus
-                })
-              });
-
-              const result = await response.json();
+              const result = await updateStatus("student", stu.id, newStatus);
               if (result.success) {
                 row.dataset.status = newStatus;
-                statusText.setAttribute("aria-label", newStatus === "active" ? "Active" : "Inactive");
-                showNotification(`Student status updated to ${newStatus}`, "#4caf50");
+                row.querySelector("td:nth-child(4)").innerHTML = statusPillHtml(newStatus);
+                (option.closest(".status-dropdown-menu") || statusMenu).querySelectorAll(".status-option").forEach(btn => {
+                  btn.classList.toggle("selected", btn.dataset.status === newStatus);
+                });
+                restoreStatusDropdown(statusMenu);
+                statusMenu.classList.remove("open");
+                closeStatusMenus();
+                showNotification(`Student status updated to ${statusLabel(newStatus)}`, "#4caf50");
+                refreshSectionStats();
               } else {
-                e.target.checked = !e.target.checked;
                 showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
               }
             } catch (error) {
-              e.target.checked = !e.target.checked;
               console.error("Student status update error:", error);
               showNotification("Error updating student status", "#f44336");
             }
           });
-        }
+        });
         
         // View Subjects
         const viewBtn = row.querySelector(".view-subjects-btn");
@@ -3264,6 +3641,7 @@ function loadStudents(){
         });
       }
     })
+    .then(() => refreshSectionStats())
     .catch(err => console.error("Error loading students:", err));
   });
 }
@@ -4324,6 +4702,90 @@ window.testDeleteDashboardUpdate = function() {
 };
 
 // ========================= MANAGE PERIODS =========================
+function formatPeriodName(semester, ay) {
+  const sem = (semester || "").toString();
+  let prefix = sem;
+  if (sem.toLowerCase().includes("1st")) prefix = "1st";
+  else if (sem.toLowerCase().includes("2nd")) prefix = "2nd";
+  return `${prefix} ${ay || ""}`.trim();
+}
+
+function formatRange(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const startStr = start.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+  const endStr = end.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+  return `${startStr} - ${endStr}`;
+}
+
+async function refreshPeriodCard() {
+  try {
+    const res = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const data = await res.json();
+    if (!data || !data.success) return;
+
+    const activeBox = document.getElementById("activePeriodBox");
+    const statusText = document.getElementById("evaluationStatusText");
+    const btnOpen = document.querySelector(".btn-open");
+    const btnClose = document.querySelector(".btn-close");
+
+    if (activeBox) {
+      activeBox.textContent = data.active_period_name || "No Active Period";
+    }
+    if (statusText) {
+      statusText.textContent = data.evaluation_open ? "Evaluation is Open" : "Evaluation is Closed";
+    }
+    if (btnOpen && btnClose) {
+      const hasActive = !!data.active_period_id;
+      btnOpen.style.display = (!data.evaluation_open && hasActive) ? "inline-block" : "none";
+      btnClose.style.display = (data.evaluation_open || hasActive) ? "inline-block" : "none";
+      if (!hasActive && !data.evaluation_open) btnClose.style.display = "none";
+    }
+  } catch (_) {
+    // ignore
+  }
+}
+
+function initPeriodCardControls() {
+  const btnOpen = document.querySelector(".btn-open");
+  const btnClose = document.querySelector(".btn-close");
+
+  if (btnOpen) {
+    btnOpen.addEventListener("click", async () => {
+      try {
+        const res = await fetch("periods_api.php?action=set_open", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ open: 1 })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.message || "Unable to open evaluation.");
+        }
+      } finally {
+        refreshPeriodCard();
+      }
+    });
+  }
+
+  if (btnClose) {
+    btnClose.addEventListener("click", async () => {
+      try {
+        // Closing the period should also remove active period
+        await fetch("periods_api.php?action=deactivate", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+      } finally {
+        refreshPeriodCard();
+      }
+    });
+  }
+}
+
 function initManagePeriodsButton() {
   const manageBtn = document.querySelector(".btn-manage");
   if (manageBtn) {
@@ -4336,33 +4798,126 @@ function initManagePeriodsButton() {
 function openManagePeriodsModal() {
   // Clear form
   document.getElementById("period-ay").value = "";
-  document.getElementById("period-sem").value = "1st Semester";
+  document.getElementById("period-sem").value = "";
+
+  // Start/end should be set via calendar selection
   document.getElementById("period-start").value = "";
   document.getElementById("period-end").value = "";
   
   // Load existing periods
   loadPeriods();
+
+  // Display today's day/date inside the modal table area
+  const todayEl = document.getElementById("managePeriodsToday");
+  if (todayEl) {
+    const now = new Date();
+    todayEl.textContent = now.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  }
   
   // Show modal
   managePeriodsModal.style.display = "flex";
   managePeriodsModal.style.zIndex = "9999";
 }
 
-function loadPeriods() {
+async function loadPeriods() {
   const tbody = document.getElementById("periods-tbody");
-  
-  // Show empty table - no data
+  if (!tbody) return;
+
   tbody.innerHTML = `
     <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td class="action-cell">
-        <div class="action-buttons">
-        </div>
-      </td>
+      <td colspan="4" style="text-align:center; padding: 18px; color:#6b7280;">Loading...</td>
     </tr>
   `;
+
+  try {
+    const res = await fetch("periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+    const data = await res.json();
+    const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+
+    if (periods.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align:center; padding: 18px; color:#6b7280;">No periods yet</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    periods.forEach(p => {
+      const tr = document.createElement("tr");
+      const periodName = formatPeriodName(p.semester, p.ay);
+      const duration = formatRange(p.start_date, p.end_date);
+
+      const statusHtml = p.is_active
+        ? `<button class="status-badge active" data-action="deactivate" data-id="${p.id}" style="cursor:pointer; border:none;">ACTIVE</button>`
+        : `<button class="status-badge" data-action="set-active" data-id="${p.id}" style="cursor:pointer; border:none;">Set Active</button>`;
+
+      tr.innerHTML = `
+        <td>${periodName}</td>
+        <td>${duration}</td>
+        <td>${statusHtml}</td>
+        <td class="action-cell">
+          <div class="action-buttons">
+            <button class="delete-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    // Delegate click handlers
+    tbody.querySelectorAll("[data-action='set-active']").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const id = parseInt(e.currentTarget.dataset.id, 10);
+        if (!id) return;
+        await fetch("periods_api.php?action=set_active", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        });
+        await loadPeriods();
+        await refreshPeriodCard();
+      });
+    });
+
+    tbody.querySelectorAll("[data-action='deactivate']").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await fetch("periods_api.php?action=deactivate", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        await loadPeriods();
+        await refreshPeriodCard();
+      });
+    });
+
+    tbody.querySelectorAll("[data-action='delete']").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const id = parseInt(e.currentTarget.dataset.id, 10);
+        if (!id) return;
+        const row = e.currentTarget.closest("tr");
+        const name = row?.cells?.[0]?.innerText || "period";
+        openDeleteModal("period", name, e.currentTarget);
+      });
+    });
+  } catch (err) {
+    console.error("Failed to load periods:", err);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align:center; padding: 18px; color:#ef4444;">Failed to load periods</td>
+      </tr>
+    `;
+  }
 }
 
 function formatDate(dateString) {
@@ -4396,23 +4951,40 @@ function addPeriod() {
     alert("Please fill all fields");
     return;
   }
+
+  // Validate YYYY-MM-DD format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(start) || !dateRegex.test(end)) {
+    alert("Invalid date format.");
+    return;
+  }
   
   if (new Date(start) >= new Date(end)) {
     alert("End date must be after start date");
     return;
   }
   
-  // For now, just show notification and reload
-  // In production, you would make an API call here
-  showNotification("Period added successfully!", "#4caf50");
-  
-  // Clear form and reload
-  document.getElementById("period-ay").value = "";
-  document.getElementById("period-sem").selectedIndex = 0;
-  document.getElementById("period-start").value = "";
-  document.getElementById("period-end").value = "";
-  
-  loadPeriods();
+  // Persist
+  fetch("periods_api.php?action=create", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ay, semester: sem, start_date: start, end_date: end })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.success) {
+        showNotification("Period added successfully!", "#4caf50");
+        document.getElementById("period-ay").value = "";
+        document.getElementById("period-sem").selectedIndex = 0;
+        document.getElementById("period-start").value = "";
+        document.getElementById("period-end").value = "";
+        loadPeriods();
+      } else {
+        alert((d && d.message) || "Error adding period.");
+      }
+    })
+    .catch(() => alert("Error adding period."));
 }
 
 function updatePeriod(periodId) {
@@ -4425,27 +4997,47 @@ function updatePeriod(periodId) {
     alert("Please fill all fields");
     return;
   }
+
+  // Validate YYYY-MM-DD format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(start) || !dateRegex.test(end)) {
+    alert("Invalid date format.");
+    return;
+  }
   
   if (new Date(start) >= new Date(end)) {
     alert("End date must be after start date");
     return;
   }
   
-  // For now, just show notification and reload
-  // In production, you would make an API call here
-  showNotification("Period updated successfully!", "#4caf50");
-  
-  // Reset button and clear form
-  const addBtn = document.getElementById("add-period-btn");
-  addBtn.textContent = "Add";
-  addBtn.onclick = addPeriod;
-  
-  document.getElementById("period-ay").value = "";
-  document.getElementById("period-sem").selectedIndex = 0;
-  document.getElementById("period-start").value = "";
-  document.getElementById("period-end").value = "";
-  
-  loadPeriods();
+  // Update via API
+  fetch("periods_api.php?action=update", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: periodId, ay, semester: sem, start_date: start, end_date: end })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.success) {
+        showNotification("Period updated successfully!", "#4caf50");
+        
+        // Reset button and clear form
+        const addBtn = document.getElementById("add-period-btn");
+        addBtn.textContent = "Add";
+        addBtn.onclick = addPeriod;
+        
+        document.getElementById("period-ay").value = "";
+        document.getElementById("period-sem").selectedIndex = 0;
+        document.getElementById("period-start").value = "";
+        document.getElementById("period-end").value = "";
+        
+        loadPeriods();
+      } else {
+        alert((d && d.message) || "Error updating period.");
+      }
+    })
+    .catch(() => alert("Error updating period."));
 }
 
 // Add period button event
@@ -4590,16 +5182,12 @@ function generateCalendarDays(calendar, targetId) {
   }
 }
 
-// Initialize manage periods button
-document.addEventListener("DOMContentLoaded", () => {
-  initManagePeriodsButton();
-  initAYTooltip();
-  initCalendarClickHandlers();
-  
-  });
+// Initialize manage periods + period card controls (runs inside main DOMContentLoaded handler)
 initManagePeriodsButton();
 initAYTooltip();
 initCalendarClickHandlers();
+initPeriodCardControls();
+refreshPeriodCard();
 
 });
 

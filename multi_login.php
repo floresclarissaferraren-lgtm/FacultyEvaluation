@@ -21,6 +21,29 @@ if (str_starts_with($username, 'GC-')) {
 
     if ($result && $result->num_rows === 1) {
         $row = $result->fetch_assoc();
+        
+        // Handle NULL password - generate temporary password
+        if ($row['password'] === null) {
+            $tempPassword = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 8);
+            $hashedPassword = password_hash($tempPassword, PASSWORD_DEFAULT);
+            
+            // Update the student's password in database
+            $updateStmt = $conn->prepare("UPDATE add_students SET password = ? WHERE id = ?");
+            $updateStmt->bind_param("si", $hashedPassword, $row['id']);
+            $updateStmt->execute();
+            $updateStmt->close();
+            
+            // Return the temporary password to the user
+            echo json_encode([
+                "success" => false, 
+                "message" => "Your account has been activated. Your temporary password is: $tempPassword. Please use this to login.",
+                "temp_password" => $tempPassword
+            ]);
+            $stmt->close();
+            $conn->close();
+            exit;
+        }
+        
         if (password_verify($password, $row['password'])) {
             $log = $conn->prepare("INSERT INTO student_login (username, password) VALUES (?, ?)");
             $log->bind_param("ss", $username, $row['password']);

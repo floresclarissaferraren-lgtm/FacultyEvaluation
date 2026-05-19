@@ -141,7 +141,7 @@ $conn->close();
 <div class="content-container">
   <div class="main-box" id="mainPage">
     <div class="main-left">
-      <img src="OIP.png" alt="Welcome Image" class="main-img">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Welcome Image" class="main-img">
     </div>
     <div class="main-right">
       <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>

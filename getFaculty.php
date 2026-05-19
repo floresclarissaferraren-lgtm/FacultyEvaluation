@@ -3,6 +3,11 @@ header("Content-Type: application/json");
 include 'connect.php';
 
 try {
+    $checkFacultyStatusColumn = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'status'");
+    if ($checkFacultyStatusColumn && $checkFacultyStatusColumn->num_rows === 0) {
+        $conn->query("ALTER TABLE add_faculties ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
+    }
+
     $conn->query("
         CREATE TABLE IF NOT EXISTS evaluations (
             id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -24,8 +29,23 @@ try {
     $student_year_raw = '';
     $student_year_formatted = '';
 
+    // Function to resolve program ID from program name/code
+    function resolveProgramId(mysqli $conn, string $program): int {
+        $program = trim($program);
+        if ($program === '') return 0;
+        if (ctype_digit($program)) return intval($program);
+        $stmt = $conn->prepare("SELECT id FROM add_programs WHERE program_code = ? OR program_name = ? LIMIT 1");
+        if (!$stmt) return 0;
+        $stmt->bind_param("ss", $program, $program);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res ? $res->fetch_assoc() : null;
+        $stmt->close();
+        return $row ? intval($row['id']) : 0;
+    }
+
     if ($student_id > 0) {
-        $student_meta_stmt = $conn->prepare("SELECT yearlevel FROM add_students WHERE id = ? LIMIT 1");
+        $student_meta_stmt = $conn->prepare("SELECT yearlevel, program, section FROM add_students WHERE id = ? LIMIT 1");
         $student_meta_stmt->bind_param("i", $student_id);
         $student_meta_stmt->execute();
         $student_meta_result = $student_meta_stmt->get_result();
@@ -37,8 +57,13 @@ try {
                 $suffix = $y === 1 ? 'st' : ($y === 2 ? 'nd' : ($y === 3 ? 'rd' : 'th'));
                 $student_year_formatted = $y . $suffix . ' Year';
             }
+            $student_program = $student_meta['program'] ?? '';
+            $student_section = trim((string)($student_meta['section'] ?? ''));
         }
         $student_meta_stmt->close();
+
+        // Resolve program ID from program name/code
+        $program_id = resolveProgramId($conn, $student_program);
 
         // Primary source: exact class assignment by student's program + year level + section.
         $query = "
@@ -58,9 +83,9 @@ try {
                 ) AS subjects_data
             FROM add_students st
             INNER JOIN add_classes ac
-                ON ac.program_id = st.program
+                ON ac.program_id = ?
                 AND (ac.year_level = ? OR ac.year_level = ?)
-                AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
+                AND TRIM(UPPER(ac.block)) = TRIM(UPPER(?))
             INNER JOIN class_subjects cs ON cs.class_id = ac.id
             INNER JOIN add_subjects s ON s.id = cs.subject_id
             LEFT JOIN add_programs p ON s.program_id = p.id
@@ -73,7 +98,7 @@ try {
         ";
 
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("ssi", $student_year_raw, $student_year_formatted, $student_id);
+        $stmt->bind_param("isssi", $program_id, $student_year_raw, $student_year_formatted, $student_section, $student_id);
         $stmt->execute();
         $result = $stmt->get_result();
 

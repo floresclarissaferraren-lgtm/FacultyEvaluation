@@ -17,20 +17,35 @@ try {
     
     error_log("Dashboard stats - Total students: " . $total_students);
     
-    // Get total evaluations count
+    // Get total active students (who need to evaluate)
+    $active_students_query = "SELECT COUNT(*) as total FROM add_students WHERE LOWER(TRIM(COALESCE(status,'active'))) = 'active'";
+    $active_students_result = $conn->query($active_students_query);
+    $total_active_students = $active_students_result->fetch_assoc()['total'];
+
+    // Get total submitted evaluations
     $evaluation_query = "SELECT COUNT(*) as total FROM evaluations";
     $evaluation_result = $conn->query($evaluation_query);
-    $total_evaluations = $evaluation_result->fetch_assoc()['total'];
+    $total_evaluations_submitted = $evaluation_result->fetch_assoc()['total'];
     
-    // Get overall faculty rating
+    // Get overall faculty rating:
+    // (sum of each faculty's average rating) / (number of evaluated faculty)
     $overall_rating_query = "
-        SELECT AVG(e.overall_rating) as overall_avg
-        FROM evaluations e
-        WHERE e.overall_rating IS NOT NULL
+        SELECT
+            AVG(t.faculty_avg) AS overall_avg,
+            COUNT(*) AS evaluated_faculty
+        FROM (
+            SELECT e.faculty_id, AVG(e.overall_rating) AS faculty_avg
+            FROM evaluations e
+            WHERE e.overall_rating IS NOT NULL
+            GROUP BY e.faculty_id
+        ) t
     ";
     $overall_rating_result = $conn->query($overall_rating_query);
-    $overall_rating_row = $overall_rating_result->fetch_assoc();
-    $overall_rating = $overall_rating_row ? round($overall_rating_row['overall_avg'], 2) : 0;
+    $overall_rating_row = $overall_rating_result ? $overall_rating_result->fetch_assoc() : null;
+    $overall_rating = ($overall_rating_row && $overall_rating_row['overall_avg'] !== null)
+        ? round((float)$overall_rating_row['overall_avg'], 2)
+        : 0;
+    $evaluated_faculty = $overall_rating_row ? (int)$overall_rating_row['evaluated_faculty'] : 0;
     
     // Get faculty ratings for dashboard
     $ratings_query = "
@@ -58,14 +73,14 @@ try {
         ];
     }
     
-    // Get department data for graph
+    // Get department/program data for graph (based on subject assignments)
     $dept_query = "
-        SELECT 
-            p.program_name as department,
-            COUNT(DISTINCT f.id) as faculty_count
+        SELECT
+            p.program_name AS department,
+            COUNT(DISTINCT fs.faculty_id) AS faculty_count
         FROM add_programs p
-        LEFT JOIN add_faculties f ON p.id = f.program
-        WHERE f.id IS NOT NULL
+        LEFT JOIN add_subjects s ON s.program_id = p.id
+        LEFT JOIN faculty_subjects fs ON fs.subject_id = s.id
         GROUP BY p.id, p.program_name
         ORDER BY faculty_count DESC
     ";
@@ -84,8 +99,10 @@ try {
         'data' => [
             'totalFaculty' => $total_faculty,
             'totalStudents' => $total_students,
-            'totalEvaluations' => $total_evaluations,
+            'activeStudents' => $total_active_students,
+            'totalEvaluationsSubmitted' => $total_evaluations_submitted,
             'overallRating' => $overall_rating,
+            'evaluatedFaculty' => $evaluated_faculty,
             'ratings' => $ratings,
             'departments' => $departments
         ]
