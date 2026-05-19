@@ -1,6 +1,17 @@
 <?php
 include 'connect.php';
 
+function ensureStatusColumn($conn, $table) {
+    $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+    $check = $conn->query("SHOW COLUMNS FROM {$safeTable} LIKE 'status'");
+    if ($check && $check->num_rows === 0) {
+        $conn->query("ALTER TABLE {$safeTable} ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
+    }
+}
+
+ensureStatusColumn($conn, 'add_students');
+ensureStatusColumn($conn, 'add_faculties');
+
 function getTotalCount($conn, $table) {
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM {$table}");
     if (!$stmt) {
@@ -27,8 +38,8 @@ function getStudentStatistics($conn) {
     $stats['total_students'] = isset($row['total']) ? (int) $row['total'] : 0;
     $stmt->close();
     
-    // Active Students (assuming active means with enrolled subjects)
-    $stmt = $conn->prepare("SELECT COUNT(DISTINCT student_id) as total FROM student_subjects");
+    // Active Students
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM add_students WHERE LOWER(TRIM(status)) = 'active'");
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
@@ -70,8 +81,8 @@ function getFacultyStatistics($conn) {
     $stats['total_faculty'] = isset($row['total']) ? (int) $row['total'] : 0;
     $stmt->close();
     
-    // Active Faculty (assuming active means with assigned subjects)
-    $stmt = $conn->prepare("SELECT COUNT(DISTINCT faculty_id) as total FROM faculty_subjects");
+    // Active Faculty
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM add_faculties WHERE LOWER(TRIM(status)) = 'active'");
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
@@ -84,6 +95,7 @@ function getFacultyStatistics($conn) {
         FROM add_faculties f 
         LEFT JOIN evaluations e ON f.id = e.faculty_id 
         WHERE e.faculty_id IS NULL
+          AND LOWER(TRIM(COALESCE(f.status, 'active'))) = 'active'
     ");
     $stmt->execute();
     $result = $stmt->get_result();

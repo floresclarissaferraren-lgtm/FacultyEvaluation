@@ -197,7 +197,7 @@ include 'totalstudents_dashcount.php';
     <div class="dashboard-card evaluations">
       <div class="dashboard-content">
         <div>
-          <h3>Total Evaluations</h3>
+          <h3>Total Evaluators</h3>
           <p id="totalEvaluations" class="dashboard-value"><?php echo $totalEvaluationsCount; ?></p>
           <span>Overall</span>
         </div>
@@ -210,7 +210,7 @@ include 'totalstudents_dashcount.php';
       <div class="dashboard-content">
         <div>
           <h3>Overall Faculty Rating</h3>
-          <p id="overallRating" class="dashboard-value">4.2</p>
+          <p id="overallRating" class="dashboard-value">0.00</p>
           <span>Out of 5.0</span>
         </div>
         <div class="icon-box"><i class="ph ph-star"></i></div>
@@ -232,7 +232,7 @@ include 'totalstudents_dashcount.php';
         </div>
         <div class="rating-legend" id="ratingLegend">
           <div class="legend-item">
-            <div class="legend-color excellence"></div>
+            <div class="legend-color excellent"></div>
             <span class="legend-label">Excellent</span>
           </div>
           <div class="legend-item">
@@ -423,9 +423,36 @@ include 'totalstudents_dashcount.php';
   <!-- Subject Table -->
   <div class="manage-body">
     <div id="subjects" class="table-wrapper">
+      <div class="subject-control-box manage-subject-control-box">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input type="text" id="manage-subjects-search" placeholder="Search subjects...">
+        </div>
+        <select id="manage-subjects-semester-filter" class="program-dropdown">
+          <option value="">All Semesters</option>
+          <option value="1st Semester">1st Semester</option>
+          <option value="2nd Semester">2nd Semester</option>
+        </select>
+        <select id="manage-subjects-year-filter" class="program-dropdown">
+          <option value="">All Year Levels</option>
+          <option value="1st Year">1st Year</option>
+          <option value="2nd Year">2nd Year</option>
+          <option value="3rd Year">3rd Year</option>
+          <option value="4th Year">4th Year</option>
+        </select>
+        <div class="set-semester-group">
+          <button type="button" id="manage-set-class-semester-btn" class="button-gradient">
+            <i class="ph ph-calendar-check"></i> Set Semester
+          </button>
+          <div id="manage-semester-dropdown" class="semester-dropdown" style="display: none;">
+            <div class="semester-option" data-value="1st Semester">1st Semester</div>
+            <div class="semester-option" data-value="2nd Semester">2nd Semester</div>
+          </div>
+        </div>
+      </div>
       <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
-          <th>Subject Code</th><th>Description</th><th>Year</th><th>Action</th>
+          <th>Subject Code</th><th>Description</th><th>Semester</th><th>Year</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
@@ -436,7 +463,7 @@ include 'totalstudents_dashcount.php';
     <div id="classes" class="table-wrapper" style="display:none;">
       <div class="table-scroll-container">
         <table class="classes-table"><thead><tr>
-          <th>Section Name</th><th>Year Level</th><th>Semester</th><th>Status</th><th>Action</th>
+          <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
@@ -457,14 +484,26 @@ include 'totalstudents_dashcount.php';
       <input type="text" id="subject-code" placeholder="eg. MATH101">
       <label for="subject-desc">Description</label>
       <input type="text" id="subject-desc" placeholder="eg. College Algebra">
-      <label for="subject-year">Year</label>
-      <select id="subject-year">
-        <option value="">Select Year Level</option>
-        <option value="1st Year">1st Year</option>
-        <option value="2nd Year">2nd Year</option>
-        <option value="3rd Year">3rd Year</option>
-        <option value="4th Year">4th Year</option>
-      </select>
+      <div class="form-row">
+        <div>
+          <label for="subject-semester">Semester</label>
+          <select id="subject-semester">
+            <option value="">Select Semester</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+          </select>
+        </div>
+        <div>
+          <label for="subject-year">Year</label>
+          <select id="subject-year">
+            <option value="">Select Year Level</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+          </select>
+        </div>
+      </div>
       <button id="save-subject-btn" class="submit-btn">SAVE SUBJECT</button>
     </div>
   </div>
@@ -492,14 +531,6 @@ include 'totalstudents_dashcount.php';
         <div>
           <label for="class-block"><i class="ph ph-hash"></i> Section</label>
           <input type="text" id="class-block">
-        </div>
-        <div>
-          <label for="class-semester"><i class="ph ph-calendar-check"></i> Semester</label>
-          <select id="class-semester">
-            <option value="">Select Semester</option>
-            <option value="1st Semester">1st Semester</option>
-            <option value="2nd Semester">2nd Semester</option>
-          </select>
         </div>
       </div>
       <div class="section-box">
@@ -536,11 +567,29 @@ include 'totalstudents_dashcount.php';
   <div class="section-header">
     <h2>Subjects Management</h2>
     <div class="header-actions">
-      <div class="search-wrapper">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        <input type="text" id="subjects-search" placeholder="Search subjects...">
-      </div>
       <button class="add-subject-main-btn button-gradient"><i class="ph ph-plus"></i> Add Subject</button>
+    </div>
+  </div>
+  <div class="subject-control-box">
+    <div class="search-wrapper">
+      <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+      <input type="text" id="subjects-search" placeholder="Search subjects...">
+    </div>
+    <select id="subjects-year-filter" class="program-dropdown">
+      <option value="">All Year Levels</option>
+      <option value="1st Year">1st Year</option>
+      <option value="2nd Year">2nd Year</option>
+      <option value="3rd Year">3rd Year</option>
+      <option value="4th Year">4th Year</option>
+    </select>
+    <div class="set-semester-group">
+      <button type="button" id="set-class-semester-btn" class="button-gradient">
+        <i class="ph ph-calendar-check"></i> Set Semester
+      </button>
+      <div id="semester-dropdown" class="semester-dropdown" style="display: none;">
+        <div class="semester-option" data-value="1st Semester">1st Semester</div>
+        <div class="semester-option" data-value="2nd Semester">2nd Semester</div>
+      </div>
     </div>
   </div>
   <div class="table-wrapper">
@@ -551,13 +600,14 @@ include 'totalstudents_dashcount.php';
             <th>Subject Code</th>
             <th>Description</th>
             <th>Program</th>
+            <th>Semester</th>
             <th>Year Level</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody id="subjects-main-tbody">
           <tr>
-            <td colspan="5" style="text-align: center; padding: 20px;">Loading subjects...</td>
+            <td colspan="6" style="text-align: center; padding: 20px;">Loading subjects...</td>
           </tr>
         </tbody>
       </table>
@@ -590,6 +640,16 @@ include 'totalstudents_dashcount.php';
           <label for="main-program-select">Program</label>
           <select id="main-program-select" required>
             <option value="" disabled selected>-- Select Program --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="main-semester-select">Semester</label>
+          <select id="main-semester-select" required>
+            <option value="" disabled selected>-- Select Semester --</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
           </select>
         </div>
         <div>
@@ -666,6 +726,7 @@ include 'totalstudents_dashcount.php';
             <option value="">Filter by Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
+            <option value="on leave">On Leave</option>
           </select>
         </div>
       </div>
@@ -676,7 +737,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
-          <tr><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
+          <tr><th>Image</th><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -722,8 +783,7 @@ include 'totalstudents_dashcount.php';
         <div id="faculty-subjects-list" class="subjects-list">
           <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
           <div class="subject-filters">
-            <input type="text" id="faculty-program-search" placeholder="Search by program..." class="subject-search-input">
-            <input type="text" id="faculty-year-search" placeholder="Search by year level..." class="subject-search-input">
+            <input type="text" id="faculty-subject-search" placeholder="Search subjects, program, year level..." class="subject-search-input">
           </div>
         </div>
       </div>
@@ -1010,7 +1070,7 @@ include 'totalstudents_dashcount.php';
 
 <!-- Add Category Form -->
 <div id="addCategoryModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:500px;">
+  <div class="modal-content" style="max-width:850px; width: 92%;">
     <div class="modal-header">
       <h3 id="categoryModalTitle">ADD CATEGORY</h3>
       <span class="close-btn">&times;</span>
@@ -1312,7 +1372,7 @@ include 'totalstudents_dashcount.php';
       <h3 style="margin: 0; color: white;">Evaluation Details</h3>
       <span class="close-btn" onclick="closeFacultyReportModal()" style="color: white;">&times;</span>
     </div>
-    <div class="modal-body" style="background: white; padding: 20px;">
+    <div class="modal-body" style="background: white; padding: 20px; max-height: 78vh; overflow-y: auto;">
       <!-- Faculty Info Header -->
       <div class="faculty-info-header" style="display: flex; align-items: center; margin-bottom: 15px; padding: 12px; background: #2c5282; border-radius: 6px; color: white;">
         <div class="faculty-avatar" style="width: 35px; height: 35px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
@@ -1342,6 +1402,23 @@ include 'totalstudents_dashcount.php';
           <div id="reportTotalResponses" style="font-size: 24px; font-weight: 700; margin-bottom: 2px; color: var(--primary-900);">-</div>
           <div style="font-size: 10px; color: #9ca3af;">evaluation responses</div>
         </div>
+      </div>
+
+      <div class="evaluation-details-table-wrap" style="margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+        <table class="evaluation-details-table" style="width: 100%; border-collapse: collapse; background: white;">
+          <thead>
+            <tr style="background: var(--primary-900); color: white;">
+              <th style="padding: 10px; text-align: left; font-size: 12px; color: white !important;">Category</th>
+              <th style="padding: 10px; text-align: center; font-size: 12px; width: 130px; color: white !important;">Overall Rating</th>
+              <th style="padding: 10px; text-align: left; font-size: 12px; color: white !important;">All Feedback</th>
+            </tr>
+          </thead>
+          <tbody id="reportEvaluationDetailsBody">
+            <tr>
+              <td colspan="3" style="padding: 14px; text-align: center; color: #6b7280;">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       </div>

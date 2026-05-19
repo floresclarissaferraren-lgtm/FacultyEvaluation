@@ -30,6 +30,8 @@ $facultyId     = cleanText($data['facultyId']);
 $overallRating = cleanText($data['overallRating'] ?? '0.00');
 $totalResponses = cleanText($data['totalResponses'] ?? '0');
 $feedback      = cleanText($data['feedback'] ?? 'No feedback available');
+$evaluationDetails = is_array($data['evaluationDetails'] ?? null) ? $data['evaluationDetails'] : [];
+$allFeedback = cleanText($data['allFeedback'] ?? ($data['feedback'] ?? 'No feedback available'));
 
 // Check if this is admin request (empty feedback indicates admin)
 $isAdminRequest = (empty($data['feedback']) || $data['feedback'] === '');
@@ -146,6 +148,76 @@ $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(60, 10, 'Total Student Responses:', 0, 0);
 $pdf->SetFont('Arial', '', 12);
 $pdf->Cell(0, 10, $totalResponses, 0, 1);
+
+// =====================
+// EVALUATION DETAILS TABLE (admin request)
+// =====================
+if ($isAdminRequest) {
+    $pdf->Ln(12);
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->Cell(0, 9, '  Evaluation Details', 0, 1, 'L', true);
+
+    $categoryWidth = 65;
+    $ratingWidth = 35;
+    $feedbackWidth = 90;
+    $tableX = 10;
+
+    $pdf->SetX($tableX);
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->SetFillColor(30, 64, 175);
+    $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
+    $pdf->Cell($categoryWidth, 8, 'Category', 1, 0, 'C', true);
+    $pdf->Cell($ratingWidth, 8, 'Overall Rating', 1, 0, 'C', true);
+    $pdf->Cell($feedbackWidth, 8, 'All Feedback', 1, 1, 'C', true);
+
+    $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+    $pdf->SetFont('Arial', '', 9);
+
+    if (empty($evaluationDetails)) {
+        $pdf->SetX($tableX);
+        $pdf->Cell($categoryWidth + $ratingWidth + $feedbackWidth, 10, 'No evaluation details available', 1, 1, 'C');
+    } else {
+        foreach ($evaluationDetails as $index => $detail) {
+            $category = cleanText($detail['category'] ?? 'N/A');
+            $rating = cleanText($detail['average_score'] ?? $detail['overall_rating'] ?? '0.00');
+            $feedbackText = $index === 0 ? cleanText($detail['all_feedback'] ?? $allFeedback) : '';
+            $feedbackLines = $feedbackText !== ''
+                ? explode("\n", wordwrap($feedbackText, 52, "\n", true))
+                : [''];
+            $feedbackChunks = array_chunk($feedbackLines, 8);
+
+            foreach ($feedbackChunks as $chunkIndex => $chunkLines) {
+                $chunkText = implode("\n", $chunkLines);
+                $lineCount = max(1, count($chunkLines));
+                $rowHeight = max(10, $lineCount * 5 + 4);
+
+                if ($pdf->GetY() + $rowHeight > 275) {
+                    $pdf->AddPage();
+                }
+
+                $x = $tableX;
+                $y = $pdf->GetY();
+
+                $pdf->Rect($x, $y, $categoryWidth, $rowHeight);
+                $pdf->Rect($x + $categoryWidth, $y, $ratingWidth, $rowHeight);
+                $pdf->Rect($x + $categoryWidth + $ratingWidth, $y, $feedbackWidth, $rowHeight);
+
+                $pdf->SetXY($x + 2, $y + 2);
+                $pdf->MultiCell($categoryWidth - 4, 5, $chunkIndex === 0 ? $category : '', 0, 'L');
+
+                $pdf->SetXY($x + $categoryWidth, $y + 2);
+                $pdf->Cell($ratingWidth, 5, $chunkIndex === 0 ? $rating . ' / 5.00' : '', 0, 0, 'C');
+
+                $pdf->SetXY($x + $categoryWidth + $ratingWidth + 2, $y + 2);
+                $pdf->MultiCell($feedbackWidth - 4, 5, $chunkText ?: ($index === 0 && $chunkIndex === 0 ? 'No feedback available' : ''), 0, 'L');
+
+                $pdf->SetY($y + $rowHeight);
+            }
+        }
+    }
+}
 
 // =====================
 // FEEDBACK SECTION (only for instructor requests)

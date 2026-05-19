@@ -498,9 +498,14 @@ input[type="password"]::-webkit-password-toggle {
 .password-actions button {width: 100%;padding: 14px 0;font: 600 16px "Segoe UI", sans-serif;border-radius: 10px;
   cursor: pointer;transition: 0.3s ease;box-shadow: 0 4px 12px rgba(0,0,0,0.08);min-height:44px;max-height:44px;min-width:120px;max-width:none;}
 /* Viewing Section ==================================================================================================== */
-.main-box{max-width:920px;margin:84px auto 0;padding:clamp(18px,3vw,30px);background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%);border-radius:var(--radius-xl);
-  box-shadow:var(--shadow-strong);border-left:8px solid var(--yellow-500);display:flex;align-items:center;justify-content:center;
-  border:1px solid var(--line);overflow:hidden}
+.main-box{
+  max-width:920px;margin:84px auto 0;padding:clamp(18px,3vw,30px);
+  background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%);
+  border-radius:var(--radius-xl);box-shadow:var(--shadow-strong);
+  border-left:8px solid var(--blue-500);display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);overflow:hidden
+}
+
 .main-box:hover{box-shadow:var(--shadow-strong);transform:none}
 .main-left{flex:0 0 220px;text-align:center;border-right:1px solid #f3f4f6;padding-right:24px}
 .main-img{width:200px;height:200px;object-fit:cover;border-radius:18px;box-shadow:0 12px 32px rgba(30,58,138,.15);transition:.3s ease}

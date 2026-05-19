@@ -19,6 +19,42 @@ if ($faculty_id <= 0 || !is_array($answers) || empty($answers)) {
     exit;
 }
 
+// Block feedback that contains bad words (server-side enforcement).
+if ($feedback !== '') {
+    $badWords = [
+        "putangina",
+        "puta",
+        "tangina",
+        "tang ina",
+        "gago",
+        "tanga",
+        "bobo",
+        "ulol",
+        "tarantado",
+        "inutil",
+        "leche",
+        "bwiset",
+        "bwisit",
+        "punyeta",
+        "fuck you",
+        "fuck",
+        "shit",
+        "bitch",
+        "asshole",
+        "dick",
+        "cunt",
+        "faggot",
+        "nigger"
+    ];
+    $normalized = ' ' . preg_replace('/\s+/', ' ', trim(preg_replace('/[^a-z0-9]+/i', ' ', strtolower($feedback)))) . ' ';
+    foreach ($badWords as $w) {
+        if (strpos($normalized, ' ' . $w . ' ') !== false) {
+            echo json_encode(["success" => false, "message" => "Bad words is not allowed"]);
+            exit;
+        }
+    }
+}
+
 // Ensure evaluation tables exist.
 $conn->query("
     CREATE TABLE IF NOT EXISTS evaluations (

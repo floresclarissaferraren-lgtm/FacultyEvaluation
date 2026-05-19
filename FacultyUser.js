@@ -408,11 +408,69 @@ async function loadFacultyCategories() {
         <div class="feedback-box">
           <label for="studentFeedback">OPTIONAL COMMENTS</label>
           <textarea id="studentFeedback" placeholder="Type your feedback here..."></textarea>
+          <div class="feedback-badwords-msg" id="feedbackBadwordsMsg" aria-live="polite">
+            Bad words is not allowed
+          </div>
         </div>
       </div>
     `;
     
     formContentArea.appendChild(feedbackSubmitContainer);
+
+    // Bad words filtering for feedback
+    const feedbackTextarea = document.getElementById("studentFeedback");
+    const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
+    const badWordsList = [
+      "putangina",
+      "puta",
+      "tangina",
+      "tang ina",
+      "gago",
+      "tanga",
+      "bobo",
+      "ulol",
+      "tarantado",
+      "inutil",
+      "leche",
+      "bwiset",
+      "bwisit",
+      "punyeta",
+      "fuck you",
+      "fuck",
+      "shit",
+      "bitch",
+      "asshole",
+      "dick",
+      "cunt",
+      "faggot",
+      "nigger"
+    ];
+
+    function normalizeFeedbackText(text) {
+      return (" " + String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() + " ");
+    }
+
+    function feedbackHasBadWords(text) {
+      const normalized = normalizeFeedbackText(text);
+      return badWordsList.some(w => normalized.includes(` ${w} `));
+    }
+
+    function setFeedbackBadwordsState(hasBadWords) {
+      const feedbackBox = document.querySelector(".feedback-box");
+      if (feedbackBox) feedbackBox.classList.toggle("has-badwords", hasBadWords);
+      if (badwordsMsg) badwordsMsg.style.display = hasBadWords ? "block" : "none";
+    }
+
+    if (feedbackTextarea) {
+      setFeedbackBadwordsState(false);
+      feedbackTextarea.addEventListener("input", () => {
+        setFeedbackBadwordsState(feedbackHasBadWords(feedbackTextarea.value));
+      });
+    }
     
     // Create navigation section
     const navigationSection = document.createElement("div");
@@ -498,6 +556,24 @@ function submitEvaluation() {
 
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
   const facultyId = window.selectedFaculty?.id || '';
+  const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
+
+  // Prevent submission when feedback has bad words
+  const normalizedFeedback = (" " + feedbackText.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ");
+  const hasBadWords = [
+    "putangina","puta","tangina","tang ina","gago","tanga","bobo","ulol","tarantado","inutil","leche","bwiset","bwisit","punyeta",
+    "fuck you","fuck","shit","bitch","asshole","dick","cunt","faggot","nigger"
+  ].some(w => normalizedFeedback.includes(` ${w} `));
+
+  if (hasBadWords) {
+    const feedbackBox = document.querySelector(".feedback-box");
+    const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
+    if (feedbackBox) feedbackBox.classList.add("has-badwords");
+    if (badwordsMsg) badwordsMsg.style.display = "block";
+    alert("Bad words is not allowed");
+    updatePaginationButtons();
+    return;
+  }
 
   if (!facultyId) {
     alert('Please select a faculty member to evaluate.');
@@ -526,7 +602,7 @@ function submitEvaluation() {
     faculty_id: facultyId,
     faculty_name: facultyLabel,
     answers: data,
-    feedback: document.getElementById('studentFeedback')?.value.trim() || ''
+    feedback: feedbackText
   };
 
   fetch("submit_evaluation.php", {
