@@ -186,7 +186,10 @@ window.showSection = (id, e) => {
   // =========================
   if (id === "dashboard-section") loadDashboardStats?.();
   if (id === "programs-section") loadPrograms?.();
-  if (id === "faculties-section") loadFaculty?.();
+  if (id === "faculties-section") {
+    showFacultyListView?.();
+    loadFaculty?.();
+  }
   if (id === "criteria-section") loadCategories?.();
   if (id === "report-section") loadEvaluations?.();
   if (id === "students-section") loadStudents?.();
@@ -780,10 +783,14 @@ const addSubjectMainModal = document.getElementById("addSubjectMainModal"),
       subjectsMainTbody = document.getElementById("subjects-main-tbody");
 let subjectsMainData = [];
 let selectedClassSemester = "";
+let selectedAcademicYear = "";
+let editingPeriodId = null;
 try {
   selectedClassSemester = localStorage.getItem("selectedClassSemester") || "";
+  selectedAcademicYear = localStorage.getItem("selectedAcademicYear") || "";
 } catch (err) {
   selectedClassSemester = "";
+  selectedAcademicYear = "";
 }
 
 function initAddSubjectMainBtn() {
@@ -946,15 +953,45 @@ function renderSubjectsMainTable(){
   document.getElementById(id)?.addEventListener("change", renderSubjectsMainTable);
 });
 
-function syncClassSemesterSetting() {
-  ["class-semester-setting", "manage-class-semester-setting"].forEach(id => {
-    const select = document.getElementById(id);
-    if (select) select.value = selectedClassSemester;
-  });
+function defaultAcademicYear() {
+  const today = new Date();
+  const startYear = today.getMonth() >= 5 ? today.getFullYear() : today.getFullYear() - 1;
+  return `${startYear}-${startYear + 1}`;
 }
 
-syncClassSemesterSetting();
-document.addEventListener("DOMContentLoaded", syncClassSemesterSetting);
+function populateAcademicYearSelect() {
+  const select = document.getElementById("dashboard-ay-select");
+  if (!select) return;
+
+  const baseYear = new Date().getFullYear();
+  const years = [];
+  for (let year = baseYear - 2; year <= baseYear + 3; year++) {
+    years.push(`${year}-${year + 1}`);
+  }
+
+  select.innerHTML = '<option value="">Select Academic Year</option>' +
+    years.map(ay => `<option value="${ay}">${ay}</option>`).join("");
+
+  if (!selectedAcademicYear) selectedAcademicYear = defaultAcademicYear();
+  select.value = selectedAcademicYear;
+}
+
+function syncDashboardPeriodSetting() {
+  populateAcademicYearSelect();
+  const semSelect = document.getElementById("dashboard-semester-select");
+  if (semSelect) semSelect.value = selectedClassSemester;
+  syncPeriodFormDefaults();
+}
+
+function syncPeriodFormDefaults() {
+  const ayInput = document.getElementById("period-ay");
+  const semSelect = document.getElementById("period-sem");
+  if (ayInput && !editingPeriodId) ayInput.value = selectedAcademicYear || "";
+  if (semSelect && !editingPeriodId) semSelect.value = selectedClassSemester || "";
+}
+
+syncDashboardPeriodSetting();
+document.addEventListener("DOMContentLoaded", syncDashboardPeriodSetting);
 
 function handleSetClassSemester(semester) {
   if (!semester) return showNotification("Please select semester first", "#f44336");
@@ -962,7 +999,7 @@ function handleSetClassSemester(semester) {
   try {
     localStorage.setItem("selectedClassSemester", semester);
   } catch (err) {}
-  syncClassSemesterSetting();
+  syncDashboardPeriodSetting();
   showNotification(`Add Classes will show ${semester} subjects only`, "#4caf50");
 
   const classYear = document.getElementById("class-year")?.value || "";
@@ -976,47 +1013,16 @@ function handleSetClassSemester(semester) {
   }
 }
 
-// Toggle semester dropdown visibility
-function toggleSemesterDropdown(dropdownId) {
-  const dropdown = document.getElementById(dropdownId);
-  if (dropdown) {
-    const isVisible = dropdown.style.display === "block";
-    dropdown.style.display = isVisible ? "none" : "block";
-  }
-}
-
-// Close all semester dropdowns
-function closeAllSemesterDropdowns() {
-  document.querySelectorAll(".semester-dropdown").forEach(dropdown => {
-    dropdown.style.display = "none";
-  });
-}
-
-document.getElementById("set-class-semester-btn")?.addEventListener("click", (e) => {
-  e.stopPropagation();
-  closeAllSemesterDropdowns();
-  toggleSemesterDropdown("semester-dropdown");
+document.getElementById("dashboard-ay-select")?.addEventListener("change", (e) => {
+  selectedAcademicYear = e.target.value;
+  try {
+    localStorage.setItem("selectedAcademicYear", selectedAcademicYear);
+  } catch (err) {}
+  syncPeriodFormDefaults();
 });
 
-document.getElementById("manage-set-class-semester-btn")?.addEventListener("click", (e) => {
-  e.stopPropagation();
-  closeAllSemesterDropdowns();
-  toggleSemesterDropdown("manage-semester-dropdown");
-});
-
-// Handle semester option clicks
-document.querySelectorAll(".semester-option").forEach(option => {
-  option.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const semester = e.target.dataset.value;
-    handleSetClassSemester(semester);
-    closeAllSemesterDropdowns();
-  });
-});
-
-// Close dropdowns when clicking outside
-document.addEventListener("click", () => {
-  closeAllSemesterDropdowns();
+document.getElementById("dashboard-semester-select")?.addEventListener("change", (e) => {
+  handleSetClassSemester(e.target.value);
 });
 
 // CLOSE MODAL
@@ -1106,7 +1112,7 @@ addManageBtn?.addEventListener("click", () => {
     delete addClassModal.dataset.existingSubjectIds;
     document.getElementById("class-year").selectedIndex = 0;
     document.getElementById("class-block").value = "";
-    document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Select year level first to load subjects</small>';
+    document.getElementById("subject-checkbox-list").innerHTML = `${classSubjectSearchHtml()}<small>Select year level first to load subjects</small>`;
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
       facultyBox.dataset.facultyData = JSON.stringify({});
@@ -1114,6 +1120,27 @@ addManageBtn?.addEventListener("click", () => {
     }
   }
 });
+
+function classSubjectSearchHtml() {
+  return `
+    <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
+    <div class="class-subject-search">
+      <input type="text" id="class-subject-search" placeholder="Search assigned subjects..." class="subject-search-input">
+      <i class="ph ph-magnifying-glass"></i>
+    </div>
+  `;
+}
+
+function bindClassSubjectSearch() {
+  const input = document.getElementById("class-subject-search");
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const term = input.value.toLowerCase().trim();
+    document.querySelectorAll("#subject-checkbox-list .class-subject-option").forEach(item => {
+      item.style.display = !term || item.dataset.search.includes(term) ? "" : "none";
+    });
+  });
+}
 
 // ========================= LOAD SUBJECTS =========================
 function loadSubjects() {
@@ -1271,7 +1298,15 @@ saveSubjectBtn?.addEventListener("click", () => {
 function loadSubjectsByYear(yearLevel, callback = null) {
 
   const box = document.getElementById("subject-checkbox-list");
-  box.innerHTML = "Loading...";
+  box.innerHTML = `${classSubjectSearchHtml()}<small>Loading subjects...</small>`;
+  bindClassSubjectSearch();
+
+  if (!selectedClassSemester) {
+    box.innerHTML = `${classSubjectSearchHtml()}<small>Set semester on the dashboard first</small>`;
+    bindClassSubjectSearch();
+    if (typeof callback === "function") callback([]);
+    return;
+  }
 
   console.log(`Fetching subjects for program_id: ${currentProgramId}, year_level: ${yearLevel}, semester: ${selectedClassSemester || "all"}`);
 
@@ -1288,28 +1323,15 @@ function loadSubjectsByYear(yearLevel, callback = null) {
 
       if (!data || data.length === 0) {
         const semesterText = selectedClassSemester ? ` in ${selectedClassSemester}` : "";
-        box.innerHTML = `<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>No subjects found for year ${yearLevel}${semesterText}</small>`;
-        if (selectedClassSemester) {
-          const clearBtn = document.createElement("button");
-          clearBtn.type = "button";
-          clearBtn.className = "clear-semester-filter-btn";
-          clearBtn.textContent = "Show all semesters";
-          clearBtn.addEventListener("click", () => {
-            selectedClassSemester = "";
-            try {
-              localStorage.removeItem("selectedClassSemester");
-            } catch (err) {}
-            syncClassSemesterSetting();
-            loadSubjectsByYear(yearLevel, callback);
-          });
-          box.appendChild(clearBtn);
-        }
+        box.innerHTML = `${classSubjectSearchHtml()}<small>No subjects found for year ${yearLevel}${semesterText}</small>`;
+        bindClassSubjectSearch();
         if (typeof callback === "function") callback([]);
         return;
       }
 
       // Clear existing content but keep the header
-      box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4>';
+      box.innerHTML = classSubjectSearchHtml();
+      bindClassSubjectSearch();
       if (selectedClassSemester) {
         const note = document.createElement("small");
         note.textContent = `Showing ${selectedClassSemester} subjects only`;
@@ -1318,6 +1340,8 @@ function loadSubjectsByYear(yearLevel, callback = null) {
       
       data.forEach(sub => {
         const label = document.createElement("label");
+        label.className = "class-subject-option";
+        label.dataset.search = `${sub.subject_code || ""} ${sub.subject_desc || ""} ${sub.year_level || ""}`.toLowerCase();
         label.innerHTML = `
           <input type="checkbox" value="${sub.id}">
           ${sub.subject_code} - ${sub.subject_desc}
@@ -1329,7 +1353,8 @@ function loadSubjectsByYear(yearLevel, callback = null) {
     })
     .catch(err => {
       console.error("Error loading subjects:", err);
-      box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Error loading subjects</small>';
+      box.innerHTML = `${classSubjectSearchHtml()}<small>Error loading subjects</small>`;
+      bindClassSubjectSearch();
       if (typeof callback === "function") callback([]);
     });
 }
@@ -1346,12 +1371,15 @@ document.getElementById("class-year")?.addEventListener("change", (e) => {
   
   if (!year) {
     console.log("No year selected, returning");
+    box.innerHTML = `${classSubjectSearchHtml()}<small>Select year level first to load subjects</small>`;
+    bindClassSubjectSearch();
     return;
   }
   
   if (!currentProgramId) {
     console.log("No program ID set");
-    box.innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Please select a program first from the programs list, then click Manage</small>';
+    box.innerHTML = `${classSubjectSearchHtml()}<small>Please select a program first from the programs list, then click Manage</small>`;
+    bindClassSubjectSearch();
     return;
   }
   
@@ -1406,7 +1434,7 @@ function loadFacultyBySubject(subjectId, subjectLabel, isChecked, selectedFacult
         facultyData[subjectId] = {
           subjectLabel,
           faculty,
-          selectedFacultyId: selectedFacultyId || (faculty.length > 0 ? faculty[0].id : null)
+          selectedFacultyId: selectedFacultyId || null
         };
         facultyBox.dataset.facultyData = JSON.stringify(facultyData);
         
@@ -1465,7 +1493,7 @@ function updateFacultyDisplay(facultyData) {
       select.style.padding = "8px";
       select.style.border = "1px solid #ccc";
       select.style.borderRadius = "4px";
-      select.innerHTML = `<option value="">Assign teacher for this subject</option>` +
+      select.innerHTML = `<option value="">Assigned faculty for this subject</option>` +
         data.faculty.map(f => `
           <option value="${f.id}" ${data.selectedFacultyId == f.id ? "selected" : ""}>
             ${f.name}
@@ -1570,7 +1598,8 @@ function loadClasses() {
 
           document.getElementById("class-year").value = c.year_level;
           document.getElementById("class-block").value = c.block || "";
-          document.getElementById("subject-checkbox-list").innerHTML = '<h4><i class="ph ph-book"></i> Assigned Subjects</h4><small>Loading subjects...</small>';
+          document.getElementById("subject-checkbox-list").innerHTML = `${classSubjectSearchHtml()}<small>Loading subjects...</small>`;
+          bindClassSubjectSearch();
 
           const facultyBox = document.getElementById("faculty-list");
           if (facultyBox) {
@@ -1987,6 +2016,10 @@ const closeModal=m=>m.style.display="none";
 
 // ================= Faculty ==========================================================================================
 const facultyTbody = document.querySelector("#faculties-section tbody");
+const archivedFacultyTbody = document.querySelector(".archived-faculties-table tbody");
+const facultyStatsContainer = document.querySelector("#faculties-section .faculty-stats-container");
+const facultyTableWrapper = document.querySelector("#faculties-section .table-wrapper");
+const archivedFacultySection = document.querySelector("#faculties-section .archived-faculty-section");
 
 function normalizeStatusValue(status) {
   return String(status || "active").trim().toLowerCase();
@@ -1995,6 +2028,7 @@ function normalizeStatusValue(status) {
 function statusLabel(status) {
   const normalized = normalizeStatusValue(status);
   if (normalized === "on leave") return "On Leave";
+  if (normalized === "archived") return "Archived";
   return normalized === "inactive" ? "Inactive" : "Active";
 }
 
@@ -2090,6 +2124,36 @@ document.addEventListener("click", (e) => {
 window.addEventListener("scroll", () => closeStatusMenus(), true);
 window.addEventListener("resize", () => closeStatusMenus());
 
+function showFacultyListView() {
+  if (facultyStatsContainer) {
+    facultyStatsContainer.hidden = false;
+    facultyStatsContainer.style.display = "";
+  }
+  if (facultyTableWrapper) {
+    facultyTableWrapper.hidden = false;
+    facultyTableWrapper.style.display = "";
+  }
+  if (archivedFacultySection) {
+    archivedFacultySection.hidden = true;
+    archivedFacultySection.style.display = "none";
+  }
+}
+
+function showArchivedFacultyView() {
+  if (facultyStatsContainer) {
+    facultyStatsContainer.hidden = true;
+    facultyStatsContainer.style.display = "none";
+  }
+  if (facultyTableWrapper) {
+    facultyTableWrapper.hidden = true;
+    facultyTableWrapper.style.display = "none";
+  }
+  if (archivedFacultySection) {
+    archivedFacultySection.hidden = false;
+    archivedFacultySection.style.display = "";
+  }
+}
+
 function refreshSectionStats() {
   fetch("get_section_stats.php?cb=" + Date.now(), { cache: "no-store" })
     .then(r => r.json())
@@ -2140,13 +2204,17 @@ function loadFaculty() {
         return;
       }
       facultyTbody.innerHTML = "";
+      if (archivedFacultyTbody) archivedFacultyTbody.innerHTML = "";
       
       // Check if no data or empty array
       if (!data || data.length === 0) {
         facultyTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No faculty found</td></tr>';
+        if (archivedFacultyTbody) {
+          archivedFacultyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No archived faculty found</td></tr>';
+        }
         return;
       }
-      
+
       data.forEach(f => {
         console.log("Processing faculty:", f);
         console.log("Photo data:", f.photo);
@@ -2170,6 +2238,27 @@ function loadFaculty() {
           
         console.log("Subjects display:", subjectsDisplay);
 
+        if (normalizeStatusValue(f.status) === "archived") {
+          row.innerHTML = `
+            <td>
+              ${f.photo ? `<img src="${f.photo}" class="table-avatar" alt="">` : `<div class="table-avatar placeholder"><i class="ph ph-user"></i></div>`}
+            </td>
+            <td><strong>${f.faculty_id}</strong></td>
+            <td>
+              <div>
+                <div style="font-weight: 600; color: var(--primary-900);">${f.firstname} ${f.lastname} ${f.suffix||""}</div>
+                <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
+              </div>
+            </td>
+            <td>
+              <span class="subject-count-badge">${f.subjects ? f.subjects.length : 0}</span>
+            </td>
+            <td>${statusPillHtml(f.status)}</td>`;
+
+          if (archivedFacultyTbody) archivedFacultyTbody.appendChild(row);
+          return;
+        }
+
         row.innerHTML = `
           <td>
             ${f.photo ? `<img src="${f.photo}" class="table-avatar" alt="">` : `<div class="table-avatar placeholder"><i class="ph ph-user"></i></div>`}
@@ -2188,8 +2277,8 @@ function loadFaculty() {
           <td class="action-cell"><div class="action-buttons">
             <button class="view-btn"><i class="ph ph-eye"></i></button>
             <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-            <button class="delete-btn"><i class="ph ph-trash"></i></button>
             ${statusMenuHtml("faculty", f.status)}
+            <button class="archive-btn" title="Archive Faculty">Archived</button>
           </div></td>`;
 
         facultyTbody.appendChild(row);
@@ -2295,11 +2384,42 @@ function loadFaculty() {
           });
         });
 
-        // DELETE --------------------
-        row.querySelector(".delete-btn").onclick = () => {
-          deleteTarget = row;
-          deleteType = "faculty";
-          openDeleteModal("faculty", f.firstname + " " + f.lastname, row);};});})
+        row.querySelector(".archive-btn").addEventListener("click", async () => {
+          const currentStatus = normalizeStatusValue(row.dataset.status);
+          if (currentStatus === "archived") {
+            showNotification("Faculty is already archived", "#64748b");
+            return;
+          }
+
+          if (!confirm("Archive this faculty account?")) return;
+
+          try {
+            const result = await updateStatus("faculty", f.id, "archived");
+            if (result.success) {
+              row.dataset.status = "archived";
+              row.querySelector("td:nth-child(5)").innerHTML = statusPillHtml("archived");
+              statusMenu.querySelectorAll(".status-option").forEach(btn => btn.classList.remove("selected"));
+              closeStatusMenus();
+              showNotification("Faculty archived successfully", "#4caf50");
+              refreshSectionStats();
+              loadFaculty();
+            } else {
+              showNotification("Failed to archive faculty: " + (result.message || "Unknown error"), "#f44336");
+            }
+          } catch (error) {
+            console.error("Archive faculty error:", error);
+            showNotification("Error archiving faculty", "#f44336");
+          }
+        });
+        });})
+    .then(() => {
+      if (facultyTbody && facultyTbody.rows.length === 0) {
+        facultyTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No faculty found</td></tr>';
+      }
+      if (archivedFacultyTbody && archivedFacultyTbody.rows.length === 0) {
+        archivedFacultyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No archived faculty found</td></tr>';
+      }
+    })
     .then(() => refreshSectionStats())
     .catch(err => console.error("Load error:", err));}
 
@@ -2455,10 +2575,13 @@ function filterFaculty() {
       matchesSearch = idText.includes(searchTerm) || nameText.includes(searchTerm);
     }
     
-    // Check status filter against the row status value.
+    const statusText = normalizeStatusValue(r.dataset.status);
+
+    // Check status filter against the row status value. Archived faculty stay out of the normal list.
     if (statusFilter && statusFilter !== "") {
-      const statusText = normalizeStatusValue(r.dataset.status);
       matchesStatus = statusText === statusFilter.toLowerCase();
+    } else {
+      matchesStatus = statusText !== "archived";
     }
     
     // Show row only if both conditions are met
@@ -2468,6 +2591,20 @@ function filterFaculty() {
 
 document.getElementById("faculty-search").oninput = filterFaculty;
 document.getElementById("faculty-status-filter").onchange = filterFaculty;
+
+const showArchivedFacultyBtn = document.querySelector(".show-archived-faculty-btn");
+if (showArchivedFacultyBtn) {
+  showArchivedFacultyBtn.addEventListener("click", () => {
+    showArchivedFacultyView();
+  });
+}
+
+const backToFacultyBtn = document.querySelector(".back-to-faculty-btn");
+if (backToFacultyBtn) {
+  backToFacultyBtn.addEventListener("click", () => {
+    showFacultyListView();
+  });
+}
 // ========================= Report Section =========================
 function loadEvaluations() {
   console.log('Loading evaluations...');
@@ -2672,7 +2809,7 @@ function renderEvaluationDetailsTable(reportData) {
 
   const rowsHtml = details.map((detail, index) => `
     <tr>
-      <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: left; font-weight: 600; color: #374151;">${escapeHtml(detail.category)}</td>
+      <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: left; font-weight: 600; color: #374151; text-transform: uppercase;">${escapeHtml(String(detail.category || "").toUpperCase())}</td>
       <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: center; color: var(--primary-900); font-weight: 700;">${escapeHtml(detail.average_score || detail.overall_rating || "0.00")}</td>
       ${index === 0 ? feedbackCell : ""}
     </tr>
@@ -3319,7 +3456,6 @@ function loadStudents(){
             <div class="action-buttons">
               <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
               <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-              <button class="delete-btn"><i class="ph ph-trash"></i></button>
               ${statusMenuHtml("student", stu.status)}
             </div>
           </td>`;
@@ -3551,18 +3687,6 @@ function loadStudents(){
         } else {
           console.error("View subjects button not found for student row:", stu);
         }
-        
-        // Delete
-        const deleteBtn = row.querySelector(".delete-btn");
-        if (deleteBtn) {
-          deleteBtn.onclick = () => {
-            console.log("Delete button clicked for student:", stu);
-            openDeleteModal("student", `${stu.firstname} ${stu.lastname}`, row);
-          };
-        } else {
-          console.error("Delete button not found for student row:", stu);
-        }
-        
         studentTbody.appendChild(row);
       });
       // Search functionality
@@ -4702,6 +4826,48 @@ window.testDeleteDashboardUpdate = function() {
 };
 
 // ========================= MANAGE PERIODS =========================
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function parseDateOnly(dateString) {
+  const [year, month, day] = String(dateString || "").split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function todayDateOnly() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function isPastDate(dateString) {
+  const date = parseDateOnly(dateString);
+  return !!date && date < todayDateOnly();
+}
+
+function setPeriodSubmitMode(mode) {
+  const addBtn = document.getElementById("add-period-btn");
+  if (!addBtn) return;
+  const isEdit = mode === "edit";
+  addBtn.innerHTML = `<i class="ph ${isEdit ? "ph-floppy-disk" : "ph-plus"}"></i>${isEdit ? "Update Period" : "Add Period"}`;
+}
+
+function resetPeriodForm() {
+  editingPeriodId = null;
+  document.getElementById("period-ay").value = selectedAcademicYear || "";
+  document.getElementById("period-sem").value = selectedClassSemester || "";
+  document.getElementById("period-start").value = "";
+  document.getElementById("period-end").value = "";
+  setPeriodSubmitMode("add");
+}
+
 function formatPeriodName(semester, ay) {
   const sem = (semester || "").toString();
   let prefix = sem;
@@ -4711,8 +4877,8 @@ function formatPeriodName(semester, ay) {
 }
 
 function formatRange(startDate, endDate) {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
   const startStr = start.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
   const endStr = end.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
   return `${startStr} - ${endStr}`;
@@ -4796,28 +4962,13 @@ function initManagePeriodsButton() {
 }
 
 function openManagePeriodsModal() {
-  // Clear form
-  document.getElementById("period-ay").value = "";
-  document.getElementById("period-sem").value = "";
-
-  // Start/end should be set via calendar selection
-  document.getElementById("period-start").value = "";
-  document.getElementById("period-end").value = "";
+  resetPeriodForm();
+  if (!selectedAcademicYear || !selectedClassSemester) {
+    showNotification("Set academic year and semester on the dashboard first", "#f44336");
+  }
   
   // Load existing periods
   loadPeriods();
-
-  // Display today's day/date inside the modal table area
-  const todayEl = document.getElementById("managePeriodsToday");
-  if (todayEl) {
-    const now = new Date();
-    todayEl.textContent = now.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  }
   
   // Show modal
   managePeriodsModal.style.display = "flex";
@@ -4851,20 +5002,28 @@ async function loadPeriods() {
     tbody.innerHTML = "";
     periods.forEach(p => {
       const tr = document.createElement("tr");
-      const periodName = formatPeriodName(p.semester, p.ay);
+      const periodName = escapeHtml(p.semester || formatPeriodName(p.semester, p.ay));
+      const ay = escapeHtml(p.ay);
       const duration = formatRange(p.start_date, p.end_date);
 
       const statusHtml = p.is_active
-        ? `<button class="status-badge active" data-action="deactivate" data-id="${p.id}" style="cursor:pointer; border:none;">ACTIVE</button>`
-        : `<button class="status-badge" data-action="set-active" data-id="${p.id}" style="cursor:pointer; border:none;">Set Active</button>`;
+        ? `<button type="button" class="period-status-btn active" data-action="deactivate" data-id="${p.id}">Active</button>`
+        : `<button type="button" class="period-status-btn inactive" data-action="set-active" data-id="${p.id}">Inactive</button>`;
 
       tr.innerHTML = `
-        <td>${periodName}</td>
+        <td>
+          <div class="period-name-cell">
+            <span class="period-semester">${periodName}</span>
+            <span class="period-ay">${ay}</span>
+          </div>
+        </td>
         <td>${duration}</td>
         <td>${statusHtml}</td>
         <td class="action-cell">
           <div class="action-buttons">
-            <button class="delete-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash-alt"></i></button>
+            <button class="edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period">
+              <i class="ph ph-pencil-simple"></i>
+            </button>
           </div>
         </td>
       `;
@@ -4877,12 +5036,16 @@ async function loadPeriods() {
       btn.addEventListener("click", async (e) => {
         const id = parseInt(e.currentTarget.dataset.id, 10);
         if (!id) return;
-        await fetch("periods_api.php?action=set_active", {
+        const res = await fetch("periods_api.php?action=set_active", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id })
         });
+        const result = await res.json().catch(() => null);
+        if (!result || !result.success) {
+          alert((result && result.message) || "Unable to activate period.");
+        }
         await loadPeriods();
         await refreshPeriodCard();
       });
@@ -4901,13 +5064,12 @@ async function loadPeriods() {
       });
     });
 
-    tbody.querySelectorAll("[data-action='delete']").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
+    tbody.querySelectorAll("[data-action='edit']").forEach(btn => {
+      btn.addEventListener("click", (e) => {
         const id = parseInt(e.currentTarget.dataset.id, 10);
         if (!id) return;
-        const row = e.currentTarget.closest("tr");
-        const name = row?.cells?.[0]?.innerText || "period";
-        openDeleteModal("period", name, e.currentTarget);
+        const period = periods.find(item => Number(item.id) === id);
+        if (period) editPeriod(period);
       });
     });
   } catch (err) {
@@ -4931,14 +5093,12 @@ function formatDate(dateString) {
 
 function editPeriod(period) {
   document.getElementById("period-ay").value = period.ay;
-  document.getElementById("period-sem").value = period.sem;
-  document.getElementById("period-start").value = period.start;
-  document.getElementById("period-end").value = period.end;
-  
-  // Change button text to update
-  const addBtn = document.getElementById("add-period-btn");
-  addBtn.textContent = "Update";
-  addBtn.onclick = () => updatePeriod(period.id);
+  document.getElementById("period-sem").value = period.semester;
+  document.getElementById("period-start").value = period.start_date;
+  document.getElementById("period-end").value = period.end_date;
+  editingPeriodId = Number(period.id);
+  setPeriodSubmitMode("edit");
+  document.querySelector("#managePeriodsModal .period-creation-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function addPeriod() {
@@ -4951,6 +5111,10 @@ function addPeriod() {
     alert("Please fill all fields");
     return;
   }
+  if (editingPeriodId) {
+    updatePeriod(editingPeriodId);
+    return;
+  }
 
   // Validate YYYY-MM-DD format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -4959,8 +5123,12 @@ function addPeriod() {
     return;
   }
   
-  if (new Date(start) >= new Date(end)) {
+  if (parseDateOnly(start) >= parseDateOnly(end)) {
     alert("End date must be after start date");
+    return;
+  }
+  if (isPastDate(start)) {
+    alert("Start date cannot be in the past");
     return;
   }
   
@@ -4975,10 +5143,7 @@ function addPeriod() {
     .then(d => {
       if (d && d.success) {
         showNotification("Period added successfully!", "#4caf50");
-        document.getElementById("period-ay").value = "";
-        document.getElementById("period-sem").selectedIndex = 0;
-        document.getElementById("period-start").value = "";
-        document.getElementById("period-end").value = "";
+        resetPeriodForm();
         loadPeriods();
       } else {
         alert((d && d.message) || "Error adding period.");
@@ -5005,8 +5170,12 @@ function updatePeriod(periodId) {
     return;
   }
   
-  if (new Date(start) >= new Date(end)) {
+  if (parseDateOnly(start) >= parseDateOnly(end)) {
     alert("End date must be after start date");
+    return;
+  }
+  if (isPastDate(start)) {
+    alert("Start date cannot be in the past");
     return;
   }
   
@@ -5021,17 +5190,7 @@ function updatePeriod(periodId) {
     .then(d => {
       if (d && d.success) {
         showNotification("Period updated successfully!", "#4caf50");
-        
-        // Reset button and clear form
-        const addBtn = document.getElementById("add-period-btn");
-        addBtn.textContent = "Add";
-        addBtn.onclick = addPeriod;
-        
-        document.getElementById("period-ay").value = "";
-        document.getElementById("period-sem").selectedIndex = 0;
-        document.getElementById("period-start").value = "";
-        document.getElementById("period-end").value = "";
-        
+        resetPeriodForm();
         loadPeriods();
       } else {
         alert((d && d.message) || "Error updating period.");
@@ -5072,47 +5231,77 @@ function initAYTooltip() {
 
 // Simple Calendar Click Handler
 function initCalendarClickHandlers() {
-  // Get calendar icons
-  const calendarIcons = document.querySelectorAll('.calendar-icon');
-  console.log('Found calendar icons:', calendarIcons.length); // Debug
-  
-  calendarIcons.forEach(icon => {
+  const hideCalendars = () => {
+    document.querySelectorAll('.calendar-picker').forEach(cal => {
+      cal.style.display = 'none';
+      cal.classList.remove('active');
+    });
+  };
+
+  const openCalendar = (targetId) => {
+    const calendar = document.getElementById(targetId + '-calendar');
+    const input = document.getElementById(targetId);
+    if (!calendar || !input) return;
+
+    hideCalendars();
+
+    // Keep the picker outside modal overflow/transform clipping.
+    if (calendar.parentElement !== document.body) {
+      document.body.appendChild(calendar);
+    }
+
+    const inputRect = input.getBoundingClientRect();
+    const pickerWidth = 292;
+    const left = Math.min(inputRect.left, window.innerWidth - pickerWidth - 12);
+    const top = inputRect.bottom + 8;
+
+    calendar.style.position = 'fixed';
+    calendar.style.top = `${top}px`;
+    calendar.style.left = `${Math.max(12, left)}px`;
+    calendar.style.right = 'auto';
+    calendar.style.zIndex = '100000';
+    calendar.style.display = 'block';
+    calendar.classList.add('active');
+
+    const now = new Date();
+    calendar.dataset.year = now.getFullYear();
+    calendar.dataset.month = now.getMonth();
+    generateCalendarDays(calendar, targetId);
+  };
+
+  document.querySelectorAll('.calendar-icon').forEach(icon => {
     icon.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Calendar icon clicked!'); // Debug
-      
-      const targetId = icon.dataset.target;
-      const calendar = document.getElementById(targetId + '-calendar');
-      
-      console.log('Target ID:', targetId); // Debug
-      console.log('Calendar element:', calendar); // Debug
-      
-      if (calendar) {
-        // Hide all calendars first
-        document.querySelectorAll('.calendar-picker').forEach(cal => {
-          cal.style.display = 'none';
-          cal.classList.remove('active');
-        });
-        
-        // Show the clicked calendar
-        calendar.style.display = 'block';
-        calendar.classList.add('active');
-        
-        // Simple positioning - just below the input
-        const input = document.getElementById(targetId);
-        const inputRect = input.getBoundingClientRect();
-        
-        calendar.style.position = 'fixed';
-        calendar.style.top = (inputRect.bottom + 5) + 'px';
-        calendar.style.left = inputRect.left + 'px';
-        calendar.style.zIndex = '10000';
-        
-        // Generate calendar days
-        generateCalendarDays(calendar, targetId);
-        
-        console.log('Calendar should be visible now!'); // Debug
-      }
+      openCalendar(icon.dataset.target);
+    });
+  });
+
+  document.querySelectorAll('#period-start, #period-end').forEach(input => {
+    input.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openCalendar(input.id);
+    });
+  });
+
+  document.querySelectorAll('.calendar-nav').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const calendar = button.closest('.calendar-picker');
+      if (!calendar) return;
+
+      const targetId = calendar.id.replace('-calendar', '');
+      const direction = button.dataset.direction === 'next' ? 1 : -1;
+      const currentYear = Number(calendar.dataset.year || new Date().getFullYear());
+      const currentMonth = Number(calendar.dataset.month || new Date().getMonth());
+      const nextDate = new Date(currentYear, currentMonth + direction, 1);
+
+      calendar.dataset.year = nextDate.getFullYear();
+      calendar.dataset.month = nextDate.getMonth();
+      generateCalendarDays(calendar, targetId);
     });
   });
   
@@ -5120,10 +5309,7 @@ function initCalendarClickHandlers() {
   document.addEventListener('click', (e) => {
     if (!e.target.classList.contains('calendar-icon') && 
         !e.target.closest('.calendar-picker')) {
-      document.querySelectorAll('.calendar-picker').forEach(cal => {
-        cal.style.display = 'none';
-        cal.classList.remove('active');
-      });
+      hideCalendars();
     }
   });
 }
@@ -5137,10 +5323,9 @@ function generateCalendarDays(calendar, targetId) {
   const existingDays = grid.querySelectorAll('.calendar-day');
   existingDays.forEach(day => day.remove());
   
-  // Current date
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const year = Number(calendar.dataset.year || now.getFullYear());
+  const month = Number(calendar.dataset.month || now.getMonth());
   
   // Update header
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -5163,16 +5348,24 @@ function generateCalendarDays(calendar, targetId) {
     const dayElement = document.createElement('div');
     dayElement.className = 'calendar-day';
     dayElement.textContent = day;
+    const formattedDate = year + '-' +
+                         String(month + 1).padStart(2, '0') + '-' +
+                         String(day).padStart(2, '0');
+    const isPastStartDate = targetId === "period-start" && isPastDate(formattedDate);
     
     // Highlight today
-    if (day === now.getDate()) {
+    if (day === now.getDate() && month === now.getMonth() && year === now.getFullYear()) {
       dayElement.classList.add('today');
+    }
+
+    if (isPastStartDate) {
+      dayElement.classList.add('disabled');
+      grid.appendChild(dayElement);
+      continue;
     }
     
     // Add click event
     dayElement.addEventListener('click', () => {
-      const formattedDate = String(day).padStart(2, '0') + '/' + 
-                           String(month + 1).padStart(2, '0') + '/' + year;
       document.getElementById(targetId).value = formattedDate;
       calendar.style.display = 'none';
       calendar.classList.remove('active');
@@ -5188,6 +5381,12 @@ initAYTooltip();
 initCalendarClickHandlers();
 initPeriodCardControls();
 refreshPeriodCard();
+setInterval(() => {
+  refreshPeriodCard();
+  if (managePeriodsModal?.style.display === "flex") {
+    loadPeriods();
+  }
+}, 60000);
 
 });
 

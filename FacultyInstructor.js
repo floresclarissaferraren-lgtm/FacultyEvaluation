@@ -207,6 +207,16 @@ document.getElementById("logoutModal").addEventListener("click", function(e){
 });
 
 function loadFacultyStats() {
+  if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
+    const ratingNumberEl = document.getElementById("overallRatingNumber");
+    const ratingStatusEl = document.getElementById("overallRatingStatus");
+    const responsesEl = document.getElementById("totalResponsesValue");
+    if (ratingNumberEl) ratingNumberEl.textContent = "0.00 / 5.00";
+    if (ratingStatusEl) ratingStatusEl.textContent = "No Data";
+    if (responsesEl) responsesEl.textContent = "0";
+    return;
+  }
+
   fetch("get_faculty_stats.php")
     .then(r => r.json())
     .then(data => {
@@ -233,6 +243,11 @@ function loadFacultyStats() {
 }
 
 function showEvaluationReport() {
+  if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
+    alert("Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.");
+    return;
+  }
+
   // Get faculty information from hidden fields
   const facultyId = document.getElementById("facultyId")?.value;
   const facultyName = document.getElementById("facultyName")?.value;

@@ -11,8 +11,9 @@ $student_id = intval($_SESSION['id']);
 $studentName = '';
 $studentYearLevel = '';
 $studentProgram = '';
+$studentStatus = 'active';
 
-$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, p.program_name 
+$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, s.status, p.program_name 
                           FROM add_students s 
                           LEFT JOIN add_programs p ON s.program = p.id 
                           WHERE s.id = ?");
@@ -26,6 +27,7 @@ if ($result && $result->num_rows === 1) {
     $studentYearLevel = $student['yearlevel'] ?? '';
     $studentNumber = $student['student_number'] ?? '';
     $studentProgram = $student['program_name'] ?? '';
+    $studentStatus = strtolower($student['status'] ?? 'active');
 } else {
     $stmt->close();
     $conn->close();
@@ -63,6 +65,7 @@ $conn->close();
     <div class="dropdown-menu" id="dropdownMenu">
       <a href="#" onclick="showPasswordForm()"><i class="ph ph-key"></i> Change Password</a>
       <a href="#" onclick="showProfile()"><i class="ph ph-user"></i> Profile</a>
+      <a href="#" onclick="showEvaluationHistory(event)"><i class="ph ph-clock-counter-clockwise"></i> View History</a>
       <a href="#" onclick="logout(event)"><i class="ph ph-sign-out"></i> Logout</a>
     </div>
   </div>
@@ -134,6 +137,7 @@ $conn->close();
 <input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars($studentNumber); ?>">
 <input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
 <input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
+<input type="hidden" id="studentStatus" value="<?php echo htmlspecialchars($studentStatus); ?>">
 
 
 <!-- Main Page ======================================================================================-->
@@ -149,7 +153,13 @@ $conn->close();
       <div class="academic-year">Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>
-      <button class="evaluate-btn" onclick="showEvaluateSection()">Evaluate Now</button>
+      <?php if ($studentStatus !== 'active'): ?>
+        <div class="inactive-account-message">
+          <i class="ph ph-warning-circle"></i>
+          <span>Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.</span>
+        </div>
+      <?php endif; ?>
+      <button class="evaluate-btn" onclick="showEvaluateSection()" <?php echo $studentStatus !== 'active' ? 'disabled' : ''; ?>>Evaluate Now</button>
     </div>
   </div>
 

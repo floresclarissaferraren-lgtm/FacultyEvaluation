@@ -21,6 +21,17 @@
   --accent-800: #854d0e;
   --accent-900: #713f12;
   --accent-950: #422006;
+  --blue-050: var(--primary-50);
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-900: #1e3a8a;
+  --slate-200: #e2e8f0;
+  --slate-500: #64748b;
+  --slate-700: #334155;
+  --slate-900: #0f172a;
+  --yellow-400: var(--accent-400);
+  --yellow-500: var(--accent-500);
+  --red-500: var(--error);
   --neutral-50: #f8fafc;
   --neutral-100: #f1f5f9;
   --neutral-200: #e2e8f0;
@@ -36,6 +47,7 @@
   --error: #ef4444;
   --info: #3b82f6;
   --border-color: var(--neutral-200);
+  --border: var(--border-color);
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / .05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
@@ -603,6 +615,7 @@ main.full {
   }
 
   .add-faculty-btn,
+  .show-archived-faculty-btn,
   .add-student-btn,
   .add-program-btn {
     width: 100%;
@@ -848,6 +861,7 @@ main.full {
 .button-gradient,
 .add-program-btn,
 .add-faculty-btn,
+.show-archived-faculty-btn,
 .add-student-btn,
 .add-manage-btn,
 .back-btn,
@@ -1454,6 +1468,61 @@ main.full {
   gap: var(--spacing-sm)
 }
 
+.dashboard-period-toolbar,
+.dashboard-period-selectors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px var(--spacing-sm);
+}
+
+.dashboard-period-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: end;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.dashboard-period-toolbar > div {
+  width: 170px;
+}
+
+.dashboard-period-toolbar label,
+.dashboard-period-selectors label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--neutral-600);
+  font-size: .76rem;
+  font-weight: 800;
+}
+
+.dashboard-period-toolbar select,
+.dashboard-period-selectors select {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  padding: 0 10px;
+  color: var(--primary-900);
+  background: #fff;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .dashboard-period-toolbar {
+    justify-content: stretch;
+  }
+
+  .dashboard-period-toolbar > div {
+    width: 100%;
+  }
+}
+
 .period-actions button {
   flex: 1;
   padding: .6rem .75rem;
@@ -1941,6 +2010,7 @@ td:first-child {
 .action-cell .view-btn,
 .action-cell .view-subjects-btn,
 .action-cell .settings-btn,
+.action-cell .archive-btn,
 .actions .edit-btn,
 .actions .delete-btn {
   width: 2.6rem;
@@ -1983,6 +2053,22 @@ td:first-child {
 
 .action-cell .settings-btn {
   background: #f3f4f6 !important;
+}
+
+.action-cell .archive-btn {
+  width: auto;
+  min-width: 0;
+  height: 2.25rem;
+  padding: 0 8px;
+  background: #fee2e2 !important;
+  color: #dc2626;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
 }
 
 
@@ -2040,6 +2126,86 @@ table.evaluation-table .view-btn {
 .action-cell .delete-btn i,
 .actions .delete-btn i {
   color: #6b7280;
+}
+
+.action-cell .archive-btn i {
+  color: #64748b;
+}
+
+.show-archived-faculty-btn {
+  width: 150px;
+  min-height: 44px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #dc2626;
+  border-radius: 8px;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+}
+
+#faculties-section .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#faculties-section .add-faculty-btn,
+#faculties-section .show-archived-faculty-btn {
+  width: 150px;
+  height: 44px;
+  justify-content: center;
+}
+
+.show-archived-faculty-btn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.archived-faculty-section {
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.archived-faculty-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.archived-faculty-header h3 {
+  margin: 0 0 4px;
+  color: var(--primary-900);
+  font-size: 1.05rem;
+}
+
+.archived-faculty-header span {
+  color: var(--neutral-500);
+  font-size: .86rem;
+  font-weight: 600;
+}
+
+.back-to-faculty-btn {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--neutral-200);
+  background: #fff;
+  color: var(--primary-800);
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.back-to-faculty-btn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-200);
 }
 
 .action-cell .view-btn i,
@@ -2123,6 +2289,11 @@ table.evaluation-table .view-btn i {
 .inline-status.on-leave .status-dot {
   background: #f59e0b;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+}
+
+.inline-status.archived .status-dot {
+  background: #64748b;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, .18);
 }
 
 .status-action-menu {
@@ -2613,6 +2784,11 @@ table.evaluation-table .view-btn:hover {
   background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-800) 100%)
 }
 
+#addCategoryModal .modal-content {
+  max-width: 500px !important;
+  width: 90% !important;
+}
+
 #addQuestionModal .addProgram-header {
   background: linear-gradient(135deg, var(--accent-600) 0%, var(--accent-500) 50%, var(--accent-400) 100%);
   box-shadow: 0 4px 6px -1px rgba(234, 179, 8, .1), 0 2px 4px -1px rgba(234, 179, 8, .06)
@@ -2999,17 +3175,6 @@ table.evaluation-table .view-btn:hover {
   overflow: hidden;
 }
 
-.period-creation-section::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-500), var(--accent-500), var(--primary-500));
-  animation: shimmer 3s ease-in-out infinite;
-}
-
 .period-form-row {
   display: flex;
   gap: 12px;
@@ -3031,7 +3196,8 @@ table.evaluation-table .view-btn:hover {
   height: 85px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .period-input-group:hover {
@@ -3039,19 +3205,29 @@ table.evaluation-table .view-btn:hover {
 }
 
 .period-input-group label {
-  display: block;
-  margin-bottom: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
   font-weight: 700;
   font-size: 0.8rem;
   color: var(--primary-700);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transform: none;
+}
+
+.period-input-group label i {
+  margin-right: 0 !important;
+  font-size: 0.8rem !important;
+  color: var(--primary-600);
 }
 
 .period-input-group input,
 .period-input-group select {
   width: 100%;
-  padding: 12px 12px;
+  height: 44px;
+  padding: 0 12px;
   border: 2px solid var(--neutral-200);
   border-radius: 6px;
   font-size: 0.9rem;
@@ -3059,6 +3235,21 @@ table.evaluation-table .view-btn:hover {
   background: #fff;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--neutral-900);
+  line-height: 1.2;
+}
+
+.period-input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--neutral-500) 50%) calc(100% - 17px) 52%/6px 6px no-repeat,
+    linear-gradient(135deg, var(--neutral-500) 50%, transparent 50%) calc(100% - 12px) 52%/6px 6px no-repeat,
+    #fff;
+}
+
+.period-input-group input[type="date"] {
+  padding-right: 36px;
 }
 
 .period-input-group input:focus,
@@ -3067,7 +3258,7 @@ table.evaluation-table .view-btn:hover {
   border-color: var(--primary-500);
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
   transform: translateY(-1px);
-  background: linear-gradient(135deg, #fff 0%, #f0f9ff 100%);
+  background-color: #fff;
 }
 
 .period-input-group input:hover,
@@ -3108,14 +3299,14 @@ table.evaluation-table .view-btn:hover {
   right: 0;
   left: auto;
   background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--neutral-200);
+  border-radius: 10px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
   z-index: 10000;
-  padding: 15px;
-  margin-top: 5px;
+  padding: 12px;
+  margin-top: 8px;
   display: none;
-  min-width: 280px;
+  min-width: 292px;
   max-height: 400px;
   overflow: visible;
 }
@@ -3124,7 +3315,7 @@ table.evaluation-table .view-btn:hover {
 .calendar-picker.active {
   display: block !important;
   position: fixed;
-  z-index: 10000;
+  z-index: 100000 !important;
 }
 
 /* Alternative positioning if calendar goes off screen */
@@ -3156,71 +3347,98 @@ table.evaluation-table .view-btn:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 12px;
+  padding: 4px 2px 10px;
+  border-bottom: 1px solid var(--neutral-100);
 }
 
 .calendar-nav {
-  background: #3b82f6;
-  color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-200);
+  padding: 0;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s ease;
+  font-size: 14px;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.calendar-nav i {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .calendar-nav:hover {
-  background: #2563eb;
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+  color: #fff;
 }
 
 .calendar-month-year {
-  font-weight: 600;
-  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--neutral-800);
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 4px;
 }
 
 .calendar-day-header {
   text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  padding: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--neutral-500);
+  padding: 5px 0;
+  text-transform: uppercase;
 }
 
 .calendar-day {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 8px;
+  padding: 0;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-700);
   transition: all 0.2s ease;
 }
 
 .calendar-day:hover {
-  background: #f3f4f6;
+  background: var(--primary-50);
+  color: var(--primary-800);
 }
 
 .calendar-day.selected {
-  background: #3b82f6;
+  background: var(--primary-700);
   color: #fff;
+  box-shadow: 0 6px 14px rgba(3, 105, 161, 0.24);
 }
 
 .calendar-day.disabled {
   color: #d1d5db;
   cursor: not-allowed;
+  pointer-events: none;
+  background: transparent;
 }
 
 .calendar-day.today {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--accent-100);
+  color: var(--accent-800);
+  box-shadow: inset 0 0 0 1px var(--accent-300);
 }
 
 .period-tooltip {
@@ -3293,30 +3511,31 @@ table.evaluation-table .view-btn:hover {
 }
 
 .periods-table th {
-  background: var(--primary-800);
-  color: #fff;
+  background: #f3f4f6;
+  color: #000;
   font-weight: 700;
-  text-align: left;
-  padding: var(--spacing-lg) var(--spacing-md);
-  font-size: .875rem;
+  text-align: center;
+  padding: var(--spacing-md);
+  font-size: .75rem;
   font-family: var(--font-sans);
   border-bottom: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .05);
   position: sticky;
   top: 0;
   z-index: 10;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  min-height: 3rem;
 }
 
 .periods-table td {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 0.65rem 0.9rem;
   border-bottom: 1px solid var(--neutral-100);
   font-size: .875rem;
   font-family: var(--font-sans);
   vertical-align: middle;
   transition: background-color 0.2s ease;
-  min-height: 2.5rem;
+  min-height: 2.2rem;
 }
 
 .periods-table tr:hover td {
@@ -3325,6 +3544,52 @@ table.evaluation-table .view-btn:hover {
 
 .periods-table .action-cell .delete-btn i {
   color: #ef4444 !important;
+}
+
+.period-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.15;
+}
+
+.period-semester {
+  color: var(--neutral-800);
+  font-weight: 800;
+}
+
+.period-ay {
+  color: var(--neutral-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.period-status-btn {
+  min-width: 82px;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
+}
+
+.period-status-btn.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.period-status-btn.inactive {
+  background: #f3f4f6;
+  color: var(--neutral-600);
+}
+
+.period-status-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Manage Periods date inputs: avoid double borders (wrapper already reused elsewhere) */
@@ -3340,12 +3605,108 @@ table.evaluation-table .view-btn:hover {
   position: relative;
 }
 
+#managePeriodsModal .period-input-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-700);
+}
+
+#managePeriodsModal .period-input-group label i {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: var(--primary-50);
+  color: var(--primary-700);
+  font-size: 0.95rem !important;
+  line-height: 1;
+}
+
+#managePeriodsModal .period-input-group input,
+#managePeriodsModal .period-input-group select {
+  height: 42px !important;
+  padding: 0 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  background-color: #fff !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  color: var(--neutral-800) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+}
+
+#managePeriodsModal #period-ay[readonly],
+#managePeriodsModal #period-sem:disabled {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+#managePeriodsModal .period-input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--neutral-500) 50%),
+    linear-gradient(135deg, var(--neutral-500) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) 52%,
+    calc(100% - 12px) 52%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+#managePeriodsModal .period-input-group input:hover,
+#managePeriodsModal .period-input-group select:hover {
+  border-color: var(--primary-400) !important;
+  box-shadow: 0 6px 14px rgba(14, 84, 139, 0.10) !important;
+}
+
+#managePeriodsModal .period-input-group input:focus,
+#managePeriodsModal .period-input-group select:focus {
+  border-color: var(--primary-600) !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16) !important;
+}
+
 #managePeriodsModal .date-input-wrapper input {
-  padding-right: 32px;
+  padding-right: 42px !important;
 }
 
 #managePeriodsModal .date-input-wrapper i {
+  right: 8px;
   z-index: 2;
+}
+
+#managePeriodsModal .calendar-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: var(--primary-600);
+  color: #fff;
+  font-size: 1rem;
+  box-shadow: 0 6px 14px rgba(2, 132, 199, 0.25);
+}
+
+#managePeriodsModal .calendar-icon:hover {
+  background: var(--primary-700);
+  color: #fff;
+}
+
+#managePeriodsModal .period-add-btn {
+  gap: 8px;
+}
+
+#managePeriodsModal .period-add-btn i {
+  margin-right: 0 !important;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .status-badge {
@@ -4627,9 +4988,8 @@ div#report-section .evaluation-table .badge.na {
     font-size: .875rem;
   }
 
-  .periods-table th,
   .periods-table td {
-    padding: 10px 6px;
+    padding: 8px 6px;
   }
 
   .dashboard-box h1 {
@@ -5444,13 +5804,6 @@ div#report-section .evaluation-table .badge.na {
   transform: scale(1.05)
 }
 
-border-radius:20px;
-font-size:.8rem;
-font-weight:600;
-box-shadow:0 2px 8px rgba(59, 130, 246, .3);
-text-transform:uppercase;
-letter-spacing:.5px
-}
 
 #viewStudentSubjectsModal .subject-desc,
 #viewFacultySubjectsModal .subject-desc,
@@ -5676,6 +6029,37 @@ letter-spacing:.5px
 #addClassModal #faculty-list {
   max-height: 230px !important;
   overflow-y: auto !important;
+}
+
+#addClassModal .class-subject-search {
+  position: relative;
+  margin: 8px 0 10px;
+}
+
+#addClassModal .class-subject-search .subject-search-input {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  font-size: .86rem;
+  box-sizing: border-box;
+}
+
+#addClassModal .class-subject-search i {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--neutral-500);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+#addClassModal .class-subject-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #addSubjectModal .form-row,
@@ -6066,6 +6450,7 @@ main {
 .action-cell .delete-btn,
 .action-cell .view-btn,
 .action-cell .view-subjects-btn,
+.action-cell .archive-btn,
 .actions .edit-btn,
 .actions .delete-btn {
   transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
@@ -6085,6 +6470,7 @@ main {
 .action-cell .delete-btn:hover,
 .action-cell .view-btn:hover,
 .action-cell .view-subjects-btn:hover,
+.action-cell .archive-btn:hover,
 .actions .edit-btn:hover,
 .actions .delete-btn:hover {
   transform: none;
@@ -6270,7 +6656,8 @@ tr:hover td {
 
   #managePeriodsModal .period-input-group label {
     font-size: 0.75rem !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 0 !important;
+    transform: none !important;
   }
 
   #managePeriodsModal .period-input-group input,
@@ -7038,23 +7425,38 @@ input[type=range] {
   flex: 1;
   min-width: 200px;
   padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  background: white;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
+  border-radius: 8px;
+  background: url('polygon-scatter-haikei.png') center/cover no-repeat;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+  border: none;
+  transition: .3s cubic-bezier(.4, 0, .2, 1);
+  position: relative;
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px) scale(.95);
+  animation: slideInFadeUp .5s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+.faculty-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .faculty-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, .15);
 }
 
 .faculty-stat-card .stat-content {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--spacing-md);
+  height: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .faculty-stat-card .stat-info {
@@ -7093,8 +7495,10 @@ input[type=range] {
   justify-content: center;
   font-size: 1.25rem;
   color: white;
-  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  background: transparent;
   flex-shrink: 0;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .1);
+  transition: .3s;
 }
 
 .faculty-stat-card .stat-icon i {
@@ -7104,44 +7508,59 @@ input[type=range] {
 
 /* Total Faculty Card - Blue theme */
 .faculty-stat-card.total-faculty {
-  background: #0284c7;
   border-left: none;
 }
 
-.faculty-stat-card.total-faculty .stat-icon {
-  background: transparent;
-}
-
-.faculty-stat-card.total-faculty .stat-icon i {
-  color: #ffffff;
+.faculty-stat-card.total-faculty::before {
+  background: rgba(2, 132, 199, .8);
 }
 
 /* Active Faculty Card - Green theme */
 .faculty-stat-card.active-faculty {
-  background: #059669;
   border-left: none;
 }
 
-.faculty-stat-card.active-faculty .stat-icon {
-  background: transparent;
-}
-
-.faculty-stat-card.active-faculty .stat-icon i {
-  color: #ffffff;
+.faculty-stat-card.active-faculty::before {
+  background: rgba(5, 150, 105, .8);
 }
 
 /* Pending Evaluation Card - Orange theme */
 .faculty-stat-card.pending-evaluation {
-  background: #ea580c;
   border-left: none;
 }
 
-.faculty-stat-card.pending-evaluation .stat-icon {
-  background: transparent;
+.faculty-stat-card.pending-evaluation::before {
+  background: rgba(234, 88, 12, .8);
 }
 
-.faculty-stat-card.pending-evaluation .stat-icon i {
-  color: #ffffff;
+.faculty-stat-card:nth-child(1) {
+  animation-delay: .1s;
+}
+
+.faculty-stat-card:nth-child(2) {
+  animation-delay: .2s;
+}
+
+.faculty-stat-card:nth-child(3) {
+  animation-delay: .3s;
+}
+
+.faculty-stat-card .stat-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.faculty-stat-card:hover .stat-icon {
+  animation: none;
+  transform: scale(1.1) rotate(5deg);
+}
+
+.faculty-stat-card .stat-number {
+  animation: slideInFadeUp .7s cubic-bezier(.4, 0, .2, 1) .3s both;
+  transition: .3s;
+}
+
+.faculty-stat-card:hover .stat-number {
+  transform: scale(1.05);
 }
 
 /* Responsive design */
@@ -7191,5 +7610,111 @@ input[type=range] {
     background: white !important;
     -webkit-print-color-adjust: exact;
     color-adjust: exact;
+  }
+}
+
+/* Final admin responsive layout override */
+.nav-left,
+.section-title-container {
+  min-width: 0;
+}
+
+.nav-left {
+  flex: 1;
+}
+
+.section-title {
+  max-width: min(48vw, 560px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu {
+  flex-shrink: 0;
+}
+
+.section {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
+@media(max-width:992px) {
+  .navbar {
+    height: 68px;
+    gap: 12px;
+    padding: 0 18px;
+  }
+
+  .section-title {
+    max-width: calc(100vw - 190px);
+    font-size: 18px;
+    padding: 4px 8px;
+  }
+}
+
+@media(max-width:768px) {
+  .navbar {
+    left: 0 !important;
+    width: 100% !important;
+    padding: 0 14px;
+  }
+
+  .hamburger {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    max-width: calc(100vw - 145px);
+    font-size: 16px;
+    margin-left: 0;
+  }
+
+  .admin-box {
+    height: 42px;
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .admin-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .admin-text {
+    display: none;
+  }
+}
+
+@media(max-width:480px) {
+  .navbar {
+    height: 64px;
+    padding: 0 10px;
+  }
+
+  .hamburger {
+    width: 38px;
+    height: 38px;
+  }
+
+  .section-title {
+    max-width: calc(100vw - 125px);
+    font-size: 15px;
+    padding: 4px 6px;
+  }
+
+  .admin-box {
+    padding: 4px;
+  }
+
+  .admin-icon {
+    width: 32px;
+    height: 32px;
   }
 }

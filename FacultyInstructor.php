@@ -9,7 +9,7 @@ include 'connect.php';
 
 // Fetch faculty data
 $faculty_id = $_SESSION['id'];
-$stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email FROM add_faculties WHERE id = ?");
+$stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email, status FROM add_faculties WHERE id = ?");
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -17,6 +17,7 @@ $result = $stmt->get_result();
 $faculty_name = "Instructor"; // Default fallback
 $faculty_email = ""; // Default fallback
 $faculty_faculty_id = ""; // Default fallback
+$faculty_status = "active";
 if ($result->num_rows === 1) {
     $faculty = $result->fetch_assoc();
     $name_parts = array_filter([$faculty['firstname'], $faculty['lastname']]);
@@ -26,6 +27,7 @@ if ($result->num_rows === 1) {
     $faculty_name = implode(' ', $name_parts);
     $faculty_email = $faculty['email'] ?? '';
     $faculty_faculty_id = $faculty['faculty_id'] ?? '';
+    $faculty_status = strtolower($faculty['status'] ?? 'active');
 }
 $stmt->close();
 ?>
@@ -85,6 +87,12 @@ $stmt->close();
       Track your evaluation scores, analyze feedback, and enhance your 
       teaching strategies for better student engagement.
     </p>
+    <?php if ($faculty_status !== 'active'): ?>
+      <div class="inactive-account-message">
+        <i class="ph ph-warning-circle"></i>
+        <span>Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.</span>
+      </div>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -154,6 +162,7 @@ $stmt->close();
 <input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars($faculty_id); ?>">
 <input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
 <input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
+<input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars($faculty_status); ?>">
 
 <!-- Faculty Info Box -->
 <div class="faculty-box">
@@ -162,7 +171,7 @@ $stmt->close();
       <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
-    <button class="report-btn" onclick="showEvaluationReport()">Generate Report</button>
+    <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Generate Report</button>
   </div>
   
   <div class="faculty-cards">

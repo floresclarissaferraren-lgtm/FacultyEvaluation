@@ -248,7 +248,7 @@ elseif ($action === "update_status") {
     $id = intval($data['id'] ?? 0);
     $status = $data['status'] ?? '';
 
-    $allowedStatuses = ['active', 'inactive', 'on leave'];
+    $allowedStatuses = ['active', 'inactive', 'on leave', 'archived'];
     if (!$id || !in_array(strtolower(trim($status)), $allowedStatuses, true)) {
         echo json_encode(["success"=>false,"message"=>"Invalid ID or status"]);
         exit;

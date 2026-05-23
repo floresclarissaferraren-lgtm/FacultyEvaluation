@@ -14,7 +14,7 @@ if (empty($username) || empty($password)) {
 
 // Student login by student number
 if (str_starts_with($username, 'GC-')) {
-    $stmt = $conn->prepare("SELECT id, password FROM add_students WHERE student_number = ?");
+    $stmt = $conn->prepare("SELECT id, password, status FROM add_students WHERE student_number = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -53,7 +53,15 @@ if (str_starts_with($username, 'GC-')) {
             $_SESSION['role'] = 'student';
             $_SESSION['id'] = $row['id'];
             $_SESSION['username'] = $username;
-            echo json_encode(["success" => true, "role" => "student"]);
+            $_SESSION['account_status'] = $row['status'] ?? 'active';
+            echo json_encode([
+                "success" => true,
+                "role" => "student",
+                "inactive" => strtolower((string)($row['status'] ?? 'active')) !== 'active',
+                "message" => strtolower((string)($row['status'] ?? 'active')) !== 'active'
+                    ? "Your account has been set to inactive by an admin. You cannot evaluate until your account is active again."
+                    : ""
+            ]);
         } else {
             echo json_encode(["success" => false, "message" => "Invalid password"]);
         }
@@ -67,7 +75,12 @@ if (str_starts_with($username, 'GC-')) {
 
 // Faculty login
 
-$stmt = $conn->prepare("SELECT faculty_id, faculty_username, faculty_password FROM faculty_login WHERE faculty_username = ?");
+$stmt = $conn->prepare("
+    SELECT fl.faculty_id, fl.faculty_username, fl.faculty_password, COALESCE(af.status, 'active') AS status
+    FROM faculty_login fl
+    LEFT JOIN add_faculties af ON af.id = fl.faculty_id
+    WHERE fl.faculty_username = ?
+");
 $stmt->bind_param("s", $username);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -78,7 +91,15 @@ if ($result && $result->num_rows === 1) {
         $_SESSION['role'] = 'faculty';
         $_SESSION['id'] = $user['faculty_id'];
         $_SESSION['username'] = $user['faculty_username'];
-        echo json_encode(["success" => true, "role" => "faculty"]);
+        $_SESSION['account_status'] = $user['status'] ?? 'active';
+        echo json_encode([
+            "success" => true,
+            "role" => "faculty",
+            "inactive" => strtolower((string)($user['status'] ?? 'active')) !== 'active',
+            "message" => strtolower((string)($user['status'] ?? 'active')) !== 'active'
+                ? "Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again."
+                : ""
+        ]);
     } else {
         echo json_encode(["success" => false, "message" => "Incorrect password"]);
     }

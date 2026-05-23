@@ -499,10 +499,23 @@ input[type="password"]::-webkit-password-toggle {
   cursor: pointer;transition: 0.3s ease;box-shadow: 0 4px 12px rgba(0,0,0,0.08);min-height:44px;max-height:44px;min-width:120px;max-width:none;}
 /* Viewing Section ==================================================================================================== */
 .main-box{
-  max-width:920px;margin:84px auto 0;padding:clamp(18px,3vw,30px);
+  max-width:920px;
+  margin:84px auto 0;
+  padding:clamp(18px,3vw,30px);
+
   background:linear-gradient(180deg,var(--surface) 0%,var(--surface-soft) 100%);
-  border-radius:var(--radius-xl);box-shadow:var(--shadow-strong);
-  border-left:8px solid var(--blue-500);display:flex;align-items:center;justify-content:center;overflow:hidden
+  
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-strong);
+
+  border-left:8px solid var(--blue-500);
+  border:1px solid var(--line);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  overflow:hidden;
 }
 
 .main-box:hover{box-shadow:var(--shadow-strong);transform:none}
@@ -608,6 +621,36 @@ input[type="password"]::-webkit-password-toggle {
 .report-btn:hover{transform:none;box-shadow:0 8px 20px rgba(37,99,235,.28);filter:brightness(1.02)}
 .report-btn:hover::before{left:100%}
 .report-btn:active{transform:none;box-shadow:0 8px 20px rgba(37,99,235,.28)}
+.report-btn:disabled{
+  background:#e5e7eb;
+  color:#9ca3af;
+  cursor:not-allowed;
+  box-shadow:none;
+  filter:none;
+}
+.report-btn:disabled::before{display:none}
+
+.inactive-account-message{
+  width:min(540px,100%);
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin:16px 0 0;
+  padding:12px 14px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:12px;
+  color:#9a3412;
+  font-size:0.86rem;
+  font-weight:600;
+  line-height:1.35;
+}
+
+.inactive-account-message i{
+  flex:0 0 auto;
+  font-size:1.1rem;
+  margin-top:1px;
+}
 
 .faculty-cards {
   display:grid;

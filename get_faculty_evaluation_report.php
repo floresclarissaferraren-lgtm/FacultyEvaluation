@@ -44,6 +44,21 @@ if ($numeric_faculty_id != $_SESSION['id']) {
     exit;
 }
 
+$status_stmt = $conn->prepare("SELECT status FROM add_faculties WHERE id = ? LIMIT 1");
+$status_stmt->bind_param("i", $numeric_faculty_id);
+$status_stmt->execute();
+$status_row = $status_stmt->get_result()->fetch_assoc();
+$status_stmt->close();
+
+if (strtolower((string)($status_row['status'] ?? 'active')) !== 'active') {
+    echo json_encode([
+        'success' => false,
+        'inactive' => true,
+        'message' => 'Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.'
+    ]);
+    exit;
+}
+
 // Get faculty evaluation statistics
 $stmt = $conn->prepare("
     SELECT 

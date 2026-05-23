@@ -46,16 +46,26 @@ function getStudentStatistics($conn) {
     $stats['active_students'] = isset($row['total']) ? (int) $row['total'] : 0;
     $stmt->close();
     
-    // Regular Students
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM add_students WHERE student_type = 'regular'");
+    // Regular Students (active only)
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as total
+        FROM add_students
+        WHERE student_type = 'regular'
+          AND LOWER(TRIM(COALESCE(status, 'active'))) = 'active'
+    ");
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $stats['regular_students'] = isset($row['total']) ? (int) $row['total'] : 0;
     $stmt->close();
     
-    // Irregular Students
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM add_students WHERE student_type = 'irregular'");
+    // Irregular Students (active only)
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as total
+        FROM add_students
+        WHERE student_type = 'irregular'
+          AND LOWER(TRIM(COALESCE(status, 'active'))) = 'active'
+    ");
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();

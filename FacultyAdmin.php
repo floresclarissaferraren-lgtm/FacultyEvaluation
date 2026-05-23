@@ -172,6 +172,20 @@ include 'totalstudents_dashcount.php';
 <main>
 <!-- Dashboard Section  =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
+  <div class="dashboard-period-toolbar">
+    <div>
+      <label for="dashboard-ay-select">Academic Year</label>
+      <select id="dashboard-ay-select"></select>
+    </div>
+    <div>
+      <label for="dashboard-semester-select">Semester</label>
+      <select id="dashboard-semester-select">
+        <option value="">Select Semester</option>
+        <option value="1st Semester">1st Semester</option>
+        <option value="2nd Semester">2nd Semester</option>
+      </select>
+    </div>
+  </div>
   <div class="dashboard">
 
     <!-- Faculty Card -->
@@ -278,7 +292,7 @@ include 'totalstudents_dashcount.php';
     <div class="period-container">
       <div class="dashboard-card period">
         <div class="dashboard-content">
-           <div class="period-header">
+          <div class="period-header">
              <h3>Period</h3>
             <div class="period-box" id="activePeriodBox">No Active Period</div>
            </div>
@@ -446,15 +460,6 @@ include 'totalstudents_dashcount.php';
           <option value="3rd Year">3rd Year</option>
           <option value="4th Year">4th Year</option>
         </select>
-        <div class="set-semester-group">
-          <button type="button" id="manage-set-class-semester-btn" class="button-gradient">
-            <i class="ph ph-calendar-check"></i> Set Semester
-          </button>
-          <div id="manage-semester-dropdown" class="semester-dropdown" style="display: none;">
-            <div class="semester-option" data-value="1st Semester">1st Semester</div>
-            <div class="semester-option" data-value="2nd Semester">2nd Semester</div>
-          </div>
-        </div>
       </div>
       <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
@@ -542,15 +547,9 @@ include 'totalstudents_dashcount.php';
       <div class="section-box">
         <div id="subject-checkbox-list" class="subjects-list">
           <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
-          <div class="subject-filters">
-            <div class="search-input-wrapper">
-              <input type="text" id="class-program-search" placeholder="Search by program..." class="subject-search-input">
-              <i class="ph ph-magnifying-glass"></i>
-            </div>
-            <div class="search-input-wrapper">
-              <input type="text" id="class-year-search" placeholder="Search by year level..." class="subject-search-input">
-              <i class="ph ph-magnifying-glass"></i>
-            </div>
+          <div class="class-subject-search">
+            <input type="text" id="class-subject-search" placeholder="Search assigned subjects..." class="subject-search-input">
+            <i class="ph ph-magnifying-glass"></i>
           </div>
           <small>Select year level first to load subjects</small>
         </div>
@@ -588,15 +587,6 @@ include 'totalstudents_dashcount.php';
       <option value="3rd Year">3rd Year</option>
       <option value="4th Year">4th Year</option>
     </select>
-    <div class="set-semester-group">
-      <button type="button" id="set-class-semester-btn" class="button-gradient">
-        <i class="ph ph-calendar-check"></i> Set Semester
-      </button>
-      <div id="semester-dropdown" class="semester-dropdown" style="display: none;">
-        <div class="semester-option" data-value="1st Semester">1st Semester</div>
-        <div class="semester-option" data-value="2nd Semester">2nd Semester</div>
-      </div>
-    </div>
   </div>
   <div class="table-wrapper">
     <div class="table-scroll-container">
@@ -738,12 +728,31 @@ include 'totalstudents_dashcount.php';
       </div>
       <div class="header-actions">
         <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
+        <button class="show-archived-faculty-btn">Show Archived</button>
       </div>
     </div>
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
           <tr><th>Image</th><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="archived-faculty-section" hidden>
+    <div class="archived-faculty-header">
+      <div>
+        <h3>Archived Faculty</h3>
+        <span>Faculty records moved out of the active list</span>
+      </div>
+      <button class="back-to-faculty-btn">Back to Faculty</button>
+    </div>
+    <div class="table-scroll-container">
+      <table class="faculties-table archived-faculties-table">
+        <thead>
+          <tr><th>Image</th><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1230,22 +1239,22 @@ include 'totalstudents_dashcount.php';
       <!-- Create New Period Section -->
       <div class="period-creation-section">
         <h4 style="color: #dc2626; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-          <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>CREATE NEW PERIOD
+          <i class="ph ph-plus-circle" style="margin-right: 8px;"></i>CREATE NEW PERIOD
         </h4>
         <div class="period-form-row">
           <div class="period-input-group">
             <label for="period-ay">
-              <i class="fas fa-calendar-alt" style="margin-right: 4px; font-size: 0.8rem;"></i>AY
+              <i class="ph ph-calendar-dots"></i>AY
             </label>
-            <input type="text" id="period-ay" placeholder="e.g. 2025-2026">
+            <input type="text" id="period-ay" placeholder="Set from dashboard" readonly>
             <div class="period-tooltip" id="ay-tooltip" style="display:none;">2025-2026</div>
           </div>
           
           <div class="period-input-group">
             <label for="period-sem">
-              <i class="fas fa-graduation-cap" style="margin-right: 4px; font-size: 0.8rem;"></i>Semester
+              <i class="ph ph-graduation-cap"></i>Semester
             </label>
-            <select id="period-sem">
+            <select id="period-sem" disabled>
               <option value="" selected disabled>Semester</option>
               <option value="1st Semester">1st Semester</option>
               <option value="2nd Semester">2nd Semester</option>
@@ -1254,16 +1263,20 @@ include 'totalstudents_dashcount.php';
           
           <div class="period-input-group">
             <label for="period-start">
-              <i class="fas fa-play-circle" style="margin-right: 4px; font-size: 0.8rem;"></i>Start Date
+              <i class="ph ph-play-circle"></i>Start Date
             </label>
             <div class="date-input-wrapper">
-              <input type="date" id="period-start">
-              <i class="fas fa-calendar calendar-icon" data-target="period-start"></i>
+              <input type="text" id="period-start" placeholder="YYYY-MM-DD" readonly>
+              <i class="ph ph-calendar-blank calendar-icon" data-target="period-start"></i>
               <div class="calendar-picker" id="period-start-calendar">
                 <div class="calendar-header">
-                  <button class="calendar-nav" data-direction="prev">&lt;</button>
+                  <button class="calendar-nav" data-direction="prev" type="button" aria-label="Previous month">
+                    <i class="ph ph-caret-left"></i>
+                  </button>
                   <span class="calendar-month-year"></span>
-                  <button class="calendar-nav" data-direction="next">&gt;</button>
+                  <button class="calendar-nav" data-direction="next" type="button" aria-label="Next month">
+                    <i class="ph ph-caret-right"></i>
+                  </button>
                 </div>
                 <div class="calendar-grid">
                   <div class="calendar-day-header">Sun</div>
@@ -1280,16 +1293,20 @@ include 'totalstudents_dashcount.php';
           
           <div class="period-input-group">
             <label for="period-end">
-              <i class="fas fa-stop-circle" style="margin-right: 4px; font-size: 0.8rem;"></i>End Date
+              <i class="ph ph-stop-circle"></i>End Date
             </label>
             <div class="date-input-wrapper">
-              <input type="date" id="period-end">
-              <i class="fas fa-calendar calendar-icon" data-target="period-end"></i>
+              <input type="text" id="period-end" placeholder="YYYY-MM-DD" readonly>
+              <i class="ph ph-calendar-blank calendar-icon" data-target="period-end"></i>
               <div class="calendar-picker" id="period-end-calendar">
                 <div class="calendar-header">
-                  <button class="calendar-nav" data-direction="prev">&lt;</button>
+                  <button class="calendar-nav" data-direction="prev" type="button" aria-label="Previous month">
+                    <i class="ph ph-caret-left"></i>
+                  </button>
                   <span class="calendar-month-year"></span>
-                  <button class="calendar-nav" data-direction="next">&gt;</button>
+                  <button class="calendar-nav" data-direction="next" type="button" aria-label="Next month">
+                    <i class="ph ph-caret-right"></i>
+                  </button>
                 </div>
                 <div class="calendar-grid">
                   <div class="calendar-day-header">Sun</div>
@@ -1307,16 +1324,13 @@ include 'totalstudents_dashcount.php';
         
         <div style="text-align: right; margin-top: 24px;">
           <button id="add-period-btn" class="period-add-btn">
-            <i class="fas fa-plus" style="margin-right: 8px;"></i>Add Period
+            <i class="ph ph-plus"></i>Add Period
           </button>
         </div>
       </div>
 
       <!-- Existing Periods Table -->
       <div class="periods-table-section">
-        <div class="periods-today-display" style="margin: 0 0 12px 0; font-weight: 600; color: #374151;">
-          Today: <span id="managePeriodsToday"></span>
-        </div>
         <table class="periods-table">
           <thead>
             <tr>

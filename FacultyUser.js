@@ -210,6 +210,11 @@ function togglePassword(id, icon) {
 // ================= switch section =================
 
 async function showEvaluateSection() {
+  if ((document.getElementById("studentStatus")?.value || "active").toLowerCase() !== "active") {
+    alert("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.");
+    return;
+  }
+
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
@@ -236,6 +241,26 @@ function goBackToMain() {
   document.getElementById("facultyCards").style.display = "none";
   document.getElementById("mainPage").style.display = "flex";
 }
+
+async function refreshStudentPeriodAccess() {
+  const evaluateSection = document.getElementById("evaluateSection");
+  const isEvaluating = evaluateSection && evaluateSection.style.display !== "none";
+  if (!isEvaluating) return;
+
+  try {
+    const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const status = await statusRes.json();
+    if (!status || !status.success || !status.evaluation_open) {
+      goBackToMain();
+      alert("Evaluation period has ended or is closed.");
+    }
+  } catch (_) {
+    goBackToMain();
+    alert("Evaluation is closed");
+  }
+}
+
+setInterval(refreshStudentPeriodAccess, 60000);
 // ================= LOAD CATEGORIES + QUESTIONS =================
 let currentCriteria = 0;
 let criteriaTables = [];
@@ -248,17 +273,18 @@ async function loadStudentFacultyCards() {
   if (!container) return;
 
   // Block evaluate when evaluation is closed
+  const studentActive = (document.getElementById("studentStatus")?.value || "active").toLowerCase() === "active";
   let evaluationOpen = false;
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
-    evaluationOpen = !!(status && status.success && status.evaluation_open);
+    evaluationOpen = studentActive && !!(status && status.success && status.evaluation_open);
   } catch (_) {
     evaluationOpen = false;
   }
 
   if (!studentId && !yearLevel) {
-    container.innerHTML = '<p class="no-faculty">No faculty available</p>';
+    container.innerHTML = '<div class="no-faculty"><i class="ph ph-chalkboard-teacher"></i><span>No Faculty Available</span></div>';
     return;
   }
 
@@ -289,6 +315,7 @@ async function loadStudentFacultyCards() {
         const card = document.createElement('div');
         card.className = 'faculty-card';
         card.onclick = () => {
+          if (!studentActive) return alert("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.");
           if (!evaluationOpen) return alert("Evaluation is closed");
           selectFaculty(faculty.id, fullName, subjectLabels);
         };
@@ -314,11 +341,11 @@ async function loadStudentFacultyCards() {
         container.appendChild(card);
       });
     } else {
-      container.innerHTML = `<p class="no-faculty">No faculty available for ${yearLevel}</p>`;
+      container.innerHTML = '<div class="no-faculty"><i class="ph ph-chalkboard-teacher"></i><span>No Faculty Available</span></div>';
     }
   } catch (err) {
     console.error('Error loading faculty cards:', err);
-    container.innerHTML = '<p class="no-faculty">Unable to load faculty</p>';
+    container.innerHTML = '<div class="no-faculty"><i class="ph ph-warning-circle"></i><span>Unable to Load Faculty</span></div>';
   }
 }
 
@@ -574,12 +601,6 @@ function updatePaginationButtons() {
 
 // ================= SUBMIT =================
 function submitEvaluation() {
-  const nextBtn = document.getElementById("nextBtn");
-  if (nextBtn) {
-    nextBtn.disabled = true;
-    nextBtn.textContent = "Submitting...";
-  }
-
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
   const facultyId = window.selectedFaculty?.id || '';
   const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
@@ -601,6 +622,11 @@ function submitEvaluation() {
     return;
   }
 
+  const feedbackBox = document.querySelector(".feedback-box");
+  const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
+  if (feedbackBox) feedbackBox.classList.remove("has-badwords");
+  if (badwordsMsg) badwordsMsg.style.display = "none";
+
   if (!facultyId) {
     alert('Please select a faculty member to evaluate.');
     updatePaginationButtons();
@@ -620,6 +646,12 @@ function submitEvaluation() {
     alert("Please answer all questions!");
     updatePaginationButtons();
     return;
+  }
+
+  const nextBtn = document.getElementById("nextBtn");
+  if (nextBtn) {
+    nextBtn.disabled = true;
+    nextBtn.textContent = "Submitting...";
   }
 
   const facultyLabel = window.selectedFaculty?.name || '';
@@ -651,6 +683,11 @@ function submitEvaluation() {
       
       // Refresh faculty cards to remove evaluated faculty
       await loadStudentFacultyCards();
+
+      document.getElementById("evaluateSection").style.display = "block";
+      document.getElementById("facultyCards").style.display = "block";
+      document.getElementById("evaluationContainer").style.display = "none";
+      window.selectedFaculty = null;
       
       // Reset to first criteria page
       currentCriteria = 0;
@@ -676,3 +713,206 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
+
+// ================= EVALUATION HISTORY =================
+async function showEvaluationHistory(event) {
+  if (event) event.preventDefault();
+  const dropdown = document.getElementById("dropdownMenu");
+  if (dropdown) dropdown.style.display = "none";
+
+  const studentId = document.getElementById('studentId')?.value.trim();
+  
+  if (!studentId) {
+    alert('Student ID not found');
+    return;
+  }
+  
+  try {
+    const response = await fetch('get_student_evaluation_history.php');
+    const data = await response.json();
+    
+    if (!data.success) {
+      alert(data.message || 'Failed to load evaluation history');
+      return;
+    }
+    
+    displayEvaluationHistory(data.data);
+  } catch (error) {
+    console.error('Error fetching evaluation history:', error);
+    alert('Error loading evaluation history');
+  }
+}
+
+function displayEvaluationHistory(history) {
+  let historyModal = document.getElementById('historyModal');
+  if (!historyModal) {
+    historyModal = document.createElement('div');
+    historyModal.id = 'historyModal';
+    historyModal.className = 'historyform';
+    document.body.appendChild(historyModal);
+  }
+  
+  let historyContent = '';
+  
+  if (history.length === 0) {
+    historyContent = `
+      <div class="history-content">
+        <div class="history-header">
+          <h3>Evaluation History</h3>
+          <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
+        </div>
+        <div class="history-body">
+          <p class="no-history">No evaluations submitted yet.</p>
+        </div>
+      </div>
+    `;
+  } else {
+    const historyItems = history.map(item => `
+      <div class="history-item">
+        <div class="history-faculty">
+          <i class="ph ph-user-circle"></i>
+          <span class="faculty-name">${item.faculty_name}</span>
+        </div>
+        <div class="history-details">
+          <div class="history-rating">
+            <span class="rating-label">${item.rating_label}</span>
+            <span class="rating-score">${item.overall_rating}/5.00</span>
+          </div>
+          <div class="history-date">${item.date_evaluated}</div>
+        </div>
+        ${item.feedback ? `<div class="history-feedback"><strong>Feedback:</strong> ${item.feedback}</div>` : ''}
+      </div>
+    `).join('');
+    
+    historyContent = `
+      <div class="history-content">
+        <div class="history-header">
+          <h3>Evaluation History</h3>
+          <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
+        </div>
+        <div class="history-body">
+          <div class="history-list">
+            ${historyItems}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  historyModal.innerHTML = `
+    <div class="logout-content">
+      ${historyContent}
+    </div>
+  `;
+  
+  historyModal.style.display = 'flex';
+  
+  historyModal.addEventListener('click', function(event) {
+    if (event.target === historyModal) {
+      closeHistoryModal();
+    }
+  });
+}
+
+function closeHistoryModal() {
+  const historyModal = document.getElementById('historyModal');
+  if (historyModal) {
+    historyModal.style.display = 'none';
+  }
+}
+
+function displayEvaluationHistory(history) {
+  let historyModal = document.getElementById('historyModal');
+  if (!historyModal) {
+    historyModal = document.createElement('div');
+    historyModal.id = 'historyModal';
+    historyModal.className = 'historyform';
+    document.body.appendChild(historyModal);
+  }
+
+  const escapeHistoryHtml = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const normalizeRatingLabel = label => {
+    const value = String(label || "").trim();
+    return value.toLowerCase() === "outstanding" ? "Excellent" : value;
+  };
+
+  const historyItems = history.length === 0
+    ? `<p class="no-history">No evaluations submitted yet.</p>`
+    : history.map(item => {
+      const facultyName = escapeHistoryHtml(item.faculty_name);
+      const initial = facultyName.trim().charAt(0).toUpperCase() || "F";
+      const label = escapeHistoryHtml(normalizeRatingLabel(item.rating_label));
+      const ratingClass = label.toLowerCase().replace(/\s+/g, "-");
+      const rating = Number(item.overall_rating || 0).toFixed(2);
+      const date = escapeHistoryHtml(item.date_evaluated);
+      const feedback = escapeHistoryHtml(item.feedback || "");
+
+      return `
+        <div class="history-item" data-history-name="${facultyName.toLowerCase()}">
+          <div class="history-item-top">
+            <div class="history-main">
+              <div class="history-avatar">${initial}</div>
+              <div class="history-faculty-info">
+                <div class="faculty-name">${facultyName}</div>
+                <div class="history-date">${date}</div>
+              </div>
+            </div>
+            <div class="history-rating">
+              <div class="rating-label rating-${ratingClass}">${label}</div>
+              <div class="rating-score">${rating}/5.00</div>
+            </div>
+          </div>
+          ${feedback ? `<div class="history-feedback"><span>Feedback:</span> ${feedback}</div>` : ""}
+        </div>
+      `;
+    }).join('');
+
+  historyModal.innerHTML = `
+    <div class="history-content">
+      <button class="close-history-btn" onclick="closeHistoryModal()" aria-label="Close history">
+        <i class="ph ph-x"></i>
+      </button>
+      <div class="history-header">
+        <h3>Evaluation History</h3>
+        <p>You will see your evaluation history here</p>
+      </div>
+      <div class="history-search">
+        <i class="ph ph-magnifying-glass"></i>
+        <input type="search" id="historySearchInput" placeholder="Search faculty">
+      </div>
+      <div class="history-body">
+        <div class="history-list" id="historyList">
+          ${historyItems}
+        </div>
+        <p class="no-history history-no-results" id="historyNoResults" style="display:none;">No matching evaluations found.</p>
+      </div>
+    </div>
+  `;
+
+  const searchInput = historyModal.querySelector("#historySearchInput");
+  searchInput?.addEventListener("input", () => {
+    const query = searchInput.value.trim().toLowerCase();
+    const items = historyModal.querySelectorAll(".history-item");
+    let visibleCount = 0;
+
+    items.forEach(item => {
+      const isVisible = item.dataset.historyName.includes(query);
+      item.style.display = isVisible ? "flex" : "none";
+      if (isVisible) visibleCount++;
+    });
+
+    const noResults = historyModal.querySelector("#historyNoResults");
+    if (noResults) noResults.style.display = items.length && visibleCount === 0 ? "block" : "none";
+  });
+
+  historyModal.style.display = 'flex';
+  historyModal.onclick = event => {
+    if (event.target === historyModal) closeHistoryModal();
+  };
+}

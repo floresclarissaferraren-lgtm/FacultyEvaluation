@@ -10,6 +10,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty' || !isset($_SES
 
 $faculty_id = intval($_SESSION['id']); // add_faculties.id
 
+$statusStmt = $conn->prepare("SELECT status FROM add_faculties WHERE id = ? LIMIT 1");
+$statusStmt->bind_param("i", $faculty_id);
+$statusStmt->execute();
+$statusRow = $statusStmt->get_result()->fetch_assoc();
+$statusStmt->close();
+
+if (strtolower((string)($statusRow['status'] ?? 'active')) !== 'active') {
+    echo json_encode([
+        "success" => true,
+        "inactive" => true,
+        "message" => "Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.",
+        "overall_rating" => "0.00",
+        "rating_label" => "No Data",
+        "total_responses" => 0
+    ]);
+    $conn->close();
+    exit;
+}
+
 $conn->query("
     CREATE TABLE IF NOT EXISTS evaluations (
         id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,

@@ -2,6 +2,7 @@
 session_start();
 header("Content-Type: application/json");
 include "connect.php";
+date_default_timezone_set("Asia/Manila");
 
 function ensurePeriodTables(mysqli $conn): void {
     $conn->query("
@@ -39,7 +40,34 @@ function requireAdmin(): void {
     }
 }
 
+function todayDate(): string {
+    return date("Y-m-d");
+}
+
+function closeExpiredActivePeriod(mysqli $conn): void {
+    $today = todayDate();
+    $stmt = $conn->prepare("
+        SELECT es.active_period_id
+        FROM evaluation_settings es
+        JOIN evaluation_periods ep ON ep.id = es.active_period_id
+        WHERE es.id = 1
+          AND es.active_period_id IS NOT NULL
+          AND ep.end_date < ?
+        LIMIT 1
+    ");
+    $stmt->bind_param("s", $today);
+    $stmt->execute();
+    $expired = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($expired) {
+        $conn->query("UPDATE evaluation_periods SET is_active = 0");
+        $conn->query("UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1");
+    }
+}
+
 ensurePeriodTables($conn);
+closeExpiredActivePeriod($conn);
 
 $action = $_GET["action"] ?? "";
 
@@ -51,8 +79,10 @@ if ($action === "status") {
     $activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
 
     $activeName = null;
+    $activeInDuration = false;
     if ($activePeriodId > 0) {
-        $stmt = $conn->prepare("SELECT ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1");
+        $today = todayDate();
+        $stmt = $conn->prepare("SELECT ay, semester, start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
         $stmt->bind_param("i", $activePeriodId);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
@@ -63,8 +93,10 @@ if ($action === "status") {
             if (stripos($sem, "1st") !== false) $prefix = "1st";
             else if (stripos($sem, "2nd") !== false) $prefix = "2nd";
             $activeName = trim($prefix . " " . (string)($row["ay"] ?? ""));
+            $activeInDuration = ($row["start_date"] <= $today && $row["end_date"] >= $today);
         }
     }
+    $evaluationOpen = $evaluationOpen && $activePeriodId > 0 && $activeInDuration;
 
     echo json_encode([
         "success" => true,
@@ -130,6 +162,10 @@ if ($action === "create") {
         echo json_encode(["success" => false, "message" => "End date must be after start date"]);
         exit;
     }
+    if ($start < todayDate()) {
+        echo json_encode(["success" => false, "message" => "Start date cannot be in the past"]);
+        exit;
+    }
 
     $stmt = $conn->prepare("INSERT INTO evaluation_periods (ay, semester, start_date, end_date, is_active) VALUES (?, ?, ?, ?, 0)");
     $stmt->bind_param("ssss", $ay, $semester, $start, $end);
@@ -163,6 +199,10 @@ if ($action === "update") {
     $end = date("Y-m-d", $endTs);
     if (strtotime($start) >= strtotime($end)) {
         echo json_encode(["success" => false, "message" => "End date must be after start date"]);
+        exit;
+    }
+    if ($start < todayDate()) {
+        echo json_encode(["success" => false, "message" => "Start date cannot be in the past"]);
         exit;
     }
 
@@ -203,6 +243,26 @@ if ($action === "set_active") {
     $id = intval($payload["id"] ?? 0);
     if ($id <= 0) {
         echo json_encode(["success" => false, "message" => "Invalid id"]);
+        exit;
+    }
+
+    $today = todayDate();
+    $periodStmt = $conn->prepare("SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
+    $periodStmt->bind_param("i", $id);
+    $periodStmt->execute();
+    $period = $periodStmt->get_result()->fetch_assoc();
+    $periodStmt->close();
+
+    if (!$period) {
+        echo json_encode(["success" => false, "message" => "Period not found"]);
+        exit;
+    }
+    if ($period["start_date"] > $today) {
+        echo json_encode(["success" => false, "message" => "Period has not started yet"]);
+        exit;
+    }
+    if ($period["end_date"] < $today) {
+        echo json_encode(["success" => false, "message" => "Period has already ended"]);
         exit;
     }
 
@@ -249,11 +309,26 @@ if ($action === "set_open") {
 
     // Only allow open if there is an active period.
     if ($open === 1) {
-        $res = $conn->query("SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
+        $res = $conn->query("
+            SELECT es.active_period_id, ep.start_date, ep.end_date
+            FROM evaluation_settings es
+            LEFT JOIN evaluation_periods ep ON ep.id = es.active_period_id
+            WHERE es.id = 1
+            LIMIT 1
+        ");
         $row = $res ? $res->fetch_assoc() : null;
         $activePeriodId = $row ? intval($row["active_period_id"] ?? 0) : 0;
         if ($activePeriodId <= 0) {
             echo json_encode(["success" => false, "message" => "No active period"]);
+            exit;
+        }
+        $today = todayDate();
+        if (($row["start_date"] ?? "") > $today) {
+            echo json_encode(["success" => false, "message" => "Period has not started yet"]);
+            exit;
+        }
+        if (($row["end_date"] ?? "") < $today) {
+            echo json_encode(["success" => false, "message" => "Period has already ended"]);
             exit;
         }
     }
