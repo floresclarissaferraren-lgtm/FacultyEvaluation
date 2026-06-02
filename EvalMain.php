@@ -25,6 +25,7 @@
   <ul id="navMenu">
     <li><a href="#home"><i class="ph ph-house"></i> Home</a></li>
     <li><a href="#about"><i class="ph ph-info"></i> About</a></li>
+    <li><a href="#how-it-works"><i class="ph ph-list-checks"></i> How it works</a></li>
     <li><a href="#contact"><i class="ph ph-envelope"></i> Contact</a></li>
     <li><a href="#" id="loginBtn" class="login-btn"><i class="ph ph-sign-in"></i> Login</a></li>
   </ul>
@@ -77,16 +78,105 @@
 </section>
 
 
+<!-- HOW IT WORKS ============================================================================================================== -->
+<section id="how-it-works" class="how-it-works">
+  <h2>How It Works</h2>
+  <p class="how-desc">Follow the steps based on your role in the evaluation process.</p>
+
+  <div class="how-panels">
+    <div class="how-panel student-panel">
+      <div class="how-panel-title">
+        <i class="ph ph-student"></i>
+        <h3>For Students</h3>
+      </div>
+
+      <div class="how-timeline">
+        <div class="how-item">
+          <span class="how-number">1</span>
+          <div>
+            <h4>Account Login </h4>
+            <p>Access the system by entering your Student Number together with your registered password.</p>
+          </div>
+        </div>
+        <div class="how-item">
+          <span class="how-number">2</span>
+          <div>
+            <h4>Faculty Evaluation  </h4>
+            <p>Select a faculty member from your pending list and answer the evaluation criteria.</p>
+          </div>
+        </div>
+        <div class="how-item">
+          <span class="how-number">3</span>
+          <div>
+            <h4>Submission and Verification  </h4>
+            <p>Carefully review all responses before submitting to ensure the evaluation is properly recorded.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="how-panel faculty-panel">
+      <div class="how-panel-title">
+        <i class="ph ph-chalkboard-teacher"></i>
+        <h3>For Faculty Members</h3>
+      </div>
+
+      <div class="how-timeline">
+        <div class="how-item">
+          <span class="how-number">1</span>
+          <div>
+            <h4>Portal Access</h4>
+            <p>Log in to the system to view your faculty profile and the subjects you are handling.</p>
+          </div>
+        </div>
+        <div class="how-item">
+          <span class="how-number">2</span>
+          <div>
+            <h4>View Analytics</h4>
+            <p>Review your performance dashboard once the evaluation period has concluded.</p>
+          </div>
+        </div>
+        <div class="how-item">
+          <span class="how-number">3</span>
+          <div>
+            <h4>Generate Report</h4>
+            <p>Download your evaluation summary to maintain records and support future improvement planning.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <!-- CONTACT ==============================================================================================================-->
 <section id="contact" class="contact">
   <h2>Contact Information</h2>
   <p class="contact-desc">Questions? Reach out to us.</p>
   <div class="contact-container">
     <div class="contact-info">
-      <div class="info-box"><i class="ph ph-map-pin"></i><p>Granby Colleges of Science and Technology</p></div>
-      <div class="info-box"><i class="ph ph-phone"></i><p>+63 912 345 6789</p></div>
-      <div class="info-box"><i class="ph ph-envelope"></i><p>support@granbycollege.edu</p></div>
+      <div class="info-box">
+        <i class="ph ph-map-pin"></i>
+        <h3>Location</h3>
+        <p>Granby Colleges of Science and Technology</p>
+      </div>
+      <div class="info-box">
+        <i class="ph ph-phone"></i>
+        <h3>Phone</h3>
+        <p>+63 912 345 6789</p>
+      </div>
+      <div class="info-box">
+        <i class="ph ph-envelope"></i>
+        <h3>Email</h3>
+        <p>support@granbycollege.edu</p>
+      </div>
+      <div class="info-box">
+        <i class="ph ph-clock"></i>
+        <h3>Office Hours</h3>
+        <p>Monday-Saturday<br>8:00 AM - 5:00 PM</p>
+      </div>
     </div>
+  </div>
 </section>
 
 <footer>© 2026 Faculty Evaluation System | All Rights Reserved</footer>

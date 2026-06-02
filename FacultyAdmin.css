@@ -8290,3 +8290,20 @@ input[type=range] {
     height: 32px;
   }
 }
+
+/* Keep admin content close to the fixed navbar without touching it. */
+main {
+  padding-top: 78px;
+}
+
+@media(max-width:992px) {
+  main {
+    padding-top: 86px;
+  }
+}
+
+@media(max-width:480px) {
+  main {
+    padding-top: 80px;
+  }
+}
