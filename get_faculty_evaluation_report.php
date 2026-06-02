@@ -63,7 +63,9 @@ if (strtolower((string)($status_row['status'] ?? 'active')) !== 'active') {
 $stmt = $conn->prepare("
     SELECT 
         COALESCE(AVG(overall_rating), 0) as overall_rating,
-        COUNT(*) as total_responses
+        COUNT(*) as total_responses,
+        MIN(DATE(created_at)) as date_from,
+        MAX(DATE(created_at)) as date_to
     FROM evaluations 
     WHERE faculty_id = ?
 ");
@@ -91,12 +93,49 @@ if ($feedback_result->num_rows > 0) {
     }
 }
 
+// Get category total rates
+$stmt_categories = $conn->prepare("
+    SELECT c.category_name,
+           SUM(CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END) AS responses,
+           COALESCE(AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END), 0) AS avg_rating
+    FROM add_categories c
+    LEFT JOIN add_questions q ON q.category_id = c.id
+    LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
+    LEFT JOIN evaluations e ON e.id = ea.evaluation_id AND e.faculty_id = ?
+    GROUP BY c.id, c.category_name
+    ORDER BY c.category_name ASC
+");
+$stmt_categories->bind_param("i", $numeric_faculty_id);
+$stmt_categories->execute();
+$category_result = $stmt_categories->get_result();
+
+$category_totals = [];
+if ($category_result && $category_result->num_rows > 0) {
+    while ($row = $category_result->fetch_assoc()) {
+        $category_totals[] = [
+            'category_name' => $row['category_name'],
+            'responses' => (int)$row['responses'],
+            'avg_rating' => number_format($row['avg_rating'], 2)
+        ];
+    }
+}
+
+$periodText = 'All evaluation periods';
 if ($result->num_rows > 0) {
     $stats = $result->fetch_assoc();
+    if (!empty($stats['date_from']) && !empty($stats['date_to'])) {
+        $start = date('F j, Y', strtotime($stats['date_from']));
+        $end = date('F j, Y', strtotime($stats['date_to']));
+        $periodText = $start === $end ? $start : "$start – $end";
+    }
+
     echo json_encode([
         'success' => true,
         'overall_rating' => number_format($stats['overall_rating'], 2),
         'total_responses' => $stats['total_responses'],
+        'evaluation_period' => $periodText,
+        'category_totals' => $category_totals,
+        'feedback_comments' => $feedback_comments,
         'feedback' => empty($feedback_comments) ? 'No feedback available' : implode("\n\n", $feedback_comments)
     ]);
 } else {

@@ -777,6 +777,10 @@ document.addEventListener("DOMContentLoaded", setupAllModalsClickOutside);
 // Also setup immediately in case DOM is already loaded
 setupAllModalsClickOutside();
 
+// Initialize top performance modal close button
+document.addEventListener("DOMContentLoaded", initializeTopPerformanceModal);
+initializeTopPerformanceModal();
+
 // ========================= MAIN SUBJECTS SECTION =========================
 const addSubjectMainModal = document.getElementById("addSubjectMainModal"),
       saveMainSubjectBtn = document.getElementById("save-main-subject-btn"),
@@ -2787,33 +2791,99 @@ function formatFeedbackForHtml(feedback) {
   return escapeHtml(text).replace(/\n/g, "<br>");
 }
 
+function renderFeedbackComments(reportData) {
+  const feedbackEl = document.getElementById("reportFeedbackText");
+  const feedbackCountEl = document.getElementById("reportFeedbackCount");
+  if (!feedbackEl) return;
+
+  const comments = Array.isArray(reportData.feedback_comments)
+    ? reportData.feedback_comments.map(item => String(item || "").trim()).filter(Boolean)
+    : String(reportData.all_feedback || reportData.feedback || "")
+        .split(/\n\s*\n/)
+        .map(item => item.trim())
+        .filter(Boolean);
+
+  const hasComments = comments.length > 0 && !(comments.length === 1 && comments[0] === "No feedback available");
+  if (feedbackCountEl) {
+    feedbackCountEl.textContent = `${hasComments ? comments.length : 0} ${hasComments && comments.length === 1 ? "comment" : "comments"}`;
+  }
+
+  if (!hasComments) {
+    feedbackEl.innerHTML = '<div class="feedback-loading">No feedback given by students yet.</div>';
+    return;
+  }
+
+  feedbackEl.innerHTML = comments.map(comment => `
+    <div class="feedback-comment">${formatFeedbackForHtml(comment)}</div>
+  `).join("");
+}
+
 function renderEvaluationDetailsTable(reportData) {
   const tbody = document.getElementById("reportEvaluationDetailsBody");
+  const categoryCountEl = document.getElementById("reportCategoryCount");
+  const categoryListEl = document.getElementById("reportCategoryList");
   if (!tbody) return;
 
-  const details = Array.isArray(reportData.evaluation_details) ? reportData.evaluation_details : [];
-  const fallbackFeedback = reportData.all_feedback || "No feedback available";
+  const details = Array.isArray(reportData.evaluation_details)
+    ? reportData.evaluation_details
+    : Array.isArray(reportData.category_totals)
+      ? reportData.category_totals
+      : [];
+
+  if (categoryCountEl) {
+    categoryCountEl.textContent = `${details.length} ${details.length === 1 ? "category" : "categories"}`;
+  }
+  if (categoryListEl) {
+    categoryListEl.innerHTML = details.length
+      ? details.map((detail) => {
+          const categoryName = detail.category || detail.category_name || "Uncategorized";
+          const rawScore = parseFloat(detail.average_score ?? detail.overall_rating ?? detail.score ?? 0);
+          const scoreValue = Number.isFinite(rawScore) ? rawScore.toFixed(2) : String(detail.average_score ?? detail.overall_rating ?? "0.00");
+          const ratingText = detail.rating || detail.status || "N/A";
+          const ratingClass = String((detail.rating_class || ratingText || "poor")).toLowerCase().replace(/\s+/g, "-");
+          return `
+            <span class="category-pill ${escapeHtml(ratingClass)}">
+              <span class="category-pill-name">${escapeHtml(categoryName)}</span>
+              <span class="category-pill-rating">${escapeHtml(scoreValue)} / 5.00</span>
+              <span class="category-pill-status">${escapeHtml(ratingText)}</span>
+            </span>
+          `;
+        }).join("")
+      : '<span class="category-list-empty">No categories available</span>';
+  }
 
   if (details.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="3" style="padding: 14px; text-align: center; color: #6b7280;">No evaluation details available</td>
+        <td colspan="4" class="empty-report-cell">No categories available</td>
       </tr>
     `;
     return;
   }
 
-  const feedbackHtml = formatFeedbackForHtml(details[0]?.all_feedback || fallbackFeedback);
+  const rowsHtml = details.map((detail) => {
+    const categoryName = detail.category || detail.category_name || 'Uncategorized';
+    const rawScore = parseFloat(detail.average_score ?? detail.overall_rating ?? detail.score ?? 0);
+    const scoreValue = Number.isFinite(rawScore) ? rawScore.toFixed(2) : String(detail.average_score ?? detail.overall_rating ?? '0.00');
+    const scorePercent = Number.isFinite(rawScore) ? Math.min(100, Math.max(0, rawScore * 20)) : 0;
+    const ratingText = detail.rating || detail.status || 'N/A';
+    const ratingClass = String((detail.rating_class || ratingText || 'poor')).toLowerCase().replace(/\s+/g, '-');
+    const responses = Number.parseInt(detail.responses ?? detail.total_responses ?? 0, 10) || 0;
 
-  const feedbackCell = `<td rowspan="${details.length}" style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: left; color: #4b5563; font-size: 12px; line-height: 1.45; vertical-align: top;">${feedbackHtml}</td>`;
-
-  const rowsHtml = details.map((detail, index) => `
-    <tr>
-      <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: left; font-weight: 600; color: #374151; text-transform: uppercase;">${escapeHtml(String(detail.category || "").toUpperCase())}</td>
-      <td style="padding: 10px; border-top: 1px solid #e5e7eb; text-align: center; color: var(--primary-900); font-weight: 700;">${escapeHtml(detail.average_score || detail.overall_rating || "0.00")}</td>
-      ${index === 0 ? feedbackCell : ""}
-    </tr>
-  `).join("");
+    return `
+      <tr>
+        <td class="category-name-cell">${escapeHtml(categoryName)}</td>
+        <td class="category-rating-cell">
+          <div class="category-score-cell">
+            <span class="score-text">${escapeHtml(scoreValue)} / 5.00</span>
+            <div class="score-bar"><div class="score-fill" style="width: ${scorePercent}%;"></div></div>
+          </div>
+        </td>
+        <td class="category-response-cell">${escapeHtml(responses)}</td>
+        <td class="category-status-cell"><span class="report-badge ${escapeHtml(ratingClass)}">${escapeHtml(ratingText)}</span></td>
+      </tr>
+    `;
+  }).join("");
 
   tbody.innerHTML = rowsHtml;
 }
@@ -2837,6 +2907,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function viewEvaluationDetails(facultyId) {
   console.log('View button clicked for faculty ID:', facultyId);
+
+  const modal = document.getElementById('facultyReportModal');
+  const detailsBody = document.getElementById("reportEvaluationDetailsBody");
+  const feedbackEl = document.getElementById("reportFeedbackText");
+  const statusElement = document.getElementById('reportOverallStatus');
+  const categoryCountEl = document.getElementById("reportCategoryCount");
+  const feedbackCountEl = document.getElementById("reportFeedbackCount");
+  const categoryListEl = document.getElementById("reportCategoryList");
+
+  if (detailsBody) {
+    detailsBody.innerHTML = '<tr><td colspan="4" class="empty-report-cell">Loading categories...</td></tr>';
+  }
+  if (feedbackEl) {
+    feedbackEl.innerHTML = '<div class="feedback-loading">Loading feedback...</div>';
+  }
+  if (statusElement) {
+    statusElement.textContent = '-';
+  }
+  if (categoryCountEl) categoryCountEl.textContent = '0 categories';
+  if (feedbackCountEl) feedbackCountEl.textContent = '0 comments';
+  if (categoryListEl) categoryListEl.innerHTML = '<span class="category-list-empty">Loading categories...</span>';
   
   fetch(`get_faculty_report.php?faculty_id=${facultyId}`)
     .then(r => r.json())
@@ -2850,16 +2941,23 @@ function viewEvaluationDetails(facultyId) {
         const idElement = document.getElementById('reportFacultyId');
         const ratingElement = document.getElementById('reportOverallRating');
         const responsesElement = document.getElementById('reportTotalResponses');
+        const periodElement = document.getElementById('reportEvaluationPeriod');
         
         if (nameElement) nameElement.textContent = data.data.name;
-        if (idElement) idElement.textContent = data.data.faculty_id;
-        if (ratingElement) ratingElement.textContent = data.data.overall_rating;
-        if (responsesElement) responsesElement.textContent = data.data.total_responses;
+        if (idElement) idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}`;
+        if (ratingElement) ratingElement.textContent = `${data.data.overall_rating || '0.00'}`;
+        if (responsesElement) responsesElement.textContent = data.data.total_responses || 0;
+        if (periodElement) periodElement.textContent = data.data.evaluation_period || 'All evaluation periods';
+        if (statusElement) {
+          const statusText = data.data.overall_status || data.data.rating || 'No Responses';
+          const statusClass = String(data.data.overall_status_class || statusText).toLowerCase().replace(/\s+/g, '-');
+          statusElement.innerHTML = `<span class="report-badge ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</span>`;
+        }
         
         renderEvaluationDetailsTable(data.data);
+        renderFeedbackComments(data.data);
         
         // Show modal
-        const modal = document.getElementById('facultyReportModal');
         console.log('Modal element found:', modal);
         if (modal) {
           modal.style.display = 'flex';
@@ -2984,6 +3082,8 @@ function downloadFacultyReportPDF() {
 }
 
 // ========================= Dashboard Statistics ======================================================================================================================================================
+window.topPerformanceState = { allRatings: [], sortedRatings: [], modalOpen: false };
+
 function loadDashboardStats() {
   console.log("Loading dashboard stats...");
   fetch("get_dashboard_stats.php?cb=" + Date.now(), { cache: "no-store" })
@@ -3086,7 +3186,14 @@ function loadDashboardStats() {
         }
 
         // Update Top 5 Faculty Performance bar chart
-        updateTopPerformanceChart(data.data.ratings || []);
+        window.topPerformanceState.allRatings = data.data.ratings || [];
+        window.topPerformanceState.sortedRatings = [...window.topPerformanceState.allRatings].sort((a, b) => Number(b.rating) - Number(a.rating));
+        updateTopPerformanceChart();
+        
+        // If detailed modal is open, refresh it to reflect latest ranks
+        if (window.topPerformanceState.modalOpen) {
+          populateTopPerformanceModal();
+        }
         
         // Update department graph (if canvas exists)
         updateDepartmentGraph(data.data.departments);
@@ -3135,24 +3242,17 @@ function updateDepartmentGraph(departments) {
   });
 }
 
-function updateTopPerformanceChart(ratings) {
+function updateTopPerformanceChart() {
   const canvas = document.getElementById("topPerformanceChart");
   if (!canvas) return;
   const wrapper = canvas.closest(".top-performance-chart-wrapper");
 
-  const topFive = (ratings || []).slice(0, 5);
+  const sorted = window.topPerformanceState.sortedRatings || [];
+  const chartSource = sorted.slice(0, 5);
 
   if (window.topPerformanceChartInstance) {
     window.topPerformanceChartInstance.destroy();
   }
-
-  const chartSource = topFive.length > 0 ? topFive : [
-    { name: "Prof. 1", rating: 4.8 },
-    { name: "Prof. 2", rating: 4.7 },
-    { name: "Prof. 3", rating: 4.6 },
-    { name: "Prof. 4", rating: 4.5 },
-    { name: "Prof. 5", rating: 4.4 }
-  ];
 
   const finalLabels = chartSource.map(item => item.name);
   const finalValues = chartSource.map(item => Number(item.rating) || 0);
@@ -3162,6 +3262,10 @@ function updateTopPerformanceChart(ratings) {
   }
   const chartCanvas = document.getElementById("topPerformanceChart");
   if (!chartCanvas) return;
+
+  chartCanvas.style.cursor = "pointer";
+  chartCanvas.title = "Click here to view all ranked faculties.";
+  chartCanvas.onclick = showAllFacultyPerformance;
 
   window.topPerformanceChartInstance = new Chart(chartCanvas, {
     type: "bar",
@@ -3196,6 +3300,71 @@ function updateTopPerformanceChart(ratings) {
           }
         }
       }
+    }
+  });
+}
+
+function showAllFacultyPerformance() {
+  window.topPerformanceState.modalOpen = true;
+  const modal = document.getElementById("topPerformanceModal");
+  if (!modal) return;
+  populateTopPerformanceModal();
+  modal.classList.add("show");
+}
+
+function populateTopPerformanceModal() {
+  const tableBody = document.getElementById("top-performance-modal-body");
+  const summaryText = document.getElementById("top-performance-modal-summary");
+  if (!tableBody || !summaryText) return;
+
+  const sorted = window.topPerformanceState.sortedRatings || [];
+  tableBody.innerHTML = "";
+
+  if (sorted.length === 0) {
+    const emptyRow = document.createElement("tr");
+    emptyRow.innerHTML = `<td colspan="3" style="text-align:center;padding:18px;color:#64748b;">No faculty ratings available.</td>`;
+    tableBody.appendChild(emptyRow);
+    summaryText.textContent = "No ranked faculty data available.";
+    return;
+  }
+
+  summaryText.textContent = `Showing ${sorted.length} ranked faculty members in descending order.`;
+
+  sorted.forEach((item, index) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${item.name}</td>
+      <td>${item.rating}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+function closeTopPerformanceModal() {
+  window.topPerformanceState.modalOpen = false;
+  const modal = document.getElementById("topPerformanceModal");
+  if (modal) modal.classList.remove("show");
+}
+
+// Initialize modal close button and background click
+function initializeTopPerformanceModal() {
+  const modal = document.getElementById("topPerformanceModal");
+  if (!modal) return;
+  
+  // Close button click
+  const closeBtn = modal.querySelector(".modal-close-btn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      closeTopPerformanceModal();
+    });
+  }
+  
+  // Close when clicking modal background (outside content)
+  modal.addEventListener("click", function(e) {
+    if (e.target === modal) {
+      closeTopPerformanceModal();
     }
   });
 }

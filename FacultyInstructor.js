@@ -21,6 +21,89 @@ function closePasswordForm(){
   document.body.classList.remove("modal-open");
   document.getElementById("passwordForm").classList.remove("show");}
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getOverallStatusLabel(score) {
+  const value = Number(score);
+  if (isNaN(value)) return 'No Status';
+  if (value >= 4.5) return 'Outstanding';
+  if (value >= 3.5) return 'Very Good';
+  if (value >= 2.5) return 'Good';
+  if (value >= 1.5) return 'Fair';
+  return 'Poor';
+}
+
+function getStatusBadgeClass(score) {
+  const value = Number(score);
+  if (isNaN(value)) return 'status-poor';
+  if (value >= 4.5) return 'status-outstanding';
+  if (value >= 3.5) return 'status-very-good';
+  if (value >= 2.5) return 'status-good';
+  if (value >= 1.5) return 'status-fair';
+  return 'status-poor';
+}
+
+function formatFeedbackForHtml(feedback) {
+  const text = String(feedback || 'No feedback available').trim() || 'No feedback available';
+  return escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+function renderFeedbackList(feedbackData) {
+  const items = Array.isArray(feedbackData)
+    ? feedbackData.filter(Boolean)
+    : String(feedbackData || '').split(/\n\s*\n/).filter(Boolean);
+
+  if (items.length === 0) {
+    return '<div class="feedback-item empty">No feedback available yet.</div>';
+  }
+
+  return items.slice(0, 6).map(item => `
+    <div class="feedback-item">
+      <p>${formatFeedbackForHtml(item)}</p>
+    </div>
+  `).join('');
+}
+
+function renderCategoryTotals(categoryTotals) {
+  if (!Array.isArray(categoryTotals) || categoryTotals.length === 0) {
+    return '<div class="category-empty">No category totals available yet.</div>';
+  }
+
+  return `
+    <div class="category-table-wrap">
+      <table class="category-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Average</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${categoryTotals.map(item => {
+            const avg = Number(item.avg_rating) || 0;
+            const statusLabel = getOverallStatusLabel(avg);
+            const statusClass = getStatusBadgeClass(avg).replace(/^status-/, '');
+            return `
+            <tr>
+              <td>${escapeHtml(item.category_name || 'Uncategorized')}</td>
+              <td>${escapeHtml(item.avg_rating || '0.00')} / 5.00</td>
+              <td><span class="report-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+            </tr>
+          `}).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function showProfile(){
   // Close dropdown first
   document.getElementById("dropdownMenu").style.display = "none";
@@ -274,40 +357,70 @@ function showEvaluationReport() {
   .then(response => response.json())
   .then(data => {
     // Always show the modal with back button
+    const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
+    const overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
+    const statusLabel = getOverallStatusLabel(overallRating);
+    const statusClass = getStatusBadgeClass(overallRating);
+    const feedbackHtml = renderFeedbackList(data.success ? (data.feedback_comments || data.feedback) : []);
+
     const reportContent = `
       <div class="report-content">
         <div class="report-header">
           <div class="header-left">
             <img src="logo.png" alt="College Logo" class="college-logo">
             <div class="college-info">
-              <h2>Granby Colleges of Science and Technology</h2>
-              <p class="report-subtitle">Faculty Evaluation Report</p>
+              <h2>Faculty Evaluation Report</h2>
+              <p class="report-subtitle">A summary of student feedback and performance indicators.</p>
             </div>
           </div>
           <button class="close-report-btn" onclick="closeEvaluationReport()">
             <i class="ph ph-x"></i>
           </button>
         </div>
-        
+
         <div class="report-body">
-          <div class="faculty-details">
-            <div class="detail-item">
-              <label>Name:</label>
-              <span>${facultyName || 'N/A'}</span>
+          <div class="report-context">
+            <p>This report aggregates student responses from <strong>${evaluationPeriod}</strong> and highlights your current teaching performance and feedback trends.</p>
+          </div>
+
+          <div class="report-summary-grid">
+            <div class="report-card">
+              <span class="report-card-label">Overall Rating</span>
+              <strong class="report-card-value">${overallRating} / 5.00</strong>
+              <span class="report-card-note">Average student rating</span>
             </div>
-            <div class="detail-item">
-              <label>Faculty ID:</label>
-              <span>${facultyId || 'N/A'}</span>
+            <div class="report-card report-card-large ${statusClass}">
+              <span class="report-card-label">Performance Status</span>
+              <strong class="report-card-value">${statusLabel}</strong>
+              <span class="report-card-note">Based on student ratings</span>
             </div>
-            <div class="detail-item">
-              <label>Overall Rating:</label>
-              <span>${data.success ? (data.overall_rating || '0.00') : '0.00'} / 5.00</span>
-            </div>
-            <div class="detail-item">
-              <label>Total Student Responses:</label>
-              <span>${data.success ? (data.total_responses || '0') : '0'}</span>
+            <div class="report-card">
+              <span class="report-card-label">Total Responses</span>
+              <strong class="report-card-value">${data.success ? (data.total_responses || '0') : '0'}</strong>
+              <span class="report-card-note">Responses received</span>
             </div>
           </div>
+
+          <div class="category-breakdown">
+            <div class="category-breakdown-header">
+              <div>
+                <h3>Category Total Rates</h3>
+                <p>Average score and response count for each evaluation category.</p>
+              </div>
+            </div>
+            ${renderCategoryTotals(data.success ? (data.category_totals || []) : [])}
+          </div>
+
+          <div class="feedback-section">
+            <div class="feedback-heading">
+              <h3>Student Feedback</h3>
+              <span class="feedback-summary">Latest comments are shown below.</span>
+            </div>
+            <div class="feedback-list">
+              ${feedbackHtml}
+            </div>
+          </div>
+
           <div class="report-footer">
             <button class="download-pdf-btn" onclick="downloadEvaluationReport()">
               <i class="ph ph-download"></i> Download PDF
@@ -320,12 +433,15 @@ function showEvaluationReport() {
     reportModal.innerHTML = reportContent;
     reportModal.style.display = "flex";
     
-    // Add click outside to close functionality
-    reportModal.addEventListener('click', function(event) {
-      if (event.target === reportModal) {
-        closeEvaluationReport();
-      }
-    });
+    // Add click outside to close functionality once
+    if (!reportModal.dataset.listenerAttached) {
+      reportModal.addEventListener('click', function(event) {
+        if (event.target === reportModal) {
+          closeEvaluationReport();
+        }
+      });
+      reportModal.dataset.listenerAttached = 'true';
+    }
     
     // Store data for PDF download
     reportModal.dataset.facultyName = facultyName || 'N/A';
@@ -333,6 +449,8 @@ function showEvaluationReport() {
     reportModal.dataset.totalResponses = data.success ? (data.total_responses || 0) : 0;
     reportModal.dataset.overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
     reportModal.dataset.feedback = data.success ? (data.feedback || 'No feedback available') : 'No feedback available';
+    reportModal.dataset.feedbackComments = JSON.stringify(data.success ? (data.feedback_comments || []) : []);
+    reportModal.dataset.evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
   })
   .catch(error => {
     console.error("Error fetching evaluation report:", error);

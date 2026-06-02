@@ -282,6 +282,29 @@ include 'totalstudents_dashcount.php';
         <div class="top-performance-chart-wrapper">
           <canvas id="topPerformanceChart" height="220"></canvas>
         </div>
+        <div class="top-performance-hint">Showing the top 5 ranked faculties. Click the chart to view the full ranking.</div>
+      </div>
+    </div>
+
+    <div id="topPerformanceModal" class="performance-modal">
+      <div class="performance-modal-content">
+        <div class="performance-modal-header">
+          <h3>All Faculty Performance Rankings</h3>
+          <button class="modal-close-btn" type="button" id="closeTopPerformanceModal" onclick="closeTopPerformanceModal()">×</button>
+        </div>
+        <p id="top-performance-modal-summary" class="performance-modal-summary"></p>
+        <div class="performance-modal-table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Faculty</th>
+                <th>Rating</th>
+              </tr>
+            </thead>
+            <tbody id="top-performance-modal-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1379,61 +1402,87 @@ include 'totalstudents_dashcount.php';
 
 <!-- Faculty Report Modal -->
 <div id="facultyReportModal" class="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-  <div class="modal-content" style="max-width:500px;">
-    <div class="modal-header" style="background: var(--primary-900); color: white;">
-      <h3 style="margin: 0; color: white;">Evaluation Details</h3>
-      <span class="close-btn" onclick="closeFacultyReportModal()" style="color: white;">&times;</span>
+  <div class="modal-content report-modal-content">
+    <div class="modal-header report-modal-header">
+      <h3>Evaluation Details</h3>
+      <span class="close-btn" onclick="closeFacultyReportModal()">&times;</span>
     </div>
-    <div class="modal-body" style="background: white; padding: 20px; max-height: 78vh; overflow-y: auto;">
-      <!-- Faculty Info Header -->
-      <div class="faculty-info-header" style="display: flex; align-items: center; margin-bottom: 15px; padding: 12px; background: #2c5282; border-radius: 6px; color: white;">
-        <div class="faculty-avatar" style="width: 35px; height: 35px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-          <i class="ph ph-user" style="font-size: 18px; color: var(--primary-900);"></i>
+    <div class="modal-body report-modal-body">
+      <div class="faculty-info-header">
+        <div class="faculty-avatar">
+          <i class="ph ph-user"></i>
         </div>
-        <div class="faculty-details" style="flex: 1;">
-          <h4 id="reportFacultyName" style="margin: 0; font-size: 16px; font-weight: 600; color: white;">Loading...</h4>
-          <p id="reportFacultyId" style="margin: 2px 0 0 0; opacity: 0.9; font-size: 11px; color: white;">ID: Loading...</p>
+        <div class="faculty-details">
+          <h4 id="reportFacultyName">Loading...</h4>
+          <p id="reportFacultyId">ID: Loading...</p>
+          <p id="reportEvaluationPeriod" class="faculty-meta">All evaluation periods</p>
         </div>
-        <button class="download-pdf-btn" onclick="downloadFacultyReportPDF()" style="background: white; color: var(--primary-900); border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 11px;">
-          <i class="ph ph-download-simple"></i> PDF
+        <button class="download-pdf-btn" onclick="downloadFacultyReportPDF()">
+          <i class="ph ph-download-simple"></i> Download PDF
         </button>
       </div>
 
-      <!-- Stats Cards -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <!-- Overall Rating Card -->
-        <div class="stat-card" style="background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <div style="font-size: 11px; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Overall Rating</div>
-          <div id="reportOverallRating" style="font-size: 24px; font-weight: 700; margin-bottom: 2px; color: var(--primary-900);">-</div>
-          <div style="font-size: 10px; color: #9ca3af;">out of 5.0</div>
+      <div class="details-summary-grid">
+        <div class="report-card">
+          <span class="report-card-label">Overall Rating</span>
+          <strong id="reportOverallRating" class="report-card-value">-</strong>
+          <span class="report-card-note">out of 5.0</span>
         </div>
-
-        <!-- Total Responses Card -->
-        <div class="stat-card" style="background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <div style="font-size: 11px; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total Responses</div>
-          <div id="reportTotalResponses" style="font-size: 24px; font-weight: 700; margin-bottom: 2px; color: var(--primary-900);">-</div>
-          <div style="font-size: 10px; color: #9ca3af;">evaluation responses</div>
+        <div class="report-card">
+          <span class="report-card-label">Total Responses</span>
+          <strong id="reportTotalResponses" class="report-card-value">-</strong>
+          <span class="report-card-note">evaluation responses</span>
+        </div>
+        <div class="report-card status-card">
+          <span class="report-card-label">Report Status</span>
+          <strong id="reportOverallStatus" class="report-card-value">-</strong>
+          <span class="report-card-note">performance indicator</span>
         </div>
       </div>
 
-      <div class="evaluation-details-table-wrap" style="margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-        <table class="evaluation-details-table" style="width: 100%; border-collapse: collapse; background: white;">
+      <div class="report-section-title">
+        <div>
+          <h4>All Categories</h4>
+          <p>Ratings are grouped by every evaluation category in the system.</p>
+        </div>
+        <span id="reportCategoryCount" class="section-count">0 categories</span>
+      </div>
+
+      <div id="reportCategoryList" class="category-list">
+        <span class="category-list-empty">Loading categories...</span>
+      </div>
+
+      <div class="evaluation-details-table-wrap">
+        <table class="evaluation-details-table">
           <thead>
-            <tr style="background: var(--primary-900); color: white;">
-              <th style="padding: 10px; text-align: left; font-size: 12px; color: white !important;">Category</th>
-              <th style="padding: 10px; text-align: center; font-size: 12px; width: 130px; color: white !important;">Overall Rating</th>
-              <th style="padding: 10px; text-align: left; font-size: 12px; color: white !important;">All Feedback</th>
+            <tr>
+              <th>Category</th>
+              <th>Overall Rating</th>
+              <th>Responses</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody id="reportEvaluationDetailsBody">
             <tr>
-              <td colspan="3" style="padding: 14px; text-align: center; color: #6b7280;">Loading...</td>
+              <td colspan="4" style="padding: 14px; text-align: center; color: #6b7280;">Loading...</td>
             </tr>
           </tbody>
         </table>
       </div>
 
+      <div class="feedback-section">
+        <div class="report-section-title compact">
+          <div>
+            <h4>Student Feedback</h4>
+            <p>Comments submitted by students for this faculty.</p>
+          </div>
+          <span id="reportFeedbackCount" class="section-count">0 comments</span>
+        </div>
+        <div id="reportFeedbackText" class="feedback-list">
+          <div class="feedback-loading">Loading feedback...</div>
+        </div>
       </div>
+    </div>
   </div>
 </div>
 

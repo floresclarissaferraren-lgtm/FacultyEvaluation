@@ -48,6 +48,7 @@ try {
     $evaluated_faculty = $overall_rating_row ? (int)$overall_rating_row['evaluated_faculty'] : 0;
     
     // Get faculty ratings for dashboard
+    // Return all evaluated faculty so the chart can switch between top 5 and all performance data.
     $ratings_query = "
         SELECT 
             f.firstname,
@@ -56,11 +57,10 @@ try {
             AVG(e.overall_rating) as avg_rating,
             COUNT(e.id) as response_count
         FROM add_faculties f
-        LEFT JOIN evaluations e ON f.faculty_id = e.faculty_id
+        LEFT JOIN evaluations e ON f.id = e.faculty_id
         GROUP BY f.id, f.firstname, f.lastname, f.suffix
         HAVING AVG(e.overall_rating) IS NOT NULL
         ORDER BY avg_rating DESC
-        LIMIT 5
     ";
     $ratings_result = $conn->query($ratings_query);
     
@@ -94,6 +94,37 @@ try {
         ];
     }
     
+    // Get rating distribution
+    $rating_dist_query = "
+        SELECT 
+            CASE 
+                WHEN overall_rating >= 4.5 THEN 'Excellent'
+                WHEN overall_rating >= 3.5 THEN 'Very Good'
+                WHEN overall_rating >= 2.5 THEN 'Good'
+                WHEN overall_rating >= 1.5 THEN 'Fair'
+                ELSE 'Poor'
+            END as rating_category,
+            COUNT(*) as count
+        FROM evaluations
+        WHERE overall_rating IS NOT NULL
+        GROUP BY rating_category
+        ORDER BY 
+            FIELD(rating_category, 'Excellent', 'Very Good', 'Good', 'Fair', 'Poor')
+    ";
+    $rating_dist_result = $conn->query($rating_dist_query);
+    
+    $ratingDistribution = [
+        'Excellent' => 0,
+        'Very Good' => 0,
+        'Good' => 0,
+        'Fair' => 0,
+        'Poor' => 0
+    ];
+    
+    while ($row = $rating_dist_result->fetch_assoc()) {
+        $ratingDistribution[$row['rating_category']] = (int)$row['count'];
+    }
+    
     echo json_encode([
         'success' => true,
         'data' => [
@@ -104,7 +135,8 @@ try {
             'overallRating' => $overall_rating,
             'evaluatedFaculty' => $evaluated_faculty,
             'ratings' => $ratings,
-            'departments' => $departments
+            'departments' => $departments,
+            'ratingDistribution' => $ratingDistribution
         ]
     ]);
     
