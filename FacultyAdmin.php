@@ -277,12 +277,12 @@ include 'totalstudents_dashcount.php';
     <div class="dashboard-card top-performance">
       <div class="dashboard-content">
         <div class="rating-header">
-          <h3>Top 5 Faculty Performance</h3>
+          <h3>Top Faculty Rankings</h3>
         </div>
         <div class="top-performance-chart-wrapper">
-          <canvas id="topPerformanceChart" height="220"></canvas>
+          <div id="topPerformanceChart" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all faculty performance rankings"></div>
         </div>
-        <div class="top-performance-hint">Showing the top 5 ranked faculties. Click the chart to view the full ranking.</div>
+        <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
       </div>
     </div>
 
@@ -299,7 +299,7 @@ include 'totalstudents_dashcount.php';
               <tr>
                 <th>#</th>
                 <th>Faculty</th>
-                <th>Rating</th>
+                <th>Percentage</th>
               </tr>
             </thead>
             <tbody id="top-performance-modal-body"></tbody>
@@ -1427,6 +1427,10 @@ include 'totalstudents_dashcount.php';
           <span class="report-card-label">Overall Rating</span>
           <strong id="reportOverallRating" class="report-card-value">-</strong>
           <span class="report-card-note">out of 5.0</span>
+          <span id="reportOverallPercentage" class="report-card-percent">0%</span>
+          <div class="report-card-progress" aria-hidden="true">
+            <div id="reportOverallProgressFill" class="report-card-progress-fill"></div>
+          </div>
         </div>
         <div class="report-card">
           <span class="report-card-label">Total Responses</span>
@@ -1442,8 +1446,8 @@ include 'totalstudents_dashcount.php';
 
       <div class="report-section-title">
         <div>
-          <h4>All Categories</h4>
-          <p>Ratings are grouped by every evaluation category in the system.</p>
+          <h4>Evaluation Categories</h4>
+          <p>Category scores shown as percentage progress.</p>
         </div>
         <span id="reportCategoryCount" class="section-count">0 categories</span>
       </div>

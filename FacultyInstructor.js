@@ -50,6 +50,16 @@ function getStatusBadgeClass(score) {
   return 'status-poor';
 }
 
+function getRatingPercentageValue(score) {
+  const value = Number(score);
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, value * 20));
+}
+
+function formatRatingPercentage(score) {
+  return `${getRatingPercentageValue(score).toFixed(0)}%`;
+}
+
 function formatFeedbackForHtml(feedback) {
   const text = String(feedback || 'No feedback available').trim() || 'No feedback available';
   return escapeHtml(text).replace(/\n/g, '<br>');
@@ -82,6 +92,7 @@ function renderCategoryTotals(categoryTotals) {
         <thead>
           <tr>
             <th>Category</th>
+            <th>Percentage</th>
             <th>Average</th>
             <th>Status</th>
           </tr>
@@ -89,11 +100,21 @@ function renderCategoryTotals(categoryTotals) {
         <tbody>
           ${categoryTotals.map(item => {
             const avg = Number(item.avg_rating) || 0;
+            const percent = getRatingPercentageValue(avg);
+            const percentText = formatRatingPercentage(avg);
             const statusLabel = getOverallStatusLabel(avg);
             const statusClass = getStatusBadgeClass(avg).replace(/^status-/, '');
             return `
             <tr>
               <td>${escapeHtml(item.category_name || 'Uncategorized')}</td>
+              <td>
+                <div class="category-percent-cell">
+                  <span>${percentText}</span>
+                  <div class="category-percent-track">
+                    <div class="category-percent-fill ${statusClass}" style="width: ${percent}%;"></div>
+                  </div>
+                </div>
+              </td>
               <td>${escapeHtml(item.avg_rating || '0.00')} / 5.00</td>
               <td><span class="report-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
             </tr>
@@ -359,6 +380,8 @@ function showEvaluationReport() {
     // Always show the modal with back button
     const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
     const overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
+    const overallPercent = getRatingPercentageValue(overallRating);
+    const overallPercentText = formatRatingPercentage(overallRating);
     const statusLabel = getOverallStatusLabel(overallRating);
     const statusClass = getStatusBadgeClass(overallRating);
     const feedbackHtml = renderFeedbackList(data.success ? (data.feedback_comments || data.feedback) : []);
@@ -387,6 +410,10 @@ function showEvaluationReport() {
             <div class="report-card">
               <span class="report-card-label">Overall Rating</span>
               <strong class="report-card-value">${overallRating} / 5.00</strong>
+              <span class="report-card-percent">${overallPercentText}</span>
+              <div class="report-card-progress" aria-label="Overall rating ${overallPercentText}">
+                <div class="report-card-progress-fill" style="width: ${overallPercent}%;"></div>
+              </div>
               <span class="report-card-note">Average student rating</span>
             </div>
             <div class="report-card report-card-large ${statusClass}">
@@ -405,7 +432,7 @@ function showEvaluationReport() {
             <div class="category-breakdown-header">
               <div>
                 <h3>Category Total Rates</h3>
-                <p>Average score and response count for each evaluation category.</p>
+                <p>Percentage and average score for each evaluation category.</p>
               </div>
             </div>
             ${renderCategoryTotals(data.success ? (data.category_totals || []) : [])}

@@ -2839,14 +2839,19 @@ function renderEvaluationDetailsTable(reportData) {
           const categoryName = detail.category || detail.category_name || "Uncategorized";
           const rawScore = parseFloat(detail.average_score ?? detail.overall_rating ?? detail.score ?? 0);
           const scoreValue = Number.isFinite(rawScore) ? rawScore.toFixed(2) : String(detail.average_score ?? detail.overall_rating ?? "0.00");
+          const scorePercent = Number.isFinite(rawScore) ? Math.min(100, Math.max(0, rawScore * 20)) : 0;
+          const percentText = `${scorePercent.toFixed(0)}%`;
           const ratingText = detail.rating || detail.status || "N/A";
           const ratingClass = String((detail.rating_class || ratingText || "poor")).toLowerCase().replace(/\s+/g, "-");
           return `
-            <span class="category-pill ${escapeHtml(ratingClass)}">
-              <span class="category-pill-name">${escapeHtml(categoryName)}</span>
-              <span class="category-pill-rating">${escapeHtml(scoreValue)} / 5.00</span>
-              <span class="category-pill-status">${escapeHtml(ratingText)}</span>
-            </span>
+            <div class="category-pill ${escapeHtml(ratingClass)}">
+              <div class="category-pill-name">${escapeHtml(categoryName)}</div>
+              <div class="category-pill-meter" aria-label="${escapeHtml(categoryName)} ${percentText}">
+                <div class="category-pill-fill" style="width: ${scorePercent}%;"></div>
+              </div>
+              <div class="category-pill-percent">${percentText}</div>
+              <div class="category-pill-rating">${escapeHtml(scoreValue)} / 5.00</div>
+            </div>
           `;
         }).join("")
       : '<span class="category-list-empty">No categories available</span>';
@@ -2912,6 +2917,8 @@ function viewEvaluationDetails(facultyId) {
   const detailsBody = document.getElementById("reportEvaluationDetailsBody");
   const feedbackEl = document.getElementById("reportFeedbackText");
   const statusElement = document.getElementById('reportOverallStatus');
+  const overallPercentElement = document.getElementById('reportOverallPercentage');
+  const overallProgressFill = document.getElementById('reportOverallProgressFill');
   const categoryCountEl = document.getElementById("reportCategoryCount");
   const feedbackCountEl = document.getElementById("reportFeedbackCount");
   const categoryListEl = document.getElementById("reportCategoryList");
@@ -2925,6 +2932,8 @@ function viewEvaluationDetails(facultyId) {
   if (statusElement) {
     statusElement.textContent = '-';
   }
+  if (overallPercentElement) overallPercentElement.textContent = '0%';
+  if (overallProgressFill) overallProgressFill.style.width = '0%';
   if (categoryCountEl) categoryCountEl.textContent = '0 categories';
   if (feedbackCountEl) feedbackCountEl.textContent = '0 comments';
   if (categoryListEl) categoryListEl.innerHTML = '<span class="category-list-empty">Loading categories...</span>';
@@ -2940,12 +2949,18 @@ function viewEvaluationDetails(facultyId) {
         const nameElement = document.getElementById('reportFacultyName');
         const idElement = document.getElementById('reportFacultyId');
         const ratingElement = document.getElementById('reportOverallRating');
+        const overallPercentElement = document.getElementById('reportOverallPercentage');
+        const overallProgressFill = document.getElementById('reportOverallProgressFill');
         const responsesElement = document.getElementById('reportTotalResponses');
         const periodElement = document.getElementById('reportEvaluationPeriod');
+        const overallScore = parseFloat(data.data.overall_rating || 0);
+        const overallPercent = Number.isFinite(overallScore) ? Math.min(100, Math.max(0, overallScore * 20)) : 0;
         
         if (nameElement) nameElement.textContent = data.data.name;
         if (idElement) idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}`;
         if (ratingElement) ratingElement.textContent = `${data.data.overall_rating || '0.00'}`;
+        if (overallPercentElement) overallPercentElement.textContent = `${overallPercent.toFixed(0)}%`;
+        if (overallProgressFill) overallProgressFill.style.width = `${overallPercent}%`;
         if (responsesElement) responsesElement.textContent = data.data.total_responses || 0;
         if (periodElement) periodElement.textContent = data.data.evaluation_period || 'All evaluation periods';
         if (statusElement) {
@@ -3164,7 +3179,7 @@ function loadDashboardStats() {
             const row = document.createElement("tr");
             row.innerHTML = `
               <td>${rating.name}</td>
-              <td>${rating.rating}</td>
+              <td>${formatRatingPercentage(rating.rating)}</td>
             `;
             ratingsBody.appendChild(row);
           });
@@ -3179,7 +3194,7 @@ function loadDashboardStats() {
             row.innerHTML = `
               <td>${index + 1}</td>
               <td>${rating.name}</td>
-              <td>${rating.rating}</td>
+              <td>${formatRatingPercentage(rating.rating)}</td>
             `;
             rankingBody.appendChild(row);
           });
@@ -3242,66 +3257,78 @@ function updateDepartmentGraph(departments) {
   });
 }
 
+function getRatingPercentageValue(rating) {
+  const numericRating = Number(rating);
+  if (!Number.isFinite(numericRating)) return 0;
+  return Math.max(0, Math.min(100, (numericRating / 5) * 100));
+}
+
+function formatRatingPercentage(rating) {
+  const percentage = getRatingPercentageValue(rating);
+  return `${percentage.toFixed(0)}%`;
+}
+
+function getFacultyInitial(name) {
+  const cleanName = String(name || "").trim();
+  const match = cleanName.match(/[A-Za-z0-9]/);
+  return match ? match[0].toUpperCase() : "?";
+}
+
 function updateTopPerformanceChart() {
-  const canvas = document.getElementById("topPerformanceChart");
-  if (!canvas) return;
-  const wrapper = canvas.closest(".top-performance-chart-wrapper");
+  const progressList = document.getElementById("topPerformanceChart");
+  if (!progressList) return;
+  const wrapper = progressList.closest(".top-performance-chart-wrapper");
 
   const sorted = window.topPerformanceState.sortedRatings || [];
   const chartSource = sorted.slice(0, 5);
 
   if (window.topPerformanceChartInstance) {
     window.topPerformanceChartInstance.destroy();
+    window.topPerformanceChartInstance = null;
   }
-
-  const finalLabels = chartSource.map(item => item.name);
-  const finalValues = chartSource.map(item => Number(item.rating) || 0);
 
   if (wrapper && !wrapper.querySelector("#topPerformanceChart")) {
-    wrapper.innerHTML = '<canvas id="topPerformanceChart" height="220"></canvas>';
+    wrapper.innerHTML = '<div id="topPerformanceChart" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all faculty performance rankings"></div>';
   }
-  const chartCanvas = document.getElementById("topPerformanceChart");
-  if (!chartCanvas) return;
 
-  chartCanvas.style.cursor = "pointer";
-  chartCanvas.title = "Click here to view all ranked faculties.";
-  chartCanvas.onclick = showAllFacultyPerformance;
+  const currentProgressList = document.getElementById("topPerformanceChart");
+  if (!currentProgressList) return;
 
-  window.topPerformanceChartInstance = new Chart(chartCanvas, {
-    type: "bar",
-    data: {
-      labels: finalLabels,
-      datasets: [{
-        label: "Average Rating",
-        data: finalValues,
-        backgroundColor: "#0ea5e9",
-        borderColor: "#0284c7",
-        borderWidth: 1,
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          min: 0,
-          max: 5,
-          ticks: { stepSize: 1 }
-        },
-        x: {
-          ticks: {
-            maxRotation: 30,
-            minRotation: 0
-          }
-        }
-      }
+  currentProgressList.title = "Click here to view all ranked faculties.";
+  currentProgressList.onclick = showAllFacultyPerformance;
+  currentProgressList.onkeydown = function(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      showAllFacultyPerformance();
     }
-  });
+  };
+
+  if (chartSource.length === 0) {
+    currentProgressList.innerHTML = '<div class="top-performance-empty">No faculty ratings available.</div>';
+    return;
+  }
+
+  currentProgressList.innerHTML = chartSource.map((item, index) => {
+    const percentage = getRatingPercentageValue(item.rating);
+    const displayPercentage = `${percentage.toFixed(0)}%`;
+    const facultyName = item.name || "Unknown Faculty";
+    const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
+    return `
+      <div class="top-performance-progress-item">
+        <div class="top-performance-rank">${index + 1}.</div>
+        <div class="top-performance-avatar" aria-hidden="true">${escapeHtml(getFacultyInitial(facultyName))}</div>
+        <div class="top-performance-main">
+          <div class="top-performance-progress-meta">
+            <span class="top-performance-name">${escapeHtml(facultyName)}</span>
+            <span class="top-performance-percent"><i class="ph ph-star"></i>${displayPercentage}</span>
+          </div>
+          <div class="top-performance-progress-track" aria-label="${escapeHtml(facultyName)} performance ${displayPercentage}">
+            <div class="top-performance-progress-fill ${progressColorClass}" style="width: ${percentage}%;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function showAllFacultyPerformance() {
@@ -3335,7 +3362,7 @@ function populateTopPerformanceModal() {
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${item.name}</td>
-      <td>${item.rating}</td>
+      <td>${formatRatingPercentage(item.rating)}</td>
     `;
     tableBody.appendChild(row);
   });
