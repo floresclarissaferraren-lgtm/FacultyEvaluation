@@ -814,12 +814,11 @@ main.full {
 }
 
 .icon-box {
-  animation: pulse 2s ease-in-out infinite
+  /* pulse animation removed for clean look */
 }
 
 .dashboard-card:hover .icon-box {
-  animation: none;
-  transform: scale(1.1) rotate(5deg)
+  transform: translateY(-50%) scale(1.05)
 }
 
 .dashboard-value {
@@ -1253,31 +1252,47 @@ main.full {
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 20px;
+  padding-top: 12px;
 }
 
-/* Base card */
+/* Base card — folder shape */
 .dashboard-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 22px 20px;
-  box-shadow: 0 1px 3px rgba(65, 105, 225, .06), 0 4px 16px rgba(65, 105, 225, .07);
-  border: 1px solid #e8eef8;
-  transition: box-shadow .22s, transform .22s;
+  background: #ffffff;
+  border-radius: 2px 8px 8px 8px;
+  padding: 18px 22px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #e5e7eb;
+  transition: border-color .2s ease, box-shadow .2s ease;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   opacity: 0;
   transform: translateY(20px);
   animation: slideInFadeUp .5s cubic-bezier(.4, 0, .2, 1) forwards;
 }
 
-.dashboard-card::before,
+/* Folder tab */
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: -1px;
+  width: 38px;
+  height: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  z-index: 1;
+}
+
 .dashboard-card::after {
   display: none;
 }
 
 .dashboard-card:hover {
-  box-shadow: 0 4px 24px rgba(65, 105, 225, .14);
-  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 }
 
 /* Stat card content layout */
@@ -1287,67 +1302,103 @@ main.full {
   flex-direction: column;
   justify-content: center;
   height: 100%;
-  padding-right: 3.8rem;
+  padding-right: 2.4rem;
 }
 
 .dashboard-card h3 {
-  font-size: .78rem;
-  font-weight: 600;
-  color: #94a3b8;
-  letter-spacing: .5px;
+  font-size: .75rem;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: .4px;
   text-transform: uppercase;
-  margin: 0 0 8px;
+  margin: 0 0 2px;
 }
 
 .dashboard-value {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #1e293b;
   line-height: 1;
-  margin: 0 0 6px;
+  margin: 0 0 2px;
   font-family: var(--font-sans);
   animation: slideInFadeUp .5s cubic-bezier(.4, 0, .2, 1) .3s both;
 }
 
 .dashboard-card:hover .dashboard-value {
-  color: #4169e1;
+  color: #1e293b;
 }
 
 .dashboard-card span {
-  font-size: .75rem;
+  font-size: .7rem;
   color: #94a3b8;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* Icon box */
 .icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
   transition: transform .2s;
-  animation: pulse 2.5s ease-in-out infinite;
 }
 
 .icon-box i {
-  font-size: 1.5rem;
+  font-size: .85rem;
   color: #fff;
 }
 
 .dashboard-card:hover .icon-box {
-  animation: none;
-  transform: scale(1.1) rotate(4deg);
+  transform: translateY(-50%) scale(1.05);
 }
 
-.dashboard-card.faculty .icon-box      { background: linear-gradient(135deg, #4169e1, #3558c8); }
-.dashboard-card.students .icon-box     { background: linear-gradient(135deg, #10b981, #059669); }
-.dashboard-card.evaluations .icon-box  { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.dashboard-card.overall-ratings .icon-box { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.dashboard-card.faculty .icon-box      { background: #4169e1; }
+.dashboard-card.students .icon-box     { background: #10b981; }
+.dashboard-card.evaluations .icon-box  { background: #8b5cf6; }
+.dashboard-card.overall-ratings .icon-box { background: #f59e0b; }
+
+/* Per-card accent: left border + folder tab + subtle bg tint */
+.dashboard-card.faculty {
+  border-left-color: #4169e1;
+  background: rgba(65, 105, 225, 0.03);
+}
+.dashboard-card.faculty::before {
+  background: #4169e1;
+  border-color: #4169e1;
+}
+
+.dashboard-card.students {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.03);
+}
+.dashboard-card.students::before {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.dashboard-card.evaluations {
+  border-left-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.03);
+}
+.dashboard-card.evaluations::before {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+}
+
+.dashboard-card.overall-ratings {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.03);
+}
+.dashboard-card.overall-ratings::before {
+  background: #f59e0b;
+  border-color: #f59e0b;
+}
 
 /* Row 2 & 3 layout */
 .dashboard-row-2,
@@ -1369,7 +1420,14 @@ main.full {
   width: 100%;
 }
 
-/* Row 2 cards */
+/* Row 2+ cards — no folder tab, keep rounded */
+.dashboard-card.rating-distribution::before,
+.dashboard-card.top-performance::before,
+.dashboard-card.period::before,
+.dashboard-card.evaluation-progress::before {
+  display: none;
+}
+
 .dashboard-card.rating-distribution,
 .dashboard-card.top-performance,
 .dashboard-card.period,
@@ -1819,7 +1877,7 @@ main.full {
 }
 
 .performance-modal-table-wrapper th {
-  text-align: left;
+  text-align: center;
   font-size: .78rem;
   font-weight: 700;
   color: #94a3b8;
@@ -1831,6 +1889,7 @@ main.full {
 }
 
 .performance-modal-table-wrapper td {
+  text-align: center;
   color: #1e293b;
   font-size: .875rem;
 }
@@ -2326,12 +2385,14 @@ table.evaluation-table .view-btn {
   width: 150px;
   min-height: 44px;
   padding: var(--spacing-sm) var(--spacing-lg);
-  border: 1px solid #fecaca;
+  border: 1px solid #e2e8f0;
   background: #fff;
-  color: #dc2626;
-  border-radius: 8px;
-  font-weight: 800;
-  box-shadow: var(--shadow-sm);
+  color: #475569;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
 }
 
 #faculties-section .header-actions {
@@ -2348,15 +2409,14 @@ table.evaluation-table .view-btn {
 }
 
 .show-archived-faculty-btn:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .archived-faculty-section {
   background: #fff;
-  border: 1px solid var(--neutral-200);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -2365,37 +2425,112 @@ table.evaluation-table .view-btn {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--neutral-200);
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .archived-faculty-header h3 {
-  margin: 0 0 4px;
-  color: var(--primary-900);
-  font-size: 1.05rem;
+  margin: 0 0 2px;
+  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .archived-faculty-header span {
-  color: var(--neutral-500);
-  font-size: .86rem;
-  font-weight: 600;
+  color: #94a3b8;
+  font-size: .8125rem;
+  font-weight: 400;
 }
 
 .back-to-faculty-btn {
-  height: 40px;
+  height: 36px;
   padding: 0 14px;
-  border: 1px solid var(--neutral-200);
+  border: 1px solid #e2e8f0;
   background: #fff;
-  color: var(--primary-800);
-  border-radius: 8px;
-  font-weight: 800;
+  color: #475569;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  transition: background-color .15s ease, border-color .15s ease;
 }
 
 .back-to-faculty-btn:hover {
-  background: var(--primary-50);
-  border-color: var(--primary-200);
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Archived Faculties Table */
+.archived-faculties-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.archived-faculties-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.archived-faculties-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.archived-faculties-table tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+.archived-faculties-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.archived-faculties-table .subject-count-badge {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  box-shadow: none;
+}
+
+.archived-faculties-table .inline-status {
+  font-weight: 500;
+  font-size: .8125rem;
+  color: #64748b;
+}
+
+.archived-faculties-table .inline-status .status-dot {
+  width: 7px;
+  height: 7px;
+  box-shadow: none;
+}
+
+.archived-faculties-table td strong {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.archived-faculties-table td small {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.archived-faculties-table td div[style] {
+  color: #1e293b;
 }
 
 .action-cell .view-btn i,
@@ -2482,8 +2617,8 @@ table.evaluation-table .view-btn i {
 }
 
 .inline-status.archived .status-dot {
-  background: #64748b;
-  box-shadow: 0 0 0 3px rgba(100, 116, 139, .18);
+  background: #94a3b8;
+  box-shadow: none;
 }
 
 .status-action-menu {
@@ -5019,7 +5154,7 @@ div#report-section .evaluation-table .badge.na {
 
   .dashboard-card {
     min-width: 11.25rem;
-    padding: var(--spacing-lg);
+    padding: 10px 16px;
   }
 
   .dashboard-value {
@@ -6344,7 +6479,7 @@ main {
 .subject-card:hover,
 #viewStudentSubjectsModal .subject-card:hover {
   transform: none;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 }
 
 .search-wrapper,
@@ -8517,4 +8652,97 @@ main {
   padding: 0 8px !important;
   border-radius: 6px !important;
   margin: 0 1px !important;
+}
+
+/* Archive Confirmation Modal */
+.archive-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 10005;
+  justify-content: center;
+  align-items: center;
+}
+
+.archive-modal-overlay.show {
+  display: flex;
+}
+
+.archive-modal-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  border: 1px solid #e2e8f0;
+}
+
+.archive-modal-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 22px;
+}
+
+.archive-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+
+.archive-modal-message {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.archive-modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.archive-btn-cancel {
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+
+.archive-btn-cancel:hover {
+  background: #f8fafc;
+}
+
+.archive-btn-confirm {
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: 1px solid #d97706;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+
+.archive-btn-confirm:hover {
+  background: #d97706;
 }

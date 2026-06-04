@@ -440,6 +440,49 @@ const modal=document.getElementById("deleteModal");
 modal.querySelector(".cancel-btn").onclick=closeDeleteModal;
 modal.querySelector(".submit-btn").onclick=confirmDelete;
 
+// ===================== Archive Confirmation Modal ==========================================================
+let _archivePending = null; // stores { row, faculty, statusMenu }
+
+function openArchiveModal(row, faculty, statusMenu) {
+  _archivePending = { row, faculty, statusMenu };
+  const overlay = document.getElementById("archiveModal");
+  overlay.classList.add("show");
+}
+
+function closeArchiveModal() {
+  const overlay = document.getElementById("archiveModal");
+  overlay.classList.remove("show");
+  _archivePending = null;
+}
+
+document.getElementById("archiveConfirmBtn").addEventListener("click", async () => {
+  if (!_archivePending) return;
+  const { row, faculty: f, statusMenu } = _archivePending;
+  closeArchiveModal();
+  try {
+    const result = await updateStatus("faculty", f.id, "archived");
+    if (result.success) {
+      row.dataset.status = "archived";
+      row.querySelector("td:nth-child(5)").innerHTML = statusPillHtml("archived");
+      statusMenu.querySelectorAll(".status-option").forEach(btn => btn.classList.remove("selected"));
+      closeStatusMenus();
+      showNotification("Faculty archived successfully", "#4caf50");
+      refreshSectionStats();
+      loadFaculty();
+    } else {
+      showNotification("Failed to archive faculty: " + (result.message || "Unknown error"), "#f44336");
+    }
+  } catch (error) {
+    console.error("Archive faculty error:", error);
+    showNotification("Error archiving faculty", "#f44336");
+  }
+});
+
+// Click outside archive modal box to close
+document.getElementById("archiveModal").addEventListener("click", (e) => {
+  if (e.target.classList.contains("archive-modal-overlay")) closeArchiveModal();
+});
+
 // ===================== Logout Modal ==========================================================================================
 const logoutModal = document.getElementById("logoutModal");
 const logoutContent = logoutModal.querySelector(".logout-content");
@@ -2395,25 +2438,7 @@ function loadFaculty() {
             return;
           }
 
-          if (!confirm("Archive this faculty account?")) return;
-
-          try {
-            const result = await updateStatus("faculty", f.id, "archived");
-            if (result.success) {
-              row.dataset.status = "archived";
-              row.querySelector("td:nth-child(5)").innerHTML = statusPillHtml("archived");
-              statusMenu.querySelectorAll(".status-option").forEach(btn => btn.classList.remove("selected"));
-              closeStatusMenus();
-              showNotification("Faculty archived successfully", "#4caf50");
-              refreshSectionStats();
-              loadFaculty();
-            } else {
-              showNotification("Failed to archive faculty: " + (result.message || "Unknown error"), "#f44336");
-            }
-          } catch (error) {
-            console.error("Archive faculty error:", error);
-            showNotification("Error archiving faculty", "#f44336");
-          }
+          openArchiveModal(row, f, statusMenu);
         });
         });})
     .then(() => {
@@ -3121,17 +3146,7 @@ function loadDashboardStats() {
         console.log("Elements found:", { totalFacultyEl, totalStudentsEl, totalEvaluationsEl });
 
         if (totalFacultyEl) totalFacultyEl.textContent = data.data.totalFaculty;
-        if (totalStudentsEl) {
-          const oldValue = totalStudentsEl.textContent;
-          totalStudentsEl.textContent = data.data.totalStudents;
-          console.log("Updated totalStudents from", oldValue, "to:", data.data.totalStudents);
-          // Add visual feedback for decrease
-          totalStudentsEl.style.transition = "background-color 0.3s";
-          totalStudentsEl.style.backgroundColor = "#ffebee"; // Light red for decrease
-          setTimeout(() => {
-            totalStudentsEl.style.backgroundColor = "";
-          }, 500);
-        }
+        if (totalStudentsEl) totalStudentsEl.textContent = data.data.totalStudents;
         if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.activeStudents;
 
         // Update evaluation progress bar: stay at 0 until there are submissions

@@ -194,7 +194,7 @@ include 'totalstudents_dashcount.php';
         <div>
           <h3>Total Faculty</h3>
           <p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
-          <span>Across 9 Colleges</span>
+          <span>Registered Users</span>
         </div>
         <div class="icon-box"><i class="ph ph-chalkboard-teacher"></i></div>
       </div>
@@ -1486,6 +1486,21 @@ include 'totalstudents_dashcount.php';
           <div class="feedback-loading">Loading feedback...</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal" class="archive-modal-overlay">
+  <div class="archive-modal-box">
+    <div class="archive-modal-icon">
+      <i class="ph ph-archive-box"></i>
+    </div>
+    <h3 class="archive-modal-title">Archive Faculty</h3>
+    <p class="archive-modal-message">Archive this faculty account?</p>
+    <div class="archive-modal-buttons">
+      <button class="archive-btn-cancel" onclick="closeArchiveModal()">Cancel</button>
+      <button class="archive-btn-confirm" id="archiveConfirmBtn">Yes, Archive</button>
     </div>
   </div>
 </div>
