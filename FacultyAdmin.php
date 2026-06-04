@@ -116,7 +116,7 @@ include 'totalstudents_dashcount.php';
       <div class="menu-items">
         <a href="#" data-section="dashboard-section"
            onclick="showSection('dashboard-section', event)">
-          <i class="ph ph-chart-line"></i>
+          <i class="ph ph-squares-four"></i>
           <span>Dashboard</span>
         </a>
       </div>
@@ -130,22 +130,22 @@ include 'totalstudents_dashcount.php';
       <div class="menu-items">
         <a href="#" data-section="programs-section"
            onclick="showSection('programs-section', event)">
-          <i class="ph ph-book"></i>
+          <i class="ph ph-stack"></i>
           <span>Program</span>
         </a>
         <a href="#" data-section="faculties-section"
            onclick="showSection('faculties-section', event)">
-          <i class="ph ph-chalkboard-teacher"></i>
+          <i class="ph ph-users-three"></i>
           <span>Faculty</span>
         </a>
         <a href="#" data-section="students-section"
            onclick="showSection('students-section', event)">
-          <i class="ph ph-graduation-cap"></i>
+          <i class="ph ph-student"></i>
           <span>Students</span>
         </a>
         <a href="#" data-section="criteria-section"
            onclick="showSection('criteria-section', event)">
-          <i class="ph ph-list-checks"></i>
+          <i class="ph ph-clipboard-text"></i>
           <span>Evaluation Criteria</span>
         </a>
       </div>
@@ -159,7 +159,7 @@ include 'totalstudents_dashcount.php';
       <div class="menu-items">
         <a href="#" data-section="report-section"
            onclick="showSection('report-section', event)">
-          <i class="ph ph-file-text"></i>
+          <i class="ph ph-chart-bar"></i>
           <span>Reports</span>
         </a>
       </div>

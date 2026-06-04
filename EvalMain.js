@@ -1,3 +1,83 @@
+// =====================================================================
+// FULL-PAGE NAVIGATION
+// =====================================================================
+(function() {
+  const pages   = Array.from(document.querySelectorAll('.page'));
+  const dots    = Array.from(document.querySelectorAll('.dot'));
+  const LIGHT   = [1, 2, 3]; // pages with light background (dot & ql style)
+  let current   = 0;
+  let animating = false;
+
+  function goTo(index) {
+    if (index === current || animating || index < 0 || index >= pages.length) return;
+    animating = true;
+
+    const dir = index > current ? 'up' : 'down';
+    pages[current].classList.add(dir === 'up' ? 'exit-up' : 'exit-down');
+    pages[current].classList.remove('active');
+
+    setTimeout(() => {
+      pages[current].classList.remove('exit-up', 'exit-down');
+      current = index;
+      pages[current].classList.add('active');
+
+      // dot style
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === current);
+        d.classList.toggle('dark', LIGHT.includes(current));
+      });
+
+      animating = false;
+    }, 30);
+
+    // trigger enter animation
+    setTimeout(() => {}, 0);
+  }
+
+  // Init first page
+  pages[0].classList.add('active');
+
+  // Dot clicks
+  dots.forEach(d => {
+    d.addEventListener('click', () => goTo(+d.dataset.page));
+  });
+
+  // Nav links & page-links
+  document.querySelectorAll('[data-page]').forEach(el => {
+    if (el.classList.contains('dot')) return;
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      goTo(+el.dataset.page);
+    });
+  });
+
+  // Mouse wheel
+  let wheelTimeout;
+  window.addEventListener('wheel', e => {
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(() => {
+      goTo(e.deltaY > 0 ? current + 1 : current - 1);
+    }, 50);
+  }, { passive: true });
+
+  // Touch swipe
+  let touchStartY = 0;
+  window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  window.addEventListener('touchend', e => {
+    const diff = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
+  });
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') goTo(current + 1);
+    if (e.key === 'ArrowUp'   || e.key === 'PageUp')   goTo(current - 1);
+  });
+
+  // Expose for nav hash links
+  window._goToPage = goTo;
+})();
+
 const modals = {
   login: document.getElementById("loginModal"),
   forgot: document.getElementById("forgotModal")
@@ -43,6 +123,12 @@ function toggleHamburgerMenu() {
 // ===================== Login Button =====================
 const loginBtn = document.getElementById("loginBtn");
 if (loginBtn) loginBtn.addEventListener("click", e => {
+  e.preventDefault();
+  openModal(modals.login);
+});
+
+const loginBtn2 = document.getElementById("loginBtn2");
+if (loginBtn2) loginBtn2.addEventListener("click", e => {
   e.preventDefault();
   openModal(modals.login);
 });
@@ -287,4 +373,13 @@ document.addEventListener("click", e => {
     const icon = hamburger.querySelector(".material-icons");
     if (icon) icon.textContent = "menu";
   }
+});
+
+// ===================== Navbar hash links -> page nav =====================
+document.querySelectorAll('nav ul li a[data-page]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    if (window._goToPage) window._goToPage(+a.dataset.page);
+    navMenu.classList.remove('show');
+  });
 });

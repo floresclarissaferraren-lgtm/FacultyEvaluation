@@ -624,15 +624,13 @@ function loadPrograms(){
         const card = document.createElement("div");
         card.className = "program-card";
         card.dataset.id = p.id;
-        card.dataset.program_code = p.program_code;
-        card.dataset.program_name = p.program_name;
+        card.dataset.programCode = p.program_code;
+        card.dataset.programName = p.program_name;
+        card.dataset.color = index % 8;
         card.innerHTML = `
           <div class="program-card-header">
-            <div class="program-icon">
-              <i class="ph ph-graduation-cap"></i>
-            </div>
+            <div class="program-icon">${p.program_code}</div>
             <div class="program-content">
-              <div class="program-code">${p.program_code}</div>
               <div class="program-name">${p.program_name}</div>
             </div>
           </div>
@@ -2242,11 +2240,15 @@ function loadFaculty() {
           
         console.log("Subjects display:", subjectsDisplay);
 
+        // Build initials avatar fallback
+        const initials = ((f.firstname || "").charAt(0) + (f.lastname || "").charAt(0)).toUpperCase() || "?";
+        const avatarHtml = f.photo
+          ? `<img src="${f.photo}" class="table-avatar" alt="${f.firstname} ${f.lastname}">`
+          : `<div class="table-avatar placeholder faculty-initials-avatar">${initials}</div>`;
+
         if (normalizeStatusValue(f.status) === "archived") {
           row.innerHTML = `
-            <td>
-              ${f.photo ? `<img src="${f.photo}" class="table-avatar" alt="">` : `<div class="table-avatar placeholder"><i class="ph ph-user"></i></div>`}
-            </td>
+            <td>${avatarHtml}</td>
             <td><strong>${f.faculty_id}</strong></td>
             <td>
               <div>
@@ -2264,9 +2266,7 @@ function loadFaculty() {
         }
 
         row.innerHTML = `
-          <td>
-            ${f.photo ? `<img src="${f.photo}" class="table-avatar" alt="">` : `<div class="table-avatar placeholder"><i class="ph ph-user"></i></div>`}
-          </td>
+          <td>${avatarHtml}</td>
           <td><strong>${f.faculty_id}</strong></td>
           <td>
             <div>
