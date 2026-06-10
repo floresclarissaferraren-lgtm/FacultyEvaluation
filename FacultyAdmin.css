@@ -455,11 +455,12 @@ body {
   background: #eef2fc;
   color: #1e293b;
   z-index: 1001;
-  overflow-y: auto;
   overflow-x: hidden;
   box-shadow: 2px 0 16px rgba(65, 105, 225, .08);
   transition: .35s cubic-bezier(.4, 0, .2, 1);
-  border-right: 1px solid #d6e0f8
+  border-right: 1px solid #d6e0f8;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-top {
@@ -509,7 +510,61 @@ body {
 }
 
 .sidebar-menu {
-  padding: 16px 12px
+  padding: 16px 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Sidebar bottom logout */
+.sidebar-bottom {
+  padding: 14px 12px;
+  border-top: 1px solid #d6e0f8;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.sidebar-logout-btn i {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn:hover {
+  background: #eef2fc;
+  color: #4169e1;
+}
+
+/* Hide logout text when collapsed */
+.sidebar.collapsed .sidebar-logout-btn span {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-bottom {
+  align-items: center;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .sidebar-logout-btn {
+  justify-content: center;
+  padding: 9px;
+  width: 100%;
 }
 
 .menu-section {
@@ -606,7 +661,8 @@ main.full {
 
 .sidebar.collapsed .sidebar-top h1,
 .sidebar.collapsed .sidebar-top span,
-.sidebar.collapsed .sidebar-menu a span {
+.sidebar.collapsed .sidebar-menu a span,
+.sidebar.collapsed .menu-header {
   display: none
 }
 
@@ -1476,13 +1532,19 @@ main.full {
 
 /* Period card */
 .dashboard-card.period {
-  background: #fff;
+  background: linear-gradient(160deg, #f0f7ff 0%, #ffffff 60%);
+  border-left: 4px solid #1e3a8a;
+}
+
+.dashboard-card.period::before {
+  background: #e8f0fb;
+  border-color: #c7d9f5;
 }
 
 .dashboard-card.period .dashboard-content {
   flex-direction: column;
   align-items: stretch;
-  gap: 14px;
+  gap: 12px;
   padding-right: 0;
 }
 
@@ -1499,75 +1561,100 @@ main.full {
 }
 
 .period-header h3 {
-  font-size: .78rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: .72rem;
+  font-weight: 800;
+  color: #1e3a8a;
   text-transform: uppercase;
-  letter-spacing: .5px;
+  letter-spacing: 1px;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.period-header h3::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1e3a8a;
+  flex-shrink: 0;
 }
 
 .period-box {
-  font-size: .78rem;
+  font-size: .75rem;
   font-weight: 700;
-  color: #4169e1;
-  background: #eef2fc;
-  padding: 4px 10px;
+  color: #1e40af;
+  background: #dbeafe;
+  padding: 3px 10px;
   border-radius: 20px;
-  border: 1px solid #d6e0f8;
+  border: 1.5px solid #93c5fd;
+  letter-spacing: 0.3px;
 }
 
 .system-status {
-  font-size: .875rem;
-  font-weight: 600;
+  font-size: .82rem;
+  font-weight: 700;
   color: #1e293b;
-  margin: 0 var(--spacing-sm);
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  letter-spacing: 0.2px;
 }
 
 .period-actions {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   justify-content: flex-start;
 }
 
 .period-actions button {
   flex: 1;
-  padding: .5rem .75rem;
+  padding: .48rem .6rem;
   border-radius: 8px;
-  font-size: .82rem;
-  font-weight: 600;
+  font-size: .78rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: .2s;
-  border: 1px solid transparent;
+  transition: all .2s ease;
+  border: 1.5px solid transparent;
+  letter-spacing: 0.2px;
 }
 
 .btn-open {
-  background: #eef2fc;
-  color: #4169e1;
-  border-color: #d6e0f8;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
 }
 .btn-open:hover {
-  background: #d6e0f8;
+  background: #dbeafe;
+  border-color: #93c5fd;
+  box-shadow: 0 2px 8px rgba(29,78,216,0.12);
 }
 
 .btn-close {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #475569;
   border-color: #e2e8f0;
 }
 .btn-close:hover {
-  background: #e2e8f0;
+  background: #f1f5f9;
   color: #1e293b;
+  border-color: #cbd5e1;
 }
 
 .btn-manage {
-  background: #fff0f0;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: #1e3a8a;
+  color: #fff;
+  border-color: #1e3a8a;
 }
 .btn-manage:hover {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #1e40af;
+  border-color: #1e40af;
+  box-shadow: 0 3px 10px rgba(30,58,138,0.25);
 }
 
 /* Evaluation progress card */
@@ -3492,12 +3579,20 @@ table.evaluation-table .view-btn:hover {
 .period-creation-section {
   margin-bottom: 24px;
   padding: 20px;
-  background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-  border: 2px solid var(--primary-200);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 60%, #f8fafc 100%);
+  border: 1.5px solid var(--primary-200);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(14, 84, 139, 0.08), 0 1px 4px rgba(14, 84, 139, 0.05);
   position: relative;
   overflow: hidden;
+}
+.period-creation-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-600), var(--primary-400), #38bdf8);
+  border-radius: 14px 14px 0 0;
 }
 
 .period-form-row {
@@ -3536,7 +3631,7 @@ table.evaluation-table .view-btn:hover {
   margin-bottom: 0;
   font-weight: 700;
   font-size: 0.8rem;
-  color: var(--primary-700);
+  color: var(--primary-800);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   transform: none;
@@ -3545,7 +3640,7 @@ table.evaluation-table .view-btn:hover {
 .period-input-group label i {
   margin-right: 0 !important;
   font-size: 0.8rem !important;
-  color: var(--primary-600);
+  color: var(--primary-500);
 }
 
 .period-input-group input,
@@ -3793,7 +3888,7 @@ table.evaluation-table .view-btn:hover {
 }
 
 .period-add-btn {
-  background: linear-gradient(135deg, var(--primary-900), var(--primary-700));
+  background: linear-gradient(135deg, #1e3a8a, var(--primary-600));
   color: #fff;
   border: none;
   padding: 12px 24px;
@@ -3804,7 +3899,7 @@ table.evaluation-table .view-btn:hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   margin-top: 8px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.3);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3814,9 +3909,9 @@ table.evaluation-table .view-btn:hover {
 }
 
 .period-add-btn:hover {
-  background: linear-gradient(135deg, var(--primary-800), var(--primary-600));
+  background: linear-gradient(135deg, #1e40af, var(--primary-500));
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.35);
 }
 
 .period-add-btn:active {
@@ -3826,8 +3921,10 @@ table.evaluation-table .view-btn:hover {
 
 .periods-table-section {
   background: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  border: 1.5px solid var(--neutral-200);
+  box-shadow: 0 2px 8px rgba(15,23,42,0.06);
 }
 
 .periods-table {
@@ -3836,20 +3933,20 @@ table.evaluation-table .view-btn:hover {
 }
 
 .periods-table th {
-  background: #f3f4f6;
-  color: #000;
+  background: #1e3a8a;
+  color: #fff;
   font-weight: 700;
   text-align: center;
   padding: var(--spacing-md);
   font-size: .75rem;
   font-family: var(--font-sans);
   border-bottom: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .15);
   position: sticky;
   top: 0;
   z-index: 10;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   min-height: 3rem;
 }
 
@@ -3864,7 +3961,15 @@ table.evaluation-table .view-btn:hover {
 }
 
 .periods-table tr:hover td {
-  background: var(--primary-100);
+  background: var(--primary-50);
+}
+
+.periods-table tbody tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+.periods-table tbody tr:nth-child(even):hover td {
+  background: var(--primary-50);
 }
 
 .periods-table .action-cell .delete-btn i {
@@ -3944,10 +4049,11 @@ table.evaluation-table .view-btn:hover {
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  background: var(--primary-50);
-  color: var(--primary-700);
-  font-size: 0.95rem !important;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
+  color: #fff;
+  font-size: 0.85rem !important;
   line-height: 1;
+  box-shadow: 0 2px 6px rgba(14,84,139,0.18);
 }
 
 #managePeriodsModal .period-input-group input,
@@ -4872,14 +4978,14 @@ table.evaluation-table .view-btn:hover {
 
 .period-box {
   border: none;
-  background: #eef6ff;
-  color: #1e3a8a;
-  font-weight: 600;
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 700;
 }
 
 .system-status {
-  border: none;
-  background: #ecfdf3;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
 .period-actions button {

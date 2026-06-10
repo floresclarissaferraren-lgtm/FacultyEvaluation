@@ -488,8 +488,6 @@ const logoutModal = document.getElementById("logoutModal");
 const logoutContent = logoutModal.querySelector(".logout-content");
 const cancelBtn = logoutModal.querySelector(".cancel-btn");
 const submitBtn = logoutModal.querySelector(".logout-btn");
-const dropdownMenu = document.getElementById("dropdownMenu");
-const dropdownToggle = document.getElementById("dropdownToggle");
 const logoutLink = document.getElementById("logoutLink");
 
 function showLogoutModal(e) {
@@ -498,7 +496,7 @@ function showLogoutModal(e) {
   logoutModal.style.display = "flex";
   logoutModal.style.zIndex = "10002";
   logoutModal.style.position = "fixed";
-  dropdownMenu.classList.remove("show");}
+}
 function closeLogoutModal() {
   logoutModal.style.display = "none";}
 function confirmLogout() {
@@ -509,16 +507,7 @@ logoutModal.addEventListener("click", closeLogoutModal);
 cancelBtn.addEventListener("click", closeLogoutModal);
 submitBtn.addEventListener("click", confirmLogout);
 
-dropdownToggle.addEventListener("click", e => {
-  e.stopPropagation();
-  dropdownMenu.classList.toggle("show");
-});
-
 logoutLink.addEventListener("click", showLogoutModal);
-dropdownMenu.addEventListener("click", e => e.stopPropagation());
-document.addEventListener("click", () => {
-  if (dropdownMenu.classList.contains("show")) dropdownMenu.classList.remove("show");
-});
  // ========================= Programs ==========================================================================================
 const addProgramModal=document.getElementById("addProgramModal"),
       programSubmitBtn=document.getElementById("save-program-btn"),
@@ -1010,7 +999,7 @@ function populateAcademicYearSelect() {
 
   const baseYear = new Date().getFullYear();
   const years = [];
-  for (let year = baseYear - 2; year <= baseYear + 3; year++) {
+  for (let year = baseYear - 1; year <= baseYear + 3; year++) {
     years.push(`${year}-${year + 1}`);
   }
 

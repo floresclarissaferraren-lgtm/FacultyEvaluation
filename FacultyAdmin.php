@@ -39,8 +39,7 @@ include 'totalstudents_dashcount.php';
 
   <!-- Right Side User Menu -->
   <div class="user-menu">
-
-    <div class="admin-box" id="dropdownToggle">
+    <div class="admin-box">
       <div class="admin-icon">
         <span>SA</span>
       </div>
@@ -48,16 +47,7 @@ include 'totalstudents_dashcount.php';
         <span class="admin-title">System Administrator</span>
         <span class="admin-subtitle">admin</span>
       </div>
-      <i class="ph ph-caret-down"></i>
     </div>
-
-    <div class="dropdown-menu" id="dropdownMenu">
-      <a href="#" id="logoutLink">
-        <i class="ph ph-sign-out"></i>
-        Logout
-      </a>
-    </div>
-
   </div>
 
 </div>
@@ -166,6 +156,14 @@ include 'totalstudents_dashcount.php';
     </div>
 
   </nav>
+
+  <!-- Sidebar Bottom / Logout -->
+  <div class="sidebar-bottom">
+    <a href="#" class="sidebar-logout-btn" id="logoutLink">
+      <i class="ph ph-sign-out"></i>
+      <span>Logout</span>
+    </a>
+  </div>
   
 </div>
 
@@ -183,6 +181,7 @@ include 'totalstudents_dashcount.php';
         <option value="">Select Semester</option>
         <option value="1st Semester">1st Semester</option>
         <option value="2nd Semester">2nd Semester</option>
+        <option value="Summer">Summer</option>
       </select>
     </div>
   </div>
@@ -475,6 +474,7 @@ include 'totalstudents_dashcount.php';
           <option value="">All Semesters</option>
           <option value="1st Semester">1st Semester</option>
           <option value="2nd Semester">2nd Semester</option>
+          <option value="Summer">Summer</option>
         </select>
         <select id="manage-subjects-year-filter" class="program-dropdown">
           <option value="">All Year Levels</option>
@@ -525,6 +525,7 @@ include 'totalstudents_dashcount.php';
             <option value="">Select Semester</option>
             <option value="1st Semester">1st Semester</option>
             <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
           </select>
         </div>
         <div>
@@ -669,6 +670,7 @@ include 'totalstudents_dashcount.php';
             <option value="" disabled selected>-- Select Semester --</option>
             <option value="1st Semester">1st Semester</option>
             <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
           </select>
         </div>
         <div>
@@ -1261,8 +1263,8 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <!-- Create New Period Section -->
       <div class="period-creation-section">
-        <h4 style="color: #dc2626; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-          <i class="ph ph-plus-circle" style="margin-right: 8px;"></i>CREATE NEW PERIOD
+        <h4 style="color: #1e40af; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display:flex; align-items:center; gap:8px; font-size:0.85rem;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:linear-gradient(135deg,var(--primary-700),var(--primary-500));border-radius:8px;box-shadow:0 4px 10px rgba(14,84,139,0.25);"><i class="ph ph-plus-circle" style="color:#fff;font-size:1rem;margin:0;"></i></span>CREATE NEW PERIOD
         </h4>
         <div class="period-form-row">
           <div class="period-input-group">
@@ -1281,6 +1283,7 @@ include 'totalstudents_dashcount.php';
               <option value="" selected disabled>Semester</option>
               <option value="1st Semester">1st Semester</option>
               <option value="2nd Semester">2nd Semester</option>
+              <option value="Summer">Summer</option>
             </select>
           </div>
           
