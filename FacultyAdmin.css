@@ -2838,6 +2838,48 @@ table.evaluation-table .view-btn:hover {
   color: #fff
 }
 
+/* ── Score cell in evaluation table ─────────────────────────────── */
+.score-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 130px;
+}
+
+.score-pct {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: -.2px;
+  line-height: 1;
+}
+
+.score-raw {
+  font-size: .72rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.score-mini-track {
+  height: 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.score-mini-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .4s ease;
+  background: #94a3b8;
+}
+.score-mini-fill.outstanding { background: #059669; }
+.score-mini-fill.very-good   { background: #0ea5e9; }
+.score-mini-fill.good        { background: #f59e0b; }
+.score-mini-fill.fair        { background: #f97316; }
+.score-mini-fill.poor        { background: #ef4444; }
+.score-mini-fill.na          { background: #94a3b8; }
+
 /* ====================================================================================================================================
    Top Buttons & Filters
    ==================================================================================================================================== */
@@ -4338,6 +4380,34 @@ table.evaluation-table .view-btn:hover {
   color: #fff;
   font-size: .9rem;
   margin: 0;
+}
+
+/* Weight badge shown on each category card */
+.category-weight-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, .28);
+  cursor: default;
+}
+
+/* Weight tag in instructor/admin report table */
+.category-weight-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: .78rem;
+  font-weight: 700;
 }
 
 .category-table-header {
@@ -8277,6 +8347,30 @@ input[type=range] {
 #facultyReportModal .report-badge.no-responses,
 #facultyReportModal .report-badge.na,
 #facultyReportModal .report-badge.n-a { background: #64748b; }
+
+/* Category weight tag inside admin faculty report modal */
+#facultyReportModal .category-weight-tag,
+#facultyReportModal .category-pill .category-weight-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: .72rem;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+#facultyReportModal .category-weight-cell {
+  white-space: nowrap;
+  text-align: center;
+}
+#facultyReportModal .weight-th {
+  background: #eff6ff;
+  color: #1d4ed8;
+  text-align: center;
+}
 
 @media (max-width: 760px) {
   #facultyReportModal .report-modal-content {

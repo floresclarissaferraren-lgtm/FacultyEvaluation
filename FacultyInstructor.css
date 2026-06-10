@@ -728,6 +728,31 @@ input[type="password"]::-webkit-password-toggle {
   letter-spacing:-.2px;
 }
 
+/* Percentage score shown inside the Overall Rating card */
+.rating-percentage {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: -.3px;
+  line-height: 1;
+}
+
+/* Progress bar inside the card */
+.rating-progress-track {
+  margin-top: 10px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.rating-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1d4ed8, #10b981);
+  transition: width .6s cubic-bezier(.4, 0, .2, 1);
+}
+
 .card-value {
   font-size: 24px;
   font-weight: 800;
@@ -1558,5 +1583,58 @@ select {
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
+  }
+}
+
+
+/* ── Weighted category tag in report table ───────────────────────── */
+.evaluation-report-modal .category-weight-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* report-badge colours (shared by category status column) */
+.evaluation-report-modal .report-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+.evaluation-report-modal .report-badge.outstanding { background: #059669; }
+.evaluation-report-modal .report-badge.very-good   { background: #0ea5e9; }
+.evaluation-report-modal .report-badge.good        { background: #f59e0b; color: #1e293b; }
+.evaluation-report-modal .report-badge.fair        { background: #f97316; }
+.evaluation-report-modal .report-badge.poor        { background: #ef4444; }
+.evaluation-report-modal .report-badge.no-responses,
+.evaluation-report-modal .report-badge.na          { background: #64748b; }
+
+/* ── Performance Score highlight card in report modal ───────────── */
+.evaluation-report-modal .report-score-highlight {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1.5px solid #bfdbfe;
+}
+
+.evaluation-report-modal .report-pct-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1d4ed8;
+  letter-spacing: -.5px;
+}
+
+/* Update report summary grid to 4 cols when enough space */
+@media (min-width: 600px) {
+  .evaluation-report-modal .report-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

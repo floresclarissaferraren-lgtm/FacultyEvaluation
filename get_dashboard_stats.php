@@ -3,6 +3,7 @@ header("Content-Type: application/json");
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 include 'connect.php';
+require_once 'weighted_score_helper.php';
 
 try {
     // Get total faculty count
@@ -27,51 +28,39 @@ try {
     $evaluation_result = $conn->query($evaluation_query);
     $total_evaluations_submitted = $evaluation_result->fetch_assoc()['total'];
     
-    // Get overall faculty rating:
-    // (sum of each faculty's average rating) / (number of evaluated faculty)
-    $overall_rating_query = "
-        SELECT
-            AVG(t.faculty_avg) AS overall_avg,
-            COUNT(*) AS evaluated_faculty
-        FROM (
-            SELECT e.faculty_id, AVG(e.overall_rating) AS faculty_avg
-            FROM evaluations e
-            WHERE e.overall_rating IS NOT NULL
-            GROUP BY e.faculty_id
-        ) t
-    ";
-    $overall_rating_result = $conn->query($overall_rating_query);
-    $overall_rating_row = $overall_rating_result ? $overall_rating_result->fetch_assoc() : null;
-    $overall_rating = ($overall_rating_row && $overall_rating_row['overall_avg'] !== null)
-        ? round((float)$overall_rating_row['overall_avg'], 2)
-        : 0;
-    $evaluated_faculty = $overall_rating_row ? (int)$overall_rating_row['evaluated_faculty'] : 0;
-    
-    // Get faculty ratings for dashboard
-    // Return all evaluated faculty so the chart can switch between top 5 and all performance data.
-    $ratings_query = "
-        SELECT 
-            f.firstname,
-            f.lastname,
-            f.suffix,
-            AVG(e.overall_rating) as avg_rating,
-            COUNT(e.id) as response_count
+    // Get faculty ratings using weighted scores (real-time)
+    $faculty_list_query = "
+        SELECT f.id, f.firstname, f.lastname, f.suffix, COUNT(e.id) as response_count
         FROM add_faculties f
         LEFT JOIN evaluations e ON f.id = e.faculty_id
         GROUP BY f.id, f.firstname, f.lastname, f.suffix
-        HAVING AVG(e.overall_rating) IS NOT NULL
-        ORDER BY avg_rating DESC
+        HAVING response_count > 0
     ";
-    $ratings_result = $conn->query($ratings_query);
-    
-    $ratings = [];
-    while ($row = $ratings_result->fetch_assoc()) {
+    $faculty_list_result = $conn->query($faculty_list_query);
+
+    $ratings            = [];
+    $weighted_sum       = 0.0;
+    $evaluated_faculty  = 0;
+
+    while ($frow = $faculty_list_result->fetch_assoc()) {
+        $fid          = intval($frow['id']);
+        $weighted_avg = calcWeightedScore($conn, $fid);
+        $weighted_sum += $weighted_avg;
+        $evaluated_faculty++;
         $ratings[] = [
-            'name' => trim($row['firstname'] . ' ' . $row['lastname'] . ' ' . $row['suffix']),
-            'rating' => round($row['avg_rating'], 2),
-            'responses' => $row['response_count']
+            'name'       => trim($frow['firstname'] . ' ' . $frow['lastname'] . ' ' . $frow['suffix']),
+            'rating'     => round($weighted_avg, 2),
+            'percentage' => round(($weighted_avg / 5) * 100, 2),
+            'responses'  => intval($frow['response_count'])
         ];
     }
+
+    // Sort by weighted rating descending
+    usort($ratings, fn($a, $b) => $b['rating'] <=> $a['rating']);
+
+    $overall_rating = $evaluated_faculty > 0
+        ? round($weighted_sum / $evaluated_faculty, 2)
+        : 0;
     
     // Get department/program data for graph (based on subject assignments)
     $dept_query = "
@@ -94,35 +83,21 @@ try {
         ];
     }
     
-    // Get rating distribution
-    $rating_dist_query = "
-        SELECT 
-            CASE 
-                WHEN overall_rating >= 4.5 THEN 'Excellent'
-                WHEN overall_rating >= 3.5 THEN 'Very Good'
-                WHEN overall_rating >= 2.5 THEN 'Good'
-                WHEN overall_rating >= 1.5 THEN 'Fair'
-                ELSE 'Poor'
-            END as rating_category,
-            COUNT(*) as count
-        FROM evaluations
-        WHERE overall_rating IS NOT NULL
-        GROUP BY rating_category
-        ORDER BY 
-            FIELD(rating_category, 'Excellent', 'Very Good', 'Good', 'Fair', 'Poor')
-    ";
-    $rating_dist_result = $conn->query($rating_dist_query);
-    
+    // Rating distribution based on weighted scores
     $ratingDistribution = [
         'Excellent' => 0,
         'Very Good' => 0,
-        'Good' => 0,
-        'Fair' => 0,
-        'Poor' => 0
+        'Good'      => 0,
+        'Fair'      => 0,
+        'Poor'      => 0
     ];
-    
-    while ($row = $rating_dist_result->fetch_assoc()) {
-        $ratingDistribution[$row['rating_category']] = (int)$row['count'];
+    foreach ($ratings as $r) {
+        $s = $r['rating'];
+        if ($s >= 4.5)      $ratingDistribution['Excellent']++;
+        elseif ($s >= 3.5)  $ratingDistribution['Very Good']++;
+        elseif ($s >= 2.5)  $ratingDistribution['Good']++;
+        elseif ($s >= 1.5)  $ratingDistribution['Fair']++;
+        else                $ratingDistribution['Poor']++;
     }
     
     echo json_encode([

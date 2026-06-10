@@ -1092,6 +1092,11 @@ include 'totalstudents_dashcount.php';
       <h4><i class="ph ph-clipboard-check"></i> Summary</h4>
       <p><strong>Categories:</strong> <span id="total-categories">0</span></p>
       <p><strong>Total Questions:</strong> <span id="total-questions">0</span></p>
+      <p id="weight-sum-row" style="display:none;">
+        <strong>Total Weight:</strong>
+        <span id="total-weight-display" style="font-weight:700;">0%</span>
+        <span id="weight-sum-status" style="font-size:11px;margin-left:6px;"></span>
+      </p>
       <div class="legend">
         <h5><i class="ph ph-list-bullets"></i> LEGEND</h5>
         <ul>
@@ -1118,6 +1123,14 @@ include 'totalstudents_dashcount.php';
       <input type="text" id="category-name" placeholder="eg. Instructional Competence">
       <label for="section-number">Section #</label>
       <input type="number" id="section-number" min="1" placeholder="eg. 1">
+
+      <label for="category-weight" style="display:flex;align-items:center;gap:8px;">
+        Weight (%)
+        <span id="weightSumBadge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:#e2e8f0;color:#475569;"></span>
+      </label>
+      <input type="number" id="category-weight" min="0" max="100" step="0.01" placeholder="eg. 40 — leave 0 for equal split">
+      <p id="weightHint" style="font-size:12px;color:#64748b;margin-top:4px;"></p>
+
       <button id="saveCategoryBtn" class="submit-btn">SAVE CATEGORY</button>
     </div>
   </div>

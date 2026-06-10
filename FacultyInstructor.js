@@ -86,12 +86,16 @@ function renderCategoryTotals(categoryTotals) {
     return '<div class="category-empty">No category totals available yet.</div>';
   }
 
+  // Determine if weights are meaningful (any non-zero)
+  const hasWeights = categoryTotals.some(item => parseFloat(item.weight || 0) > 0);
+
   return `
     <div class="category-table-wrap">
       <table class="category-table">
         <thead>
           <tr>
             <th>Category</th>
+            ${hasWeights ? '<th>Weight</th>' : ''}
             <th>Percentage</th>
             <th>Average</th>
             <th>Status</th>
@@ -99,14 +103,19 @@ function renderCategoryTotals(categoryTotals) {
         </thead>
         <tbody>
           ${categoryTotals.map(item => {
-            const avg = Number(item.avg_rating) || 0;
-            const percent = getRatingPercentageValue(avg);
+            const avg         = Number(item.avg_rating) || 0;
+            const percent     = getRatingPercentageValue(avg);
             const percentText = formatRatingPercentage(avg);
             const statusLabel = getOverallStatusLabel(avg);
             const statusClass = getStatusBadgeClass(avg).replace(/^status-/, '');
+            const normW       = parseFloat(item.normalised_weight || item.weight || 0);
+            const weightText  = hasWeights
+              ? `${normW.toFixed(1)}%`
+              : '—';
             return `
             <tr>
               <td>${escapeHtml(item.category_name || 'Uncategorized')}</td>
+              ${hasWeights ? `<td><span class="category-weight-tag">${weightText}</span></td>` : ''}
               <td>
                 <div class="category-percent-cell">
                   <span>${percentText}</span>
@@ -312,12 +321,16 @@ document.getElementById("logoutModal").addEventListener("click", function(e){
 
 function loadFacultyStats() {
   if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
-    const ratingNumberEl = document.getElementById("overallRatingNumber");
-    const ratingStatusEl = document.getElementById("overallRatingStatus");
-    const responsesEl = document.getElementById("totalResponsesValue");
-    if (ratingNumberEl) ratingNumberEl.textContent = "0.00 / 5.00";
-    if (ratingStatusEl) ratingStatusEl.textContent = "No Data";
-    if (responsesEl) responsesEl.textContent = "0";
+    const ratingNumberEl     = document.getElementById("overallRatingNumber");
+    const ratingPctEl        = document.getElementById("overallRatingPercentage");
+    const ratingStatusEl     = document.getElementById("overallRatingStatus");
+    const responsesEl        = document.getElementById("totalResponsesValue");
+    const progressFill       = document.getElementById("overallRatingProgressFill");
+    if (ratingNumberEl)  ratingNumberEl.textContent  = "0.00 / 5.00";
+    if (ratingPctEl)     ratingPctEl.textContent      = "0%";
+    if (ratingStatusEl)  ratingStatusEl.textContent   = "No Data";
+    if (responsesEl)     responsesEl.textContent       = "0";
+    if (progressFill)    progressFill.style.width      = "0%";
     return;
   }
 
@@ -325,21 +338,20 @@ function loadFacultyStats() {
     .then(r => r.json())
     .then(data => {
       if (!data.success) return;
-      const ratingNumberEl = document.getElementById("overallRatingNumber");
-      const ratingStatusEl = document.getElementById("overallRatingStatus");
-      const responsesEl = document.getElementById("totalResponsesValue");
 
-      if (ratingNumberEl) {
-        ratingNumberEl.textContent = `${data.overall_rating} / 5.00`;
-      }
-      
-      if (ratingStatusEl) {
-        ratingStatusEl.textContent = data.rating_label || "No Rating Yet";
-      }
-      
-      if (responsesEl) {
-        responsesEl.textContent = `${data.total_responses}`;
-      }
+      const ratingNumberEl = document.getElementById("overallRatingNumber");
+      const ratingPctEl    = document.getElementById("overallRatingPercentage");
+      const ratingStatusEl = document.getElementById("overallRatingStatus");
+      const responsesEl    = document.getElementById("totalResponsesValue");
+      const progressFill   = document.getElementById("overallRatingProgressFill");
+
+      const pct = parseFloat(data.percentage_score || 0);
+
+      if (ratingNumberEl) ratingNumberEl.textContent = `${data.overall_rating} / 5.00`;
+      if (ratingPctEl)    ratingPctEl.textContent     = `${pct.toFixed(1)}%`;
+      if (ratingStatusEl) ratingStatusEl.textContent  = data.rating_label || "No Rating Yet";
+      if (responsesEl)    responsesEl.textContent      = `${data.total_responses}`;
+      if (progressFill)   progressFill.style.width     = `${Math.min(pct, 100)}%`;
     })
     .catch(err => {
       console.error("Failed to load faculty stats:", err);
@@ -379,11 +391,13 @@ function showEvaluationReport() {
   .then(data => {
     // Always show the modal with back button
     const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
-    const overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
-    const overallPercent = getRatingPercentageValue(overallRating);
-    const overallPercentText = formatRatingPercentage(overallRating);
-    const statusLabel = getOverallStatusLabel(overallRating);
-    const statusClass = getStatusBadgeClass(overallRating);
+    const overallRating   = data.success ? (data.overall_rating || '0.00') : '0.00';
+    const overallPercent  = data.success && data.percentage_score
+      ? parseFloat(data.percentage_score)
+      : getRatingPercentageValue(overallRating);
+    const overallPercentText = `${overallPercent.toFixed(1)}%`;
+    const statusLabel    = getOverallStatusLabel(overallRating);
+    const statusClass    = getStatusBadgeClass(overallRating);
     const feedbackHtml = renderFeedbackList(data.success ? (data.feedback_comments || data.feedback) : []);
 
     const reportContent = `
@@ -414,12 +428,17 @@ function showEvaluationReport() {
               <div class="report-card-progress" aria-label="Overall rating ${overallPercentText}">
                 <div class="report-card-progress-fill" style="width: ${overallPercent}%;"></div>
               </div>
-              <span class="report-card-note">Average student rating</span>
+              <span class="report-card-note">Weighted performance score</span>
+            </div>
+            <div class="report-card report-score-highlight">
+              <span class="report-card-label">Performance Score</span>
+              <strong class="report-card-value report-pct-value">${overallPercentText}</strong>
+              <span class="report-card-note">Out of 100%</span>
             </div>
             <div class="report-card report-card-large ${statusClass}">
               <span class="report-card-label">Performance Status</span>
               <strong class="report-card-value">${statusLabel}</strong>
-              <span class="report-card-note">Based on student ratings</span>
+              <span class="report-card-note">Based on weighted ratings</span>
             </div>
             <div class="report-card">
               <span class="report-card-label">Total Responses</span>

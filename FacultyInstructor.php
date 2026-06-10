@@ -171,7 +171,7 @@ $stmt->close();
       <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
-    <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Generate Report</button>
+    <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Report</button>
   </div>
   
   <div class="faculty-cards">
@@ -180,7 +180,11 @@ $stmt->close();
         <span class="card-title">Overall Rating</span>
         <div class="rating-container">
           <span class="rating-number" id="overallRatingNumber">0.00 / 5.00</span>
+          <span class="rating-percentage" id="overallRatingPercentage">0%</span>
           <span class="rating-status" id="overallRatingStatus">No Data</span>
+        </div>
+        <div class="rating-progress-track">
+          <div class="rating-progress-fill" id="overallRatingProgressFill" style="width:0%"></div>
         </div>
       </div>
       <i class="ph ph-star"></i>

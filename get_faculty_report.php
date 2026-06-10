@@ -18,6 +18,7 @@ if (!file_exists('connect.php')) {
 }
 
 include 'connect.php';
+require_once 'weighted_score_helper.php';
 
 function getRatingLabel($score) {
     $score = floatval($score);
@@ -70,7 +71,6 @@ try {
     
     // Get overall rating, total responses, and period range from evaluations
     $overall_query = "SELECT 
-                        COALESCE(AVG(overall_rating), 0) as overall_rating,
                         COUNT(id) as total_responses,
                         MIN(DATE(created_at)) as date_from,
                         MAX(DATE(created_at)) as date_to
@@ -80,7 +80,11 @@ try {
     $overall_stmt->bind_param("i", $faculty_id);
     $overall_stmt->execute();
     $overall_result = $overall_stmt->get_result();
-    $overall_data = $overall_result->fetch_assoc();
+    $overall_data   = $overall_result->fetch_assoc();
+
+    // Weighted overall score (real-time)
+    $totalResponses = intval($overall_data['total_responses'] ?? 0);
+    $overallScore   = $totalResponses > 0 ? calcWeightedScore($conn, intval($faculty_id)) : 0.00;
     
     // Create evaluations table if it doesn't exist
     $conn->query("
@@ -118,62 +122,34 @@ try {
 
     $all_feedback = empty($feedback_comments) ? 'No feedback available' : implode("\n\n", $feedback_comments);
 
-    // Get evaluation details by category, including categories with no responses.
-    $details_query = "SELECT 
-                        c.category_name as category,
-                        COUNT(DISTINCT CASE WHEN e.id IS NOT NULL THEN e.id END) as responses,
-                        COALESCE(AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END), 0) as average_score,
-                        CASE 
-                            WHEN COUNT(DISTINCT CASE WHEN e.id IS NOT NULL THEN e.id END) = 0 THEN 'No Responses'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 4.5 THEN 'Outstanding'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 3.5 THEN 'Very Good'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 2.5 THEN 'Good'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 1.5 THEN 'Fair'
-                            ELSE 'Poor'
-                        END as rating,
-                        CASE 
-                            WHEN COUNT(DISTINCT CASE WHEN e.id IS NOT NULL THEN e.id END) = 0 THEN 'no-responses'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 4.5 THEN 'outstanding'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 3.5 THEN 'very-good'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 2.5 THEN 'good'
-                            WHEN AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END) >= 1.5 THEN 'fair'
-                            ELSE 'poor'
-                        END as rating_class
-                    FROM add_categories c
-                    LEFT JOIN add_questions q ON q.category_id = c.id
-                    LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
-                    LEFT JOIN evaluations e ON e.id = ea.evaluation_id AND e.faculty_id = ?
-                    GROUP BY c.id, c.category_name
-                    ORDER BY c.category_name ASC";
-    
-    $details_stmt = $conn->prepare($details_query);
-    $details_stmt->bind_param("i", $faculty_id);
-    $details_stmt->execute();
-    $details_result = $details_stmt->get_result();
-    
+    // Get evaluation details by category with weights (real-time).
+    $category_stats  = getCategoryStats($conn, intval($faculty_id));
     $evaluation_details = [];
-    $category_totals = [];
-    while ($detail = $details_result->fetch_assoc()) {
+    $category_totals    = [];
+    foreach ($category_stats as $cat) {
+        $avg   = floatval($cat['avg_rating']);
+        $label = getRatingLabel($avg);
+        $class = getRatingClass($avg);
         $evaluation_details[] = [
-            'category' => $detail['category'],
-            'average_score' => number_format($detail['average_score'], 2),
-            'rating' => $detail['rating'],
-            'rating_class' => $detail['rating_class'],
-            'responses' => (int)$detail['responses'],
-            'all_feedback' => $all_feedback
+            'category'     => $cat['category_name'],
+            'average_score'=> $cat['avg_rating'],
+            'rating'       => $label,
+            'rating_class' => $class,
+            'responses'    => $cat['responses'],
+            'weight'       => $cat['weight'],
+            'normalised_weight' => $cat['normalised_weight'],
+            'all_feedback' => $all_feedback,
         ];
-
         $category_totals[] = [
-            'category_name' => $detail['category'],
-            'avg_rating' => number_format($detail['average_score'], 2),
-            'responses' => (int)$detail['responses'],
-            'rating' => $detail['rating'],
-            'rating_class' => $detail['rating_class']
+            'category_name'     => $cat['category_name'],
+            'avg_rating'        => $cat['avg_rating'],
+            'responses'         => $cat['responses'],
+            'rating'            => $label,
+            'rating_class'      => $class,
+            'weight'            => $cat['weight'],
+            'normalised_weight' => $cat['normalised_weight'],
         ];
     }
-    $details_stmt->close();
-    
-    // No sample data - use only real evaluation records
     
     $periodText = 'All evaluation periods';
     if (!empty($overall_data['date_from']) && !empty($overall_data['date_to'])) {
@@ -182,24 +158,24 @@ try {
         $periodText = $start === $end ? $start : "$start - $end";
     }
 
-    $overallScore = floatval($overall_data['overall_rating'] ?? 0);
-    $overallStatus = getRatingLabel($overallScore);
+    $overallStatus      = getRatingLabel($overallScore);
     $overallStatusClass = getRatingClass($overallScore);
 
     // Prepare response data
     $response_data = [
-        'id' => $faculty['id'],
-        'name' => $faculty['name'],
-        'faculty_id' => $faculty['faculty_id'],
-        'overall_rating' => $overallScore > 0 ? number_format($overallScore, 2) : '0.00',
-        'total_responses' => $overall_data['total_responses'] ?: 0,
-        'overall_status' => $overallStatus,
-        'overall_status_class' => $overallStatusClass,
-        'evaluation_period' => $periodText,
-        'evaluation_details' => $evaluation_details,
-        'category_totals' => $category_totals,
-        'all_feedback' => $all_feedback,
-        'feedback_comments' => $feedback_comments
+        'id'                  => $faculty['id'],
+        'name'                => $faculty['name'],
+        'faculty_id'          => $faculty['faculty_id'],
+        'overall_rating'      => $overallScore > 0 ? number_format($overallScore, 2) : '0.00',
+        'percentage_score'    => $overallScore > 0 ? number_format(($overallScore / 5) * 100, 2) : '0.00',
+        'total_responses'     => $totalResponses,
+        'overall_status'      => $overallStatus,
+        'overall_status_class'=> $overallStatusClass,
+        'evaluation_period'   => $periodText,
+        'evaluation_details'  => $evaluation_details,
+        'category_totals'     => $category_totals,
+        'all_feedback'        => $all_feedback,
+        'feedback_comments'   => $feedback_comments
     ];
     
     echo json_encode([

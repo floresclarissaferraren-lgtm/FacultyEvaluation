@@ -44,21 +44,18 @@ $conn->query("
     )
 ");
 
-$stmt = $conn->prepare("
-    SELECT
-        COUNT(*) AS total_responses,
-        ROUND(AVG(overall_rating), 2) AS overall_rating
-    FROM evaluations
-    WHERE faculty_id = ?
-");
+require_once 'weighted_score_helper.php';
+
+// Total responses
+$stmt = $conn->prepare("SELECT COUNT(*) AS total_responses FROM evaluations WHERE faculty_id = ?");
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$row = $result ? $result->fetch_assoc() : null;
+$row    = $result ? $result->fetch_assoc() : null;
 $stmt->close();
 
-$overall = $row && $row['overall_rating'] !== null ? floatval($row['overall_rating']) : 0.00;
-$total = $row ? intval($row['total_responses']) : 0;
+$total   = $row ? intval($row['total_responses']) : 0;
+$overall = $total > 0 ? calcWeightedScore($conn, $faculty_id) : 0.00;
 
 function ratingLabel(float $score, int $total): string {
     // If no responses, return "No Rating Yet"
@@ -73,14 +70,16 @@ function ratingLabel(float $score, int $total): string {
     return "Needs Improvement";
 }
 
-$rating_label = ratingLabel($overall, $total);
+$rating_label   = ratingLabel($overall, $total);
 $display_rating = $total === 0 ? "0.00" : number_format($overall, 2);
+$percentage     = $total === 0 ? "0.00" : number_format(($overall / 5) * 100, 2);
 
 echo json_encode([
-    "success" => true,
-    "overall_rating" => $display_rating,
-    "rating_label" => $rating_label,
-    "total_responses" => $total
+    "success"          => true,
+    "overall_rating"   => $display_rating,
+    "percentage_score" => $percentage,
+    "rating_label"     => $rating_label,
+    "total_responses"  => $total
 ]);
 
 $conn->close();

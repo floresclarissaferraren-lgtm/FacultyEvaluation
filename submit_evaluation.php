@@ -186,7 +186,13 @@ if ($count === 0) {
     exit;
 }
 
-$overall = round($sum / $count, 2);
+// Use weighted category scoring instead of a flat mean.
+require_once 'weighted_score_helper.php';
+$overall = calcWeightedScoreFromAnswers($conn, $normalizedAnswers);
+// Fallback to flat mean if weighted calculation returns 0 unexpectedly
+if ($overall <= 0 && $count > 0) {
+    $overall = round($sum / $count, 2);
+}
 
 $conn->begin_transaction();
 try {

@@ -8,7 +8,7 @@ if ($conn->connect_error) {
     exit;
 }
 
-$sql = "SELECT id, category_name, section_number FROM add_categories ORDER BY section_number ASC";
+$sql = "SELECT id, category_name, section_number, COALESCE(weight, 0) AS weight FROM add_categories ORDER BY section_number ASC";
 $result = $conn->query($sql);
 
 $data = [];

@@ -2651,12 +2651,23 @@ function loadEvaluations() {
         }
         
         data.data.forEach(evaluation => {
+          const pct     = parseFloat(evaluation.percentage_score || 0);
+          const pctText = `${pct.toFixed(1)}%`;
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>
               <strong>${evaluation.name}</strong>
             </td>
-            <td>${evaluation.average_score}</td>
+            <td>
+              <div class="score-cell">
+                <span class="score-pct">${pctText}</span>
+                <div class="score-mini-track">
+                  <div class="score-mini-fill ${evaluation.rating_class}" style="width:${Math.min(pct,100)}%"></div>
+                </div>
+                <span class="score-raw">${Number(evaluation.average_score).toFixed(2)} / 5.00</span>
+              </div>
+            </td>
             <td>${evaluation.total_responses}</td>
             <td>
               <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
@@ -2855,6 +2866,9 @@ function renderEvaluationDetailsTable(reportData) {
       ? reportData.category_totals
       : [];
 
+  // Check if weights are present
+  const hasWeights = details.some(d => parseFloat(d.normalised_weight || d.weight || 0) > 0);
+
   if (categoryCountEl) {
     categoryCountEl.textContent = `${details.length} ${details.length === 1 ? "category" : "categories"}`;
   }
@@ -2868,9 +2882,11 @@ function renderEvaluationDetailsTable(reportData) {
           const percentText = `${scorePercent.toFixed(0)}%`;
           const ratingText = detail.rating || detail.status || "N/A";
           const ratingClass = String((detail.rating_class || ratingText || "poor")).toLowerCase().replace(/\s+/g, "-");
+          const normW = parseFloat(detail.normalised_weight || detail.weight || 0);
+          const weightTag = hasWeights ? `<span class="category-weight-tag" title="Category weight">${normW.toFixed(1)}%</span>` : '';
           return `
             <div class="category-pill ${escapeHtml(ratingClass)}">
-              <div class="category-pill-name">${escapeHtml(categoryName)}</div>
+              <div class="category-pill-name">${escapeHtml(categoryName)} ${weightTag}</div>
               <div class="category-pill-meter" aria-label="${escapeHtml(categoryName)} ${percentText}">
                 <div class="category-pill-fill" style="width: ${scorePercent}%;"></div>
               </div>
@@ -2885,10 +2901,19 @@ function renderEvaluationDetailsTable(reportData) {
   if (details.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="empty-report-cell">No categories available</td>
+        <td colspan="${hasWeights ? 5 : 4}" class="empty-report-cell">No categories available</td>
       </tr>
     `;
     return;
+  }
+
+  // Update thead if weight column needed
+  const thead = tbody.closest('table')?.querySelector('thead tr');
+  if (thead && hasWeights && !thead.querySelector('.weight-th')) {
+    const weightTh = document.createElement('th');
+    weightTh.className = 'weight-th';
+    weightTh.textContent = 'Weight';
+    thead.insertBefore(weightTh, thead.children[1]); // after Category name
   }
 
   const rowsHtml = details.map((detail) => {
@@ -2899,10 +2924,15 @@ function renderEvaluationDetailsTable(reportData) {
     const ratingText = detail.rating || detail.status || 'N/A';
     const ratingClass = String((detail.rating_class || ratingText || 'poor')).toLowerCase().replace(/\s+/g, '-');
     const responses = Number.parseInt(detail.responses ?? detail.total_responses ?? 0, 10) || 0;
+    const normW = parseFloat(detail.normalised_weight || detail.weight || 0);
+    const weightCell = hasWeights
+      ? `<td class="category-weight-cell"><span class="category-weight-tag">${normW.toFixed(1)}%</span></td>`
+      : '';
 
     return `
       <tr>
         <td class="category-name-cell">${escapeHtml(categoryName)}</td>
+        ${weightCell}
         <td class="category-rating-cell">
           <div class="category-score-cell">
             <span class="score-text">${escapeHtml(scoreValue)} / 5.00</span>
@@ -2978,14 +3008,17 @@ function viewEvaluationDetails(facultyId) {
         const overallProgressFill = document.getElementById('reportOverallProgressFill');
         const responsesElement = document.getElementById('reportTotalResponses');
         const periodElement = document.getElementById('reportEvaluationPeriod');
-        const overallScore = parseFloat(data.data.overall_rating || 0);
-        const overallPercent = Number.isFinite(overallScore) ? Math.min(100, Math.max(0, overallScore * 20)) : 0;
+        const overallScore   = parseFloat(data.data.overall_rating || 0);
+        const pctScore       = data.data.percentage_score
+          ? parseFloat(data.data.percentage_score)
+          : Math.min(100, Math.max(0, overallScore * 20));
+        const overallPercent = pctScore;
         
         if (nameElement) nameElement.textContent = data.data.name;
         if (idElement) idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}`;
         if (ratingElement) ratingElement.textContent = `${data.data.overall_rating || '0.00'}`;
-        if (overallPercentElement) overallPercentElement.textContent = `${overallPercent.toFixed(0)}%`;
-        if (overallProgressFill) overallProgressFill.style.width = `${overallPercent}%`;
+        if (overallPercentElement) overallPercentElement.textContent = `${pctScore.toFixed(1)}%`;
+        if (overallProgressFill) overallProgressFill.style.width = `${Math.min(pctScore, 100)}%`;
         if (responsesElement) responsesElement.textContent = data.data.total_responses || 0;
         if (periodElement) periodElement.textContent = data.data.evaluation_period || 'All evaluation periods';
         if (statusElement) {
@@ -3324,9 +3357,11 @@ function updateTopPerformanceChart() {
   }
 
   currentProgressList.innerHTML = chartSource.map((item, index) => {
-    const percentage = getRatingPercentageValue(item.rating);
-    const displayPercentage = `${percentage.toFixed(0)}%`;
-    const facultyName = item.name || "Unknown Faculty";
+    const pct              = item.percentage !== undefined
+      ? parseFloat(item.percentage)
+      : getRatingPercentageValue(item.rating);
+    const displayPct       = `${pct.toFixed(1)}%`;
+    const facultyName      = item.name || "Unknown Faculty";
     const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
     return `
       <div class="top-performance-progress-item">
@@ -3335,10 +3370,10 @@ function updateTopPerformanceChart() {
         <div class="top-performance-main">
           <div class="top-performance-progress-meta">
             <span class="top-performance-name">${escapeHtml(facultyName)}</span>
-            <span class="top-performance-percent"><i class="ph ph-star"></i>${displayPercentage}</span>
+            <span class="top-performance-percent"><i class="ph ph-star"></i>${displayPct}</span>
           </div>
-          <div class="top-performance-progress-track" aria-label="${escapeHtml(facultyName)} performance ${displayPercentage}">
-            <div class="top-performance-progress-fill ${progressColorClass}" style="width: ${percentage}%;"></div>
+          <div class="top-performance-progress-track" aria-label="${escapeHtml(facultyName)} performance ${displayPct}">
+            <div class="top-performance-progress-fill ${progressColorClass}" style="width: ${Math.min(pct,100)}%;"></div>
           </div>
         </div>
       </div>
@@ -3373,11 +3408,14 @@ function populateTopPerformanceModal() {
   summaryText.textContent = `Showing ${sorted.length} ranked faculty members in descending order.`;
 
   sorted.forEach((item, index) => {
+    const pct    = item.percentage !== undefined
+      ? parseFloat(item.percentage)
+      : getRatingPercentageValue(item.rating);
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${item.name}</td>
-      <td>${formatRatingPercentage(item.rating)}</td>
+      <td>${pct.toFixed(1)}%</td>
     `;
     tableBody.appendChild(row);
   });
@@ -4509,27 +4547,90 @@ const addCategoryBtn = document.getElementById("addCategoryBtn"),
       questionCategoryName = document.getElementById("questionCategoryName"),
       saveQuestionBtn = document.getElementById("saveQuestionBtn");
 
+/**
+ * Get the sum of weights currently stored on category cards,
+ * optionally excluding the category being edited (by numeric id string).
+ */
+function getCurrentWeightSum(excludeCatId = null) {
+  let sum = 0;
+  document.querySelectorAll(".criteria-category").forEach(c => {
+    if (excludeCatId && c.id === `cat-${excludeCatId}`) return;
+    sum += parseFloat(c.dataset.weight || 0);
+  });
+  return Math.round(sum * 100) / 100;
+}
+
 // --- OPEN CATEGORY form ---
 addCategoryBtn.onclick = () => {
+  // Block adding a new category if weights are already fully allocated
+  const usedWeight = getCurrentWeightSum(null);
+  if (usedWeight >= 100) {
+    showNotification(
+      `Cannot add a new category — existing categories already use ${usedWeight}% (100%). ` +
+      `Edit existing category weights to free up percentage first.`,
+      "#ef4444", 6000
+    );
+    return;
+  }
+
   addCategoryModal.style.display = "flex";
   delete addCategoryModal.dataset.editId;
   document.getElementById("categoryModalTitle").innerText = "ADD CATEGORY";
-  ["category-name","section-number"].forEach(id => document.getElementById(id).value = "");
+  ["category-name","section-number","category-weight"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  updateWeightHint(null);
 };
 
 //  CLOSE form =========================
 
 //  SAVE CATEGORY ========================= //
 saveCategoryBtn.onclick = () => {
-  const name = document.getElementById("category-name").value.trim(),
-        sec  = document.getElementById("section-number").value.trim();
+  const name   = document.getElementById("category-name").value.trim();
+  const sec    = document.getElementById("section-number").value.trim();
+  const wInput = document.getElementById("category-weight");
+  const weight = wInput ? parseFloat(wInput.value) || 0 : 0;
+
   if (!name || !sec) return alert("Fill all fields.");
 
-  const payload = { category_name: name, section_number: sec };
+  // --- Weight validation ---
+  const editId = addCategoryModal.dataset.editId
+    ? addCategoryModal.dataset.editId.replace("cat-", "")
+    : null;
+
+  const usedWeight  = getCurrentWeightSum(editId);   // sum excluding self when editing
+  const newTotal    = Math.round((usedWeight + weight) * 100) / 100;
+  const catCount    = document.querySelectorAll(".criteria-category").length;
+  const isNew       = !editId;
+
+  // Allow weight = 0 (means "equal split, no fixed percentage")
+  if (weight > 0) {
+    if (newTotal > 100) {
+      const available = Math.round((100 - usedWeight) * 100) / 100;
+      showNotification(
+        `Weight too high — other categories already use ${usedWeight}%. ` +
+        `Maximum you can assign here is ${available}%.`,
+        "#ef4444", 6000
+      );
+      return;
+    }
+    if (newTotal < 100) {
+      // Warn but allow — they may plan to set the rest later
+      const remaining = Math.round((100 - newTotal) * 100) / 100;
+      showNotification(
+        `Note: Total weight will be ${newTotal}% after this save (${remaining}% unassigned). ` +
+        `Scores will be auto-normalised until all categories sum to 100%.`,
+        "#f59e0b", 5000
+      );
+    }
+  }
+
+  const payload = { category_name: name, section_number: sec, weight: weight };
   let url = "add_category.php";
 
-  if (addCategoryModal.dataset.editId) {
-    payload.id = addCategoryModal.dataset.editId.replace("cat-", "");
+  if (editId) {
+    payload.id = editId;
     url = "edit_category.php";
   }
 
@@ -4541,11 +4642,14 @@ saveCategoryBtn.onclick = () => {
     .then(r => r.json())
     .then(d => {
       if (d.success) {
-        const isEditing = addCategoryModal.dataset.editId ? true : false;
+        const isEditing = !!editId;
         loadCategories();
         addCategoryModal.style.display = "none";
         delete addCategoryModal.dataset.editId;
-        showNotification(isEditing ? "Category edited successfully!" : "Category added successfully!", "#10b981");
+        if (newTotal === 100 || weight === 0) {
+          showNotification(isEditing ? "Category updated successfully!" : "Category added successfully!", "#10b981");
+        }
+        // else the yellow warning above already showed
       } else {
         showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
       }
@@ -4634,9 +4738,12 @@ function bindCategoryActions(cat) {
   cat.querySelector(".edit-btn").onclick = () => {
     document.getElementById("category-name").value = cat.querySelector(".category-name").innerText;
     document.getElementById("section-number").value = cat.querySelector(".section-number").innerText.replace("SECTION ", "");
+    const wInput = document.getElementById("category-weight");
+    if (wInput) wInput.value = parseFloat(cat.dataset.weight || 0).toFixed(2);
     addCategoryModal.style.display = "flex";
     addCategoryModal.dataset.editId = cat.id;
     document.getElementById("categoryModalTitle").innerText = "EDIT CATEGORY";
+    updateWeightHint(cat.id.replace("cat-", ""));
   };
 
   cat.querySelector(".delete-btn").onclick = () =>
@@ -4668,11 +4775,45 @@ function loadCategories() {
       document.getElementById("total-categories").innerText = cats.length;
       let totalQuestions = 0;
 
+      // Normalise weights for display (same logic as PHP helper)
+      const totalW = cats.reduce((s, c) => s + parseFloat(c.weight || 0), 0);
+      const useEqual = totalW <= 0;
+      const equalW   = cats.length > 0 ? (100 / cats.length) : 0;
+
+      // Update summary panel weight row
+      const weightSumRow = document.getElementById("weight-sum-row");
+      const weightDisplay = document.getElementById("total-weight-display");
+      const weightStatus  = document.getElementById("weight-sum-status");
+      if (cats.length > 0 && weightSumRow) {
+        weightSumRow.style.display = "block";
+        const displayTotal = useEqual ? 100 : Math.round(totalW * 100) / 100;
+        if (weightDisplay) weightDisplay.textContent = displayTotal + "%";
+        if (weightStatus) {
+          if (useEqual) {
+            weightStatus.textContent = "(equal split)";
+            weightStatus.style.color = "#64748b";
+          } else if (Math.abs(totalW - 100) < 0.1) {
+            weightStatus.textContent = "✓";
+            weightStatus.style.color = "#10b981";
+          } else {
+            weightStatus.textContent = "(auto-normalised to 100%)";
+            weightStatus.style.color = "#f59e0b";
+          }
+        }
+      } else if (weightSumRow) {
+        weightSumRow.style.display = "none";
+      }
+
       cats.forEach(c => {
+        const normW = useEqual
+          ? parseFloat(equalW.toFixed(2))
+          : parseFloat(((parseFloat(c.weight || 0) / totalW) * 100).toFixed(2));
+
         const cat = document.createElement("div");
         cat.className = "criteria-category";
         cat.id = `cat-${c.id}`;
         cat.dataset.category_id = c.id;
+        cat.dataset.weight = parseFloat(c.weight || 0);
 
         cat.innerHTML = `
           <div class="category-header">
@@ -4683,10 +4824,13 @@ function loadCategories() {
                 <div class="category-name">${c.category_name}</div>
               </div>
             </div>
-            <div class="action-buttons">
-              <button class="add-btn"><i class="ph ph-plus"></i></button>
-              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-              <button class="delete-btn"><i class="ph ph-trash"></i></button>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="category-weight-badge" title="Category weight (contribution to overall score)">${normW}%</span>
+              <div class="action-buttons">
+                <button class="add-btn"><i class="ph ph-plus"></i></button>
+                <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+                <button class="delete-btn"><i class="ph ph-trash"></i></button>
+              </div>
             </div>
           </div>
           <div class="category-table-header"><div>Question</div><div>Action</div></div>
@@ -4723,6 +4867,66 @@ function loadCategories() {
     })
     .catch(err => console.error("Failed to load categories:", err));
 }
+
+/**
+ * Update the weight hint in the add/edit category modal.
+ * editCatId: the numeric id of the category being edited, or null for new.
+ */
+function updateWeightHint(editCatId) {
+  const hintEl  = document.getElementById("weightHint");
+  const badgeEl = document.getElementById("weightSumBadge");
+  const wInput  = document.getElementById("category-weight");
+  if (!hintEl) return;
+
+  const usedWeight  = getCurrentWeightSum(editCatId);
+  const remaining   = Math.max(0, Math.round((100 - usedWeight) * 100) / 100);
+  const enteredWeight = wInput ? (parseFloat(wInput.value) || 0) : 0;
+  const newTotal    = Math.round((usedWeight + enteredWeight) * 100) / 100;
+
+  // Hint text
+  if (usedWeight >= 100) {
+    hintEl.textContent  = `⚠ All 100% is already allocated to other categories. Edit existing weights first.`;
+    hintEl.style.color  = "#ef4444";
+  } else {
+    hintEl.textContent  = `Other categories use ${usedWeight}% — ${remaining}% available. ` +
+                          (remaining === 100 ? "Set 0 to split equally." : `Set 0 to auto-split.`);
+    hintEl.style.color  = newTotal > 100 ? "#ef4444" : "#64748b";
+  }
+
+  // Badge on the label
+  if (badgeEl) {
+    if (usedWeight >= 100) {
+      badgeEl.textContent    = "100% used";
+      badgeEl.style.background = "#fecaca";
+      badgeEl.style.color      = "#dc2626";
+    } else {
+      badgeEl.textContent    = `${usedWeight}% used`;
+      badgeEl.style.background = usedWeight > 100 ? "#fecaca" : "#e2e8f0";
+      badgeEl.style.color      = usedWeight > 100 ? "#dc2626" : "#475569";
+    }
+  }
+
+  // Colour the weight input itself
+  if (wInput) {
+    if (enteredWeight > 0 && newTotal > 100) {
+      wInput.style.borderColor = "#ef4444";
+    } else if (enteredWeight > 0 && newTotal === 100) {
+      wInput.style.borderColor = "#10b981";
+    } else {
+      wInput.style.borderColor = "";
+    }
+  }
+}
+
+// Update hint as admin types in weight field
+document.addEventListener("input", e => {
+  if (e.target.id === "category-weight") {
+    const editId = addCategoryModal.dataset.editId
+      ? addCategoryModal.dataset.editId.replace("cat-", "")
+      : null;
+    updateWeightHint(editId);
+  }
+});
 
 document.addEventListener("DOMContentLoaded", loadCategories);
 
