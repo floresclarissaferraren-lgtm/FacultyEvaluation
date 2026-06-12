@@ -375,6 +375,37 @@
       </div>
     </div>
   </div>
+
+  <!-- Student Dashboard Layout Skeleton -->
+  <div class="student-skeleton">
+    <!-- Navbar -->
+    <div class="skeleton-navbar">
+      <div class="skeleton-nav-left">
+        <div class="skeleton-logo"></div>
+        <div class="skeleton-nav-title" style="width: 180px;"></div>
+      </div>
+      <div class="skeleton-user-box">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-name" style="width: 50px;"></div>
+      </div>
+    </div>
+    <!-- Main Content -->
+    <div class="skeleton-content-container">
+      <div class="skeleton-main-box">
+        <div class="skeleton-main-left">
+          <div class="skeleton-img"></div>
+        </div>
+        <div class="skeleton-main-right">
+          <div class="skeleton-title" style="width: 250px; height: 28px; margin-bottom: 20px;"></div>
+          <div class="skeleton-badge" style="width: 280px; height: 38px; margin-bottom: 14px;"></div>
+          <div class="skeleton-badge" style="width: 180px; height: 38px; margin-bottom: 14px;"></div>
+          <div class="skeleton-text" style="width: 90%; height: 14px; margin-bottom: 10px;"></div>
+          <div class="skeleton-text" style="width: 80%; height: 14px; margin-bottom: 24px;"></div>
+          <div class="skeleton-btn" style="width: 150px; height: 44px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="EvalMain.js?v=<?php echo time(); ?>"></script>

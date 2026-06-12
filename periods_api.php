@@ -24,13 +24,46 @@ function ensurePeriodTables(mysqli $conn): void {
             id INT(11) NOT NULL PRIMARY KEY,
             evaluation_open TINYINT(1) NOT NULL DEFAULT 0,
             active_period_id INT(11) NULL,
+            selected_ay VARCHAR(20) NULL,
+            selected_semester VARCHAR(20) NULL,
+            display_ay VARCHAR(20) NULL,
+            display_semester VARCHAR(20) NULL,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             KEY idx_active_period (active_period_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
+    if (!tableColumnExists($conn, "evaluation_settings", "selected_ay")) {
+        $conn->query("ALTER TABLE evaluation_settings ADD COLUMN selected_ay VARCHAR(20) NULL AFTER active_period_id");
+    }
+    if (!tableColumnExists($conn, "evaluation_settings", "selected_semester")) {
+        $conn->query("ALTER TABLE evaluation_settings ADD COLUMN selected_semester VARCHAR(20) NULL AFTER selected_ay");
+    }
+    if (!tableColumnExists($conn, "evaluation_settings", "display_ay")) {
+        $conn->query("ALTER TABLE evaluation_settings ADD COLUMN display_ay VARCHAR(20) NULL AFTER selected_semester");
+    }
+    if (!tableColumnExists($conn, "evaluation_settings", "display_semester")) {
+        $conn->query("ALTER TABLE evaluation_settings ADD COLUMN display_semester VARCHAR(20) NULL AFTER display_ay");
+    }
+
     // Ensure singleton row exists.
     $conn->query("INSERT IGNORE INTO evaluation_settings (id, evaluation_open, active_period_id) VALUES (1, 0, NULL)");
+}
+
+function tableColumnExists(mysqli $conn, string $table, string $column): bool {
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS count
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = ?
+          AND COLUMN_NAME = ?
+    ");
+    $stmt->bind_param("ss", $table, $column);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return intval($row["count"] ?? 0) > 0;
 }
 
 function requireAdmin(): void {
@@ -73,12 +106,21 @@ $action = $_GET["action"] ?? "";
 
 // Public-ish read used by other pages
 if ($action === "status") {
-    $settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
+    $settingsRes = $conn->query("
+        SELECT evaluation_open, active_period_id, selected_ay, selected_semester, display_ay, display_semester
+        FROM evaluation_settings
+        WHERE id = 1
+        LIMIT 1
+    ");
     $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
     $evaluationOpen = $settings ? intval($settings["evaluation_open"]) === 1 : false;
     $activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
 
     $activeName = null;
+    $activeAcademicYear = null;
+    $activeSemester = null;
+    $currentAcademicYear = $settings ? (string)(($settings["display_ay"] ?? "") ?: ($settings["selected_ay"] ?? "")) : "";
+    $currentSemester = $settings ? (string)(($settings["display_semester"] ?? "") ?: ($settings["selected_semester"] ?? "")) : "";
     $activeInDuration = false;
     if ($activePeriodId > 0) {
         $today = todayDate();
@@ -89,10 +131,14 @@ if ($action === "status") {
         $stmt->close();
         if ($row) {
             $sem = (string)($row["semester"] ?? "");
+            $activeAcademicYear = (string)($row["ay"] ?? "");
+            $activeSemester = $sem;
+            $currentAcademicYear = $activeAcademicYear;
+            $currentSemester = $activeSemester;
             $prefix = $sem;
             if (stripos($sem, "1st") !== false) $prefix = "1st";
             else if (stripos($sem, "2nd") !== false) $prefix = "2nd";
-            $activeName = trim($prefix . " " . (string)($row["ay"] ?? ""));
+            $activeName = trim($prefix . " " . $activeAcademicYear);
             $activeInDuration = ($row["start_date"] <= $today && $row["end_date"] >= $today);
         }
     }
@@ -102,7 +148,11 @@ if ($action === "status") {
         "success" => true,
         "evaluation_open" => $evaluationOpen,
         "active_period_id" => $activePeriodId > 0 ? $activePeriodId : null,
-        "active_period_name" => $activeName
+        "active_period_name" => $activeName,
+        "active_academic_year" => $activeAcademicYear,
+        "active_semester" => $activeSemester,
+        "current_academic_year" => $currentAcademicYear !== "" ? $currentAcademicYear : null,
+        "current_semester" => $currentSemester !== "" ? $currentSemester : null
     ]);
     exit;
 }
@@ -131,6 +181,33 @@ if ($action === "list") {
 
 $payload = json_decode(file_get_contents("php://input"), true);
 if (!is_array($payload)) $payload = [];
+
+if ($action === "set_dashboard_period") {
+    $academicYear = trim((string)($payload["academic_year"] ?? ""));
+    $semester = trim((string)($payload["semester"] ?? ""));
+
+    if ($academicYear !== "" && !preg_match('/^\d{4}-\d{4}$/', $academicYear)) {
+        echo json_encode(["success" => false, "message" => "Invalid academic year"]);
+        exit;
+    }
+
+    if ($semester !== "" && !in_array($semester, ["1st Semester", "2nd Semester", "Summer"], true)) {
+        echo json_encode(["success" => false, "message" => "Invalid semester"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("
+        UPDATE evaluation_settings
+        SET selected_ay = ?, selected_semester = ?, display_ay = ?, display_semester = ?
+        WHERE id = 1
+    ");
+    $stmt->bind_param("ssss", $academicYear, $semester, $academicYear, $semester);
+    $ok = $stmt->execute();
+    $stmt->close();
+
+    echo json_encode(["success" => $ok]);
+    exit;
+}
 
 if ($action === "create") {
     $ay = trim((string)($payload["ay"] ?? ""));

@@ -339,7 +339,7 @@ elseif ($action === "update_status") {
         exit;
     }
 
-    if (!in_array($status, ["active", "inactive"], true)) {
+    if (!in_array($status, ["active", "inactive", "archived"], true)) {
         echo json_encode(["success" => false, "message" => "Invalid status"]);
         exit;
     }

@@ -13,7 +13,7 @@ $studentYearLevel = '';
 $studentProgram = '';
 $studentStatus = 'active';
 
-$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, s.status, p.program_name 
+$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, s.section, s.status, p.program_name 
                           FROM add_students s 
                           LEFT JOIN add_programs p ON s.program = p.id 
                           WHERE s.id = ?");
@@ -27,6 +27,7 @@ if ($result && $result->num_rows === 1) {
     $studentYearLevel = $student['yearlevel'] ?? '';
     $studentNumber = $student['student_number'] ?? '';
     $studentProgram = $student['program_name'] ?? '';
+    $studentSection = $student['section'] ?? '';
     $studentStatus = strtolower($student['status'] ?? 'active');
 } else {
     $stmt->close();
@@ -63,8 +64,8 @@ $conn->close();
       <i class="ph ph-caret-down"></i>
     </div>
     <div class="dropdown-menu" id="dropdownMenu">
-      <a href="#" onclick="showPasswordForm()"><i class="ph ph-key"></i> Change Password</a>
-      <a href="#" onclick="showProfile()"><i class="ph ph-user"></i> Profile</a>
+      <a href="#" onclick="showPasswordForm(event)"><i class="ph ph-key"></i> Change Password</a>
+      <a href="#" onclick="showProfile(event)"><i class="ph ph-user"></i> Profile</a>
       <a href="#" onclick="showEvaluationHistory(event)"><i class="ph ph-clock-counter-clockwise"></i> View History</a>
       <a href="#" onclick="logout(event)"><i class="ph ph-sign-out"></i> Logout</a>
     </div>
@@ -103,25 +104,31 @@ $conn->close();
       
       <form id="passwordChangeForm" class="modern-login-form">
         <div class="modern-input-group has-toggle">
-          <input type="password" id="oldPass" placeholder="Old Password" required>
-          <div class="password-toggle" onclick="togglePassword('oldPass', this)">
-            <i class="ph ph-eye-slash"></i>
+          <div class="input-wrap">
+            <input type="password" id="oldPass" placeholder="Old Password" required>
+            <div class="password-toggle" onclick="togglePassword('oldPass', this)">
+              <i class="ph ph-eye-slash"></i>
+            </div>
           </div>
           <small id="oldPassError" class="error-message"></small>
         </div>
         
         <div class="modern-input-group has-toggle">
-          <input type="password" id="newPass" placeholder="New Password" required>
-          <div class="password-toggle" onclick="togglePassword('newPass', this)">
-            <i class="ph ph-eye-slash"></i>
+          <div class="input-wrap">
+            <input type="password" id="newPass" placeholder="New Password" required>
+            <div class="password-toggle" onclick="togglePassword('newPass', this)">
+              <i class="ph ph-eye-slash"></i>
+            </div>
           </div>
           <small id="newPassError" class="error-message"></small>
         </div>
         
         <div class="modern-input-group has-toggle">
-          <input type="password" id="confirmPass" placeholder="Confirm Password" required>
-          <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
-            <i class="ph ph-eye-slash"></i>
+          <div class="input-wrap">
+            <input type="password" id="confirmPass" placeholder="Confirm Password" required>
+            <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
+              <i class="ph ph-eye-slash"></i>
+            </div>
           </div>
           <small id="confirmPassError" class="error-message"></small>
         </div>
@@ -136,6 +143,7 @@ $conn->close();
 <input type="hidden" id="studentName" value="<?php echo htmlspecialchars($studentName); ?>">
 <input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars($studentNumber); ?>">
 <input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
+<input type="hidden" id="studentSection" value="<?php echo htmlspecialchars($studentSection); ?>">
 <input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
 <input type="hidden" id="studentStatus" value="<?php echo htmlspecialchars($studentStatus); ?>">
 
@@ -149,7 +157,7 @@ $conn->close();
     </div>
     <div class="main-right">
       <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
-      <div class="academic-year">Academic Year: 2025–2026 • 2nd Semester</div>
+      <div class="academic-year" id="studentAcademicPeriod">Academic Year: Loading...</div>
       <div class="academic-year">Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>

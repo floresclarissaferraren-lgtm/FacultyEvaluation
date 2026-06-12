@@ -13,13 +13,68 @@ function closeLogoutModal(){
 function confirmLogout(){
   window.location.href = "EvalMain.php";}
 
-function showPasswordForm(){
+function showPasswordForm(e){
+  if (e) e.preventDefault();
+  document.getElementById("dropdownMenu").style.display = "none";
+  
+  const passwordForm = document.getElementById("passwordForm");
+  const formContent = passwordForm.querySelector(".LoginForm-content");
+  
+  // Reset any previous animations/transforms
+  if (formContent) {
+    formContent.style.animation = "none";
+    formContent.style.transform = "none";
+    // Force reflow to restart animation
+    void formContent.offsetHeight;
+  }
+  
   document.body.classList.add("modal-open");
-  document.getElementById("passwordForm").classList.add("show");}
+  passwordForm.classList.add("show");
+  
+  // Reset button state when opening form
+  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Update Password";
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+  }
+  
+  // Clear input fields
+  document.getElementById("oldPass").value = "";
+  document.getElementById("newPass").value = "";
+  document.getElementById("confirmPass").value = "";
+  if (typeof clearPassMsgs === "function") clearPassMsgs();
+}
 
 function closePasswordForm(){
+  const passwordForm = document.getElementById("passwordForm");
+  const formContent = passwordForm.querySelector(".LoginForm-content");
+  
   document.body.classList.remove("modal-open");
-  document.getElementById("passwordForm").classList.remove("show");}
+  passwordForm.classList.remove("show");
+  
+  // Reset animations after closing
+  setTimeout(() => {
+    if (formContent) {
+      formContent.style.animation = "";
+      formContent.style.transform = "";
+    }
+  }, 300);
+  
+  if (typeof clearPassMsgs === "function") clearPassMsgs();
+  const box = document.getElementById("passGlobalMsg");
+  if (box) box.style.display = "none";
+  
+  // Reset button state when closing form
+  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Update Password";
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+  }
+}
 
 function escapeHtml(value) {
   return String(value || '')
@@ -86,12 +141,16 @@ function renderCategoryTotals(categoryTotals) {
     return '<div class="category-empty">No category totals available yet.</div>';
   }
 
+  // Determine if weights are meaningful (any non-zero)
+  const hasWeights = categoryTotals.some(item => parseFloat(item.weight || 0) > 0);
+
   return `
     <div class="category-table-wrap">
       <table class="category-table">
         <thead>
           <tr>
             <th>Category</th>
+            ${hasWeights ? '<th>Weight</th>' : ''}
             <th>Percentage</th>
             <th>Average</th>
             <th>Status</th>
@@ -99,14 +158,19 @@ function renderCategoryTotals(categoryTotals) {
         </thead>
         <tbody>
           ${categoryTotals.map(item => {
-            const avg = Number(item.avg_rating) || 0;
-            const percent = getRatingPercentageValue(avg);
+            const avg         = Number(item.avg_rating) || 0;
+            const percent     = getRatingPercentageValue(avg);
             const percentText = formatRatingPercentage(avg);
             const statusLabel = getOverallStatusLabel(avg);
             const statusClass = getStatusBadgeClass(avg).replace(/^status-/, '');
+            const normW       = parseFloat(item.normalised_weight || item.weight || 0);
+            const weightText  = hasWeights
+              ? `${normW.toFixed(1)}%`
+              : '—';
             return `
             <tr>
               <td>${escapeHtml(item.category_name || 'Uncategorized')}</td>
+              ${hasWeights ? `<td><span class="category-weight-tag">${weightText}</span></td>` : ''}
               <td>
                 <div class="category-percent-cell">
                   <span>${percentText}</span>
@@ -125,7 +189,8 @@ function renderCategoryTotals(categoryTotals) {
   `;
 }
 
-function showProfile(){
+function showProfile(e){
+  if (e) e.preventDefault();
   // Close dropdown first
   document.getElementById("dropdownMenu").style.display = "none";
   
@@ -183,13 +248,16 @@ function showProfile(){
     `;
     
     profileModal.style.display = "flex";
-    
-    // Add click outside to close functionality
-    profileModal.addEventListener('click', function(event) {
-      if (event.target === profileModal) {
-        closeProfileModal();
-      }
-    });
+
+    // Attach click-outside listener only once
+    if (!profileModal._clickListenerAttached) {
+      profileModal.addEventListener('click', function(event) {
+        if (event.target === profileModal) {
+          closeProfileModal();
+        }
+      });
+      profileModal._clickListenerAttached = true;
+    }
   }).catch(error => {
     console.error('Error fetching faculty profile data:', error);
   });
@@ -235,34 +303,113 @@ function togglePassword(fieldId, icon) {
   }
 }
 
+function showPassMsg(fieldId, message) {
+  const el = document.getElementById(fieldId);
+  if (el) { el.textContent = message; el.style.display = message ? "block" : "none"; }
+}
+
+function clearPassMsgs() {
+  ["oldPassError", "newPassError", "confirmPassError"].forEach(id => showPassMsg(id, ""));
+}
+
+function validatePasswordStrength(password) {
+  const errors = [];
+  if (password.length < 8)               errors.push("at least 8 characters");
+  if (!/[A-Z]/.test(password))           errors.push("at least one uppercase letter");
+  if (!/[a-z]/.test(password))           errors.push("at least one lowercase letter");
+  if (!/[^A-Za-z0-9]/.test(password))   errors.push("at least one special character");
+  return errors;
+}
+
+function showPasswordMessageBox(message, type) {
+  // type: 'success' | 'error'
+  let box = document.getElementById("passGlobalMsg");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "passGlobalMsg";
+    box.className = "password-message-box";
+  }
+  const container = document.querySelector("#passwordForm .login-form-container");
+  if (container && box.parentElement !== container) {
+    container.insertBefore(box, container.firstChild);
+  }
+  box.style.display = "flex";
+  
+  // Create icon based on type
+  const icon = type === "success" 
+    ? '<i class="ph ph-check-circle"></i>' 
+    : '<i class="ph ph-warning-circle"></i>';
+  
+  box.innerHTML = `
+    <div class="message-icon">${icon}</div>
+    <div class="message-text">${message}</div>
+  `;
+  
+  // Remove existing type classes
+  box.classList.remove("success", "error", "show");
+  
+  // Add type class and trigger animation
+  setTimeout(() => {
+    box.classList.add(type, "show");
+  }, 10);
+  
+  // Auto hide after 4 seconds
+  setTimeout(() => {
+    box.classList.remove("show");
+  }, 4000);
+}
+
 function updatePassword() {
-  const facultyId = document.getElementById("facultyNumericId").value;
-  const oldPass = document.getElementById("oldPass").value;
-  const newPass = document.getElementById("newPass").value;
+  const facultyId   = document.getElementById("facultyNumericId").value;
+  const oldPass     = document.getElementById("oldPass").value;
+  const newPass     = document.getElementById("newPass").value;
   const confirmPass = document.getElementById("confirmPass").value;
 
-  // Validation
-  if (!oldPass || !newPass || !confirmPass) {
-    alert("All fields are required.");
-    return;
+  clearPassMsgs();
+
+  let hasError = false;
+
+  if (!oldPass) {
+    showPassMsg("oldPassError", "Current password is required.");
+    hasError = true;
   }
 
-  if (newPass !== confirmPass) {
-    alert("New passwords do not match.");
-    return;
+  if (!newPass) {
+    showPassMsg("newPassError", "New password is required.");
+    hasError = true;
+  } else {
+    const strengthErrors = validatePasswordStrength(newPass);
+    if (strengthErrors.length > 0) {
+      showPassMsg("newPassError", "Password must have: " + strengthErrors.join(", ") + ".");
+      hasError = true;
+    }
   }
 
-  if (newPass.length < 8) {
-    alert("Password must be at least 8 characters long.");
-    return;
+  if (!confirmPass) {
+    showPassMsg("confirmPassError", "Please confirm your new password.");
+    hasError = true;
+  } else if (newPass && newPass !== confirmPass) {
+    showPassMsg("confirmPassError", "Passwords do not match.");
+    hasError = true;
   }
+
+  if (hasError) return;
+
+  // Get button and disable it during submission
+  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  const originalText = submitBtn.textContent;
+  
+  if (submitBtn.disabled) return; // Prevent double submission
+  
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Updating...";
+  submitBtn.style.opacity = "0.6";
+  submitBtn.style.cursor = "not-allowed";
 
   // Send update request
   fetch("update_facultyPassForm.php", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       faculty_id: facultyId,
       old_password: oldPass,
@@ -271,20 +418,40 @@ function updatePassword() {
   })
   .then(response => response.json())
   .then(data => {
+    // Re-enable button
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+    
     if (data.success) {
-      alert("Password updated successfully!");
-      closePasswordForm();
-      // Clear form fields
-      document.getElementById("oldPass").value = "";
-      document.getElementById("newPass").value = "";
-      document.getElementById("confirmPass").value = "";
+      showPasswordMessageBox("Password updated successfully!", "success");
+      setTimeout(() => {
+        closePasswordForm();
+        document.getElementById("oldPass").value = "";
+        document.getElementById("newPass").value = "";
+        document.getElementById("confirmPass").value = "";
+        clearPassMsgs();
+      }, 1500);
     } else {
-      alert(data.message || "Failed to update password.");
+      if ((data.message || "").toLowerCase().includes("old") ||
+          (data.message || "").toLowerCase().includes("current") ||
+          (data.message || "").toLowerCase().includes("incorrect")) {
+        showPassMsg("oldPassError", data.message || "Current password is incorrect.");
+      } else {
+        showPasswordMessageBox(data.message || "Failed to update password.", "error");
+      }
     }
   })
   .catch(error => {
+    // Re-enable button on error
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+    
     console.error("Error:", error);
-    alert("An error occurred while updating password.");
+    showPasswordMessageBox("An error occurred while updating password.", "error");
   });
 }
 // ================= GLOBAL CLICK EVENTS =================
@@ -312,12 +479,16 @@ document.getElementById("logoutModal").addEventListener("click", function(e){
 
 function loadFacultyStats() {
   if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
-    const ratingNumberEl = document.getElementById("overallRatingNumber");
-    const ratingStatusEl = document.getElementById("overallRatingStatus");
-    const responsesEl = document.getElementById("totalResponsesValue");
-    if (ratingNumberEl) ratingNumberEl.textContent = "0.00 / 5.00";
-    if (ratingStatusEl) ratingStatusEl.textContent = "No Data";
-    if (responsesEl) responsesEl.textContent = "0";
+    const ratingNumberEl     = document.getElementById("overallRatingNumber");
+    const ratingPctEl        = document.getElementById("overallRatingPercentage");
+    const ratingStatusEl     = document.getElementById("overallRatingStatus");
+    const responsesEl        = document.getElementById("totalResponsesValue");
+    const progressFill       = document.getElementById("overallRatingProgressFill");
+    if (ratingNumberEl)  ratingNumberEl.textContent  = "0.00 / 5.00";
+    if (ratingPctEl)     ratingPctEl.textContent      = "0%";
+    if (ratingStatusEl)  ratingStatusEl.textContent   = "No Data";
+    if (responsesEl)     responsesEl.textContent       = "0";
+    if (progressFill)    progressFill.style.width      = "0%";
     return;
   }
 
@@ -325,21 +496,20 @@ function loadFacultyStats() {
     .then(r => r.json())
     .then(data => {
       if (!data.success) return;
-      const ratingNumberEl = document.getElementById("overallRatingNumber");
-      const ratingStatusEl = document.getElementById("overallRatingStatus");
-      const responsesEl = document.getElementById("totalResponsesValue");
 
-      if (ratingNumberEl) {
-        ratingNumberEl.textContent = `${data.overall_rating} / 5.00`;
-      }
-      
-      if (ratingStatusEl) {
-        ratingStatusEl.textContent = data.rating_label || "No Rating Yet";
-      }
-      
-      if (responsesEl) {
-        responsesEl.textContent = `${data.total_responses}`;
-      }
+      const ratingNumberEl = document.getElementById("overallRatingNumber");
+      const ratingPctEl    = document.getElementById("overallRatingPercentage");
+      const ratingStatusEl = document.getElementById("overallRatingStatus");
+      const responsesEl    = document.getElementById("totalResponsesValue");
+      const progressFill   = document.getElementById("overallRatingProgressFill");
+
+      const pct = parseFloat(data.percentage_score || 0);
+
+      if (ratingNumberEl) ratingNumberEl.textContent = `${data.overall_rating} / 5.00`;
+      if (ratingPctEl)    ratingPctEl.textContent     = `${pct.toFixed(1)}%`;
+      if (ratingStatusEl) ratingStatusEl.textContent  = data.rating_label || "No Rating Yet";
+      if (responsesEl)    responsesEl.textContent      = `${data.total_responses}`;
+      if (progressFill)   progressFill.style.width     = `${Math.min(pct, 100)}%`;
     })
     .catch(err => {
       console.error("Failed to load faculty stats:", err);
@@ -379,11 +549,13 @@ function showEvaluationReport() {
   .then(data => {
     // Always show the modal with back button
     const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
-    const overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
-    const overallPercent = getRatingPercentageValue(overallRating);
-    const overallPercentText = formatRatingPercentage(overallRating);
-    const statusLabel = getOverallStatusLabel(overallRating);
-    const statusClass = getStatusBadgeClass(overallRating);
+    const overallRating   = data.success ? (data.overall_rating || '0.00') : '0.00';
+    const overallPercent  = data.success && data.percentage_score
+      ? parseFloat(data.percentage_score)
+      : getRatingPercentageValue(overallRating);
+    const overallPercentText = `${overallPercent.toFixed(1)}%`;
+    const statusLabel    = getOverallStatusLabel(overallRating);
+    const statusClass    = getStatusBadgeClass(overallRating);
     const feedbackHtml = renderFeedbackList(data.success ? (data.feedback_comments || data.feedback) : []);
 
     const reportContent = `
@@ -414,12 +586,17 @@ function showEvaluationReport() {
               <div class="report-card-progress" aria-label="Overall rating ${overallPercentText}">
                 <div class="report-card-progress-fill" style="width: ${overallPercent}%;"></div>
               </div>
-              <span class="report-card-note">Average student rating</span>
+              <span class="report-card-note">Weighted performance score</span>
+            </div>
+            <div class="report-card report-score-highlight">
+              <span class="report-card-label">Performance Score</span>
+              <strong class="report-card-value report-pct-value">${overallPercentText}</strong>
+              <span class="report-card-note">Out of 100%</span>
             </div>
             <div class="report-card report-card-large ${statusClass}">
               <span class="report-card-label">Performance Status</span>
               <strong class="report-card-value">${statusLabel}</strong>
-              <span class="report-card-note">Based on student ratings</span>
+              <span class="report-card-note">Based on weighted ratings</span>
             </div>
             <div class="report-card">
               <span class="report-card-label">Total Responses</span>

@@ -230,15 +230,28 @@ body.modal-open{overflow:hidden}
   border-radius:24px;
   width:100%;
   max-width:480px;
-  padding:30px;
+  padding:40px 35px;
   text-align:center;
   box-shadow:0 20px 60px rgba(0, 0, 0, 0.15);
   position:relative;
   color:#1e293b;
-  transform:translateY(-40px);
-  animation:slideDown .5s ease;
   overflow:hidden;
   border:1px solid rgba(0, 0, 0, 0.1);
+}
+
+.LoginForm.show .LoginForm-content {
+  animation:slideDown .5s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Decorative wave backgrounds */
@@ -298,7 +311,7 @@ body.modal-open{overflow:hidden}
 .login-description{
   font-size:14px;
   color:#64748b;
-  margin:0 0 20px 0;
+  margin:0 0 28px 0;
   line-height:1.5;
   max-width:320px;
   margin-left:auto;
@@ -311,13 +324,13 @@ body.modal-open{overflow:hidden}
 }
 
 .modern-input-group{
-  position:relative;
-  margin-bottom:16px;
+  margin-bottom:20px;
 }
 
 .modern-input-group input{
   width:100%;
-  padding:16px 20px 16px 20px;
+  min-height:56px;
+  padding:16px 50px 16px 20px;
   border:2px solid #e2e8f0;
   border-radius:16px;
   font-size:15px;
@@ -325,6 +338,7 @@ body.modal-open{overflow:hidden}
   background:#ffffff;
   transition:all .3s ease;
   font-weight:500;
+  box-sizing:border-box;
 }
 
 .modern-input-group.has-icon input{
@@ -367,7 +381,7 @@ body.modal-open{overflow:hidden}
 .password-toggle{
   position:absolute;
   right:16px;
-  top:40%;
+  top:50%;
   transform:translateY(-50%);
   color:#94a3b8;
   font-size:20px;
@@ -377,6 +391,41 @@ body.modal-open{overflow:hidden}
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.input-wrap{
+  position:relative;
+  display:block;
+}
+
+.input-wrap input{
+  width:100%;
+  min-height:56px;
+  padding:16px 50px 16px 20px;
+  border:2px solid #e2e8f0;
+  border-radius:16px;
+  font-size:15px;
+  color:#1e293b;
+  background:#ffffff;
+  transition:all .3s ease;
+  font-weight:500;
+  box-sizing:border-box;
+}
+
+.input-wrap input::placeholder{
+  color:#94a3b8;
+  font-weight:400;
+}
+
+.input-wrap input:focus{
+  border-color:#3b82f6;
+  outline:0;
+  box-shadow:0 0 0 4px rgba(59,130,246,.1);
+  transform:translateY(-1px);
+}
+
+.input-wrap input:focus ~ .password-toggle{
+  color:#3b82f6;
 }
 
 .password-toggle:hover{
@@ -415,9 +464,10 @@ body.modal-open{overflow:hidden}
   box-shadow:0 8px 25px rgba(59, 130, 246, 0.3);
   text-transform:uppercase;
   letter-spacing:0.5px;
+  margin-top:8px;
   margin-bottom:0;
-  min-height:44px;
-  max-height:44px;
+  min-height:56px;
+  max-height:56px;
   min-width:120px;
   max-width:none;
   display:flex;
@@ -444,6 +494,102 @@ body.modal-open{overflow:hidden}
   display: block;
   text-align: left;
   padding-left: 0;
+}
+
+/* Password Message Box - Success/Error Messages */
+.password-message-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  margin: 0 0 18px 0;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+  box-sizing: border-box;
+}
+
+.password-message-box.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.password-message-box.success {
+  background: #ecfdf5;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.password-message-box.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.password-message-box .message-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.password-message-box.success .message-icon {
+  color: #16a34a;
+}
+
+.password-message-box.error .message-icon {
+  color: #dc2626;
+}
+
+.password-message-box .message-text {
+  flex: 1;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.password-message-box.error.show {
+  animation: shake 0.5s ease;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.password-message-box.success.show {
+  animation: successPulse 0.5s ease;
+}
+
+@media(max-width:480px){
+  .password-message-box{
+    gap: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .password-message-box .message-icon{
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
 }
 
 /* Password Form ==================================================================================================== */
@@ -726,6 +872,31 @@ input[type="password"]::-webkit-password-toggle {
   font-weight: 600;
   color: #10b981;
   letter-spacing:-.2px;
+}
+
+/* Percentage score shown inside the Overall Rating card */
+.rating-percentage {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: -.3px;
+  line-height: 1;
+}
+
+/* Progress bar inside the card */
+.rating-progress-track {
+  margin-top: 10px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.rating-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1d4ed8, #10b981);
+  transition: width .6s cubic-bezier(.4, 0, .2, 1);
 }
 
 .card-value {
@@ -1558,5 +1729,58 @@ select {
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
+  }
+}
+
+
+/* ── Weighted category tag in report table ───────────────────────── */
+.evaluation-report-modal .category-weight-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* report-badge colours (shared by category status column) */
+.evaluation-report-modal .report-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+.evaluation-report-modal .report-badge.outstanding { background: #059669; }
+.evaluation-report-modal .report-badge.very-good   { background: #0ea5e9; }
+.evaluation-report-modal .report-badge.good        { background: #f59e0b; color: #1e293b; }
+.evaluation-report-modal .report-badge.fair        { background: #f97316; }
+.evaluation-report-modal .report-badge.poor        { background: #ef4444; }
+.evaluation-report-modal .report-badge.no-responses,
+.evaluation-report-modal .report-badge.na          { background: #64748b; }
+
+/* ── Performance Score highlight card in report modal ───────────── */
+.evaluation-report-modal .report-score-highlight {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1.5px solid #bfdbfe;
+}
+
+.evaluation-report-modal .report-pct-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1d4ed8;
+  letter-spacing: -.5px;
+}
+
+/* Update report summary grid to 4 cols when enough space */
+@media (min-width: 600px) {
+  .evaluation-report-modal .report-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

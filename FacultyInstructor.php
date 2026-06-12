@@ -61,10 +61,10 @@ $stmt->close();
     </div>
 
     <div class="dropdown-menu" id="dropdownMenu">
-      <a href="#" onclick="showPasswordForm()">
+      <a href="#" onclick="showPasswordForm(event)">
         <i class="ph ph-key"></i> Change Password
       </a>
-      <a href="#" onclick="showProfile()">
+      <a href="#" onclick="showProfile(event)">
         <i class="ph ph-user"></i> Profile
       </a>
       <a href="#" onclick="logout(event)">
@@ -128,25 +128,31 @@ $stmt->close();
       
       <form id="passwordChangeForm" class="modern-login-form">
         <div class="modern-input-group has-toggle">
-          <input type="password" id="oldPass" placeholder="Old Password" required>
-          <div class="password-toggle" onclick="togglePassword('oldPass', this)">
-            <i class="ph ph-eye-slash"></i>
+          <div class="input-wrap">
+            <input type="password" id="oldPass" placeholder="Old Password" required>
+            <div class="password-toggle" onclick="togglePassword('oldPass', this)">
+              <i class="ph ph-eye-slash"></i>
+            </div>
           </div>
           <small id="oldPassError" class="error-message"></small>
         </div>
         
         <div class="modern-input-group has-toggle">
-          <input type="password" id="newPass" placeholder="New Password" required>
-          <div class="password-toggle" onclick="togglePassword('newPass', this)">
-            <i class="ph ph-eye-slash"></i>
+          <div class="input-wrap">
+            <input type="password" id="newPass" placeholder="New Password" required>
+            <div class="password-toggle" onclick="togglePassword('newPass', this)">
+              <i class="ph ph-eye-slash"></i>
+            </div>
           </div>
           <small id="newPassError" class="error-message"></small>
         </div>
         
         <div class="modern-input-group has-toggle">
-          <input type="password" id="confirmPass" placeholder="Confirm Password" required>
-          <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
-            <i class="ph ph-eye-slash"></i>
+          <div class="input-wrap">
+            <input type="password" id="confirmPass" placeholder="Confirm Password" required>
+            <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
+              <i class="ph ph-eye-slash"></i>
+            </div>
           </div>
           <small id="confirmPassError" class="error-message"></small>
         </div>
@@ -171,7 +177,7 @@ $stmt->close();
       <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
-    <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Generate Report</button>
+    <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Report</button>
   </div>
   
   <div class="faculty-cards">
@@ -180,7 +186,11 @@ $stmt->close();
         <span class="card-title">Overall Rating</span>
         <div class="rating-container">
           <span class="rating-number" id="overallRatingNumber">0.00 / 5.00</span>
+          <span class="rating-percentage" id="overallRatingPercentage">0%</span>
           <span class="rating-status" id="overallRatingStatus">No Data</span>
+        </div>
+        <div class="rating-progress-track">
+          <div class="rating-progress-fill" id="overallRatingProgressFill" style="width:0%"></div>
         </div>
       </div>
       <i class="ph ph-star"></i>

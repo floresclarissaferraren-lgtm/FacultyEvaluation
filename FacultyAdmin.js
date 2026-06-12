@@ -28,6 +28,18 @@ function showNotification(message, color="#4caf50", duration=3000){
     }, duration);
 }
 
+function showAlertModal(message) {
+  const overlay = document.getElementById("alertModal");
+  const msg = document.getElementById("alertModalMessage");
+  const closeBtn = document.getElementById("alertModalClose");
+  if (!overlay || !msg) return;
+  msg.textContent = message;
+  overlay.style.display = "flex";
+  const close = () => { overlay.style.display = "none"; };
+  closeBtn.onclick = close;
+  overlay.onclick = (e) => { if (e.target === overlay) close(); };
+}
+
 // Custom Notification Modal Functions
 function showNotificationModal() {
     const modal = document.getElementById("notificationModal");
@@ -441,11 +453,18 @@ modal.querySelector(".cancel-btn").onclick=closeDeleteModal;
 modal.querySelector(".submit-btn").onclick=confirmDelete;
 
 // ===================== Archive Confirmation Modal ==========================================================
-let _archivePending = null; // stores { row, faculty, statusMenu }
+let _archivePending = null; // stores { row, record, statusMenu, type }
 
-function openArchiveModal(row, faculty, statusMenu) {
-  _archivePending = { row, faculty, statusMenu };
+function openArchiveModal(row, record, statusMenu, type = "faculty") {
+  _archivePending = { row, record, statusMenu, type };
   const overlay = document.getElementById("archiveModal");
+  const label = type === "student" ? "Student" : "Faculty";
+  const title = overlay.querySelector(".archive-modal-title");
+  const message = overlay.querySelector(".archive-modal-message");
+  const confirmBtn = document.getElementById("archiveConfirmBtn");
+  if (title) title.textContent = `Archive ${label}`;
+  if (message) message.textContent = `Archive this ${label.toLowerCase()} account?`;
+  if (confirmBtn) confirmBtn.textContent = `Yes, Archive`;
   overlay.classList.add("show");
 }
 
@@ -454,27 +473,30 @@ function closeArchiveModal() {
   overlay.classList.remove("show");
   _archivePending = null;
 }
+window.closeArchiveModal = closeArchiveModal;
 
 document.getElementById("archiveConfirmBtn").addEventListener("click", async () => {
   if (!_archivePending) return;
-  const { row, faculty: f, statusMenu } = _archivePending;
+  const { row, record, statusMenu, type } = _archivePending;
   closeArchiveModal();
   try {
-    const result = await updateStatus("faculty", f.id, "archived");
+    const result = await updateStatus(type, record.id, "archived");
     if (result.success) {
       row.dataset.status = "archived";
-      row.querySelector("td:nth-child(5)").innerHTML = statusPillHtml("archived");
-      statusMenu.querySelectorAll(".status-option").forEach(btn => btn.classList.remove("selected"));
+      const statusCellIndex = type === "student" ? 4 : 5;
+      row.querySelector(`td:nth-child(${statusCellIndex})`).innerHTML = statusPillHtml("archived");
+      if (statusMenu) statusMenu.querySelectorAll(".status-option").forEach(btn => btn.classList.remove("selected"));
       closeStatusMenus();
-      showNotification("Faculty archived successfully", "#4caf50");
+      showNotification(`${type === "student" ? "Student" : "Faculty"} archived successfully`, "#4caf50");
       refreshSectionStats();
-      loadFaculty();
+      if (type === "student") loadStudents();
+      else loadFaculty();
     } else {
-      showNotification("Failed to archive faculty: " + (result.message || "Unknown error"), "#f44336");
+      showNotification(`Failed to archive ${type}: ` + (result.message || "Unknown error"), "#f44336");
     }
   } catch (error) {
-    console.error("Archive faculty error:", error);
-    showNotification("Error archiving faculty", "#f44336");
+    console.error(`Archive ${type} error:`, error);
+    showNotification(`Error archiving ${type}`, "#f44336");
   }
 });
 
@@ -1015,6 +1037,41 @@ function syncDashboardPeriodSetting() {
   const semSelect = document.getElementById("dashboard-semester-select");
   if (semSelect) semSelect.value = selectedClassSemester;
   syncPeriodFormDefaults();
+  updateDashboardPeriodBox();
+}
+
+async function loadDashboardPeriodSetting() {
+  try {
+    const res = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const data = await res.json();
+    if (!data || !data.success) return;
+
+    const serverHasSetting = !!(data.current_academic_year && data.current_semester);
+    if (data.current_academic_year) selectedAcademicYear = data.current_academic_year;
+    if (data.current_semester) selectedClassSemester = data.current_semester;
+
+    try {
+      if (selectedAcademicYear) localStorage.setItem("selectedAcademicYear", selectedAcademicYear);
+      if (selectedClassSemester) localStorage.setItem("selectedClassSemester", selectedClassSemester);
+    } catch (err) {}
+
+    syncDashboardPeriodSetting();
+    if (!serverHasSetting && selectedAcademicYear && selectedClassSemester) {
+      saveDashboardPeriodSetting();
+    }
+  } catch (err) {}
+}
+
+function saveDashboardPeriodSetting() {
+  fetch("periods_api.php?action=set_dashboard_period", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      academic_year: selectedAcademicYear || "",
+      semester: selectedClassSemester || ""
+    })
+  }).catch(() => {});
 }
 
 function syncPeriodFormDefaults() {
@@ -1025,7 +1082,10 @@ function syncPeriodFormDefaults() {
 }
 
 syncDashboardPeriodSetting();
-document.addEventListener("DOMContentLoaded", syncDashboardPeriodSetting);
+document.addEventListener("DOMContentLoaded", () => {
+  syncDashboardPeriodSetting();
+  loadDashboardPeriodSetting();
+});
 
 function handleSetClassSemester(semester) {
   if (!semester) return showNotification("Please select semester first", "#f44336");
@@ -1034,7 +1094,8 @@ function handleSetClassSemester(semester) {
     localStorage.setItem("selectedClassSemester", semester);
   } catch (err) {}
   syncDashboardPeriodSetting();
-  showNotification(`Add Classes will show ${semester} subjects only`, "#4caf50");
+  updateDashboardPeriodBox();
+  saveDashboardPeriodSetting();
 
   const classYear = document.getElementById("class-year")?.value || "";
   if (document.getElementById("addClassModal")?.style.display !== "none" && classYear) {
@@ -1053,6 +1114,8 @@ document.getElementById("dashboard-ay-select")?.addEventListener("change", (e) =
     localStorage.setItem("selectedAcademicYear", selectedAcademicYear);
   } catch (err) {}
   syncPeriodFormDefaults();
+  updateDashboardPeriodBox();
+  saveDashboardPeriodSetting();
 });
 
 document.getElementById("dashboard-semester-select")?.addEventListener("change", (e) => {
@@ -1146,7 +1209,7 @@ addManageBtn?.addEventListener("click", () => {
     delete addClassModal.dataset.existingSubjectIds;
     document.getElementById("class-year").selectedIndex = 0;
     document.getElementById("class-block").value = "";
-    document.getElementById("subject-checkbox-list").innerHTML = `${classSubjectSearchHtml()}<small>Select year level first to load subjects</small>`;
+    setClassSubjectMessage("Select year level first to load subjects");
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
       facultyBox.dataset.facultyData = JSON.stringify({});
@@ -1162,7 +1225,21 @@ function classSubjectSearchHtml() {
       <input type="text" id="class-subject-search" placeholder="Search assigned subjects..." class="subject-search-input">
       <i class="ph ph-magnifying-glass"></i>
     </div>
+    <div class="class-subject-options"></div>
   `;
+}
+
+function getClassSubjectOptionsBox() {
+  const box = document.getElementById("subject-checkbox-list");
+  return box?.querySelector(".class-subject-options") || box;
+}
+
+function setClassSubjectMessage(message) {
+  const box = document.getElementById("subject-checkbox-list");
+  if (!box) return;
+  box.innerHTML = classSubjectSearchHtml();
+  getClassSubjectOptionsBox().innerHTML = `<small>${message}</small>`;
+  bindClassSubjectSearch();
 }
 
 function bindClassSubjectSearch() {
@@ -1179,6 +1256,15 @@ function bindClassSubjectSearch() {
 // ========================= LOAD SUBJECTS =========================
 function loadSubjects() {
   if (!currentProgramId) return;
+
+  // Reset filters
+  const searchInput = document.getElementById("manage-subjects-search");
+  const semesterFilter = document.getElementById("manage-subjects-semester-filter");
+  const yearFilter = document.getElementById("manage-subjects-year-filter");
+  
+  if (searchInput) searchInput.value = "";
+  if (semesterFilter) semesterFilter.value = "";
+  if (yearFilter) yearFilter.value = "";
 
   fetch(`subject_crud.php?action=get&program_id=${currentProgramId}`)
     .then(r => r.json())
@@ -1332,11 +1418,13 @@ saveSubjectBtn?.addEventListener("click", () => {
 function loadSubjectsByYear(yearLevel, callback = null) {
 
   const box = document.getElementById("subject-checkbox-list");
-  box.innerHTML = `${classSubjectSearchHtml()}<small>Loading subjects...</small>`;
+  box.innerHTML = classSubjectSearchHtml();
+  getClassSubjectOptionsBox().innerHTML = "<small>Loading subjects...</small>";
   bindClassSubjectSearch();
 
   if (!selectedClassSemester) {
-    box.innerHTML = `${classSubjectSearchHtml()}<small>Set semester on the dashboard first</small>`;
+    box.innerHTML = classSubjectSearchHtml();
+    getClassSubjectOptionsBox().innerHTML = "<small>Set semester on the dashboard first</small>";
     bindClassSubjectSearch();
     if (typeof callback === "function") callback([]);
     return;
@@ -1357,7 +1445,8 @@ function loadSubjectsByYear(yearLevel, callback = null) {
 
       if (!data || data.length === 0) {
         const semesterText = selectedClassSemester ? ` in ${selectedClassSemester}` : "";
-        box.innerHTML = `${classSubjectSearchHtml()}<small>No subjects found for year ${yearLevel}${semesterText}</small>`;
+        box.innerHTML = classSubjectSearchHtml();
+        getClassSubjectOptionsBox().innerHTML = `<small>No subjects found for year ${yearLevel}${semesterText}</small>`;
         bindClassSubjectSearch();
         if (typeof callback === "function") callback([]);
         return;
@@ -1366,10 +1455,11 @@ function loadSubjectsByYear(yearLevel, callback = null) {
       // Clear existing content but keep the header
       box.innerHTML = classSubjectSearchHtml();
       bindClassSubjectSearch();
+      const optionsBox = getClassSubjectOptionsBox();
       if (selectedClassSemester) {
         const note = document.createElement("small");
         note.textContent = `Showing ${selectedClassSemester} subjects only`;
-        box.appendChild(note);
+        optionsBox.appendChild(note);
       }
       
       data.forEach(sub => {
@@ -1380,14 +1470,15 @@ function loadSubjectsByYear(yearLevel, callback = null) {
           <input type="checkbox" value="${sub.id}">
           ${sub.subject_code} - ${sub.subject_desc}
         `;
-        box.appendChild(label);
+        optionsBox.appendChild(label);
       });
 
       if (typeof callback === "function") callback(data);
     })
     .catch(err => {
       console.error("Error loading subjects:", err);
-      box.innerHTML = `${classSubjectSearchHtml()}<small>Error loading subjects</small>`;
+      box.innerHTML = classSubjectSearchHtml();
+      getClassSubjectOptionsBox().innerHTML = "<small>Error loading subjects</small>";
       bindClassSubjectSearch();
       if (typeof callback === "function") callback([]);
     });
@@ -1405,15 +1496,13 @@ document.getElementById("class-year")?.addEventListener("change", (e) => {
   
   if (!year) {
     console.log("No year selected, returning");
-    box.innerHTML = `${classSubjectSearchHtml()}<small>Select year level first to load subjects</small>`;
-    bindClassSubjectSearch();
+    setClassSubjectMessage("Select year level first to load subjects");
     return;
   }
   
   if (!currentProgramId) {
     console.log("No program ID set");
-    box.innerHTML = `${classSubjectSearchHtml()}<small>Please select a program first from the programs list, then click Manage</small>`;
-    bindClassSubjectSearch();
+    setClassSubjectMessage("Please select a program first from the programs list, then click Manage");
     return;
   }
   
@@ -1632,8 +1721,7 @@ function loadClasses() {
 
           document.getElementById("class-year").value = c.year_level;
           document.getElementById("class-block").value = c.block || "";
-          document.getElementById("subject-checkbox-list").innerHTML = `${classSubjectSearchHtml()}<small>Loading subjects...</small>`;
-          bindClassSubjectSearch();
+          setClassSubjectMessage("Loading subjects...");
 
           const facultyBox = document.getElementById("faculty-list");
           if (facultyBox) {
@@ -2623,6 +2711,20 @@ if (backToFacultyBtn) {
     showFacultyListView();
   });
 }
+
+const showArchivedStudentBtn = document.querySelector(".show-archived-student-btn");
+if (showArchivedStudentBtn) {
+  showArchivedStudentBtn.addEventListener("click", () => {
+    showArchivedStudentView();
+  });
+}
+
+const backToStudentBtn = document.querySelector(".back-to-student-btn");
+if (backToStudentBtn) {
+  backToStudentBtn.addEventListener("click", () => {
+    showStudentListView();
+  });
+}
 // ========================= Report Section =========================
 function loadEvaluations() {
   console.log('Loading evaluations...');
@@ -2640,12 +2742,23 @@ function loadEvaluations() {
         }
         
         data.data.forEach(evaluation => {
+          const pct     = parseFloat(evaluation.percentage_score || 0);
+          const pctText = `${pct.toFixed(1)}%`;
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>
               <strong>${evaluation.name}</strong>
             </td>
-            <td>${evaluation.average_score}</td>
+            <td>
+              <div class="score-cell">
+                <span class="score-pct">${pctText}</span>
+                <div class="score-mini-track">
+                  <div class="score-mini-fill ${evaluation.rating_class}" style="width:${Math.min(pct,100)}%"></div>
+                </div>
+                <span class="score-raw">${Number(evaluation.average_score).toFixed(2)} / 5.00</span>
+              </div>
+            </td>
             <td>${evaluation.total_responses}</td>
             <td>
               <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
@@ -2844,6 +2957,9 @@ function renderEvaluationDetailsTable(reportData) {
       ? reportData.category_totals
       : [];
 
+  // Check if weights are present
+  const hasWeights = details.some(d => parseFloat(d.normalised_weight || d.weight || 0) > 0);
+
   if (categoryCountEl) {
     categoryCountEl.textContent = `${details.length} ${details.length === 1 ? "category" : "categories"}`;
   }
@@ -2857,9 +2973,11 @@ function renderEvaluationDetailsTable(reportData) {
           const percentText = `${scorePercent.toFixed(0)}%`;
           const ratingText = detail.rating || detail.status || "N/A";
           const ratingClass = String((detail.rating_class || ratingText || "poor")).toLowerCase().replace(/\s+/g, "-");
+          const normW = parseFloat(detail.normalised_weight || detail.weight || 0);
+          const weightTag = hasWeights ? `<span class="category-weight-tag" title="Category weight">${normW.toFixed(1)}%</span>` : '';
           return `
             <div class="category-pill ${escapeHtml(ratingClass)}">
-              <div class="category-pill-name">${escapeHtml(categoryName)}</div>
+              <div class="category-pill-name">${escapeHtml(categoryName)} ${weightTag}</div>
               <div class="category-pill-meter" aria-label="${escapeHtml(categoryName)} ${percentText}">
                 <div class="category-pill-fill" style="width: ${scorePercent}%;"></div>
               </div>
@@ -2874,10 +2992,19 @@ function renderEvaluationDetailsTable(reportData) {
   if (details.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="empty-report-cell">No categories available</td>
+        <td colspan="${hasWeights ? 5 : 4}" class="empty-report-cell">No categories available</td>
       </tr>
     `;
     return;
+  }
+
+  // Update thead if weight column needed
+  const thead = tbody.closest('table')?.querySelector('thead tr');
+  if (thead && hasWeights && !thead.querySelector('.weight-th')) {
+    const weightTh = document.createElement('th');
+    weightTh.className = 'weight-th';
+    weightTh.textContent = 'Weight';
+    thead.insertBefore(weightTh, thead.children[1]); // after Category name
   }
 
   const rowsHtml = details.map((detail) => {
@@ -2888,10 +3015,15 @@ function renderEvaluationDetailsTable(reportData) {
     const ratingText = detail.rating || detail.status || 'N/A';
     const ratingClass = String((detail.rating_class || ratingText || 'poor')).toLowerCase().replace(/\s+/g, '-');
     const responses = Number.parseInt(detail.responses ?? detail.total_responses ?? 0, 10) || 0;
+    const normW = parseFloat(detail.normalised_weight || detail.weight || 0);
+    const weightCell = hasWeights
+      ? `<td class="category-weight-cell"><span class="category-weight-tag">${normW.toFixed(1)}%</span></td>`
+      : '';
 
     return `
       <tr>
         <td class="category-name-cell">${escapeHtml(categoryName)}</td>
+        ${weightCell}
         <td class="category-rating-cell">
           <div class="category-score-cell">
             <span class="score-text">${escapeHtml(scoreValue)} / 5.00</span>
@@ -2967,14 +3099,17 @@ function viewEvaluationDetails(facultyId) {
         const overallProgressFill = document.getElementById('reportOverallProgressFill');
         const responsesElement = document.getElementById('reportTotalResponses');
         const periodElement = document.getElementById('reportEvaluationPeriod');
-        const overallScore = parseFloat(data.data.overall_rating || 0);
-        const overallPercent = Number.isFinite(overallScore) ? Math.min(100, Math.max(0, overallScore * 20)) : 0;
+        const overallScore   = parseFloat(data.data.overall_rating || 0);
+        const pctScore       = data.data.percentage_score
+          ? parseFloat(data.data.percentage_score)
+          : Math.min(100, Math.max(0, overallScore * 20));
+        const overallPercent = pctScore;
         
         if (nameElement) nameElement.textContent = data.data.name;
         if (idElement) idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}`;
         if (ratingElement) ratingElement.textContent = `${data.data.overall_rating || '0.00'}`;
-        if (overallPercentElement) overallPercentElement.textContent = `${overallPercent.toFixed(0)}%`;
-        if (overallProgressFill) overallProgressFill.style.width = `${overallPercent}%`;
+        if (overallPercentElement) overallPercentElement.textContent = `${pctScore.toFixed(1)}%`;
+        if (overallProgressFill) overallProgressFill.style.width = `${Math.min(pctScore, 100)}%`;
         if (responsesElement) responsesElement.textContent = data.data.total_responses || 0;
         if (periodElement) periodElement.textContent = data.data.evaluation_period || 'All evaluation periods';
         if (statusElement) {
@@ -3313,9 +3448,11 @@ function updateTopPerformanceChart() {
   }
 
   currentProgressList.innerHTML = chartSource.map((item, index) => {
-    const percentage = getRatingPercentageValue(item.rating);
-    const displayPercentage = `${percentage.toFixed(0)}%`;
-    const facultyName = item.name || "Unknown Faculty";
+    const pct              = item.percentage !== undefined
+      ? parseFloat(item.percentage)
+      : getRatingPercentageValue(item.rating);
+    const displayPct       = `${pct.toFixed(1)}%`;
+    const facultyName      = item.name || "Unknown Faculty";
     const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
     return `
       <div class="top-performance-progress-item">
@@ -3324,10 +3461,10 @@ function updateTopPerformanceChart() {
         <div class="top-performance-main">
           <div class="top-performance-progress-meta">
             <span class="top-performance-name">${escapeHtml(facultyName)}</span>
-            <span class="top-performance-percent"><i class="ph ph-star"></i>${displayPercentage}</span>
+            <span class="top-performance-percent"><i class="ph ph-star"></i>${displayPct}</span>
           </div>
-          <div class="top-performance-progress-track" aria-label="${escapeHtml(facultyName)} performance ${displayPercentage}">
-            <div class="top-performance-progress-fill ${progressColorClass}" style="width: ${percentage}%;"></div>
+          <div class="top-performance-progress-track" aria-label="${escapeHtml(facultyName)} performance ${displayPct}">
+            <div class="top-performance-progress-fill ${progressColorClass}" style="width: ${Math.min(pct,100)}%;"></div>
           </div>
         </div>
       </div>
@@ -3362,11 +3499,14 @@ function populateTopPerformanceModal() {
   summaryText.textContent = `Showing ${sorted.length} ranked faculty members in descending order.`;
 
   sorted.forEach((item, index) => {
+    const pct    = item.percentage !== undefined
+      ? parseFloat(item.percentage)
+      : getRatingPercentageValue(item.rating);
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${item.name}</td>
-      <td>${formatRatingPercentage(item.rating)}</td>
+      <td>${pct.toFixed(1)}%</td>
     `;
     tableBody.appendChild(row);
   });
@@ -3415,6 +3555,40 @@ function initializeTopPerformanceModal() {
 // ========================= Students  ==========================================================================================
 const studentTbody   = document.querySelector("#students-section table tbody"),
       programSelect  = document.getElementById("student-program");
+const archivedStudentTbody = document.querySelector(".archived-students-table tbody");
+const studentStatsContainer = document.querySelector("#students-section .student-stats-container");
+const studentTableWrapper = document.querySelector("#students-section .table-wrapper");
+const archivedStudentSection = document.querySelector("#students-section .archived-student-section");
+
+function showStudentListView() {
+  if (studentStatsContainer) {
+    studentStatsContainer.hidden = false;
+    studentStatsContainer.style.display = "";
+  }
+  if (studentTableWrapper) {
+    studentTableWrapper.hidden = false;
+    studentTableWrapper.style.display = "";
+  }
+  if (archivedStudentSection) {
+    archivedStudentSection.hidden = true;
+    archivedStudentSection.style.display = "none";
+  }
+}
+
+function showArchivedStudentView() {
+  if (studentStatsContainer) {
+    studentStatsContainer.hidden = true;
+    studentStatsContainer.style.display = "none";
+  }
+  if (studentTableWrapper) {
+    studentTableWrapper.hidden = true;
+    studentTableWrapper.style.display = "none";
+  }
+  if (archivedStudentSection) {
+    archivedStudentSection.hidden = false;
+    archivedStudentSection.style.display = "";
+  }
+}
 
 // ------------------- Helpers -------------------
 function val(id){ return document.getElementById("student-"+id).value.trim(); }
@@ -3439,12 +3613,27 @@ function normalizeStudentYearlevel(yearLevel) {
   return Number.isNaN(year) ? value : year.toString();
 }
 
+function normalizeFilterText(value) {
+  return (value || "").toString().trim().toLowerCase();
+}
+
+function getProgramByStudentValue(programValue) {
+  const value = (programValue || "").toString().trim();
+  if (!value || !Array.isArray(programs)) return null;
+
+  return programs.find(program =>
+    String(program.id) === value ||
+    normalizeFilterText(program.name) === normalizeFilterText(value) ||
+    normalizeFilterText(program.program_name) === normalizeFilterText(value)
+  ) || null;
+}
+
 // Function to get program name from program ID
 function getProgramName(programId) {
   if (!programId) return '';
   
-  const program = programs.find(p => p.id == programId);
-  return program ? program.name : programId;
+  const program = getProgramByStudentValue(programId);
+  return program ? (program.name || program.program_name || programId) : programId;
 }
 
 function resetSubmitBtn(text){
@@ -3464,6 +3653,7 @@ function populateProgramDropdown() {
   }
   
   console.log("Populating dropdown with programs:", programs);
+  const currentValue = dropdown.value;
   
   // Clear existing options except "All Programs"
   dropdown.innerHTML = '<option value="">All Programs</option>';
@@ -3472,11 +3662,14 @@ function populateProgramDropdown() {
   if (programs && Array.isArray(programs)) {
     programs.forEach(program => {
       const option = document.createElement("option");
-      option.value = program.name || program.program_name || '';
+      option.value = String(program.id || '');
       option.textContent = program.name || program.program_name || '';
       dropdown.appendChild(option);
       console.log("Added program to dropdown:", program.name || program.program_name);
     });
+    if ([...dropdown.options].some(option => option.value === currentValue)) {
+      dropdown.value = currentValue;
+    }
   } else {
     console.log("No programs available or programs is not an array");
   }
@@ -3628,11 +3821,15 @@ function loadStudents(){
       }
       
       studentTbody.innerHTML = "";
+      if (archivedStudentTbody) archivedStudentTbody.innerHTML = "";
       
       // Check if data is empty or not an array
       if (!data || !Array.isArray(data) || data.length === 0) {
         console.log("No students found");
         studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No students found</td></tr>';
+        if (archivedStudentTbody) {
+          archivedStudentTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No archived students found</td></tr>';
+        }
         return;
       }
       
@@ -3642,7 +3839,25 @@ function loadStudents(){
         const row = document.createElement("tr");
         row.dataset.id = stu.id;
         row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
+        const studentProgram = getProgramByStudentValue(stu.program);
+        row.dataset.programId = studentProgram ? String(studentProgram.id) : String(stu.program || "");
+        row.dataset.programName = normalizeFilterText(studentProgram ? (studentProgram.name || studentProgram.program_name) : stu.program);
         row.dataset.status = (stu.status || "active").toLowerCase();
+
+        if (normalizeStatusValue(stu.status) === "archived") {
+          row.innerHTML = `
+            <td>${stu.student_number || ''}</td>
+            <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix||""}</div>
+                <small style="color:#6b7280;">${stu.email || ''}</small>
+            </td>
+            <td><div>${stu.yearlevel === 'irregular' ? 'irregular' : (stu.yearlevel || '') + (stu.section || '')}</div>
+                <small style="color:#6b7280;">${getProgramName(stu.program)}</small>
+            </td>
+            <td>${statusPillHtml(stu.status)}</td>`;
+          if (archivedStudentTbody) archivedStudentTbody.appendChild(row);
+          return;
+        }
+
         row.innerHTML = `
           <td>${stu.student_number || ''}</td>
           <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix||""}</div>
@@ -3657,6 +3872,7 @@ function loadStudents(){
               <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
               <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
               ${statusMenuHtml("student", stu.status)}
+              <button class="archive-btn" title="Archive Student">Archived</button>
             </div>
           </td>`;
 
@@ -3876,6 +4092,16 @@ function loadStudents(){
             }
           });
         });
+
+        row.querySelector(".archive-btn").addEventListener("click", async () => {
+          const currentStatus = normalizeStatusValue(row.dataset.status);
+          if (currentStatus === "archived") {
+            showNotification("Student is already archived", "#64748b");
+            return;
+          }
+
+          openArchiveModal(row, stu, statusMenu, "student");
+        });
         
         // View Subjects
         const viewBtn = row.querySelector(".view-subjects-btn");
@@ -3889,6 +4115,12 @@ function loadStudents(){
         }
         studentTbody.appendChild(row);
       });
+      if (studentTbody.rows.length === 0) {
+        studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No students found</td></tr>';
+      }
+      if (archivedStudentTbody && archivedStudentTbody.rows.length === 0) {
+        archivedStudentTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No archived students found</td></tr>';
+      }
       // Search functionality
       const searchInput = document.getElementById("student-search");
       const programFilter = document.getElementById("student-program-filter");
@@ -3952,8 +4184,10 @@ function loadStudents(){
           
           // Check program filter
           if (selectedProgram && selectedProgram !== "") {
-            const programText = programCell ? programCell.textContent.trim() : "";
-            matchesProgram = programText === selectedProgram;
+            const programText = programCell ? normalizeFilterText(programCell.textContent) : "";
+            matchesProgram = row.dataset.programId === selectedProgram ||
+              row.dataset.programName === normalizeFilterText(selectedProgram) ||
+              programText === normalizeFilterText(selectedProgram);
           }
 
           if (selectedYearlevel && selectedYearlevel !== "") {
@@ -4498,27 +4732,115 @@ const addCategoryBtn = document.getElementById("addCategoryBtn"),
       questionCategoryName = document.getElementById("questionCategoryName"),
       saveQuestionBtn = document.getElementById("saveQuestionBtn");
 
+// --- Criteria lock: disable/enable buttons when period is active ---
+function updateCriteriaLockUI() {
+  const locked = !!window.hasActivePeriod;
+
+  // Add Category button
+  const btn = document.getElementById("addCategoryBtn");
+  if (btn) {
+    btn.disabled = locked;
+    btn.classList.toggle("criteria-btn-locked", locked);
+  }
+
+  // All per-category and per-question add/edit/delete buttons
+  document.querySelectorAll(
+    ".criteria-category .add-btn, .criteria-category .edit-btn, .criteria-category .delete-btn, " +
+    ".question-item .edit-btn, .question-item .delete-btn"
+  ).forEach(b => {
+    b.disabled = locked;
+    b.classList.toggle("criteria-btn-locked", locked);
+  });
+}
+
+/**
+ * Get the sum of weights currently stored on category cards,
+ * optionally excluding the category being edited (by numeric id string).
+ */
+function getCurrentWeightSum(excludeCatId = null) {
+  let sum = 0;
+  document.querySelectorAll(".criteria-category").forEach(c => {
+    if (excludeCatId && c.id === `cat-${excludeCatId}`) return;
+    sum += parseFloat(c.dataset.weight || 0);
+  });
+  return Math.round(sum * 100) / 100;
+}
+
 // --- OPEN CATEGORY form ---
 addCategoryBtn.onclick = () => {
+  if (window.hasActivePeriod) return;
+
+  // Block adding a new category if weights are already fully allocated
+  const usedWeight = getCurrentWeightSum(null);
+  if (usedWeight >= 100) {
+    showNotification(
+      `Cannot add a new category — existing categories already use ${usedWeight}% (100%). ` +
+      `Edit existing category weights to free up percentage first.`,
+      "#ef4444", 6000
+    );
+    return;
+  }
+
   addCategoryModal.style.display = "flex";
   delete addCategoryModal.dataset.editId;
   document.getElementById("categoryModalTitle").innerText = "ADD CATEGORY";
-  ["category-name","section-number"].forEach(id => document.getElementById(id).value = "");
+  ["category-name","section-number","category-weight"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  updateWeightHint(null);
 };
 
 //  CLOSE form =========================
 
 //  SAVE CATEGORY ========================= //
 saveCategoryBtn.onclick = () => {
-  const name = document.getElementById("category-name").value.trim(),
-        sec  = document.getElementById("section-number").value.trim();
+  if (window.hasActivePeriod) return;
+
+  const name   = document.getElementById("category-name").value.trim();
+  const sec    = document.getElementById("section-number").value.trim();
+  const wInput = document.getElementById("category-weight");
+  const weight = wInput ? parseFloat(wInput.value) || 0 : 0;
+
   if (!name || !sec) return alert("Fill all fields.");
 
-  const payload = { category_name: name, section_number: sec };
+  // --- Weight validation ---
+  const editId = addCategoryModal.dataset.editId
+    ? addCategoryModal.dataset.editId.replace("cat-", "")
+    : null;
+
+  const usedWeight  = getCurrentWeightSum(editId);   // sum excluding self when editing
+  const newTotal    = Math.round((usedWeight + weight) * 100) / 100;
+  const catCount    = document.querySelectorAll(".criteria-category").length;
+  const isNew       = !editId;
+
+  // Allow weight = 0 (means "equal split, no fixed percentage")
+  if (weight > 0) {
+    if (newTotal > 100) {
+      const available = Math.round((100 - usedWeight) * 100) / 100;
+      showNotification(
+        `Weight too high — other categories already use ${usedWeight}%. ` +
+        `Maximum you can assign here is ${available}%.`,
+        "#ef4444", 6000
+      );
+      return;
+    }
+    if (newTotal < 100) {
+      // Warn but allow — they may plan to set the rest later
+      const remaining = Math.round((100 - newTotal) * 100) / 100;
+      showNotification(
+        `Note: Total weight will be ${newTotal}% after this save (${remaining}% unassigned). ` +
+        `Scores will be auto-normalised until all categories sum to 100%.`,
+        "#f59e0b", 5000
+      );
+    }
+  }
+
+  const payload = { category_name: name, section_number: sec, weight: weight };
   let url = "add_category.php";
 
-  if (addCategoryModal.dataset.editId) {
-    payload.id = addCategoryModal.dataset.editId.replace("cat-", "");
+  if (editId) {
+    payload.id = editId;
     url = "edit_category.php";
   }
 
@@ -4530,11 +4852,14 @@ saveCategoryBtn.onclick = () => {
     .then(r => r.json())
     .then(d => {
       if (d.success) {
-        const isEditing = addCategoryModal.dataset.editId ? true : false;
+        const isEditing = !!editId;
         loadCategories();
         addCategoryModal.style.display = "none";
         delete addCategoryModal.dataset.editId;
-        showNotification(isEditing ? "Category edited successfully!" : "Category added successfully!", "#10b981");
+        if (newTotal === 100 || weight === 0) {
+          showNotification(isEditing ? "Category updated successfully!" : "Category added successfully!", "#10b981");
+        }
+        // else the yellow warning above already showed
       } else {
         showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
       }
@@ -4547,6 +4872,8 @@ saveCategoryBtn.onclick = () => {
 
 //  SAVE QUESTION ========================= //
 saveQuestionBtn.onclick = () => {
+  if (window.hasActivePeriod) return;
+
   const q = document.getElementById("question-text").value.trim();
   if (!q) {
     showNotification("Please enter a question", "#f59e0b");
@@ -4613,6 +4940,7 @@ function proceedToAddQuestion(catId, q) {
 //  CATEGORY ACTIONS ========================= //
 function bindCategoryActions(cat) {
   cat.querySelector(".add-btn").onclick = () => {
+    if (window.hasActivePeriod) return;
     questionCategoryName.innerText = cat.querySelector(".category-name").innerText;
     addQuestionModal.style.display = "flex";
     addQuestionModal.dataset.targetId = cat.id;
@@ -4621,21 +4949,28 @@ function bindCategoryActions(cat) {
   };
 
   cat.querySelector(".edit-btn").onclick = () => {
+    if (window.hasActivePeriod) return;
     document.getElementById("category-name").value = cat.querySelector(".category-name").innerText;
     document.getElementById("section-number").value = cat.querySelector(".section-number").innerText.replace("SECTION ", "");
+    const wInput = document.getElementById("category-weight");
+    if (wInput) wInput.value = parseFloat(cat.dataset.weight || 0).toFixed(2);
     addCategoryModal.style.display = "flex";
     addCategoryModal.dataset.editId = cat.id;
     document.getElementById("categoryModalTitle").innerText = "EDIT CATEGORY";
+    updateWeightHint(cat.id.replace("cat-", ""));
   };
 
-  cat.querySelector(".delete-btn").onclick = () =>
+  cat.querySelector(".delete-btn").onclick = () => {
+    if (window.hasActivePeriod) return;
     openDeleteModal("category", cat.querySelector(".category-name").innerText, cat);
+  };
 }
 
 function bindQuestionActions(item) {
   const cat = item.closest(".criteria-category");
 
   item.querySelector(".edit-btn").onclick = () => {
+    if (window.hasActivePeriod) return;
     document.getElementById("question-text").value = item.querySelector(".question-text").innerText;
     questionCategoryName.innerText = cat.querySelector(".category-name").innerText;
     addQuestionModal.style.display = "flex";
@@ -4644,8 +4979,10 @@ function bindQuestionActions(item) {
     document.getElementById("questionModalTitle").innerText = "EDIT QUESTION";
   };
 
-  item.querySelector(".delete-btn").onclick = () =>
+  item.querySelector(".delete-btn").onclick = () => {
+    if (window.hasActivePeriod) return;
     openDeleteModal("question", item.querySelector(".question-text").innerText, item);
+  };
 }
 //  LOAD CATEGORIES ========================= //
 function loadCategories() {
@@ -4657,11 +4994,45 @@ function loadCategories() {
       document.getElementById("total-categories").innerText = cats.length;
       let totalQuestions = 0;
 
+      // Normalise weights for display (same logic as PHP helper)
+      const totalW = cats.reduce((s, c) => s + parseFloat(c.weight || 0), 0);
+      const useEqual = totalW <= 0;
+      const equalW   = cats.length > 0 ? (100 / cats.length) : 0;
+
+      // Update summary panel weight row
+      const weightSumRow = document.getElementById("weight-sum-row");
+      const weightDisplay = document.getElementById("total-weight-display");
+      const weightStatus  = document.getElementById("weight-sum-status");
+      if (cats.length > 0 && weightSumRow) {
+        weightSumRow.style.display = "block";
+        const displayTotal = useEqual ? 100 : Math.round(totalW * 100) / 100;
+        if (weightDisplay) weightDisplay.textContent = displayTotal + "%";
+        if (weightStatus) {
+          if (useEqual) {
+            weightStatus.textContent = "(equal split)";
+            weightStatus.style.color = "#64748b";
+          } else if (Math.abs(totalW - 100) < 0.1) {
+            weightStatus.textContent = "✓";
+            weightStatus.style.color = "#10b981";
+          } else {
+            weightStatus.textContent = "(auto-normalised to 100%)";
+            weightStatus.style.color = "#f59e0b";
+          }
+        }
+      } else if (weightSumRow) {
+        weightSumRow.style.display = "none";
+      }
+
       cats.forEach(c => {
+        const normW = useEqual
+          ? parseFloat(equalW.toFixed(2))
+          : parseFloat(((parseFloat(c.weight || 0) / totalW) * 100).toFixed(2));
+
         const cat = document.createElement("div");
         cat.className = "criteria-category";
         cat.id = `cat-${c.id}`;
         cat.dataset.category_id = c.id;
+        cat.dataset.weight = parseFloat(c.weight || 0);
 
         cat.innerHTML = `
           <div class="category-header">
@@ -4672,10 +5043,13 @@ function loadCategories() {
                 <div class="category-name">${c.category_name}</div>
               </div>
             </div>
-            <div class="action-buttons">
-              <button class="add-btn"><i class="ph ph-plus"></i></button>
-              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-              <button class="delete-btn"><i class="ph ph-trash"></i></button>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="category-weight-badge" title="Category weight (contribution to overall score)">${normW}%</span>
+              <div class="action-buttons">
+                <button class="add-btn"><i class="ph ph-plus"></i></button>
+                <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+                <button class="delete-btn"><i class="ph ph-trash"></i></button>
+              </div>
             </div>
           </div>
           <div class="category-table-header"><div>Question</div><div>Action</div></div>
@@ -4709,9 +5083,70 @@ function loadCategories() {
           .catch(err => console.error("Failed to load questions:", err));
       });
       document.getElementById("criteria-section").style.display = "block";
+      updateCriteriaLockUI();
     })
     .catch(err => console.error("Failed to load categories:", err));
 }
+
+/**
+ * Update the weight hint in the add/edit category modal.
+ * editCatId: the numeric id of the category being edited, or null for new.
+ */
+function updateWeightHint(editCatId) {
+  const hintEl  = document.getElementById("weightHint");
+  const badgeEl = document.getElementById("weightSumBadge");
+  const wInput  = document.getElementById("category-weight");
+  if (!hintEl) return;
+
+  const usedWeight  = getCurrentWeightSum(editCatId);
+  const remaining   = Math.max(0, Math.round((100 - usedWeight) * 100) / 100);
+  const enteredWeight = wInput ? (parseFloat(wInput.value) || 0) : 0;
+  const newTotal    = Math.round((usedWeight + enteredWeight) * 100) / 100;
+
+  // Hint text
+  if (usedWeight >= 100) {
+    hintEl.textContent  = `⚠ All 100% is already allocated to other categories. Edit existing weights first.`;
+    hintEl.style.color  = "#ef4444";
+  } else {
+    hintEl.textContent  = `Other categories use ${usedWeight}% — ${remaining}% available. ` +
+                          (remaining === 100 ? "Set 0 to split equally." : `Set 0 to auto-split.`);
+    hintEl.style.color  = newTotal > 100 ? "#ef4444" : "#64748b";
+  }
+
+  // Badge on the label
+  if (badgeEl) {
+    if (usedWeight >= 100) {
+      badgeEl.textContent    = "100% used";
+      badgeEl.style.background = "#fecaca";
+      badgeEl.style.color      = "#dc2626";
+    } else {
+      badgeEl.textContent    = `${usedWeight}% used`;
+      badgeEl.style.background = usedWeight > 100 ? "#fecaca" : "#e2e8f0";
+      badgeEl.style.color      = usedWeight > 100 ? "#dc2626" : "#475569";
+    }
+  }
+
+  // Colour the weight input itself
+  if (wInput) {
+    if (enteredWeight > 0 && newTotal > 100) {
+      wInput.style.borderColor = "#ef4444";
+    } else if (enteredWeight > 0 && newTotal === 100) {
+      wInput.style.borderColor = "#10b981";
+    } else {
+      wInput.style.borderColor = "";
+    }
+  }
+}
+
+// Update hint as admin types in weight field
+document.addEventListener("input", e => {
+  if (e.target.id === "category-weight") {
+    const editId = addCategoryModal.dataset.editId
+      ? addCategoryModal.dataset.editId.replace("cat-", "")
+      : null;
+    updateWeightHint(editId);
+  }
+});
 
 document.addEventListener("DOMContentLoaded", loadCategories);
 
@@ -5076,6 +5511,17 @@ function formatPeriodName(semester, ay) {
   return `${prefix} ${ay || ""}`.trim();
 }
 
+function dashboardPeriodLabel() {
+  if (!selectedAcademicYear || !selectedClassSemester) return "";
+  return formatPeriodName(selectedClassSemester, selectedAcademicYear);
+}
+
+function updateDashboardPeriodBox(fallbackLabel = "") {
+  const activeBox = document.getElementById("activePeriodBox");
+  if (!activeBox) return;
+  activeBox.textContent = dashboardPeriodLabel() || fallbackLabel || "No Active Period";
+}
+
 function formatRange(startDate, endDate) {
   const start = parseDateOnly(startDate);
   const end = parseDateOnly(endDate);
@@ -5095,9 +5541,7 @@ async function refreshPeriodCard() {
     const btnOpen = document.querySelector(".btn-open");
     const btnClose = document.querySelector(".btn-close");
 
-    if (activeBox) {
-      activeBox.textContent = data.active_period_name || "No Active Period";
-    }
+    updateDashboardPeriodBox(data.active_period_name || "");
     if (statusText) {
       statusText.textContent = data.evaluation_open ? "Evaluation is Open" : "Evaluation is Closed";
     }
@@ -5107,6 +5551,10 @@ async function refreshPeriodCard() {
       btnClose.style.display = (data.evaluation_open || hasActive) ? "inline-block" : "none";
       if (!hasActive && !data.evaluation_open) btnClose.style.display = "none";
     }
+
+    // Store active period state globally for criteria lock
+    window.hasActivePeriod = !!data.active_period_id;
+    updateCriteriaLockUI();
   } catch (_) {
     // ignore
   }
@@ -5127,7 +5575,7 @@ function initPeriodCardControls() {
         });
         const data = await res.json();
         if (!data.success) {
-          alert(data.message || "Unable to open evaluation.");
+          showAlertModal(data.message || "Unable to open evaluation.");
         }
       } finally {
         refreshPeriodCard();
@@ -5244,7 +5692,7 @@ async function loadPeriods() {
         });
         const result = await res.json().catch(() => null);
         if (!result || !result.success) {
-          alert((result && result.message) || "Unable to activate period.");
+          showAlertModal((result && result.message) || "Unable to activate period.");
         }
         await loadPeriods();
         await refreshPeriodCard();
@@ -5319,16 +5767,16 @@ function addPeriod() {
   // Validate YYYY-MM-DD format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(start) || !dateRegex.test(end)) {
-    alert("Invalid date format.");
+    showAlertModal("Invalid date format.");
     return;
   }
   
   if (parseDateOnly(start) >= parseDateOnly(end)) {
-    alert("End date must be after start date");
+    showAlertModal("End date must be after start date.");
     return;
   }
   if (isPastDate(start)) {
-    alert("Start date cannot be in the past");
+    showAlertModal("Start date cannot be in the past.");
     return;
   }
   
@@ -5366,16 +5814,16 @@ function updatePeriod(periodId) {
   // Validate YYYY-MM-DD format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(start) || !dateRegex.test(end)) {
-    alert("Invalid date format.");
+    showAlertModal("Invalid date format.");
     return;
   }
   
   if (parseDateOnly(start) >= parseDateOnly(end)) {
-    alert("End date must be after start date");
+    showAlertModal("End date must be after start date.");
     return;
   }
   if (isPastDate(start)) {
-    alert("Start date cannot be in the past");
+    showAlertModal("Start date cannot be in the past.");
     return;
   }
   

@@ -2468,7 +2468,8 @@ table.evaluation-table .view-btn {
   color: #64748b;
 }
 
-.show-archived-faculty-btn {
+.show-archived-faculty-btn,
+.show-archived-student-btn {
   width: 150px;
   min-height: 44px;
   padding: var(--spacing-sm) var(--spacing-lg);
@@ -2495,19 +2496,111 @@ table.evaluation-table .view-btn {
   justify-content: center;
 }
 
-.show-archived-faculty-btn:hover {
+#faculties-section .table-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+#faculties-section .search-filters-container {
+  display: grid;
+  grid-template-columns: minmax(220px, .85fr) minmax(220px, .75fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+#faculties-section .search-filters-container .search-wrapper,
+#faculties-section .search-filters-container .filter-wrapper {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dbe5f3;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  padding: 0 12px;
+  box-sizing: border-box;
+  transform: none;
+}
+
+#faculties-section .search-filters-container .search-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+#faculties-section .search-filters-container .search-btn i,
+#faculties-section .search-filters-container .filter-wrapper i {
+  color: #64748b;
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-right: 0 !important;
+}
+
+#faculties-section .search-filters-container input,
+#faculties-section .search-filters-container select {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background-color: transparent;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 500;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+#faculties-section .search-filters-container select {
+  padding-right: 28px;
+}
+
+@media (max-width: 900px) {
+  #faculties-section .table-header {
+    grid-template-columns: 1fr;
+  }
+
+  #faculties-section .search-filters-container {
+    grid-template-columns: 1fr;
+  }
+
+  #faculties-section .header-actions {
+    justify-content: stretch;
+  }
+
+  #faculties-section .add-faculty-btn,
+  #faculties-section .show-archived-faculty-btn {
+    flex: 1 1 0;
+  }
+}
+
+.show-archived-faculty-btn:hover,
+.show-archived-student-btn:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
 }
 
-.archived-faculty-section {
+.archived-faculty-section,
+.archived-student-section {
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.archived-faculty-header {
+.archived-faculty-header,
+.archived-student-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2516,7 +2609,8 @@ table.evaluation-table .view-btn {
   border-bottom: 1px solid #e2e8f0;
 }
 
-.archived-faculty-header h3 {
+.archived-faculty-header h3,
+.archived-student-header h3 {
   margin: 0 0 2px;
   color: #1e293b;
   font-size: 1rem;
@@ -2524,13 +2618,15 @@ table.evaluation-table .view-btn {
   letter-spacing: -0.01em;
 }
 
-.archived-faculty-header span {
+.archived-faculty-header span,
+.archived-student-header span {
   color: #94a3b8;
   font-size: .8125rem;
   font-weight: 400;
 }
 
-.back-to-faculty-btn {
+.back-to-faculty-btn,
+.back-to-student-btn {
   height: 36px;
   padding: 0 14px;
   border: 1px solid #e2e8f0;
@@ -2543,19 +2639,22 @@ table.evaluation-table .view-btn {
   transition: background-color .15s ease, border-color .15s ease;
 }
 
-.back-to-faculty-btn:hover {
+.back-to-faculty-btn:hover,
+.back-to-student-btn:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
 }
 
-/* Archived Faculties Table */
-.archived-faculties-table {
+/* Archived Records Table */
+.archived-faculties-table,
+.archived-students-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.archived-faculties-table thead th {
+.archived-faculties-table thead th,
+.archived-students-table thead th {
   background: #f8fafc;
   color: #475569;
   font-weight: 500;
@@ -2567,22 +2666,26 @@ table.evaluation-table .view-btn {
   text-align: left;
 }
 
-.archived-faculties-table tbody td {
+.archived-faculties-table tbody td,
+.archived-students-table tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
   vertical-align: middle;
 }
 
-.archived-faculties-table tbody tr:nth-child(even) {
+.archived-faculties-table tbody tr:nth-child(even),
+.archived-students-table tbody tr:nth-child(even) {
   background: #fafbfc;
 }
 
-.archived-faculties-table tbody tr:hover {
+.archived-faculties-table tbody tr:hover,
+.archived-students-table tbody tr:hover {
   background: #f8fafc;
 }
 
-.archived-faculties-table .subject-count-badge {
+.archived-faculties-table .subject-count-badge,
+.archived-students-table .subject-count-badge {
   background: #f1f5f9;
   color: #475569;
   border-radius: 4px;
@@ -2594,29 +2697,34 @@ table.evaluation-table .view-btn {
   box-shadow: none;
 }
 
-.archived-faculties-table .inline-status {
+.archived-faculties-table .inline-status,
+.archived-students-table .inline-status {
   font-weight: 500;
   font-size: .8125rem;
   color: #64748b;
 }
 
-.archived-faculties-table .inline-status .status-dot {
+.archived-faculties-table .inline-status .status-dot,
+.archived-students-table .inline-status .status-dot {
   width: 7px;
   height: 7px;
   box-shadow: none;
 }
 
-.archived-faculties-table td strong {
+.archived-faculties-table td strong,
+.archived-students-table td strong {
   font-weight: 600;
   color: #1e293b;
 }
 
-.archived-faculties-table td small {
+.archived-faculties-table td small,
+.archived-students-table td small {
   color: #94a3b8;
   font-weight: 400;
 }
 
-.archived-faculties-table td div[style] {
+.archived-faculties-table td div[style],
+.archived-students-table td div[style] {
   color: #1e293b;
 }
 
@@ -2801,6 +2909,36 @@ table.evaluation-table .view-btn i {
   width: 100%;
 }
 
+/* Select boxes styling to match student filter style */
+.subject-control-box .program-dropdown,
+.manage-subject-control-box .program-dropdown {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #dbe5f3;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 32px 0 12px;
+  box-sizing: border-box;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  outline: none;
+  cursor: pointer;
+}
+
+.subject-control-box .program-dropdown:hover,
+.manage-subject-control-box .program-dropdown:hover {
+  border-color: #b3cfe7;
+  background: #f8fafc;
+}
+
+.subject-control-box .program-dropdown:focus,
+.manage-subject-control-box .program-dropdown:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
 .set-semester-group {
   display: flex;
   gap: 8px;
@@ -2924,6 +3062,48 @@ table.evaluation-table .view-btn:hover {
   background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
   color: #fff
 }
+
+/* ── Score cell in evaluation table ─────────────────────────────── */
+.score-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 130px;
+}
+
+.score-pct {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: -.2px;
+  line-height: 1;
+}
+
+.score-raw {
+  font-size: .72rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.score-mini-track {
+  height: 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.score-mini-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .4s ease;
+  background: #94a3b8;
+}
+.score-mini-fill.outstanding { background: #059669; }
+.score-mini-fill.very-good   { background: #0ea5e9; }
+.score-mini-fill.good        { background: #f59e0b; }
+.score-mini-fill.fair        { background: #f97316; }
+.score-mini-fill.poor        { background: #ef4444; }
+.score-mini-fill.na          { background: #94a3b8; }
 
 /* ====================================================================================================================================
    Top Buttons & Filters
@@ -4446,6 +4626,34 @@ table.evaluation-table .view-btn:hover {
   margin: 0;
 }
 
+/* Weight badge shown on each category card */
+.category-weight-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, .28);
+  cursor: default;
+}
+
+/* Weight tag in instructor/admin report table */
+.category-weight-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
 .category-table-header {
   display: grid;
   grid-template-columns: 1fr 130px;
@@ -5650,7 +5858,9 @@ div#report-section .evaluation-table .badge.na {
 #faculty-subjects-list {
   max-height: 350px;
   overflow-y: auto;
-  padding-right: 8px
+  padding-right: 8px;
+  transition: none !important;
+  transform: none !important;
 }
 
 #faculty-subjects-list::-webkit-scrollbar {
@@ -5747,13 +5957,15 @@ div#report-section .evaluation-table .badge.na {
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
-  transition: all .2s ease;
-  font-size: 14px
+  transition: none !important;
+  font-size: 14px;
+  transform: none !important;
 }
 
 .subject-checkbox-item:hover {
-  background: var(--primary-50);
-  border-color: var(--primary-300)
+  background: transparent;
+  border-color: transparent;
+  transform: none !important;
 }
 
 .subject-checkbox-item input[type="checkbox"] {
@@ -5780,7 +5992,9 @@ div#report-section .evaluation-table .badge.na {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  align-self: center; /* center alignment */
+  align-self: center;
+  transform: none !important;
+  transition: none !important;
 }
 
 
@@ -6298,12 +6512,15 @@ div#report-section .evaluation-table .badge.na {
 }
 
 .subjects-selection-table tbody tr:hover {
-  background: #f3f4f6
+  background: #f3f4f6;
+  transform: none !important;
 }
 
 .subjects-selection-table input[type="checkbox"] {
   margin: 0;
-  transform: scale(1.1)
+  transform: none !important;
+  width: 18px;
+  height: 18px;
 }
 
 .modal-actions {
@@ -6425,6 +6642,14 @@ div#report-section .evaluation-table .badge.na {
   padding: 20px !important;
 }
 
+#addClassModal * {
+  transform: none !important;
+}
+
+#addClassModal *:hover {
+  transform: none !important;
+}
+
 #addClassModal .modal-content {
   width: min(28rem, 94vw) !important;
   max-width: 28rem !important;
@@ -6467,6 +6692,21 @@ div#report-section .evaluation-table .badge.na {
 #addClassModal #faculty-list {
   max-height: 230px !important;
   overflow-y: auto !important;
+  transform: none !important;
+}
+
+#addClassModal #faculty-list * {
+  transform: none !important;
+  transition: none !important;
+}
+
+#addClassModal #faculty-list *:hover {
+  transform: none !important;
+  background: transparent !important;
+}
+
+#addClassModal input[type="checkbox"] {
+  transform: none !important;
 }
 
 #addClassModal .class-subject-search {
@@ -6498,6 +6738,21 @@ div#report-section .evaluation-table .badge.na {
   display: flex;
   align-items: center;
   gap: 8px;
+  transform: none !important;
+  transition: none !important;
+  padding: 6px;
+  border-radius: 4px;
+}
+
+#addClassModal .class-subject-option:hover {
+  background: transparent !important;
+  transform: none !important;
+}
+
+#addClassModal .class-subject-option input[type="checkbox"] {
+  transform: none !important;
+  width: 18px;
+  height: 18px;
 }
 
 #addSubjectModal .form-row,
@@ -6734,9 +6989,33 @@ main {
 .program-dropdown {
   appearance: none;
   background:
-    linear-gradient(45deg, transparent 50%, var(--neutral-500) 50%) calc(100% - 14px) 52%/6px 6px no-repeat,
+    linear-gradient(45deg, transparent 50%, var(--neutral-500) 50%) calc(100% - 18px) 52%/6px 6px no-repeat,
 
-    linear-gradient(135deg, var(--neutral-500) 50%, transparent 50%) calc(100% - 9px) 52%/6px 6px no-repeat;
+    linear-gradient(135deg, var(--neutral-500) 50%, transparent 50%) calc(100% - 13px) 52%/6px 6px no-repeat;
+  padding-right: 32px;
+}
+
+/* Dropdown arrow for subject control boxes - match student filter style */
+.subject-control-box .program-dropdown,
+.manage-subject-control-box .program-dropdown {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.subject-control-box .program-dropdown:hover,
+.manage-subject-control-box .program-dropdown:hover {
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--primary-600) 50%),
+    linear-gradient(135deg, var(--primary-600) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
 }
 
 /* =========================================
@@ -6744,92 +7023,131 @@ main {
 ========================================= */
 
 #students-section .table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  display: block;
+  padding: 16px 18px;
 }
 
-#students-section .search-filters-container {
-  flex: 1 1 auto;
+#students-section .student-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
 
+#students-section .student-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+#students-section .student-filter-row {
   display: grid;
-
-  /* SAME WIDTH FOR ALL FIELDS */
-  grid-template-columns: repeat(3, minmax(12rem, 1fr));
-
-  gap: .75rem;
+  grid-template-columns: minmax(180px, .75fr) minmax(240px, 1fr) minmax(220px, .9fr);
   align-items: center;
-
-  min-width: 0;
+  gap: 12px;
+  width: 100%;
 }
 
-/* HEADER ACTIONS */
-#students-section .header-actions {
-  flex-shrink: 0;
+#students-section .student-filter-row .search-wrapper,
+#students-section .student-filter-row .program-filter-wrapper {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
   display: flex;
   align-items: center;
+  border: 1px solid #dbe5f3;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  padding: 0 12px;
+  box-sizing: border-box;
 }
 
-/* ADD PROGRAM BUTTON FIX */
-.add-program-btn {
-  min-height: 48px;
-  height: 48px;
+#students-section .student-filter-row .search-wrapper {
+  gap: 8px;
+}
 
-  padding: 0 1.2rem;
+#students-section .student-filter-row .program-filter-wrapper {
+  gap: 8px;
+}
 
+#students-section .student-filter-row .program-filter-wrapper i,
+#students-section .student-filter-row .search-btn i {
+  color: #64748b;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+#students-section .student-filter-row .search-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#students-section .student-filter-row input,
+#students-section .student-filter-row select {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background-color: transparent;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+#students-section .student-filter-row select {
+  padding-right: 28px;
+}
+
+#students-section .student-header-actions .add-student-btn,
+#students-section .student-header-actions .show-archived-student-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  height: 42px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
-
-  white-space: nowrap;
-  min-width: max-content;
-
-  flex-shrink: 0;
+  gap: 6px;
 }
 
-@media(max-width:1180px) {
-  #students-section .table-header {
-    align-items: stretch;
-  }
+#students-section .student-header-actions .show-archived-student-btn {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
+}
 
-  #students-section .search-filters-container {
-    grid-template-columns: minmax(16rem, 1fr) repeat(2, minmax(10rem, .55fr));
-  }
+#students-section .student-header-actions .show-archived-student-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 @media(max-width:900px) {
-  #students-section .search-filters-container {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  #students-section .search-wrapper {
-    grid-column: 1 / -1;
-  }
-}
-
-@media(max-width:768px) {
-  #students-section .search-filters-container {
-    display: grid;
+  #students-section .student-filter-row {
     grid-template-columns: 1fr;
-    gap: .65rem;
   }
 
-  #students-section .search-wrapper,
-  #students-section .program-filter-wrapper {
-    min-height: 46px;
+  #students-section .student-header-actions {
+    justify-content: stretch;
   }
 
-  #students-section .program-dropdown {
-    font-size: .9rem;
-    padding-top: .66rem;
-    padding-bottom: .66rem;
-  }
-
-  #students-section .header-actions {
-    width: 100%;
+  #students-section .student-header-actions .add-student-btn,
+  #students-section .student-header-actions .show-archived-student-btn {
+    flex: 1 1 0;
   }
 }
 
@@ -6985,6 +7303,20 @@ tr:hover td {
   justify-content: center;
   overflow: auto;
   padding: clamp(10px, 2.5vw, 20px);
+}
+
+#addStudentModal * {
+  transform: none !important;
+}
+
+#addStudentModal *:hover {
+  transform: none !important;
+}
+
+#addStudentModal input[type="checkbox"] {
+  transform: none !important;
+  width: 18px;
+  height: 18px;
 }
 
 #addFacultyModal .modal-content,
@@ -8384,6 +8716,30 @@ input[type=range] {
 #facultyReportModal .report-badge.na,
 #facultyReportModal .report-badge.n-a { background: #64748b; }
 
+/* Category weight tag inside admin faculty report modal */
+#facultyReportModal .category-weight-tag,
+#facultyReportModal .category-pill .category-weight-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: .72rem;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+#facultyReportModal .category-weight-cell {
+  white-space: nowrap;
+  text-align: center;
+}
+#facultyReportModal .weight-th {
+  background: #eff6ff;
+  color: #1d4ed8;
+  text-align: center;
+}
+
 @media (max-width: 760px) {
   #facultyReportModal .report-modal-content {
     width: 96vw;
@@ -8851,4 +9207,246 @@ main {
 
 .archive-btn-confirm:hover {
   background: #d97706;
+}
+
+/* ===================== Alert Modal ===================== */
+.alert-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: alertFadeIn 0.18s ease;
+}
+
+@keyframes alertFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.alert-modal-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 24px 24px 20px;
+  max-width: 400px;
+  width: calc(100% - 40px);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08);
+  border-left: 4px solid #f59e0b;
+  position: relative;
+  animation: alertSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes alertSlideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.alert-modal-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fef3c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  font-size: 22px;
+}
+
+.alert-modal-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.alert-modal-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin: 0 0 4px;
+}
+
+.alert-modal-message {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.alert-modal-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 14px;
+  transition: background 0.15s ease, color 0.15s ease;
+  margin-top: 1px;
+}
+
+.alert-modal-close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* ===================== Criteria Lock ===================== */
+.criteria-btn-locked,
+.criteria-btn-locked:hover {
+  opacity: 0.38;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+
+#students-section #student-program-filter {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===================== Add Class Assigned Subjects Fix ===================== */
+#addClassModal .modal-body input:hover,
+#addClassModal .modal-body select:hover,
+#addClassModal .modal-body textarea:hover,
+#addClassModal .modal-body input:focus,
+#addClassModal .modal-body select:focus,
+#addClassModal .modal-body textarea:focus {
+  border-color: #d1d5db !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#addClassModal #class-year,
+#addClassModal #class-block {
+  height: 60px;
+  min-height: 60px;
+  margin-top: 8px;
+  border-width: 2px;
+  box-sizing: border-box;
+  font-size: .95rem;
+  line-height: 1.25;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#addClassModal #class-year {
+  padding: 0 42px 0 20px;
+  background-position: right 16px center;
+  cursor: pointer;
+}
+
+#addClassModal #class-block {
+  padding: 0 20px;
+}
+
+#addClassModal #subject-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow: hidden;
+  background: #f8fbff;
+}
+
+#addClassModal .class-subject-search {
+  position: relative;
+  flex: 0 0 auto;
+  background: #f8fbff;
+  margin-bottom: 10px;
+  padding-bottom: 0;
+}
+
+#addClassModal .class-subject-search .subject-search-input,
+#addClassModal .class-subject-search .subject-search-input:hover,
+#addClassModal .class-subject-search .subject-search-input:focus {
+  border-color: #d1d5db !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#addClassModal .class-subject-search i {
+  top: 50%;
+  transform: translateY(-50%) !important;
+}
+
+#addClassModal .class-subject-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+#addClassModal .class-subject-options::-webkit-scrollbar {
+  width: 8px;
+}
+
+#addClassModal .class-subject-options::-webkit-scrollbar-track {
+  background: #e8f1fb;
+  border-radius: 4px;
+}
+
+#addClassModal .class-subject-options::-webkit-scrollbar-thumb {
+  background: #45718a;
+  border-radius: 4px;
+}
+
+#addClassModal .class-subject-option,
+#addClassModal .class-subject-option:hover,
+#addClassModal .class-subject-option:focus-within {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--neutral-700);
+  line-height: 1.35;
+  box-sizing: border-box;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#addClassModal .class-subject-option:hover,
+#addClassModal .class-subject-option:focus-within {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--neutral-700) !important;
+  transform: none !important;
+}
+
+#addClassModal .class-subject-option input[type="checkbox"],
+#addClassModal .class-subject-option input[type="checkbox"]:hover,
+#addClassModal .class-subject-option input[type="checkbox"]:focus {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
 }

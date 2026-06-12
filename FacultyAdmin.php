@@ -53,6 +53,22 @@ include 'totalstudents_dashcount.php';
 </div>
 
 
+<!-- ===================== ALERT MODAL ===================== -->
+<div id="alertModal" class="alert-modal-overlay" style="display:none;">
+  <div class="alert-modal-box">
+    <div class="alert-modal-icon">
+      <i class="ph ph-warning-circle"></i>
+    </div>
+    <div class="alert-modal-body">
+      <p class="alert-modal-title">Notice</p>
+      <p class="alert-modal-message" id="alertModalMessage"></p>
+    </div>
+    <button class="alert-modal-close" id="alertModalClose">
+      <i class="ph ph-x"></i>
+    </button>
+  </div>
+</div>
+
 <!-- ===================== LOGOUT MODAL ===================== -->
 <div id="logoutModal" class="logoutform">
 
@@ -471,13 +487,13 @@ include 'totalstudents_dashcount.php';
           <input type="text" id="manage-subjects-search" placeholder="Search subjects...">
         </div>
         <select id="manage-subjects-semester-filter" class="program-dropdown">
-          <option value="">All Semesters</option>
+          <option value="">-- All Semesters --</option>
           <option value="1st Semester">1st Semester</option>
           <option value="2nd Semester">2nd Semester</option>
           <option value="Summer">Summer</option>
         </select>
         <select id="manage-subjects-year-filter" class="program-dropdown">
-          <option value="">All Year Levels</option>
+          <option value="">-- All Year Levels --</option>
           <option value="1st Year">1st Year</option>
           <option value="2nd Year">2nd Year</option>
           <option value="3rd Year">3rd Year</option>
@@ -575,7 +591,9 @@ include 'totalstudents_dashcount.php';
             <input type="text" id="class-subject-search" placeholder="Search assigned subjects..." class="subject-search-input">
             <i class="ph ph-magnifying-glass"></i>
           </div>
-          <small>Select year level first to load subjects</small>
+          <div class="class-subject-options">
+            <small>Select year level first to load subjects</small>
+          </div>
         </div>
       </div>
       <div class="section-box">
@@ -605,7 +623,7 @@ include 'totalstudents_dashcount.php';
       <input type="text" id="subjects-search" placeholder="Search subjects...">
     </div>
     <select id="subjects-year-filter" class="program-dropdown">
-      <option value="">All Year Levels</option>
+      <option value="">-- All Year Levels --</option>
       <option value="1st Year">1st Year</option>
       <option value="2nd Year">2nd Year</option>
       <option value="3rd Year">3rd Year</option>
@@ -893,37 +911,58 @@ include 'totalstudents_dashcount.php';
 
   <div class="table-wrapper">
     <div class="table-header">
-      <div class="search-filters-container">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input id="student-search" placeholder="Search student...">
+      <div class="student-toolbar">
+        <div class="student-header-actions">
+          <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
+          <button class="show-archived-student-btn">Show Archived</button>
         </div>
-        <div class="program-filter-wrapper">
-          <i class="ph ph-funnel" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
-          <select id="student-program-filter" class="program-dropdown">
-            <option value="">All Programs</option>
-          </select>
+        <div class="student-filter-row">
+          <div class="search-wrapper">
+            <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+            <input id="student-search" placeholder="Search student...">
+          </div>
+          <div class="program-filter-wrapper">
+            <i class="ph ph-funnel"></i>
+            <select id="student-program-filter" class="program-dropdown">
+              <option value="">All Programs</option>
+            </select>
+          </div>
+          <div class="program-filter-wrapper">
+            <i class="ph ph-graduation-cap"></i>
+            <select id="student-yearlevel-filter" class="program-dropdown">
+              <option value="">-- All Year Levels --</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="irregular">Irregular</option>
+            </select>
+          </div>
         </div>
-        <div class="program-filter-wrapper">
-          <i class="ph ph-graduation-cap" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
-          <select id="student-yearlevel-filter" class="program-dropdown">
-            <option value="">All Year Levels</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-            <option value="irregular">Irregular</option>
-          </select>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
       </div>
     </div>
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
           <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="archived-student-section" hidden>
+    <div class="archived-student-header">
+      <div>
+        <h3>Archived Students</h3>
+        <span>Student records moved out of the active list</span>
+      </div>
+      <button class="back-to-student-btn">Back to Students</button>
+    </div>
+    <div class="table-scroll-container">
+      <table class="students-table archived-students-table">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1094,6 +1133,11 @@ include 'totalstudents_dashcount.php';
       <h4><i class="ph ph-clipboard-check"></i> Summary</h4>
       <p><strong>Categories:</strong> <span id="total-categories">0</span></p>
       <p><strong>Total Questions:</strong> <span id="total-questions">0</span></p>
+      <p id="weight-sum-row" style="display:none;">
+        <strong>Total Weight:</strong>
+        <span id="total-weight-display" style="font-weight:700;">0%</span>
+        <span id="weight-sum-status" style="font-size:11px;margin-left:6px;"></span>
+      </p>
       <div class="legend">
         <h5><i class="ph ph-list-bullets"></i> LEGEND</h5>
         <ul>
@@ -1120,6 +1164,14 @@ include 'totalstudents_dashcount.php';
       <input type="text" id="category-name" placeholder="eg. Instructional Competence">
       <label for="section-number">Section #</label>
       <input type="number" id="section-number" min="1" placeholder="eg. 1">
+
+      <label for="category-weight" style="display:flex;align-items:center;gap:8px;">
+        Weight (%)
+        <span id="weightSumBadge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:#e2e8f0;color:#475569;"></span>
+      </label>
+      <input type="number" id="category-weight" min="0" max="100" step="0.01" placeholder="eg. 40 — leave 0 for equal split">
+      <p id="weightHint" style="font-size:12px;color:#64748b;margin-top:4px;"></p>
+
       <button id="saveCategoryBtn" class="submit-btn">SAVE CATEGORY</button>
     </div>
   </div>

@@ -30,15 +30,70 @@ document.getElementById("logoutModal").addEventListener("click", e => {
   if (e.target === document.getElementById("logoutModal")) closeLogoutModal();
 });
 
-function showPasswordForm(){
+function showPasswordForm(e){
+  if (e) e.preventDefault();
+  document.getElementById("dropdownMenu").style.display = "none";
+  
+  const passwordForm = document.getElementById("passwordForm");
+  const formContent = passwordForm.querySelector(".LoginForm-content");
+  
+  // Reset any previous animations/transforms
+  if (formContent) {
+    formContent.style.animation = "none";
+    formContent.style.transform = "none";
+    // Force reflow to restart animation
+    void formContent.offsetHeight;
+  }
+  
   document.body.classList.add("modal-open");
-  document.getElementById("passwordForm").classList.add("show");
+  passwordForm.classList.add("show");
+  
+  // Reset button state when opening form
+  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Update Password";
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+  }
+  
+  // Clear input fields
+  document.getElementById("oldPass").value = "";
+  document.getElementById("newPass").value = "";
+  document.getElementById("confirmPass").value = "";
+  if (typeof clearPassMsgs === "function") clearPassMsgs();
 }
+
 function closePasswordForm(){
+  const passwordForm = document.getElementById("passwordForm");
+  const formContent = passwordForm.querySelector(".LoginForm-content");
+  
   document.body.classList.remove("modal-open");
-  document.getElementById("passwordForm").classList.remove("show");
+  passwordForm.classList.remove("show");
+  
+  // Reset animations after closing
+  setTimeout(() => {
+    if (formContent) {
+      formContent.style.animation = "";
+      formContent.style.transform = "";
+    }
+  }, 300);
+  
+  if (typeof clearPassMsgs === "function") clearPassMsgs();
+  const box = document.getElementById("passGlobalMsg");
+  if (box) box.style.display = "none";
+  
+  // Reset button state when closing form
+  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Update Password";
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
+  }
 }
-function showProfile(){
+function showProfile(e){
+  if (e) e.preventDefault();
   // Close dropdown first
   document.getElementById("dropdownMenu").style.display = "none";
   
@@ -47,42 +102,61 @@ function showProfile(){
   const studentName = document.getElementById("studentName")?.value;
   const studentNumber = document.getElementById("studentNumber")?.value;
   const studentYearLevel = document.getElementById("studentYearLevel")?.value;
+  const studentSection = document.getElementById("studentSection")?.value;
   const studentProgram = document.getElementById("studentProgram")?.value;
   
   // Fetch additional student data from database
   fetchStudentProfileData(studentId).then(additionalData => {
     // Create profile modal content with real data
     const profileContent = `
-      <div class="profile-header">
-        <h3>Student Profile</h3>
-      </div>
-      <div class="profile-body">
-        <div class="profile-header-info">
-          <div class="profile-avatar">
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Profile Picture">
-          </div>
-          <div class="profile-name-section">
-            <h4>${studentName || 'Student'}</h4>
-            <p>Student</p>
-          </div>
+      <div class="sp-modal">
+        <div class="sp-header">
+          <h3 class="sp-title">Student Profile</h3>
+          <button class="sp-close-btn" onclick="closeProfileModal()" aria-label="Close">
+            <i class="ph ph-x"></i>
+          </button>
         </div>
-        <div class="profile-fields">
-          <div class="field-group">
-            <div class="field-label">Student ID</div>
-            <div class="field-value">${studentNumber || 'N/A'}</div>
+
+        <div class="sp-body">
+          <div class="sp-name-row">
+            <div class="sp-initial">${(studentName || 'S').charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="sp-name">${studentName || 'Student'}</div>
+              <div class="sp-role-badge">Student</div>
+            </div>
           </div>
-          <div class="field-group">
-            <div class="field-label">Program</div>
-            <div class="field-value">${studentProgram || 'N/A'}</div>
+
+          <div class="sp-divider"></div>
+
+          <div class="sp-info-list">
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Student ID</span>
+                <span class="sp-info-value">${studentNumber || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Program</span>
+                <span class="sp-info-value">${studentProgram || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Year Level</span>
+                <span class="sp-info-value">${studentYearLevel ? studentYearLevel + (studentYearLevel == 1 ? 'st' : studentYearLevel == 2 ? 'nd' : studentYearLevel == 3 ? 'rd' : 'th') + ' Year' : 'N/A'}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Section</span>
+                <span class="sp-info-value">${studentSection || 'N/A'}</span>
+              </div>
+            </div>
           </div>
-          <div class="field-group">
-            <div class="field-label">Year Level</div>
-            <div class="field-value">${studentYearLevel || 'N/A'}</div>
-          </div>
+
+          <button class="sp-close-main-btn" onclick="closeProfileModal()">Close</button>
         </div>
-      </div>
-      <div class="profile-buttons">
-        <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
       </div>
     `;
     
@@ -95,20 +169,18 @@ function showProfile(){
       document.body.appendChild(profileModal);
     }
     
-    profileModal.innerHTML = `
-      <div class="logout-content">
-        ${profileContent}
-      </div>
-    `;
-    
+    profileModal.innerHTML = profileContent;
     profileModal.style.display = "flex";
-    
-    // Add click outside to close functionality
-    profileModal.addEventListener('click', function(event) {
-      if (event.target === profileModal) {
-        closeProfileModal();
-      }
-    });
+
+    // Attach click-outside listener only once
+    if (!profileModal._clickListenerAttached) {
+      profileModal.addEventListener('click', function(event) {
+        if (event.target === profileModal) {
+          closeProfileModal();
+        }
+      });
+      profileModal._clickListenerAttached = true;
+    }
   }).catch(error => {
     console.error('Error fetching student profile data:', error);
   });
@@ -140,24 +212,108 @@ async function fetchStudentProfileData(studentId) {
 window.closeProfileModal = () => {
   document.getElementById("profileModal").style.display = "none";
 };
+function showPassMsg(fieldId, message) {
+  const el = document.getElementById(fieldId);
+  if (el) { el.textContent = message; el.style.display = message ? "block" : "none"; }
+}
+
+function clearPassMsgs() {
+  ["oldPassError", "newPassError", "confirmPassError"].forEach(id => showPassMsg(id, ""));
+}
+
+function validatePasswordStrength(password) {
+  const errors = [];
+  if (password.length < 8)               errors.push("at least 8 characters");
+  if (!/[A-Z]/.test(password))           errors.push("at least one uppercase letter");
+  if (!/[a-z]/.test(password))           errors.push("at least one lowercase letter");
+  if (!/[^A-Za-z0-9]/.test(password))   errors.push("at least one special character");
+  return errors;
+}
+
+function showPasswordMessageBox(message, type) {
+  let box = document.getElementById("passGlobalMsg");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "passGlobalMsg";
+    box.className = "password-message-box";
+  }
+  const container = document.querySelector("#passwordForm .login-form-container");
+  if (container && box.parentElement !== container) {
+    container.insertBefore(box, container.firstChild);
+  }
+  box.style.display = "flex";
+  
+  // Create icon based on type
+  const icon = type === "success" 
+    ? '<i class="ph ph-check-circle"></i>' 
+    : '<i class="ph ph-warning-circle"></i>';
+  
+  box.innerHTML = `
+    <div class="message-icon">${icon}</div>
+    <div class="message-text">${message}</div>
+  `;
+  
+  // Remove existing type classes
+  box.classList.remove("success", "error", "show");
+  
+  // Add type class and trigger animation
+  setTimeout(() => {
+    box.classList.add(type, "show");
+  }, 10);
+  
+  // Auto hide after 4 seconds
+  setTimeout(() => {
+    box.classList.remove("show");
+  }, 4000);
+}
+
 function updatePassword() {
-  const studentId = document.getElementById("studentId").value.trim();
-  const oldPass = document.getElementById("oldPass").value.trim();
-  const newPass = document.getElementById("newPass").value.trim();
+  const studentId   = document.getElementById("studentId").value.trim();
+  const oldPass     = document.getElementById("oldPass").value.trim();
+  const newPass     = document.getElementById("newPass").value.trim();
   const confirmPass = document.getElementById("confirmPass").value.trim();
 
-  // Validation
-  if (!studentId || !oldPass || !newPass || !confirmPass) {
-    alert("Please fill in all fields!");
-    return;
+  clearPassMsgs();
+
+  let hasError = false;
+
+  if (!oldPass) {
+    showPassMsg("oldPassError", "Current password is required.");
+    hasError = true;
   }
 
-  if (newPass !== confirmPass) {
-    alert("New passwords do not match!");
-    return;
+  if (!newPass) {
+    showPassMsg("newPassError", "New password is required.");
+    hasError = true;
+  } else {
+    const strengthErrors = validatePasswordStrength(newPass);
+    if (strengthErrors.length > 0) {
+      showPassMsg("newPassError", "Password must have: " + strengthErrors.join(", ") + ".");
+      hasError = true;
+    }
   }
 
-  // Send to PHP backend
+  if (!confirmPass) {
+    showPassMsg("confirmPassError", "Please confirm your new password.");
+    hasError = true;
+  } else if (newPass && newPass !== confirmPass) {
+    showPassMsg("confirmPassError", "Passwords do not match.");
+    hasError = true;
+  }
+
+  if (hasError) return;
+
+  // Get button and disable it during submission
+  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  const originalText = submitBtn.textContent;
+  
+  if (submitBtn.disabled) return; // Prevent double submission
+  
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Updating...";
+  submitBtn.style.opacity = "0.6";
+  submitBtn.style.cursor = "not-allowed";
+
   fetch("update_studentPassForm.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -172,16 +328,40 @@ function updatePassword() {
       return res.json();
     })
     .then((data) => {
+      // Re-enable button
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      submitBtn.style.opacity = "1";
+      submitBtn.style.cursor = "pointer";
+      
       if (data.success) {
-        alert("Password updated successfully!");
-        closePasswordForm();
+        showPasswordMessageBox("Password updated successfully!", "success");
+        setTimeout(() => {
+          closePasswordForm();
+          document.getElementById("oldPass").value = "";
+          document.getElementById("newPass").value = "";
+          document.getElementById("confirmPass").value = "";
+          clearPassMsgs();
+        }, 1500);
       } else {
-        alert(data.message || "Failed to update password.");
+        if ((data.message || "").toLowerCase().includes("old") ||
+            (data.message || "").toLowerCase().includes("current") ||
+            (data.message || "").toLowerCase().includes("incorrect")) {
+          showPassMsg("oldPassError", data.message || "Current password is incorrect.");
+        } else {
+          showPasswordMessageBox(data.message || "Failed to update password.", "error");
+        }
       }
     })
     .catch((err) => {
+      // Re-enable button on error
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      submitBtn.style.opacity = "1";
+      submitBtn.style.cursor = "pointer";
+      
       console.error("Error updating password:", err);
-      alert("Something went wrong. Please try again.");
+      showPasswordMessageBox("Something went wrong. Please try again.", "error");
     });
 }
 
@@ -189,10 +369,6 @@ function updatePassword() {
 document.getElementById("passwordForm").addEventListener("click", (e) => {
   if (e.target.id === "passwordForm") closePasswordForm();
 });
-
-function closePasswordForm() {
-  document.getElementById("passwordForm").style.display = "none";
-}
 
 function togglePassword(id, icon) {
   const input = document.getElementById(id);
@@ -209,6 +385,33 @@ function togglePassword(id, icon) {
 
 // ================= switch section =================
 
+function updateStudentAcademicPeriodDisplay(status) {
+  const periodEl = document.getElementById("studentAcademicPeriod");
+  if (!periodEl) return;
+
+  const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
+  const semester = (status?.current_semester || status?.active_semester || "").trim();
+
+  if (academicYear && semester) {
+    periodEl.textContent = `Academic Year: ${academicYear} - ${semester}`;
+    return;
+  }
+
+  periodEl.textContent = status?.active_period_name
+    ? `Academic Period: ${status.active_period_name}`
+    : "Academic Year: No active period";
+}
+
+async function loadStudentAcademicPeriod() {
+  try {
+    const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const status = await statusRes.json();
+    if (status && status.success) updateStudentAcademicPeriodDisplay(status);
+  } catch (_) {
+    updateStudentAcademicPeriodDisplay(null);
+  }
+}
+
 async function showEvaluateSection() {
   if ((document.getElementById("studentStatus")?.value || "active").toLowerCase() !== "active") {
     alert("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.");
@@ -218,6 +421,7 @@ async function showEvaluateSection() {
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
+    updateStudentAcademicPeriodDisplay(status);
     if (!status || !status.success || !status.evaluation_open) {
       alert("Evaluation is closed");
       return;
@@ -250,6 +454,7 @@ async function refreshStudentPeriodAccess() {
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
+    updateStudentAcademicPeriodDisplay(status);
     if (!status || !status.success || !status.evaluation_open) {
       goBackToMain();
       alert("Evaluation period has ended or is closed.");
@@ -705,6 +910,8 @@ function submitEvaluation() {
 
 // Add event listener for password form back button
 document.addEventListener("DOMContentLoaded", function() {
+  loadStudentAcademicPeriod();
+
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {
     backBtn.addEventListener("click", function(e) {
@@ -806,12 +1013,16 @@ function displayEvaluationHistory(history) {
   `;
   
   historyModal.style.display = 'flex';
-  
-  historyModal.addEventListener('click', function(event) {
-    if (event.target === historyModal) {
-      closeHistoryModal();
-    }
-  });
+
+  // Attach click-outside listener only once
+  if (!historyModal._clickListenerAttached) {
+    historyModal.addEventListener('click', function(event) {
+      if (event.target === historyModal) {
+        closeHistoryModal();
+      }
+    });
+    historyModal._clickListenerAttached = true;
+  }
 }
 
 function closeHistoryModal() {
@@ -839,7 +1050,7 @@ function displayEvaluationHistory(history) {
 
   const normalizeRatingLabel = label => {
     const value = String(label || "").trim();
-    return value.toLowerCase() === "outstanding" ? "Excellent" : value;
+    return value.toLowerCase() === "excellent" ? "Outstanding" : value;
   };
 
   const historyItems = history.length === 0

@@ -14,6 +14,17 @@ if (empty($student_id) || empty($old_password) || empty($new_password)) {
     exit;
 }
 
+// Server-side password strength validation
+$strength_errors = [];
+if (strlen($new_password) < 8)                      $strength_errors[] = "at least 8 characters";
+if (!preg_match('/[A-Z]/', $new_password))           $strength_errors[] = "at least one uppercase letter";
+if (!preg_match('/[a-z]/', $new_password))           $strength_errors[] = "at least one lowercase letter";
+if (!preg_match('/[^A-Za-z0-9]/', $new_password))   $strength_errors[] = "at least one special character";
+if (!empty($strength_errors)) {
+    echo json_encode(['success' => false, 'message' => 'Password must have: ' . implode(', ', $strength_errors) . '.']);
+    exit;
+}
+
 $stmt = $conn->prepare("SELECT id, password FROM add_students WHERE id=?");
 $stmt->bind_param("i", $student_id); 
 
