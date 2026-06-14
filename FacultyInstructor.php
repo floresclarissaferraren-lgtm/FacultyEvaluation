@@ -9,7 +9,7 @@ include 'connect.php';
 
 // Fetch faculty data
 $faculty_id = $_SESSION['id'];
-$stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email, status FROM add_faculties WHERE id = ?");
+$stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email, status, photo FROM add_faculties WHERE id = ?");
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -18,6 +18,7 @@ $faculty_name = "Instructor"; // Default fallback
 $faculty_email = ""; // Default fallback
 $faculty_faculty_id = ""; // Default fallback
 $faculty_status = "active";
+$faculty_photo = ""; // Default fallback
 if ($result->num_rows === 1) {
     $faculty = $result->fetch_assoc();
     $name_parts = array_filter([$faculty['firstname'], $faculty['lastname']]);
@@ -28,8 +29,15 @@ if ($result->num_rows === 1) {
     $faculty_email = $faculty['email'] ?? '';
     $faculty_faculty_id = $faculty['faculty_id'] ?? '';
     $faculty_status = strtolower($faculty['status'] ?? 'active');
+    $faculty_photo = $faculty['photo'] ?? '';
 }
 $stmt->close();
+
+// Determine the image source: use stored base64 photo or fall back to default avatar
+$default_avatar = "https://cdn-icons-png.flaticon.com/512/3135/3135755.png";
+$faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image') === 0)
+    ? $faculty_photo
+    : $default_avatar;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,7 +63,7 @@ $stmt->close();
 
   <div class="user-menu">
     <div class="instructor-box" onclick="toggleDropdown()">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" class="logo-img">
+      <img src="<?php echo htmlspecialchars($faculty_img_src); ?>" class="logo-img" alt="Profile Photo">
       <span>Instructor</span>
       <i class="ph ph-caret-down"></i>
     </div>
@@ -76,7 +84,7 @@ $stmt->close();
 
 <div class="main-box" id="mainPage">
   <div class="main-left">
-    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Welcome Image" class="main-img">
+    <img src="<?php echo htmlspecialchars($faculty_img_src); ?>" alt="Welcome Image" class="main-img">
   </div>
   <div class="main-right">
     <h1>Welcome, <?php echo htmlspecialchars($faculty_name); ?></h1>
