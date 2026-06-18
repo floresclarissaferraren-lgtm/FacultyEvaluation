@@ -1,4 +1,5 @@
 <?php
+include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 include 'connect.php';
 
@@ -13,7 +14,7 @@ $studentYearLevel = '';
 $studentProgram = '';
 $studentStatus = 'active';
 
-$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, s.section, s.status, p.program_name 
+$stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, s.section, s.status, p.program_name, p.program_code 
                           FROM add_students s 
                           LEFT JOIN add_programs p ON s.program = p.id 
                           WHERE s.id = ?");
@@ -27,6 +28,7 @@ if ($result && $result->num_rows === 1) {
     $studentYearLevel = $student['yearlevel'] ?? '';
     $studentNumber = $student['student_number'] ?? '';
     $studentProgram = $student['program_name'] ?? '';
+    $studentProgramCode = $student['program_code'] ?? '';
     $studentSection = $student['section'] ?? '';
     $studentStatus = strtolower($student['status'] ?? 'active');
 } else {
@@ -45,7 +47,8 @@ $conn->close();
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System - Admin Panel</title>
   <link rel="stylesheet" href="FacultyUser.css?v=<?=time()?>">
-    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="unified_notifications.css?v=<?=time()?>">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 
 </head>
 <body>
@@ -89,12 +92,7 @@ $conn->close();
 <div id="passwordForm" class="LoginForm">
   <div class="LoginForm-content">
 
-  <div class="wave-bg wave-1"></div>
-    <div class="wave-bg wave-2"></div>
-    <div class="wave-bg wave-3"></div>
-    
     <div class="LoginForm-header">
-      <img src="logo.png" class="logo">
       <div class="back-btn" id="closePasswordForm">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     
@@ -158,7 +156,21 @@ $conn->close();
     <div class="main-right">
       <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
       <div class="academic-year" id="studentAcademicPeriod">Academic Year: Loading...</div>
-      <div class="academic-year">Year Level: <?php echo htmlspecialchars($studentYearLevel ?: 'N/A'); ?></div>
+      <div class="academic-year">Year Level: <?php 
+        $display = '';
+        if (!empty($studentProgramCode)) {
+            $display .= $studentProgramCode . ' ';
+        }
+        if ($studentYearLevel === 'irregular') {
+            $display .= 'irregular';
+        } else {
+            $display .= $studentYearLevel;
+            if (!empty($studentSection)) {
+                $display .= '-' . $studentSection;
+            }
+        }
+        echo htmlspecialchars($display ?: 'N/A'); 
+      ?></div>
       <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
         Each evaluation you complete strengthens our commitment to academic excellence.</p>
       <?php if ($studentStatus !== 'active'): ?>
@@ -196,6 +208,8 @@ $conn->close();
 </div>
 
 
+<script src="unified_notifications.js?v=<?=time()?>"></script>
+<script src="session_keepalive.js?v=<?=time()?>"></script>
 <script src="FacultyUser.js?v=<?=time()?>"></script>
 </body>
 </html>

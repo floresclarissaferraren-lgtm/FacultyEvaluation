@@ -1,5 +1,6 @@
 
 <?php
+include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin' || !isset($_SESSION['id'])) {
   header('Location: EvalMain.php');
@@ -14,6 +15,7 @@ include 'totalstudents_dashcount.php';
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Faculty Evaluation System</title>
   <link rel="stylesheet" href="FacultyAdmin.css?v=<?php echo time(); ?>">
+  <link rel="stylesheet" href="unified_notifications.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -570,7 +572,7 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="form-row">
         <div>
-          <label for="class-year"><i class="ph ph-graduation-cap"></i> Year Level</label>
+          <label for="class-year">Year Level</label>
           <select id="class-year">
             <option value="">Select Year Level</option>
             <option value="1st Year">1st Year</option>
@@ -580,7 +582,7 @@ include 'totalstudents_dashcount.php';
           </select>
         </div>
         <div>
-          <label for="class-block"><i class="ph ph-hash"></i> Section</label>
+          <label for="class-block">Section</label>
           <input type="text" id="class-block">
         </div>
       </div>
@@ -1185,6 +1187,12 @@ include 'totalstudents_dashcount.php';
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
+      <!-- Error message container -->
+      <div id="questionErrorMsg" class="question-error-msg" style="display:none;">
+        <i class="ph ph-warning-circle"></i>
+        <span class="error-text"></span>
+      </div>
+      
       <p class="category-label">
         <span class="label-text">Category:</span>
         <span class="category-name" id="questionCategoryName"></span>
@@ -1315,34 +1323,32 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <!-- Create New Period Section -->
       <div class="period-creation-section">
-        <h4 style="color: #1e40af; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display:flex; align-items:center; gap:8px; font-size:0.85rem;">
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:linear-gradient(135deg,var(--primary-700),var(--primary-500));border-radius:8px;box-shadow:0 4px 10px rgba(14,84,139,0.25);"><i class="ph ph-plus-circle" style="color:#fff;font-size:1rem;margin:0;"></i></span>CREATE NEW PERIOD
-        </h4>
-        <div class="period-form-row">
+        <div class="period-section-header">
+          <div>
+            <h4 class="period-section-title">Create New Period</h4>
+            <p class="period-section-subtitle">Define the academic year, semester, and date range</p>
+          </div>
+        </div>
+
+        <div class="period-form-grid">
           <div class="period-input-group">
-            <label for="period-ay">
-              <i class="ph ph-calendar-dots"></i>AY
-            </label>
+            <label for="period-ay">Academic Year</label>
             <input type="text" id="period-ay" placeholder="Set from dashboard" readonly>
             <div class="period-tooltip" id="ay-tooltip" style="display:none;">2025-2026</div>
           </div>
-          
+
           <div class="period-input-group">
-            <label for="period-sem">
-              <i class="ph ph-graduation-cap"></i>Semester
-            </label>
+            <label for="period-sem">Semester</label>
             <select id="period-sem" disabled>
-              <option value="" selected disabled>Semester</option>
+              <option value="" selected disabled>Select semester</option>
               <option value="1st Semester">1st Semester</option>
               <option value="2nd Semester">2nd Semester</option>
               <option value="Summer">Summer</option>
             </select>
           </div>
-          
+
           <div class="period-input-group">
-            <label for="period-start">
-              <i class="ph ph-play-circle"></i>Start Date
-            </label>
+            <label for="period-start">Start Date</label>
             <div class="date-input-wrapper">
               <input type="text" id="period-start" placeholder="YYYY-MM-DD" readonly>
               <i class="ph ph-calendar-blank calendar-icon" data-target="period-start"></i>
@@ -1368,11 +1374,9 @@ include 'totalstudents_dashcount.php';
               </div>
             </div>
           </div>
-          
+
           <div class="period-input-group">
-            <label for="period-end">
-              <i class="ph ph-stop-circle"></i>End Date
-            </label>
+            <label for="period-end">End Date</label>
             <div class="date-input-wrapper">
               <input type="text" id="period-end" placeholder="YYYY-MM-DD" readonly>
               <i class="ph ph-calendar-blank calendar-icon" data-target="period-end"></i>
@@ -1399,8 +1403,8 @@ include 'totalstudents_dashcount.php';
             </div>
           </div>
         </div>
-        
-        <div style="text-align: right; margin-top: 24px;">
+
+        <div class="period-form-footer">
           <button id="add-period-btn" class="period-add-btn">
             <i class="ph ph-plus"></i>Add Period
           </button>
@@ -1409,7 +1413,19 @@ include 'totalstudents_dashcount.php';
 
       <!-- Existing Periods Table -->
       <div class="periods-table-section">
+        <div class="periods-table-header">
+          <div class="periods-table-title-group">
+            <i class="ph ph-clock-countdown"></i>
+            <span>Existing Periods</span>
+          </div>
+        </div>
         <table class="periods-table">
+          <colgroup>
+            <col style="width:32%">
+            <col style="width:30%">
+            <col style="width:22%">
+            <col style="width:16%">
+          </colgroup>
           <thead>
             <tr>
               <th>PERIOD NAME</th>
@@ -1443,7 +1459,8 @@ include 'totalstudents_dashcount.php';
     font-size: 14px;
 "></div>
 
-<!-- Custom Notification Modal -->
+<!-- DEPRECATED: Custom Notification Modal - replaced with unified showGlobalNotification system -->
+<!-- 
 <div id="notificationModal" class="notification-modal">
   <div class="notification-modal-content">
     <div class="notification-modal-icon">
@@ -1454,6 +1471,7 @@ include 'totalstudents_dashcount.php';
     <button id="notificationModalOkBtn" class="notification-modal-btn">OK</button>
   </div>
 </div>
+-->
 
 <!-- Faculty Report Modal -->
 <div id="facultyReportModal" class="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
@@ -1560,6 +1578,8 @@ include 'totalstudents_dashcount.php';
   </div>
 </div>
 
+<script src="unified_notifications.js?v=<?php echo time(); ?>"></script>
+<script src="session_keepalive.js?v=<?php echo time(); ?>"></script>
 <script src="FacultyAdmin.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

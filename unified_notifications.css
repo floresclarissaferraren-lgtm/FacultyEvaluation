@@ -1,0 +1,185 @@
+/**
+ * Unified Notification System
+ * Consistent notification styling across all pages (Admin, Student, Instructor)
+ * Based on "Evaluation is closed" design from FacultyUser.css
+ */
+
+/* ==================== Global Notification Styles ==================== */
+.global-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.global-notification.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.global-notification .notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-width: 320px;
+  max-width: 500px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Success State */
+.global-notification .notification-content.success {
+  background: #ecfdf5;
+  color: #166534;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* Error State */
+.global-notification .notification-content.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Warning State */
+.global-notification .notification-content.warning {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+/* Info State */
+.global-notification .notification-content.info {
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Icon Styling */
+.global-notification .notification-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.global-notification .notification-content.success .notification-icon {
+  color: #16a34a;
+}
+
+.global-notification .notification-content.error .notification-icon {
+  color: #dc2626;
+}
+
+.global-notification .notification-content.warning .notification-icon {
+  color: #f59e0b;
+}
+
+.global-notification .notification-content.info .notification-icon {
+  color: #3b82f6;
+}
+
+/* Text Styling */
+.global-notification .notification-text {
+  flex: 1;
+  line-height: 1.4;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Animation */
+@keyframes slideInDown {
+  from {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.global-notification.show {
+  animation: slideInDown 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .global-notification {
+    top: 70px;
+    left: 50%;
+    width: 90%;
+    max-width: none;
+  }
+
+  .global-notification .notification-content {
+    min-width: 280px;
+    max-width: 90vw;
+    padding: 14px 20px;
+    gap: 10px;
+  }
+
+  .global-notification .notification-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 22px;
+  }
+
+  .global-notification .notification-text {
+    font-size: 13px;
+  }
+}
+
+/* ==================== Legacy Notification Support ==================== */
+/* For backwards compatibility with old #notification element */
+#notification {
+  position: fixed;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  display: none;
+  opacity: 0;
+  transition: all 0.3s ease;
+  min-width: 320px;
+  max-width: 500px;
+  text-align: center;
+}
+
+#notification.show {
+  display: block;
+  opacity: 1;
+}
+
+/* ==================== Alert Modal Replacement ==================== */
+/* Replace old alert-modal with notification style */
+.alert-modal-overlay {
+  display: none !important;
+}
+
+/* Use notification instead of modal for alerts */
+.alert-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+}

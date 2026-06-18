@@ -5,10 +5,19 @@ function toggleDropdown() {
   menu.style.display = (menu.style.display === "block") ? "none" : "block";}
 function logout(e){
   e.preventDefault();
+  // Calculate scrollbar width before hiding overflow
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+  document.body.classList.add("modal-open");
+  document.querySelector(".navbar")?.classList.add("modal-compensate");
   document.getElementById("logoutModal").style.display = "flex";}
 
 function closeLogoutModal(){
-  document.getElementById("logoutModal").style.display = "none";}
+  document.getElementById("logoutModal").style.display = "none";
+  document.body.classList.remove("modal-open");
+  document.querySelector(".navbar")?.classList.remove("modal-compensate");
+  document.documentElement.style.removeProperty('--scrollbar-width');
+}
 
 function confirmLogout(){
   window.location.href = "EvalMain.php";}
@@ -16,6 +25,10 @@ function confirmLogout(){
 function showPasswordForm(e){
   if (e) e.preventDefault();
   document.getElementById("dropdownMenu").style.display = "none";
+  
+  // Calculate scrollbar width before hiding overflow
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
   
   const passwordForm = document.getElementById("passwordForm");
   const formContent = passwordForm.querySelector(".LoginForm-content");
@@ -29,6 +42,7 @@ function showPasswordForm(e){
   }
   
   document.body.classList.add("modal-open");
+  document.querySelector(".navbar")?.classList.add("modal-compensate");
   passwordForm.classList.add("show");
   
   // Reset button state when opening form
@@ -52,6 +66,8 @@ function closePasswordForm(){
   const formContent = passwordForm.querySelector(".LoginForm-content");
   
   document.body.classList.remove("modal-open");
+  document.querySelector(".navbar")?.classList.remove("modal-compensate");
+  document.documentElement.style.removeProperty('--scrollbar-width');
   passwordForm.classList.remove("show");
   
   // Reset animations after closing
@@ -159,10 +175,13 @@ function renderCategoryTotals(categoryTotals) {
         <tbody>
           ${categoryTotals.map(item => {
             const avg         = Number(item.avg_rating) || 0;
-            const percent     = getRatingPercentageValue(avg);
-            const percentText = formatRatingPercentage(avg);
-            const statusLabel = getOverallStatusLabel(avg);
-            const statusClass = getStatusBadgeClass(avg).replace(/^status-/, '');
+            const responseCount = Number(item.response_count || item.responses || 0);
+            const hasResponses = responseCount > 0 || avg > 0;
+            
+            const percent     = hasResponses ? getRatingPercentageValue(avg) : 0;
+            const percentText = hasResponses ? formatRatingPercentage(avg) : '0%';
+            const statusLabel = hasResponses ? getOverallStatusLabel(avg) : 'N/A';
+            const statusClass = hasResponses ? getStatusBadgeClass(avg).replace(/^status-/, '') : 'na';
             const normW       = parseFloat(item.normalised_weight || item.weight || 0);
             const weightText  = hasWeights
               ? `${normW.toFixed(1)}%`
@@ -194,6 +213,10 @@ function showProfile(e){
   // Close dropdown first
   document.getElementById("dropdownMenu").style.display = "none";
   
+  // Calculate scrollbar width before hiding overflow
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+  
   // Get faculty information from hidden fields
   const facultyId = document.getElementById("facultyId")?.value;
   const facultyName = document.getElementById("facultyName")?.value;
@@ -201,34 +224,44 @@ function showProfile(e){
   
   // Fetch additional faculty data from database
   fetchFacultyProfileData(facultyId).then(additionalData => {
-    // Create profile modal content with real data
+    // Create profile modal content with real data matching student profile design
     const profileContent = `
-      <div class="profile-header">
-        <h3>Faculty Profile</h3>
-      </div>
-      <div class="profile-body">
-        <div class="profile-header-info">
-          <div class="profile-avatar">
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Profile Picture">
-          </div>
-          <div class="profile-name-section">
-            <h4>${facultyName || 'Faculty'}</h4>
-            <p>Faculty Instructor</p>
-          </div>
+      <div class="sp-modal">
+        <div class="sp-header">
+          <h3 class="sp-title">Faculty Profile</h3>
+          <button class="sp-close-btn" onclick="closeProfileModal()" aria-label="Close">
+            <i class="ph ph-x"></i>
+          </button>
         </div>
-        <div class="profile-fields">
-          <div class="field-group">
-            <div class="field-label">Email</div>
-            <div class="field-value">${facultyEmail || 'N/A'}</div>
+
+        <div class="sp-body">
+          <div class="sp-name-row">
+            <div class="sp-initial">${(facultyName || 'F').charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="sp-name">${facultyName || 'Faculty'}</div>
+              <div class="sp-role-badge">Instructor</div>
+            </div>
           </div>
-          <div class="field-group">
-            <div class="field-label">Faculty ID</div>
-            <div class="field-value">${facultyId || 'N/A'}</div>
+
+          <div class="sp-divider"></div>
+
+          <div class="sp-info-list">
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Faculty ID</span>
+                <span class="sp-info-value">${facultyId || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Email</span>
+                <span class="sp-info-value">${facultyEmail || 'N/A'}</span>
+              </div>
+            </div>
           </div>
+
+          <button class="sp-close-main-btn" onclick="closeProfileModal()">Close</button>
         </div>
-      </div>
-      <div class="profile-buttons">
-        <button class="btn close-profile-btn" onclick="closeProfileModal()">Close</button>
       </div>
     `;
     
@@ -241,12 +274,9 @@ function showProfile(e){
       document.body.appendChild(profileModal);
     }
     
-    profileModal.innerHTML = `
-      <div class="logout-content">
-        ${profileContent}
-      </div>
-    `;
-    
+    profileModal.innerHTML = profileContent;
+    document.body.classList.add("modal-open");
+    document.querySelector(".navbar")?.classList.add("modal-compensate");
     profileModal.style.display = "flex";
 
     // Attach click-outside listener only once
@@ -287,7 +317,13 @@ async function fetchFacultyProfileData(facultyId) {
 }
 
 window.closeProfileModal = () => {
-  document.getElementById("profileModal").style.display = "none";
+  const profileModal = document.getElementById("profileModal");
+  if (profileModal) {
+    profileModal.style.display = "none";
+    document.body.classList.remove("modal-open");
+    document.querySelector(".navbar")?.classList.remove("modal-compensate");
+    document.documentElement.style.removeProperty('--scrollbar-width');
+  }
 };
 
 function togglePassword(fieldId, icon) {
@@ -359,6 +395,48 @@ function showPasswordMessageBox(message, type) {
   }, 4000);
 }
 
+// Global notification (outside modal)
+function showGlobalNotification(message, type) {
+  // type: 'success' | 'error' | 'warning'
+  let notification = document.getElementById("globalNotification");
+  
+  if (!notification) {
+    notification = document.createElement("div");
+    notification.id = "globalNotification";
+    notification.className = "global-notification";
+    document.body.appendChild(notification);
+  }
+  
+  let icon = '';
+  if (type === "success") {
+    icon = '<i class="ph ph-check-circle"></i>';
+  } else if (type === "warning") {
+    icon = '<i class="ph ph-warning"></i>';
+  } else {
+    icon = '<i class="ph ph-warning-circle"></i>';
+  }
+  
+  notification.innerHTML = `
+    <div class="notification-content ${type}">
+      <div class="notification-icon">${icon}</div>
+      <div class="notification-text">${message}</div>
+    </div>
+  `;
+  
+  // Remove existing classes
+  notification.classList.remove("show");
+  
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+  
+  // Auto hide after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove("show");
+  }, 3000);
+}
+
 function updatePassword() {
   const facultyId   = document.getElementById("facultyNumericId").value;
   const oldPass     = document.getElementById("oldPass").value;
@@ -425,14 +503,15 @@ function updatePassword() {
     submitBtn.style.cursor = "pointer";
     
     if (data.success) {
-      showPasswordMessageBox("Password updated successfully!", "success");
-      setTimeout(() => {
-        closePasswordForm();
-        document.getElementById("oldPass").value = "";
-        document.getElementById("newPass").value = "";
-        document.getElementById("confirmPass").value = "";
-        clearPassMsgs();
-      }, 1500);
+      // Close form first
+      closePasswordForm();
+      document.getElementById("oldPass").value = "";
+      document.getElementById("newPass").value = "";
+      document.getElementById("confirmPass").value = "";
+      clearPassMsgs();
+      
+      // Show success notification outside the modal
+      showGlobalNotification("Password updated successfully!", "success");
     } else {
       if ((data.message || "").toLowerCase().includes("old") ||
           (data.message || "").toLowerCase().includes("current") ||
@@ -503,12 +582,14 @@ function loadFacultyStats() {
       const responsesEl    = document.getElementById("totalResponsesValue");
       const progressFill   = document.getElementById("overallRatingProgressFill");
 
+      const totalResponses = parseInt(data.total_responses || 0);
+      const hasResponses = totalResponses > 0;
       const pct = parseFloat(data.percentage_score || 0);
 
-      if (ratingNumberEl) ratingNumberEl.textContent = `${data.overall_rating} / 5.00`;
+      if (ratingNumberEl) ratingNumberEl.textContent = `${data.overall_rating || '0.00'} / 5.00`;
       if (ratingPctEl)    ratingPctEl.textContent     = `${pct.toFixed(1)}%`;
-      if (ratingStatusEl) ratingStatusEl.textContent  = data.rating_label || "No Rating Yet";
-      if (responsesEl)    responsesEl.textContent      = `${data.total_responses}`;
+      if (ratingStatusEl) ratingStatusEl.textContent  = hasResponses ? (data.rating_label || "No Rating Yet") : "N/A";
+      if (responsesEl)    responsesEl.textContent      = `${totalResponses}`;
       if (progressFill)   progressFill.style.width     = `${Math.min(pct, 100)}%`;
     })
     .catch(err => {
@@ -549,13 +630,16 @@ function showEvaluationReport() {
   .then(data => {
     // Always show the modal with back button
     const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
-    const overallRating   = data.success ? (data.overall_rating || '0.00') : '0.00';
-    const overallPercent  = data.success && data.percentage_score
+    const totalResponses = data.success ? (data.total_responses || 0) : 0;
+    const hasResponses = totalResponses > 0;
+    
+    const overallRating   = hasResponses && data.success ? (data.overall_rating || '0.00') : '0.00';
+    const overallPercent  = hasResponses && data.success && data.percentage_score
       ? parseFloat(data.percentage_score)
-      : getRatingPercentageValue(overallRating);
-    const overallPercentText = `${overallPercent.toFixed(1)}%`;
-    const statusLabel    = getOverallStatusLabel(overallRating);
-    const statusClass    = getStatusBadgeClass(overallRating);
+      : 0;
+    const overallPercentText = hasResponses ? `${overallPercent.toFixed(1)}%` : '0%';
+    const statusLabel    = hasResponses ? getOverallStatusLabel(overallRating) : 'N/A';
+    const statusClass    = hasResponses ? getStatusBadgeClass(overallRating) : 'status-na';
     const feedbackHtml = renderFeedbackList(data.success ? (data.feedback_comments || data.feedback) : []);
 
     const reportContent = `
@@ -579,7 +663,7 @@ function showEvaluationReport() {
           </div>
 
           <div class="report-summary-grid">
-            <div class="report-card">
+            <div class="report-card ${!hasResponses ? 'no-data' : ''}">
               <span class="report-card-label">Overall Rating</span>
               <strong class="report-card-value">${overallRating} / 5.00</strong>
               <span class="report-card-percent">${overallPercentText}</span>
@@ -588,7 +672,7 @@ function showEvaluationReport() {
               </div>
               <span class="report-card-note">Weighted performance score</span>
             </div>
-            <div class="report-card report-score-highlight">
+            <div class="report-card report-score-highlight ${!hasResponses ? 'no-data' : ''}">
               <span class="report-card-label">Performance Score</span>
               <strong class="report-card-value report-pct-value">${overallPercentText}</strong>
               <span class="report-card-note">Out of 100%</span>
@@ -598,9 +682,9 @@ function showEvaluationReport() {
               <strong class="report-card-value">${statusLabel}</strong>
               <span class="report-card-note">Based on weighted ratings</span>
             </div>
-            <div class="report-card">
+            <div class="report-card ${!hasResponses ? 'no-data' : ''}">
               <span class="report-card-label">Total Responses</span>
-              <strong class="report-card-value">${data.success ? (data.total_responses || '0') : '0'}</strong>
+              <strong class="report-card-value">${totalResponses}</strong>
               <span class="report-card-note">Responses received</span>
             </div>
           </div>
@@ -635,6 +719,13 @@ function showEvaluationReport() {
     `;
     
     reportModal.innerHTML = reportContent;
+    
+    // Calculate scrollbar width and add compensation
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+    document.body.classList.add("modal-open");
+    document.querySelector(".navbar")?.classList.add("modal-compensate");
+    
     reportModal.style.display = "flex";
     
     // Add click outside to close functionality once
@@ -719,6 +810,9 @@ function closeEvaluationReport() {
   const modal = document.getElementById("evaluationReportModal");
   if (modal) {
     modal.style.display = "none";
+    document.body.classList.remove("modal-open");
+    document.querySelector(".navbar")?.classList.remove("modal-compensate");
+    document.documentElement.style.removeProperty('--scrollbar-width');
   }
 }
 
@@ -733,4 +827,43 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
-document.addEventListener("DOMContentLoaded", loadFacultyStats);
+// ================= REAL-TIME ACADEMIC PERIOD UPDATE =================
+
+function updateInstructorAcademicPeriodDisplay(status) {
+  const periodEl = document.getElementById("instructorAcademicPeriod");
+  if (!periodEl) return;
+
+  const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
+  const semester = (status?.current_semester || status?.active_semester || "").trim();
+
+  if (academicYear && semester) {
+    periodEl.innerHTML = `<i class="ph ph-calendar"></i> Academic Year: ${academicYear} • ${semester}`;
+    return;
+  }
+
+  periodEl.innerHTML = status?.active_period_name
+    ? `<i class="ph ph-calendar"></i> Academic Period: ${status.active_period_name}`
+    : '<i class="ph ph-calendar"></i> Academic Year: No active period';
+}
+
+async function loadInstructorAcademicPeriod() {
+  try {
+    const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const status = await statusRes.json();
+    if (status && status.success) updateInstructorAcademicPeriodDisplay(status);
+  } catch (err) {
+    console.error("Failed to load academic period:", err);
+    updateInstructorAcademicPeriodDisplay(null);
+  }
+}
+
+// Refresh academic period display every 1 second
+function startInstructorPeriodRefresh() {
+  loadInstructorAcademicPeriod(); // Load immediately
+  setInterval(loadInstructorAcademicPeriod, 1000); // Then every 1 second
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  loadFacultyStats();
+  startInstructorPeriodRefresh();
+});

@@ -13,94 +13,71 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentRow = null; 
   let deleteTarget = null;
   let deleteType = "";
-  // ------------------- Notification==========================================================================================
-function showNotification(message, color="#4caf50", duration=3000){
-    const notif = document.getElementById("notification");
-    notif.style.backgroundColor = color;
-    notif.textContent = message;
-    notif.style.display = "block";
-    notif.style.opacity = 1;
+  // ------------------- Notification (now using unified system) ==========================================================================================
+// Note: showNotification and showAlertModal are now provided by unified_notifications.js
+// These use consistent styling across all pages
 
-    setTimeout(()=>{
-        notif.style.transition = "opacity 0.5s";
-        notif.style.opacity = 0;
-        setTimeout(()=>{ notif.style.display = "none"; notif.style.transition = ""; }, 500);
-    }, duration);
-}
+// DEPRECATED: Old notification modal system - replaced with unified showGlobalNotification
+// function showNotificationModal() {
+//     const modal = document.getElementById("notificationModal");
+//     modal.style.display = "flex";
+//     modal.style.zIndex = "10002";
+//     modal.style.position = "fixed";
+//     
+//     // Ensure OK button is clickable when modal is shown
+//     setTimeout(() => {
+//         const okBtn = document.getElementById("notificationModalOkBtn");
+//         if (okBtn) {
+//             okBtn.onclick = function() {
+//                 closeNotificationModal();
+//             };
+//         }
+//     }, 100);
+// }
 
-function showAlertModal(message) {
-  const overlay = document.getElementById("alertModal");
-  const msg = document.getElementById("alertModalMessage");
-  const closeBtn = document.getElementById("alertModalClose");
-  if (!overlay || !msg) return;
-  msg.textContent = message;
-  overlay.style.display = "flex";
-  const close = () => { overlay.style.display = "none"; };
-  closeBtn.onclick = close;
-  overlay.onclick = (e) => { if (e.target === overlay) close(); };
-}
-
-// Custom Notification Modal Functions
-function showNotificationModal() {
-    const modal = document.getElementById("notificationModal");
-    modal.style.display = "flex";
-    modal.style.zIndex = "10002";
-    modal.style.position = "fixed";
-    
-    // Ensure OK button is clickable when modal is shown
-    setTimeout(() => {
-        const okBtn = document.getElementById("notificationModalOkBtn");
-        if (okBtn) {
-            okBtn.onclick = function() {
-                closeNotificationModal();
-            };
-        }
-    }, 100);
-}
-
-function closeNotificationModal() {
-    const modal = document.getElementById("notificationModal");
-    modal.style.display = "none";
-    
-    // Also close the add question modal
-    const addQuestionModal = document.getElementById("addQuestionModal");
-    if (addQuestionModal) {
-        addQuestionModal.style.display = "none";
-    }
-}
+// function closeNotificationModal() {
+//     const modal = document.getElementById("notificationModal");
+//     modal.style.display = "none";
+//     
+//     // Also close the add question modal
+//     const addQuestionModal = document.getElementById("addQuestionModal");
+//     if (addQuestionModal) {
+//         addQuestionModal.style.display = "none";
+//     }
+// }
 
 
-// Setup notification modal event listeners
-document.addEventListener("DOMContentLoaded", () => {
-    const notificationModal = document.getElementById("notificationModal");
-    const okBtn = document.getElementById("notificationModalOkBtn");
-    
-    if (notificationModal) {
-        // Click outside to close
-        notificationModal.addEventListener("click", (e) => {
-            // Check if click is on modal backdrop (outside modal content)
-            if (e.target === notificationModal) {
-                closeNotificationModal();
-            }
-        });
-        
-        // Ensure modal has proper z-index
-        notificationModal.style.zIndex = "10002";
-    }
-    
-    if (okBtn) {
-        // OK button click to close
-        okBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closeNotificationModal();
-        });
-        
-        // Ensure button is clickable
-        okBtn.style.pointerEvents = "auto";
-        okBtn.style.cursor = "pointer";
-    }
-});
+// DEPRECATED: Setup notification modal event listeners - replaced with unified notification system
+// document.addEventListener("DOMContentLoaded", () => {
+//     const notificationModal = document.getElementById("notificationModal");
+//     const okBtn = document.getElementById("notificationModalOkBtn");
+//     
+//     if (notificationModal) {
+//         // Click outside to close
+//         notificationModal.addEventListener("click", (e) => {
+//             // Check if click is on modal backdrop (outside modal content)
+//             if (e.target === notificationModal) {
+//                 closeNotificationModal();
+//             }
+//         });
+//         
+//         // Ensure modal has proper z-index
+//         notificationModal.style.zIndex = "10002";
+//     }
+//     
+//     if (okBtn) {
+//         // OK button click to close
+//         okBtn.addEventListener("click", (e) => {
+//             e.preventDefault();
+//             e.stopPropagation();
+//             closeNotificationModal();
+//         });
+//         
+//         // Ensure button is clickable
+//         okBtn.style.pointerEvents = "auto";
+//         okBtn.style.cursor = "pointer";
+//     }
+// });
   // ================= Sidebar Toggle ==========================================================================================
 window.toggleSidebar=()=>{
   const s=document.getElementById("sidebar"),m=document.querySelector("main"),navbar=document.querySelector(".navbar");
@@ -589,7 +566,10 @@ programCodeInput?.addEventListener("input", () => {
 // SAVE / UPDATE
 programSubmitBtn.addEventListener("click",()=>{
   const code=programCodeInput.value.trim(),name=programNameInput.value.trim();
-  if(!code||!name)return alert("Please fill in both Program Code and Program Name.");
+  if(!code||!name){
+    showGlobalNotification("Please fill in both Program Code and Program Name", "warning");
+    return;
+  }
   
   // Simple validation using existing table data
   const existingCodes = [];
@@ -746,12 +726,14 @@ function manageProgram(id, code) {
   const classesTab = document.querySelector('.classes-btn');
   const subjectsDiv = document.getElementById('subjects');
   const classesDiv = document.getElementById('classes');
+  const mw = document.querySelector("#manage-section .header-actions-section .search-wrapper");
   
   if (subjectsTab && classesTab && subjectsDiv && classesDiv) {
     subjectsTab.classList.add('active');
     classesTab.classList.remove('active');
     subjectsDiv.style.display = 'block';
     classesDiv.style.display = 'none';
+    if (mw) mw.style.display = 'none';
   }
   
   // Load subjects and classes for this program
@@ -913,7 +895,7 @@ saveMainSubjectBtn?.addEventListener("click",()=>{
         year = document.getElementById("main-year-select").value;
   
   if(!code||!desc||!program||!semester||!year){
-    alert("Please fill all fields");
+    showGlobalNotification("Please fill all fields", "warning");
     return;
   }
   
@@ -1146,7 +1128,8 @@ function showTable(tab) {
   const s = document.getElementById("subjects"),
         c = document.getElementById("classes"),
         sb = document.querySelector(".subject-btn"),
-        cb = document.querySelector(".classes-btn");
+        cb = document.querySelector(".classes-btn"),
+        mw = document.querySelector("#manage-section .header-actions-section .search-wrapper");
 
   if (!s || !c) return;
 
@@ -1155,11 +1138,13 @@ function showTable(tab) {
     c.style.display = "none";
     sb?.classList.add("active");
     cb?.classList.remove("active");
+    if (mw) mw.style.display = "none";
   } else {
     s.style.display = "none";
     c.style.display = "block";
     sb?.classList.remove("active");
     cb?.classList.add("active");
+    if (mw) mw.style.display = "flex";
   }
 }
 
@@ -1375,8 +1360,14 @@ saveSubjectBtn?.addEventListener("click", () => {
 
   console.log("Saving subject:", { code, desc, semester, year, currentProgramId, isEditingSubject });
 
-  if (!code || !desc || !semester || !year) return alert("Fill all fields");
-  if (!currentProgramId) return alert("Select program first");
+  if (!code || !desc || !semester || !year) {
+    showGlobalNotification("Please fill all fields", "warning");
+    return;
+  }
+  if (!currentProgramId) {
+    showGlobalNotification("Please select program first", "warning");
+    return;
+  }
 
   const url = "subject_crud.php";
 
@@ -1816,8 +1807,14 @@ saveClassBtn?.addEventListener("click", () => {
   const block = document.getElementById("class-block").value.trim();
   const addClassModalEl = document.getElementById("addClassModal");
 
-  if (!year || !block) return alert("Fill all fields");
-  if (!currentProgramId) return alert("Select program first");
+  if (!year || !block) {
+    showGlobalNotification("Please fill all fields", "warning");
+    return;
+  }
+  if (!currentProgramId) {
+    showGlobalNotification("Please select program first", "warning");
+    return;
+  }
 
   const isEditing = addClassModalEl.dataset.isEditing === "true";
   const editId = addClassModalEl.dataset.editId;
@@ -1830,7 +1827,10 @@ saveClassBtn?.addEventListener("click", () => {
   if (isEditing && checked.length === 0 && existingSubjectIds.length > 0) {
     checked.push(...existingSubjectIds);
   }
-  if (checked.length === 0) return alert("Select at least one subject");
+  if (checked.length === 0) {
+    showGlobalNotification("Please select at least one subject", "warning");
+    return;
+  }
 
   const assignments = {};
   checked.forEach(subjectId => {
@@ -2135,6 +2135,23 @@ const openModal=(m,h,b)=>{
   if(sid&&sem){sid.disabled=sem.disabled=h.includes("EDIT STUDENT");}
 };
 const closeModal=m=>m.style.display="none";
+
+function showYearSectionRow(row) {
+  if (!row) return;
+
+  row.style.setProperty('display', 'grid', 'important');
+  row.style.setProperty('grid-template-columns', 'minmax(0, 1fr) minmax(0, 1fr)', 'important');
+  row.style.setProperty('gap', 'clamp(8px, 3vw, 20px)', 'important');
+  row.style.setProperty('align-items', 'start', 'important');
+  row.style.setProperty('width', '100%', 'important');
+  row.style.setProperty('min-width', '0', 'important');
+
+  Array.from(row.children).forEach(field => {
+    field.style.setProperty('min-width', '0', 'important');
+    field.style.setProperty('width', '100%', 'important');
+    field.style.setProperty('margin', '0', 'important');
+  });
+}
 
 // ================= Faculty ==========================================================================================
 const facultyTbody = document.querySelector("#faculties-section tbody");
@@ -3741,7 +3758,6 @@ function renderFacultySubjectList(subjects) {
   const rows = subjects.map(subject => `
     <label class="subject-checkbox-item faculty-subject-item" data-search="${escapeHtml(facultySubjectSearchText(subject))}">
       <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
-      <span class="checkmark"></span>
       <span class="subject-info">
         <span class="subject-code">${escapeHtml(subject.subject_code)}</span>
         <span class="subject-desc">${escapeHtml(subject.subject_desc)}</span>
@@ -3914,7 +3930,7 @@ function loadStudents(){
               if (subjectsSection) subjectsSection.style.display = 'block';
             } else {
               document.querySelector('input[name="student-type"][value="regular"]').checked = true;
-              yearlevelRow.style.setProperty('display', 'flex', 'important');
+              showYearSectionRow(yearlevelRow);
               yearlevelSelect.required = true;
               sectionSelect.required = true;
               document.getElementById("student-yearlevel").value = stu.yearlevel || "";
@@ -3981,7 +3997,7 @@ function loadStudents(){
                     if (subjectsSection) subjectsSection.style.display = 'block';
                   } else {
                     console.log('Showing year level and section for regular in edit form');
-                    yearlevelRow.style.setProperty('display', 'flex', 'important');
+                    showYearSectionRow(yearlevelRow);
                     yearlevelSelect.required = true;
                     sectionSelect.required = true;
                     if (subjectsSection) subjectsSection.style.display = 'none';
@@ -4015,7 +4031,7 @@ function loadStudents(){
               } else {
                 yearlevelValue = document.getElementById("student-yearlevel").value;
                 if (!yearlevelValue) {
-                  alert("Please select year level for regular student.");
+                  showGlobalNotification("Please select year level for regular student", "warning");
                   submitBtn.disabled = false;
                   return;
                 }
@@ -4324,7 +4340,7 @@ document.getElementById("add-subject-btn")?.addEventListener("click", () => {
   const program = document.getElementById("student-program").value;
   
   if (!program) {
-    alert("Please select a program first to view available subjects");
+    showGlobalNotification("Please select a program first to view available subjects", "warning");
     return;
   }
   
@@ -4475,6 +4491,17 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Question modal closed by X button");
     };
   }
+  
+  // Clear error message when user starts typing in question textarea
+  const questionTextarea = document.getElementById("question-text");
+  if (questionTextarea) {
+    questionTextarea.addEventListener("input", () => {
+      const errorMsg = document.getElementById("questionErrorMsg");
+      if (errorMsg && errorMsg.style.display !== "none") {
+        errorMsg.style.display = "none";
+      }
+    });
+  }
 
   // Add Subject modal close button
   const subjectCloseBtn = document.querySelector("#addSubjectModal .close-btn");
@@ -4563,7 +4590,7 @@ document.getElementById("confirm-subject-selection")?.addEventListener("click", 
       const selectedClass = classOptions.find(opt => parseInt(opt.class_id, 10) === classId);
 
       if (!classId || !selectedClass) {
-        alert(`Please select year level and section for subject ${subject.subject_code}.`);
+        showGlobalNotification(`Please select year level and section for subject ${subject.subject_code}`, "warning");
         hasMissingClass = true;
         return;
       }
@@ -4802,7 +4829,10 @@ saveCategoryBtn.onclick = () => {
   const wInput = document.getElementById("category-weight");
   const weight = wInput ? parseFloat(wInput.value) || 0 : 0;
 
-  if (!name || !sec) return alert("Fill all fields.");
+  if (!name || !sec) {
+    showGlobalNotification("Please fill all fields", "warning");
+    return;
+  }
 
   // --- Weight validation ---
   const editId = addCategoryModal.dataset.editId
@@ -4875,9 +4905,26 @@ saveQuestionBtn.onclick = () => {
   if (window.hasActivePeriod) return;
 
   const q = document.getElementById("question-text").value.trim();
+  const errorMsg = document.getElementById("questionErrorMsg");
+  const errorText = errorMsg?.querySelector(".error-text");
+  
   if (!q) {
-    showNotification("Please enter a question", "#f59e0b");
+    // Show error message inside the modal
+    if (errorMsg && errorText) {
+      errorText.textContent = "Please enter a question";
+      errorMsg.style.display = "flex";
+      
+      // Auto-hide after 3 seconds
+      setTimeout(() => {
+        errorMsg.style.display = "none";
+      }, 3000);
+    }
     return;
+  }
+  
+  // Hide error message if shown
+  if (errorMsg) {
+    errorMsg.style.display = "none";
   }
 
   const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
@@ -4889,7 +4936,16 @@ saveQuestionBtn.onclick = () => {
       .then(r => r.json())
       .then(questions => {
         if (questions.length >= 5) {
-          showNotificationModal();
+          // Close the add question modal first
+          const addQuestionModal = document.getElementById("addQuestionModal");
+          if (addQuestionModal) {
+            addQuestionModal.style.display = "none";
+          }
+          
+          // Show notification after a short delay so user can see it
+          setTimeout(() => {
+            showGlobalNotification("Maximum of 5 questions per category reached!", "warning");
+          }, 100);
           return;
         }
         
@@ -4942,6 +4998,12 @@ function bindCategoryActions(cat) {
   cat.querySelector(".add-btn").onclick = () => {
     if (window.hasActivePeriod) return;
     questionCategoryName.innerText = cat.querySelector(".category-name").innerText;
+    
+    // Clear error message and input field when opening modal
+    const errorMsg = document.getElementById("questionErrorMsg");
+    if (errorMsg) errorMsg.style.display = "none";
+    document.getElementById("question-text").value = "";
+    
     addQuestionModal.style.display = "flex";
     addQuestionModal.dataset.targetId = cat.id;
     delete addQuestionModal.dataset.editId;
@@ -4971,6 +5033,11 @@ function bindQuestionActions(item) {
 
   item.querySelector(".edit-btn").onclick = () => {
     if (window.hasActivePeriod) return;
+    
+    // Clear error message when opening edit modal
+    const errorMsg = document.getElementById("questionErrorMsg");
+    if (errorMsg) errorMsg.style.display = "none";
+    
     document.getElementById("question-text").value = item.querySelector(".question-text").innerText;
     questionCategoryName.innerText = cat.querySelector(".category-name").innerText;
     addQuestionModal.style.display = "flex";
@@ -5289,10 +5356,20 @@ function initAddStudentButton() {
         position: addStudentModal.style.position
       });
       ["number","email","firstname","lastname","suffix","yearlevel","program","section"].forEach(f=>{
-        document.getElementById("student-"+f).value = "";
+        const el = document.getElementById("student-"+f);
+        if (el) {
+          el.value = "";
+          if (f === "number") el.disabled = false;
+        }
       });
       const errorDiv = document.getElementById("student-number-error");
       errorDiv.textContent = "";
+      
+      // Reset student type to regular
+      const regularRadio = document.querySelector('input[name="student-type"][value="regular"]');
+      if (regularRadio) {
+        regularRadio.checked = true;
+      }
       
       // Load programs to ensure dropdown is populated
       loadStudentPrograms();
@@ -5338,7 +5415,7 @@ function initAddStudentButton() {
           } else {
             // Show both year level and section for regular students
             console.log('Showing year level and section for regular');
-            yearlevelRow.style.setProperty('display', 'flex', 'important');
+            showYearSectionRow(yearlevelRow);
             yearlevelSelect.required = true;
             sectionSelect.required = true;
             if (subjectsSection) subjectsSection.style.display = 'none';
@@ -5347,7 +5424,7 @@ function initAddStudentButton() {
       });
       
       // Initially, since regular is checked, show year level and section, hide subjects
-      yearlevelRow.style.setProperty('display', 'flex', 'important');
+      showYearSectionRow(yearlevelRow);
       yearlevelSelect.required = true;
       sectionSelect.required = true;
       if (subjectsSection) subjectsSection.style.display = 'none';
@@ -5381,14 +5458,14 @@ function initAddStudentButton() {
         } else {
           y = val("yearlevel");
           if (!y) {
-            alert("Please select year level for regular student.");
+            showGlobalNotification("Please select year level for regular student", "warning");
             submitBtn.disabled = false;
             return;
           }
         }
 
         if(!n||!eMail||!fName||!lName||!p){ 
-          alert("Please fill all required fields."); 
+          showGlobalNotification("Please fill all required fields", "warning");
           submitBtn.disabled = false; 
           return; }
 
@@ -5692,7 +5769,8 @@ async function loadPeriods() {
         });
         const result = await res.json().catch(() => null);
         if (!result || !result.success) {
-          showAlertModal((result && result.message) || "Unable to activate period.");
+          // Use same notification style as "Evaluation is closed"
+          showNotification((result && result.message) || "Unable to activate period.", "#f59e0b", 4000);
         }
         await loadPeriods();
         await refreshPeriodCard();
@@ -5756,7 +5834,7 @@ function addPeriod() {
   const end = document.getElementById("period-end").value;
   
   if (!ay || !sem || !start || !end) {
-    alert("Please fill all fields");
+    showGlobalNotification("Please fill all fields", "warning");
     return;
   }
   if (editingPeriodId) {
@@ -5807,7 +5885,7 @@ function updatePeriod(periodId) {
   const end = document.getElementById("period-end").value;
   
   if (!ay || !sem || !start || !end) {
-    alert("Please fill all fields");
+    showGlobalNotification("Please fill all fields", "warning");
     return;
   }
 

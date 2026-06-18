@@ -1,4 +1,5 @@
 <?php
+include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
     header("Location: faculty_login.php");
@@ -47,6 +48,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
   <title>Faculty Evaluation System</title>
 
   <link rel="stylesheet" href="FacultyInstructor.css?v=<?=time()?>&fix=<?=rand(1000,9999)?>">
+  <link rel="stylesheet" href="unified_notifications.css?v=<?=time()?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 
@@ -88,8 +90,8 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
   </div>
   <div class="main-right">
     <h1>Welcome, <?php echo htmlspecialchars($faculty_name); ?></h1>
-    <div class="academic-year">
-      <i class="ph ph-calendar"></i> Academic Year: 2025–2026 • 2nd Semester
+    <div class="academic-year" id="instructorAcademicPeriod">
+      <i class="ph ph-calendar"></i> Academic Year: Loading...
     </div>
     <p class="subtitle">
       Track your evaluation scores, analyze feedback, and enhance your 
@@ -120,13 +122,8 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 
 <div id="passwordForm" class="LoginForm">
   <div class="LoginForm-content">
-    <!-- Decorative waves background -->
-    <div class="wave-bg wave-1"></div>
-    <div class="wave-bg wave-2"></div>
-    <div class="wave-bg wave-3"></div>
     
     <div class="LoginForm-header">
-      <img src="logo.png" class="logo">
       <div class="back-btn" id="closePasswordForm">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     
@@ -215,6 +212,8 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 
 
 <!-- JS FILE -->
+<script src="unified_notifications.js?v=<?=time()?>"></script>
+<script src="session_keepalive.js?v=<?=time()?>"></script>
 <script src="FacultyInstructor.js?v=<?=time()?>"></script>
 
 </body>

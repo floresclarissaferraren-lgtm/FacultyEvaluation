@@ -1,4 +1,5 @@
 <?php
+include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 include 'connect.php';
 

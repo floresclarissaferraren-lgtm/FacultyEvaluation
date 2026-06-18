@@ -267,6 +267,9 @@ function showPasswordMessageBox(message, type) {
   }, 4000);
 }
 
+// Global notification (now using unified system from unified_notifications.js)
+// Old function removed - using consistent notifications across all pages
+
 function updatePassword() {
   const studentId   = document.getElementById("studentId").value.trim();
   const oldPass     = document.getElementById("oldPass").value.trim();
@@ -335,14 +338,15 @@ function updatePassword() {
       submitBtn.style.cursor = "pointer";
       
       if (data.success) {
-        showPasswordMessageBox("Password updated successfully!", "success");
-        setTimeout(() => {
-          closePasswordForm();
-          document.getElementById("oldPass").value = "";
-          document.getElementById("newPass").value = "";
-          document.getElementById("confirmPass").value = "";
-          clearPassMsgs();
-        }, 1500);
+        // Close form first
+        closePasswordForm();
+        document.getElementById("oldPass").value = "";
+        document.getElementById("newPass").value = "";
+        document.getElementById("confirmPass").value = "";
+        clearPassMsgs();
+        
+        // Show success notification outside the modal
+        showGlobalNotification("Password updated successfully!", "success");
       } else {
         if ((data.message || "").toLowerCase().includes("old") ||
             (data.message || "").toLowerCase().includes("current") ||
@@ -394,12 +398,23 @@ function updateStudentAcademicPeriodDisplay(status) {
 
   if (academicYear && semester) {
     periodEl.textContent = `Academic Year: ${academicYear} - ${semester}`;
-    return;
+  } else {
+    periodEl.textContent = status?.active_period_name
+      ? `Academic Period: ${status.active_period_name}`
+      : "Academic Year: No active period";
   }
 
-  periodEl.textContent = status?.active_period_name
-    ? `Academic Period: ${status.active_period_name}`
-    : "Academic Year: No active period";
+  // Update Evaluate Now button state in real-time
+  const evaluateBtn = document.querySelector(".evaluate-btn");
+  if (evaluateBtn) {
+    const studentActive = (document.getElementById("studentStatus")?.value || "active").toLowerCase() === "active";
+    const evaluationOpen = !!(status && status.success && status.evaluation_open);
+    if (studentActive && evaluationOpen) {
+      evaluateBtn.removeAttribute("disabled");
+    } else {
+      evaluateBtn.setAttribute("disabled", "true");
+    }
+  }
 }
 
 async function loadStudentAcademicPeriod() {
@@ -423,12 +438,12 @@ async function showEvaluateSection() {
     const status = await statusRes.json();
     updateStudentAcademicPeriodDisplay(status);
     if (!status || !status.success || !status.evaluation_open) {
-      alert("Evaluation is closed");
+      showGlobalNotification("Evaluation is closed", "warning");
       return;
     }
   } catch (_) {
     // If status check fails, be safe and block entry.
-    alert("Evaluation is closed");
+    showGlobalNotification("Evaluation is closed", "warning");
     return;
   }
 
@@ -440,32 +455,50 @@ async function showEvaluateSection() {
   await loadStudentFacultyCards();
 }
 function goBackToMain() {
-  document.getElementById("evaluateSection").style.display = "none";
-  document.getElementById("evaluationContainer").style.display = "none";
-  document.getElementById("facultyCards").style.display = "none";
-  document.getElementById("mainPage").style.display = "flex";
+  const evalContainer = document.getElementById("evaluationContainer");
+  const facultyCards = document.getElementById("facultyCards");
+  const evaluateSection = document.getElementById("evaluateSection");
+  const mainPage = document.getElementById("mainPage");
+
+  if (evalContainer && evalContainer.style.display !== "none") {
+    // If currently evaluating, return to faculty cards list
+    evalContainer.style.display = "none";
+    if (facultyCards) facultyCards.style.display = "block";
+    window.selectedFaculty = null;
+  } else {
+    // Otherwise, go back to main student dashboard
+    if (evaluateSection) evaluateSection.style.display = "none";
+    if (evalContainer) evalContainer.style.display = "none";
+    if (facultyCards) facultyCards.style.display = "none";
+    if (mainPage) mainPage.style.display = "flex";
+  }
 }
 
 async function refreshStudentPeriodAccess() {
-  const evaluateSection = document.getElementById("evaluateSection");
-  const isEvaluating = evaluateSection && evaluateSection.style.display !== "none";
-  if (!isEvaluating) return;
-
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
     updateStudentAcademicPeriodDisplay(status);
-    if (!status || !status.success || !status.evaluation_open) {
-      goBackToMain();
-      alert("Evaluation period has ended or is closed.");
+
+    const evaluateSection = document.getElementById("evaluateSection");
+    const isEvaluating = evaluateSection && evaluateSection.style.display !== "none";
+    if (isEvaluating) {
+      if (!status || !status.success || !status.evaluation_open) {
+        goBackToMain();
+        showGlobalNotification("Evaluation period has ended or is closed", "warning");
+      }
     }
   } catch (_) {
-    goBackToMain();
-    alert("Evaluation is closed");
+    const evaluateSection = document.getElementById("evaluateSection");
+    const isEvaluating = evaluateSection && evaluateSection.style.display !== "none";
+    if (isEvaluating) {
+      goBackToMain();
+      showGlobalNotification("Evaluation is closed", "warning");
+    }
   }
 }
 
-setInterval(refreshStudentPeriodAccess, 60000);
+setInterval(refreshStudentPeriodAccess, 1000);
 // ================= LOAD CATEGORIES + QUESTIONS =================
 let currentCriteria = 0;
 let criteriaTables = [];
@@ -489,7 +522,7 @@ async function loadStudentFacultyCards() {
   }
 
   if (!studentId && !yearLevel) {
-    container.innerHTML = '<div class="no-faculty"><i class="ph ph-chalkboard-teacher"></i><span>No Faculty Available</span></div>';
+    container.innerHTML = renderFacultyEmptyState("No Faculty Available", "There are no instructors assigned to your account for evaluation right now.");
     return;
   }
 
@@ -520,38 +553,62 @@ async function loadStudentFacultyCards() {
         const card = document.createElement('div');
         card.className = 'faculty-card';
         card.onclick = () => {
-          if (!studentActive) return alert("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.");
-          if (!evaluationOpen) return alert("Evaluation is closed");
+          if (!studentActive) return showGlobalNotification("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again", "warning");
+          if (!evaluationOpen) return showGlobalNotification("Evaluation is closed", "warning");
           selectFaculty(faculty.id, fullName, subjectLabels);
         };
          
+        const avatarHtml = faculty.photo
+          ? `<img src="${faculty.photo}" class="faculty-avatar" alt="${fullName}">`
+          : `<div class="faculty-avatar placeholder">${(faculty.firstname || 'F').charAt(0).toUpperCase()}</div>`;
+
         card.innerHTML = `
           <div class="faculty-header">
-            <div class="faculty-icon">
-              <i class="ph ph-user-circle"></i>
+            <div class="faculty-avatar-wrapper">
+              ${avatarHtml}
             </div>
-            <div class="faculty-name-bg">
+            <div class="faculty-title-area">
               <h3 class="faculty-name">${fullName}</h3>
+              <span class="faculty-role">Instructor</span>
             </div>
           </div>
           <div class="faculty-info">
-            <p class="faculty-subjects-label">Subjects:</p>
-            <div class="faculty-subjects">${subjectLabels || 'No subjects assigned'}</div>
+            <div class="faculty-info-row">
+              <i class="ph ph-book-open faculty-info-icon"></i>
+              <div class="faculty-info-text">
+                <span class="faculty-info-label">Assigned Subjects</span>
+                <span class="faculty-subjects">${subjectLabels || 'No subjects assigned'}</span>
+              </div>
+            </div>
           </div>
           <div class="evaluate-action">
-            <button class="evaluate-faculty-btn" ${evaluationOpen ? "" : "disabled"}>Evaluate</button>
+            <button class="evaluate-faculty-btn" ${evaluationOpen ? "" : "disabled"}>
+              <i class="ph ph-note-pencil"></i> Evaluate Now
+            </button>
           </div>
         `;
         
         container.appendChild(card);
       });
     } else {
-      container.innerHTML = '<div class="no-faculty"><i class="ph ph-chalkboard-teacher"></i><span>No Faculty Available</span></div>';
+      container.innerHTML = renderFacultyEmptyState("No Faculty Available", "There are no instructors assigned to your account for evaluation right now.");
     }
   } catch (err) {
     console.error('Error loading faculty cards:', err);
-    container.innerHTML = '<div class="no-faculty"><i class="ph ph-warning-circle"></i><span>Unable to Load Faculty</span></div>';
+    container.innerHTML = renderFacultyEmptyState("Unable to Load Faculty", "Please refresh the page or try again later.", "ph-warning-circle");
   }
+}
+
+function renderFacultyEmptyState(title, message, icon = "ph-chalkboard-teacher") {
+  return `
+    <div class="no-faculty" role="status">
+      <div class="no-faculty-icon"><i class="ph ${icon}"></i></div>
+      <div class="no-faculty-copy">
+        <span class="no-faculty-title">${title}</span>
+        <p>${message}</p>
+      </div>
+    </div>
+  `;
 }
 
 function selectFaculty(facultyId, facultyName, subjects) {
@@ -822,7 +879,7 @@ function submitEvaluation() {
     const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
     if (feedbackBox) feedbackBox.classList.add("has-badwords");
     if (badwordsMsg) badwordsMsg.style.display = "block";
-    alert("Bad words is not allowed");
+    showGlobalNotification("Bad words is not allowed", "error");
     updatePaginationButtons();
     return;
   }
@@ -833,7 +890,7 @@ function submitEvaluation() {
   if (badwordsMsg) badwordsMsg.style.display = "none";
 
   if (!facultyId) {
-    alert('Please select a faculty member to evaluate.');
+    showGlobalNotification("Please select a faculty member to evaluate.", "warning");
     updatePaginationButtons();
     return;
   }
@@ -848,10 +905,61 @@ function submitEvaluation() {
   const totalQuestions = document.querySelectorAll('.question-list').length;
 
   if (Object.keys(data).length < totalQuestions) {
-    alert("Please answer all questions!");
+    showGlobalNotification("Please answer all questions!", "warning");
     updatePaginationButtons();
     return;
   }
+
+  // ---- All validation passed: show Final Review modal ----
+  showFinalReviewModal();
+}
+
+function showFinalReviewModal() {
+  let modal = document.getElementById('finalReviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'finalReviewModal';
+    modal.className = 'final-review-overlay';
+    modal.innerHTML = `
+      <div class="final-review-card" role="dialog" aria-modal="true" aria-labelledby="frTitle">
+        <div class="fr-icon-wrap">
+          <i class="ph ph-paper-plane-tilt fr-icon"></i>
+        </div>
+        <h2 class="fr-title" id="frTitle">Final Review</h2>
+        <p class="fr-sub">Submit this evaluation?</p>
+        <p class="fr-warning">This cannot be undone.</p>
+        <button class="fr-submit-btn" onclick="_doSubmitEvaluation()">
+          <i class="ph ph-check-circle"></i> YES, SUBMIT NOW
+        </button>
+        <button class="fr-cancel-btn" onclick="closeFinalReviewModal()">
+          Review Again
+        </button>
+      </div>
+    `;
+    modal.addEventListener('click', e => {
+      if (e.target === modal) closeFinalReviewModal();
+    });
+    document.body.appendChild(modal);
+  }
+  requestAnimationFrame(() => modal.classList.add('fr-visible'));
+}
+
+function closeFinalReviewModal() {
+  const modal = document.getElementById('finalReviewModal');
+  if (modal) {
+    modal.classList.remove('fr-visible');
+  }
+}
+
+function _doSubmitEvaluation() {
+  closeFinalReviewModal();
+
+  const studentId = document.getElementById('studentId')?.value?.trim() || '';
+  const facultyId = window.selectedFaculty?.id || '';
+  const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
+  const selected = document.querySelectorAll('input[type="radio"]:checked');
+  const data = {};
+  selected.forEach(r => { data[r.name] = r.value; });
 
   const nextBtn = document.getElementById("nextBtn");
   if (nextBtn) {
@@ -877,15 +985,18 @@ function submitEvaluation() {
     .then(r => r.json())
     .then(async res => {
       if (!res.success) {
-        alert(res.message || "Failed to submit evaluation.");
+        showGlobalNotification(res.message || "Failed to submit evaluation.", "error");
         updatePaginationButtons();
         return;
       }
-      alert(`Evaluation submitted! Your overall rating for this instructor: ${res.overall_rating}/5.00`);
+
+      // Show the success modal with rating
+      showSuccessModal(res.overall_rating);
+
       document.querySelectorAll('input[type="radio"]:checked').forEach(el => { el.checked = false; });
       const fb = document.getElementById('studentFeedback');
       if (fb) fb.value = '';
-      
+
       // Refresh faculty cards to remove evaluated faculty
       await loadStudentFacultyCards();
 
@@ -893,7 +1004,7 @@ function submitEvaluation() {
       document.getElementById("facultyCards").style.display = "block";
       document.getElementById("evaluationContainer").style.display = "none";
       window.selectedFaculty = null;
-      
+
       // Reset to first criteria page
       currentCriteria = 0;
       criteriaTables.forEach((table, index) => {
@@ -903,9 +1014,38 @@ function submitEvaluation() {
     })
     .catch(err => {
       console.error("Submit error:", err);
-      alert("Error submitting evaluation. Please try again.");
+      showGlobalNotification("Error submitting evaluation. Please try again.", "error");
       updatePaginationButtons();
     });
+}
+
+// ================= SUCCESS MODAL =================
+function showSuccessModal(overallRating) {
+  let modal = document.getElementById('evalSuccessModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'evalSuccessModal';
+    modal.className = 'success-overlay';
+    document.body.appendChild(modal);
+  }
+  const ratingText = overallRating ? `Overall Rating: ${parseFloat(overallRating).toFixed(2)} / 5.00` : '';
+  modal.innerHTML = `
+    <div class="success-card" role="dialog" aria-modal="true">
+      <div class="su-icon-wrap">
+        <i class="ph ph-check-circle su-icon"></i>
+      </div>
+      <h2 class="su-title">Success!</h2>
+      <p class="su-message">Evaluation submitted successfully!</p>
+      ${ratingText ? `<span class="su-rating">${ratingText}</span>` : ''}
+      <button class="su-ok-btn" onclick="closeSuccessModal()">OK</button>
+    </div>
+  `;
+  requestAnimationFrame(() => modal.classList.add('su-visible'));
+}
+
+function closeSuccessModal() {
+  const modal = document.getElementById('evalSuccessModal');
+  if (modal) modal.classList.remove('su-visible');
 }
 
 // Add event listener for password form back button
@@ -935,7 +1075,11 @@ async function showEvaluationHistory(event) {
   }
   
   try {
-    const response = await fetch('get_student_evaluation_history.php');
+    const response = await fetch('get_student_evaluation_history.php', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-cache'
+    });
     const data = await response.json();
     
     if (!data.success) {
