@@ -651,11 +651,13 @@ body.modal-open{overflow:hidden}
 
 /* Form links */
 .form-links{
-  text-align:center;
+  text-align:right;
   margin-bottom:20px;
 }
 
 .forgot-link{
+  display:inline-block;
+  transform:translateY(-8px);
   color:#3b82f6;
   text-decoration:none;
   font-size:14px;
@@ -1271,4 +1273,99 @@ body.modal-open{overflow:hidden}
     width: 140px;
     height: 140px;
   }
+}
+
+/* =====================================================================
+   FORGOT PASSWORD — OTP & NEW PASSWORD STEPS
+   ===================================================================== */
+
+/* OTP icon centered above title */
+.otp-icon-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.otp-icon-wrap i {
+  font-size: 48px;
+  color: #3b82f6;
+  background: #eff6ff;
+  border-radius: 50%;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 6-box OTP input row */
+.otp-input-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+
+.otp-digit {
+  width: 52px;
+  height: 60px;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  color: #1e293b;
+  background: #ffffff;
+  transition: all .2s ease;
+  outline: none;
+  caret-color: #3b82f6;
+  -moz-appearance: textfield;
+}
+
+.otp-digit::-webkit-inner-spin-button,
+.otp-digit::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.otp-digit:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
+  transform: translateY(-2px);
+}
+
+.otp-digit.otp-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, .1);
+}
+
+/* Resend row */
+.resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: color .2s;
+}
+
+.resend-btn:hover { color: #1d4ed8; }
+.resend-btn:disabled { color: #94a3b8; cursor: not-allowed; text-decoration: none; }
+
+/* Responsive OTP digits */
+@media (max-width: 400px) {
+  .otp-digit { width: 42px; height: 52px; font-size: 22px; border-radius: 10px; }
+  .otp-input-row { gap: 7px; }
 }

@@ -10396,3 +10396,260 @@ main,
     min-width: 560px;
   }
 }
+
+/* =====================================================================
+   STUDENTS SECTION — PROFESSIONAL SKELETON LOADER
+   Mirrors the exact shape: stat-cards row + table-wrapper card
+   ===================================================================== */
+
+/* Shared shimmer animation for all skeleton pieces */
+@keyframes studentSkeletonShimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.student-skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    #e8eef8 25%,
+    #f3f7ff 50%,
+    #e8eef8 75%
+  );
+  background-size: 600px 100%;
+  animation: studentSkeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ── Skeleton stat cards row ─────────────────────────────────────── */
+.student-skeleton-stats {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.student-skeleton-stat-card {
+  flex: 1;
+  min-width: 200px;
+  padding: var(--spacing-lg);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .07);
+  background: #fff;
+  border: 1px solid #e8eef8;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  /* staggered fade-in to feel alive */
+  opacity: 0;
+  animation: slideInFadeUp .45s cubic-bezier(.4,0,.2,1) forwards;
+}
+
+.student-skeleton-stat-card:nth-child(1) { animation-delay: .05s; }
+.student-skeleton-stat-card:nth-child(2) { animation-delay: .12s; }
+.student-skeleton-stat-card:nth-child(3) { animation-delay: .19s; }
+.student-skeleton-stat-card:nth-child(4) { animation-delay: .26s; }
+
+.student-skeleton-stat-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.student-skeleton-stat-label {
+  height: 12px;
+  width: 60%;
+  border-radius: 6px;
+}
+
+.student-skeleton-stat-number {
+  height: 28px;
+  width: 45%;
+  border-radius: 8px;
+}
+
+.student-skeleton-stat-sub {
+  height: 10px;
+  width: 75%;
+  border-radius: 6px;
+}
+
+.student-skeleton-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Skeleton table-wrapper card ─────────────────────────────────── */
+.student-skeleton-table-card {
+  width: 100%;
+  margin: -8px 0 var(--spacing-lg) 0;   /* match #students-section .table-wrapper margin-top: -8px */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .08), 0 2px 6px rgba(0, 0, 0, .05);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  opacity: 0;
+  animation: slideInFadeUp .45s cubic-bezier(.4,0,.2,1) .3s forwards;
+}
+
+/* toolbar header area */
+.student-skeleton-toolbar {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-skeleton-toolbar-top {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.student-skeleton-btn {
+  height: 42px;
+  border-radius: 8px;
+}
+
+.student-skeleton-btn-primary { width: 130px; }
+.student-skeleton-btn-secondary { width: 120px; }
+
+.student-skeleton-filter-row {
+  display: grid;
+  grid-template-columns: minmax(180px, .75fr) minmax(240px, 1fr) minmax(220px, .9fr);
+  gap: 12px;
+}
+
+.student-skeleton-filter-item {
+  height: 48px;
+  border-radius: 12px;
+}
+
+/* table header row */
+.student-skeleton-table-head {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
+  gap: 0;
+  background: #f3f4f6;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.student-skeleton-th {
+  height: 14px;
+  border-radius: 6px;
+  margin: 0 8px;
+}
+
+/* data rows */
+.student-skeleton-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-skeleton-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 0;
+}
+
+.student-skeleton-row:last-child { border-bottom: none; }
+
+.student-skeleton-cell {
+  height: 14px;
+  border-radius: 6px;
+  margin: 0 8px;
+}
+
+.student-skeleton-cell.cell-sm  { width: 60%; }
+.student-skeleton-cell.cell-md  { width: 80%; }
+.student-skeleton-cell.cell-lg  { width: 90%; }
+.student-skeleton-cell.cell-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 8px;
+}
+.student-skeleton-cell.cell-name .sk-name-line  { height: 13px; border-radius: 6px; width: 85%; }
+.student-skeleton-cell.cell-name .sk-email-line { height: 10px; border-radius: 6px; width: 65%; }
+
+.student-skeleton-cell.cell-loc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 8px;
+}
+.student-skeleton-cell.cell-loc .sk-loc-line  { height: 13px; border-radius: 6px; width: 45%; }
+.student-skeleton-cell.cell-loc .sk-prog-line { height: 10px; border-radius: 6px; width: 70%; }
+
+.student-skeleton-cell.cell-badge {
+  height: 26px;
+  width: 70px;
+  border-radius: 20px;
+  margin: 0 auto;
+}
+
+.student-skeleton-cell.cell-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0 8px;
+}
+.sk-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+/* staggered row reveal */
+.student-skeleton-row:nth-child(1)  { animation-delay: .32s; }
+.student-skeleton-row:nth-child(2)  { animation-delay: .36s; }
+.student-skeleton-row:nth-child(3)  { animation-delay: .40s; }
+.student-skeleton-row:nth-child(4)  { animation-delay: .44s; }
+.student-skeleton-row:nth-child(5)  { animation-delay: .48s; }
+.student-skeleton-row:nth-child(6)  { animation-delay: .52s; }
+.student-skeleton-row:nth-child(7)  { animation-delay: .56s; }
+
+/* apply shimmer to every child element that needs it */
+.student-skeleton-stat-card .student-skeleton-pulse,
+.student-skeleton-table-card .student-skeleton-pulse,
+.student-skeleton-stat-icon.student-skeleton-pulse,
+.student-skeleton-btn.student-skeleton-pulse,
+.student-skeleton-filter-item.student-skeleton-pulse,
+.student-skeleton-th.student-skeleton-pulse,
+.student-skeleton-cell.student-skeleton-pulse,
+.sk-name-line.student-skeleton-pulse,
+.sk-email-line.student-skeleton-pulse,
+.sk-loc-line.student-skeleton-pulse,
+.sk-prog-line.student-skeleton-pulse,
+.sk-action-btn.student-skeleton-pulse,
+.student-skeleton-cell.cell-badge.student-skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    #e8eef8 25%,
+    #f3f7ff 50%,
+    #e8eef8 75%
+  );
+  background-size: 600px 100%;
+  animation: studentSkeletonShimmer 1.4s ease-in-out infinite;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .student-skeleton-stats { flex-direction: column; gap: var(--spacing-sm); }
+  .student-skeleton-stat-card { min-width: 100%; }
+  .student-skeleton-filter-row { grid-template-columns: 1fr; }
+  .student-skeleton-table-head,
+  .student-skeleton-row {
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+  }
+  .student-skeleton-row .student-skeleton-cell:last-child { display: none; }
+}

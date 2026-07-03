@@ -195,7 +195,7 @@
   </div>
 </div>
 
-<!-- FORGOT PASSWORD -->
+<!-- FORGOT PASSWORD - STEP 1: Email -->
 <div class="LoginForm" id="forgotModal">
   <div class="LoginForm-content">
     <div class="wave-bg wave-1"></div>
@@ -206,16 +206,89 @@
       <div class="back-btn" id="closeForgot">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     <div class="login-form-container">
-      <h2 class="login-title">Reset Password</h2>
-      <p class="login-description">Enter your email to reset</p>
+      <h2 class="login-title">Forgot Password</h2>
+      <p class="login-description">Enter your registered email and we'll send you a 6-digit reset code.</p>
       <form id="forgotForm" class="modern-login-form">
         <div class="modern-input-group has-icon">
-          <input type="email" id="resetEmail" placeholder="Email" required>
+          <input type="email" id="resetEmail" placeholder="Email address" required autocomplete="email">
           <div class="input-icon"><i class="ph ph-envelope"></i></div>
           <small id="resetEmailError" class="error-message"></small>
         </div>
-        <button type="submit" class="modern-login-btn">Submit</button>
+        <button type="submit" class="modern-login-btn" id="sendCodeBtn">
+          <i class="ph ph-paper-plane-right"></i>&nbsp; Send Code
+        </button>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD - STEP 2: OTP Verification -->
+<div class="LoginForm" id="otpModal">
+  <div class="LoginForm-content">
+    <div class="wave-bg wave-1"></div>
+    <div class="wave-bg wave-2"></div>
+    <div class="wave-bg wave-3"></div>
+    <div class="LoginForm-header">
+      <img src="logo.png" class="logo">
+      <div class="back-btn" id="closeOtp">Back<i class="ph ph-arrow-up-right"></i></div>
+    </div>
+    <div class="login-form-container">
+      <h2 class="login-title">Enter Reset Code</h2>
+      <p class="login-description" id="otpDesc">Enter the 6-digit code sent to your email.</p>
+      <div class="modern-login-form">
+        <div class="otp-input-row" id="otpInputRow">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <small id="otpError" class="error-message" style="display:block;text-align:center;margin-bottom:12px;"></small>
+        <button type="button" class="modern-login-btn" id="verifyOtpBtn">
+          <i class="ph ph-check-circle"></i>&nbsp; Verify Code
+        </button>
+        <div class="resend-row">
+          <span>Didn't receive it?</span>
+          <button type="button" class="resend-btn" id="resendCodeBtn">Resend Code</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD - STEP 3: New Password -->
+<div class="LoginForm" id="newPasswordModal">
+  <div class="LoginForm-content">
+    <div class="wave-bg wave-1"></div>
+    <div class="wave-bg wave-2"></div>
+    <div class="wave-bg wave-3"></div>
+    <div class="LoginForm-header">
+      <img src="logo.png" class="logo">
+      <div class="back-btn" id="closeNewPass">Cancel<i class="ph ph-arrow-up-right"></i></div>
+    </div>
+    <div class="login-form-container">
+      <h2 class="login-title">New Password</h2>
+      <p class="login-description">Create a strong new password for your account.</p>
+      <div class="modern-login-form">
+        <div class="modern-input-group has-toggle">
+          <div class="input-wrap">
+            <input type="password" id="newResetPass" placeholder="New Password" required autocomplete="new-password">
+            <div class="password-toggle" onclick="toggleResetPass('newResetPass', this)"><i class="ph ph-eye-slash"></i></div>
+          </div>
+          <small id="newResetPassError" class="error-message"></small>
+        </div>
+        <div class="modern-input-group has-toggle">
+          <div class="input-wrap">
+            <input type="password" id="confirmResetPass" placeholder="Confirm New Password" required autocomplete="new-password">
+            <div class="password-toggle" onclick="toggleResetPass('confirmResetPass', this)"><i class="ph ph-eye-slash"></i></div>
+          </div>
+          <small id="confirmResetPassError" class="error-message"></small>
+        </div>
+        <button type="button" class="modern-login-btn" id="resetPasswordBtn">
+          Reset Password
+        </button>
+      </div>
     </div>
   </div>
 </div>

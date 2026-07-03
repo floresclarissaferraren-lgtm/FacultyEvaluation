@@ -13,11 +13,28 @@ define("MAIL_USER", "floresclarissaferraren@gmail.com");
 define("MAIL_PASS", "nicj elgi ruam ozca");
 define("MAIL_NAME", "Faculty Evaluation System");
 
+$lastEmailError = '';
+
+function getLastEmailError()
+{
+    global $lastEmailError;
+    return $lastEmailError;
+}
+
 /* =========================
    SEND EMAIL FUNCTION
 ========================= */
 function sendEmail($toEmail, $toName, $subject, $body)
 {
+    global $lastEmailError;
+    $lastEmailError = '';
+
+    if (!extension_loaded('openssl')) {
+        $lastEmailError = 'OpenSSL extension is disabled. Enable OpenSSL in PHP/XAMPP before sending Gmail SMTP email.';
+        error_log("MAIL ERROR: " . $lastEmailError);
+        return false;
+    }
+
     $mail = new PHPMailer(true);
 
     try {
@@ -27,7 +44,7 @@ function sendEmail($toEmail, $toName, $subject, $body)
         $mail->SMTPAuth = true;
 
         $mail->Username = MAIL_USER;
-        $mail->Password = MAIL_PASS;
+        $mail->Password = preg_replace('/\s+/', '', MAIL_PASS);
 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
@@ -46,13 +63,22 @@ function sendEmail($toEmail, $toName, $subject, $body)
         $mail->addAddress($toEmail, $toName);
 
         $mail->isHTML(true);
+        $mail->CharSet = 'UTF-8';
         $mail->Subject = $subject;
         $mail->Body = $body;
+        $mail->AltBody = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $body)));
 
-        return $mail->send();
+        if (!$mail->send()) {
+            $lastEmailError = $mail->ErrorInfo ?: 'Unknown mail error.';
+            error_log("MAIL ERROR: " . $lastEmailError);
+            return false;
+        }
+
+        return true;
 
     } catch (Exception $e) {
-        error_log("MAIL ERROR: " . $mail->ErrorInfo);
+        $lastEmailError = $mail->ErrorInfo ?: $e->getMessage();
+        error_log("MAIL ERROR: " . $lastEmailError);
         return false;
     }
 }
