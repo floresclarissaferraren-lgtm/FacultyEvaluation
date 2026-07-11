@@ -200,3 +200,123 @@ function getCategoryStats(mysqli $conn, int $faculty_id): array
 
     return $rows;
 }
+
+/**
+ * Calculate weighted score for a faculty member filtered to one program.
+ * Handles add_students.program storing either program_code or numeric id.
+ *
+ * @param mysqli $conn
+ * @param int    $faculty_id
+ * @param string $program_name  Full program name from add_programs.program_name
+ * @return float
+ */
+function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $program_name): float
+{
+    $sql = "
+        SELECT
+            c.id          AS cat_id,
+            COALESCE(c.weight, 0) AS cat_weight,
+            COALESCE(AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END), NULL) AS cat_avg
+        FROM add_categories c
+        LEFT JOIN add_questions q    ON q.category_id = c.id
+        LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
+        LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
+                                     AND e.faculty_id = ?
+        LEFT JOIN add_students s     ON s.id = e.student_id
+        LEFT JOIN add_programs p     ON (TRIM(p.program_code) = TRIM(s.program)
+                                     OR CAST(p.id AS CHAR) = TRIM(s.program))
+                                     AND p.program_name = ?
+        WHERE e.id IS NULL OR p.program_name = ?
+        GROUP BY c.id, c.weight
+        ORDER BY c.section_number ASC
+    ";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return 0.00;
+    $stmt->bind_param("iss", $faculty_id, $program_name, $program_name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        if ($row['cat_avg'] === null) continue;
+        $rows[] = [
+            'weight' => floatval($row['cat_weight']),
+            'avg'    => floatval($row['cat_avg']),
+        ];
+    }
+
+    if (empty($rows)) return 0.00;
+
+    $totalWeight = array_sum(array_column($rows, 'weight'));
+    if ($totalWeight <= 0) {
+        $equalWeight = 100.0 / count($rows);
+        foreach ($rows as &$r) { $r['weight'] = $equalWeight; }
+        unset($r);
+        $totalWeight = 100.0;
+    }
+
+    $weighted = 0.0;
+    foreach ($rows as $r) {
+        $normalised  = ($r['weight'] / $totalWeight) * 100.0;
+        $weighted   += $r['avg'] * ($normalised / 100.0);
+    }
+
+    return round($weighted, 2);
+}
+
+/**
+ * Return per-category stats for a faculty member filtered to one program.
+ *
+ * @param mysqli $conn
+ * @param int    $faculty_id
+ * @param string $program_name  Full program name from add_programs.program_name
+ * @return array
+ */
+function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $program_name): array
+{
+    $sql = "
+        SELECT
+            c.id                                                                    AS cat_id,
+            c.category_name,
+            COALESCE(c.weight, 0)                                                  AS weight,
+            COUNT(DISTINCT CASE WHEN e.id IS NOT NULL AND p.program_name = ? THEN e.id END)       AS responses,
+            COALESCE(AVG(CASE WHEN e.id IS NOT NULL AND p.program_name = ? THEN ea.rating END), 0) AS avg_rating
+        FROM add_categories c
+        LEFT JOIN add_questions q    ON q.category_id = c.id
+        LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
+        LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
+                                     AND e.faculty_id = ?
+        LEFT JOIN add_students s     ON s.id = e.student_id
+        LEFT JOIN add_programs p     ON TRIM(p.program_code) = TRIM(s.program)
+                                     OR CAST(p.id AS CHAR)   = TRIM(s.program)
+        GROUP BY c.id, c.category_name, c.weight
+        ORDER BY c.section_number ASC
+    ";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return [];
+    $stmt->bind_param("ssi", $program_name, $program_name, $faculty_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+
+    $totalWeight = array_sum(array_column($rows, 'weight'));
+    foreach ($rows as &$row) {
+        $row['weight']            = floatval($row['weight']);
+        $row['normalised_weight'] = $totalWeight > 0
+            ? round(($row['weight'] / $totalWeight) * 100, 2)
+            : (count($rows) > 0 ? round(100 / count($rows), 2) : 0);
+        $row['avg_rating']        = number_format(floatval($row['avg_rating']), 2);
+        $row['responses']         = intval($row['responses']);
+    }
+    unset($row);
+
+    return $rows;
+}

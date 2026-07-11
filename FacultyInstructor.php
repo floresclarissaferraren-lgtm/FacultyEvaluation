@@ -65,7 +65,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 
   <div class="user-menu">
     <div class="instructor-box" onclick="toggleDropdown()">
-      <img src="<?php echo htmlspecialchars($faculty_img_src); ?>" class="logo-img" alt="Profile Photo">
+      <i class="ph ph-gear navbar-settings-icon"></i>
       <span>Instructor</span>
       <i class="ph ph-caret-down"></i>
     </div>
@@ -183,6 +183,18 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
     <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Report</button>
+  </div>
+
+  <!-- Program Filter -->
+  <div class="program-filter-row">
+    <label class="program-filter-label" for="programFilterSelect">
+      <i class="ph ph-funnel"></i> Filter by Program
+    </label>
+    <div class="program-filter-select-wrap">
+      <select id="programFilterSelect" class="program-filter-select" onchange="onProgramFilterChange(this.value)">
+        <option value="all">All Programs</option>
+      </select>
+    </div>
   </div>
   
   <div class="faculty-cards">

@@ -12,8 +12,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
 }
 
 // Get JSON input
-$data       = json_decode(file_get_contents('php://input'), true);
-$faculty_id = isset($data['faculty_id']) ? trim($data['faculty_id']) : '';
+$data           = json_decode(file_get_contents('php://input'), true);
+$faculty_id     = isset($data['faculty_id']) ? trim($data['faculty_id']) : '';
+$program_filter = isset($data['program_filter']) ? trim($data['program_filter']) : '';
 
 if (empty($faculty_id)) {
     echo json_encode(['success' => false, 'message' => 'Faculty ID is required.']);
@@ -59,24 +60,46 @@ if (strtolower((string)($status_row['status'] ?? 'active')) !== 'active') {
 }
 
 // --- Total responses & date range ---
-$stmt = $conn->prepare("
-    SELECT COUNT(*) AS total_responses,
-           MIN(DATE(created_at)) AS date_from,
-           MAX(DATE(created_at)) AS date_to
-    FROM evaluations
-    WHERE faculty_id = ?
-");
-$stmt->bind_param("i", $numeric_faculty_id);
+if ($program_filter !== '') {
+    // Filter by program name — join add_programs by code or numeric id
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS total_responses,
+               MIN(DATE(e.created_at)) AS date_from,
+               MAX(DATE(e.created_at)) AS date_to
+        FROM evaluations e
+        INNER JOIN add_students s ON s.id = e.student_id
+        LEFT  JOIN add_programs p ON TRIM(p.program_code) = TRIM(s.program)
+                                  OR CAST(p.id AS CHAR)   = TRIM(s.program)
+        WHERE e.faculty_id = ?
+          AND p.program_name = ?
+    ");
+    $stmt->bind_param("is", $numeric_faculty_id, $program_filter);
+} else {
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS total_responses,
+               MIN(DATE(created_at)) AS date_from,
+               MAX(DATE(created_at)) AS date_to
+        FROM evaluations
+        WHERE faculty_id = ?
+    ");
+    $stmt->bind_param("i", $numeric_faculty_id);
+}
 $stmt->execute();
 $stats = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 $total_responses = intval($stats['total_responses'] ?? 0);
 
-// --- Weighted overall score (real-time recalculation) ---
-$overall_rating = $total_responses > 0
-    ? calcWeightedScore($conn, $numeric_faculty_id)
-    : 0.00;
+// --- Weighted overall score ---
+if ($program_filter !== '') {
+    $overall_rating = $total_responses > 0
+        ? calcWeightedScoreByProgram($conn, $numeric_faculty_id, $program_filter)
+        : 0.00;
+} else {
+    $overall_rating = $total_responses > 0
+        ? calcWeightedScore($conn, $numeric_faculty_id)
+        : 0.00;
+}
 
 // --- Period text ---
 $periodText = 'All evaluation periods';
@@ -87,15 +110,31 @@ if (!empty($stats['date_from']) && !empty($stats['date_to'])) {
 }
 
 // --- Feedback comments ---
-$stmt_feedback = $conn->prepare("
-    SELECT feedback
-    FROM evaluations
-    WHERE faculty_id = ?
-      AND feedback IS NOT NULL
-      AND feedback != ''
-    ORDER BY created_at DESC
-");
-$stmt_feedback->bind_param("i", $numeric_faculty_id);
+if ($program_filter !== '') {
+    $stmt_feedback = $conn->prepare("
+        SELECT e.feedback
+        FROM evaluations e
+        INNER JOIN add_students s ON s.id = e.student_id
+        LEFT  JOIN add_programs p ON TRIM(p.program_code) = TRIM(s.program)
+                                  OR CAST(p.id AS CHAR)   = TRIM(s.program)
+        WHERE e.faculty_id = ?
+          AND p.program_name = ?
+          AND e.feedback IS NOT NULL
+          AND e.feedback != ''
+        ORDER BY e.created_at DESC
+    ");
+    $stmt_feedback->bind_param("is", $numeric_faculty_id, $program_filter);
+} else {
+    $stmt_feedback = $conn->prepare("
+        SELECT feedback
+        FROM evaluations
+        WHERE faculty_id = ?
+          AND feedback IS NOT NULL
+          AND feedback != ''
+        ORDER BY created_at DESC
+    ");
+    $stmt_feedback->bind_param("i", $numeric_faculty_id);
+}
 $stmt_feedback->execute();
 $feedback_result   = $stmt_feedback->get_result();
 $feedback_comments = [];
@@ -104,8 +143,10 @@ while ($row = $feedback_result->fetch_assoc()) {
 }
 $stmt_feedback->close();
 
-// --- Per-category stats with weights (real-time) ---
-$category_stats  = getCategoryStats($conn, $numeric_faculty_id);
+// --- Per-category stats with weights ---
+$category_stats  = $program_filter !== ''
+    ? getCategoryStatsByProgram($conn, $numeric_faculty_id, $program_filter)
+    : getCategoryStats($conn, $numeric_faculty_id);
 $category_totals = [];
 foreach ($category_stats as $cat) {
     $category_totals[] = [

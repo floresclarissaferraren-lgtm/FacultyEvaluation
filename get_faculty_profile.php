@@ -62,8 +62,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
                 ]
             ];
             
+            // Fetch subjects assigned to this faculty — check both tables
+            $numeric_id = intval($faculty_data['id']);
+            $subjects   = [];
+
+            $subj_sql = "
+                SELECT DISTINCT s.subject_code, s.subject_desc
+                FROM add_subjects s
+                WHERE s.id IN (
+                    SELECT subject_id FROM class_subjects   WHERE faculty_id = ?
+                    UNION
+                    SELECT subject_id FROM faculty_subjects WHERE faculty_id = ?
+                )
+                ORDER BY s.subject_code ASC
+            ";
+            $subj_stmt = $conn->prepare($subj_sql);
+            if ($subj_stmt) {
+                $subj_stmt->bind_param("ii", $numeric_id, $numeric_id);
+                $subj_stmt->execute();
+                $subj_result = $subj_stmt->get_result();
+                while ($srow = $subj_result->fetch_assoc()) {
+                    $subjects[] = [
+                        'code' => $srow['subject_code'],
+                        'name' => $srow['subject_desc'],
+                    ];
+                }
+                $subj_stmt->close();
+            }
+
+            $response['data']['subjects'] = $subjects;
             header('Content-Type: application/json');
             echo json_encode($response);
+
         } else {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'error' => 'Faculty not found']);

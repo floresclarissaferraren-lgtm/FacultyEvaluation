@@ -224,6 +224,17 @@ function showProfile(e){
   
   // Fetch additional faculty data from database
   fetchFacultyProfileData(facultyId).then(additionalData => {
+    const subjects = (additionalData?.data?.subjects) || [];
+
+    // Build subjects HTML
+    const subjectsHtml = subjects.length > 0
+      ? subjects.map(s => `
+          <div class="sp-subject-item">
+            <span class="sp-subject-code">${escapeHtml(s.code)}</span>
+            <span class="sp-subject-desc">${escapeHtml(s.name)}</span>
+          </div>`).join('')
+      : '<span class="sp-no-subjects">No subjects assigned</span>';
+
     // Create profile modal content with real data matching student profile design
     const profileContent = `
       <div class="sp-modal">
@@ -257,6 +268,15 @@ function showProfile(e){
                 <span class="sp-info-label">Email</span>
                 <span class="sp-info-value">${facultyEmail || 'N/A'}</span>
               </div>
+            </div>
+          </div>
+
+          <div class="sp-divider"></div>
+
+          <div class="sp-subjects-section">
+            <span class="sp-subjects-label"><i class="ph ph-books"></i> Assigned Subjects</span>
+            <div class="sp-subjects-list">
+              ${subjectsHtml}
             </div>
           </div>
 
@@ -556,7 +576,7 @@ document.getElementById("logoutModal").addEventListener("click", function(e){
   }
 });
 
-function loadFacultyStats() {
+function loadFacultyStats(program = 'all') {
   if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
     const ratingNumberEl     = document.getElementById("overallRatingNumber");
     const ratingPctEl        = document.getElementById("overallRatingPercentage");
@@ -571,7 +591,9 @@ function loadFacultyStats() {
     return;
   }
 
-  fetch("get_faculty_stats.php")
+  const url = `get_faculty_stats_by_program.php${program && program !== 'all' ? '?program=' + encodeURIComponent(program) : ''}`;
+
+  fetch(url)
     .then(r => r.json())
     .then(data => {
       if (!data.success) return;
@@ -591,10 +613,43 @@ function loadFacultyStats() {
       if (ratingStatusEl) ratingStatusEl.textContent  = hasResponses ? (data.rating_label || "No Rating Yet") : "N/A";
       if (responsesEl)    responsesEl.textContent      = `${totalResponses}`;
       if (progressFill)   progressFill.style.width     = `${Math.min(pct, 100)}%`;
+
+      // Populate program dropdown (only on first load when program = 'all')
+      if (program === 'all' && Array.isArray(data.programs_with_data) && data.programs_with_data.length > 0) {
+        populateProgramDropdown(data.programs_with_data);
+      }
     })
     .catch(err => {
       console.error("Failed to load faculty stats:", err);
     });
+}
+
+function populateProgramDropdown(programs) {
+  const select = document.getElementById("programFilterSelect");
+  if (!select) return;
+
+  // Keep the "All Programs" option, remove any old ones
+  while (select.options.length > 1) select.remove(1);
+
+  programs.forEach(prog => {
+    const opt = document.createElement("option");
+    // prog is an object {code, name} from the PHP response
+    // Use program name as value (PHP filters by name via add_programs join)
+    const name = (typeof prog === 'object' && prog !== null) ? (prog.name || prog.code || prog) : prog;
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+
+  // Show the filter row only if there are multiple programs
+  const filterRow = document.querySelector(".program-filter-row");
+  if (filterRow) {
+    filterRow.style.display = programs.length > 0 ? "flex" : "none";
+  }
+}
+
+function onProgramFilterChange(program) {
+  loadFacultyStats(program);
 }
 
 function showEvaluationReport() {
@@ -606,7 +661,14 @@ function showEvaluationReport() {
   // Get faculty information from hidden fields
   const facultyId = document.getElementById("facultyId")?.value;
   const facultyName = document.getElementById("facultyName")?.value;
-  
+
+  // Read the currently active program filter
+  const programSelect = document.getElementById("programFilterSelect");
+  const selectedProgram = programSelect ? programSelect.value : 'all';
+  const selectedProgramLabel = (programSelect && selectedProgram !== 'all')
+    ? (programSelect.options[programSelect.selectedIndex]?.text || '')
+    : '';
+
   // Create evaluation report modal if it doesn't exist
   let reportModal = document.getElementById("evaluationReportModal");
   if (!reportModal) {
@@ -615,7 +677,7 @@ function showEvaluationReport() {
     reportModal.className = "evaluation-report-modal";
     document.body.appendChild(reportModal);
   }
-  
+
   // Fetch faculty evaluation data
   fetch("get_faculty_evaluation_report.php", {
     method: "POST",
@@ -623,7 +685,8 @@ function showEvaluationReport() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      faculty_id: facultyId
+      faculty_id: facultyId,
+      program_filter: selectedProgram !== 'all' ? selectedProgram : ''
     })
   })
   .then(response => response.json())
@@ -649,7 +712,7 @@ function showEvaluationReport() {
             <img src="logo.png" alt="College Logo" class="college-logo">
             <div class="college-info">
               <h2>Faculty Evaluation Report</h2>
-              <p class="report-subtitle">A summary of student feedback and performance indicators.</p>
+              <p class="report-subtitle">${selectedProgramLabel ? `Program: <strong>${escapeHtml(selectedProgramLabel)}</strong>` : 'A summary of student feedback and performance indicators.'}</p>
             </div>
           </div>
           <button class="close-report-btn" onclick="closeEvaluationReport()">
@@ -659,7 +722,7 @@ function showEvaluationReport() {
 
         <div class="report-body">
           <div class="report-context">
-            <p>This report aggregates student responses from <strong>${evaluationPeriod}</strong> and highlights your current teaching performance and feedback trends.</p>
+            <p>This report aggregates student responses from <strong>${evaluationPeriod}</strong>${selectedProgramLabel ? ` for students under <strong>${escapeHtml(selectedProgramLabel)}</strong>` : ''} and highlights your current teaching performance and feedback trends.</p>
           </div>
 
           <div class="report-summary-grid">
@@ -741,6 +804,7 @@ function showEvaluationReport() {
     // Store data for PDF download
     reportModal.dataset.facultyName = facultyName || 'N/A';
     reportModal.dataset.facultyId = facultyId || 'N/A';
+    reportModal.dataset.programFilter = selectedProgramLabel || '';
     reportModal.dataset.totalResponses = data.success ? (data.total_responses || 0) : 0;
     reportModal.dataset.overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
     reportModal.dataset.feedback = data.success ? (data.feedback || 'No feedback available') : 'No feedback available';
