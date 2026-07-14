@@ -931,3 +931,261 @@ document.addEventListener("DOMContentLoaded", function() {
   loadFacultyStats();
   startInstructorPeriodRefresh();
 });
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PER-SUBJECT REPORT
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Open the per-subject evaluation report modal for the logged-in faculty.
+ */
+function showPerSubjectReport() {
+  if ((document.getElementById('facultyStatus')?.value || 'active').toLowerCase() !== 'active') {
+    alert('Your account has been set to inactive by an admin. You cannot generate or view results until your account is active again.');
+    return;
+  }
+
+  const facultyId   = document.getElementById('facultyId')?.value || '';
+  const facultyName = document.getElementById('facultyName')?.value || 'Instructor';
+
+  const modal        = document.getElementById('perSubjectReportModal');
+  const modalContent = modal.querySelector('.per-subject-modal-content');
+
+  // Show loading state
+  modalContent.innerHTML = '<div class="psm-loading"><i class="ph ph-spinner-gap psm-spin"></i><p>Loading per-subject report…</p></div>';
+  openPerSubjectModal();
+
+  fetch('get_faculty_per_subject_report.php', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ faculty_id: facultyId }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        modalContent.innerHTML = `<div class="psm-error"><i class="ph ph-warning-circle"></i><p>${escapeHtml(data.message || 'Failed to load report.')}</p><button class="psm-close-btn" onclick="closePerSubjectReport()">Close</button></div>`;
+        return;
+      }
+
+      // Store raw data for PDF download
+      modal.dataset.reportData = JSON.stringify({ facultyName, facultyId, departments: data.departments, overall: data.overall });
+
+      modalContent.innerHTML = buildPerSubjectReportHtml(facultyName, facultyId, data.departments, data.overall);
+    })
+    .catch(err => {
+      console.error('Per-subject report error:', err);
+      modalContent.innerHTML = `<div class="psm-error"><i class="ph ph-warning-circle"></i><p>An error occurred while loading the report.</p><button class="psm-close-btn" onclick="closePerSubjectReport()">Close</button></div>`;
+    });
+}
+
+function openPerSubjectModal() {
+  const modal = document.getElementById('perSubjectReportModal');
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+  document.body.classList.add('modal-open');
+  document.querySelector('.navbar')?.classList.add('modal-compensate');
+  modal.style.display = 'flex';
+
+  if (!modal.dataset.listenerAttached) {
+    modal.addEventListener('click', e => { if (e.target === modal) closePerSubjectReport(); });
+    modal.dataset.listenerAttached = 'true';
+  }
+}
+
+function closePerSubjectReport() {
+  const modal = document.getElementById('perSubjectReportModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    document.querySelector('.navbar')?.classList.remove('modal-compensate');
+    document.documentElement.style.removeProperty('--scrollbar-width');
+  }
+}
+
+/**
+ * Build the inner HTML for the per-subject report modal.
+ */
+function buildPerSubjectReportHtml(facultyName, facultyId, departments, overall) {
+  const pct          = parseFloat(overall.percentage || 0);
+  const statusClass  = getStatusBadgeClass(parseFloat(overall.avg_rating || 0));
+
+  let deptHtml = '';
+  if (!departments || departments.length === 0) {
+    deptHtml = '<div class="psm-empty"><i class="ph ph-clipboard-text"></i><p>No subject-level evaluation data found.</p></div>';
+  } else {
+    departments.forEach(dept => {
+      deptHtml += `
+        <section class="psm-dept">
+          <div class="psm-dept-header">
+            <i class="ph ph-graduation-cap"></i>
+            <span>${escapeHtml(dept.program_name)}${dept.program_code ? ' <em>(' + escapeHtml(dept.program_code) + ')</em>' : ''}</span>
+          </div>
+          ${buildSubjectsHtml(dept.subjects || [])}
+        </section>`;
+    });
+  }
+
+  return `
+    <div class="psm-header">
+      <div class="psm-header-left">
+        <img src="logo.png" alt="Logo" class="psm-logo">
+        <div>
+          <h2 id="perSubjectModalTitle">Per-Subject Evaluation Report</h2>
+          <p class="psm-subtitle">${escapeHtml(facultyName)}</p>
+        </div>
+      </div>
+      <div class="psm-header-actions">
+        <button class="psm-download-btn" onclick="downloadPerSubjectReportPdf()">
+          <i class="ph ph-download-simple"></i> Download PDF
+        </button>
+        <button class="psm-close-btn" onclick="closePerSubjectReport()" aria-label="Close">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="psm-body">
+
+      <!-- Overall summary -->
+      <div class="psm-overall-section">
+        <h3 class="psm-section-title"><i class="ph ph-star"></i> Overall Faculty Rating</h3>
+        <p class="psm-section-sub">Combined across all subjects taught</p>
+        <div class="psm-summary-cards">
+          <div class="psm-card">
+            <span class="psm-card-label">Weighted Average</span>
+            <strong class="psm-card-value">${escapeHtml(overall.avg_rating)} / 5.00</strong>
+            <span class="psm-card-pct">${pct.toFixed(1)}%</span>
+            <div class="psm-prog-track"><div class="psm-prog-fill" style="width:${Math.min(pct, 100)}%"></div></div>
+          </div>
+          <div class="psm-card ${statusClass}">
+            <span class="psm-card-label">Performance Status</span>
+            <strong class="psm-card-value">${escapeHtml(overall.rating_label)}</strong>
+            <span class="psm-card-note">Overall indicator</span>
+          </div>
+          <div class="psm-card">
+            <span class="psm-card-label">Total Evaluations</span>
+            <strong class="psm-card-value">${escapeHtml(String(overall.eval_count))}</strong>
+            <span class="psm-card-note">Across all subjects</span>
+          </div>
+          <div class="psm-card">
+            <span class="psm-card-label">Evaluation Period</span>
+            <strong class="psm-card-value psm-period-val">${escapeHtml(overall.period)}</strong>
+          </div>
+        </div>
+        ${renderCategoryTotals(overall.category_totals || [])}
+      </div>
+
+      <!-- Per-department / per-subject breakdown -->
+      <div class="psm-subjects-section">
+        <h3 class="psm-section-title"><i class="ph ph-books"></i> Per-Subject Reports</h3>
+        <p class="psm-section-sub">Separated by program / department</p>
+        ${deptHtml}
+      </div>
+
+    </div>`;
+}
+
+function buildSubjectsHtml(subjects) {
+  if (!subjects.length) return '<p class="psm-no-subjects">No evaluation data for any subject in this program.</p>';
+
+  return subjects.map(s => {
+    const avg     = parseFloat(s.avg_rating || 0);
+    const pct     = parseFloat(s.percentage || 0);
+    const badge   = getStatusBadgeClass(avg).replace(/^status-/, '');
+    const hasData = s.eval_count > 0;
+
+    const commentsHtml = (s.comments && s.comments.length > 0)
+      ? `<div class="psm-comments">
+           <h5 class="psm-comments-title"><i class="ph ph-chat-circle-dots"></i> Student Comments <span class="psm-count-badge">${s.comments.length}</span></h5>
+           <div class="psm-comments-list">
+             ${s.comments.slice(0, 6).map((c, i) => `
+               <div class="psm-comment-item">
+                 <span class="psm-comment-num">${i + 1}</span>
+                 <p>${escapeHtml(c)}</p>
+               </div>`).join('')}
+             ${s.comments.length > 6 ? `<p class="psm-more-comments">… and ${s.comments.length - 6} more comment(s)</p>` : ''}
+           </div>
+         </div>`
+      : '<div class="psm-no-comments"><i class="ph ph-chat-slash"></i><p>No comments submitted for this subject.</p></div>';
+
+    return `
+      <div class="psm-subject-card">
+        <div class="psm-subject-header">
+          <div class="psm-subject-title-row">
+            <span class="psm-subject-code">${escapeHtml(s.subject_code)}</span>
+            <span class="psm-subject-desc">${escapeHtml(s.subject_desc)}</span>
+            ${s.class_label ? `<span class="psm-class-badge"><i class="ph ph-users"></i> ${escapeHtml(s.class_label)}</span>` : ''}
+          </div>
+          <span class="psm-period-tag"><i class="ph ph-calendar"></i> ${escapeHtml(s.period)}</span>
+        </div>
+
+        <div class="psm-subject-meta">
+          <div class="psm-meta-item">
+            <span class="psm-meta-label">Avg Rating</span>
+            <strong class="psm-meta-value">${escapeHtml(s.avg_rating)} / 5.00</strong>
+          </div>
+          <div class="psm-meta-item">
+            <span class="psm-meta-label">Score</span>
+            <strong class="psm-meta-value">${pct.toFixed(1)}%</strong>
+          </div>
+          <div class="psm-meta-item">
+            <span class="psm-meta-label">Evaluations</span>
+            <strong class="psm-meta-value">${s.eval_count}</strong>
+          </div>
+          <div class="psm-meta-item">
+            <span class="psm-meta-label">Status</span>
+            <span class="report-badge ${badge} psm-status-badge">${escapeHtml(s.rating_label)}</span>
+          </div>
+        </div>
+
+        <div class="psm-subject-progress">
+          <div class="psm-prog-track"><div class="psm-prog-fill ${badge}" style="width:${Math.min(pct, 100)}%"></div></div>
+        </div>
+
+        ${renderCategoryTotals(s.category_totals || [])}
+
+        ${commentsHtml}
+      </div>`;
+  }).join('');
+}
+
+/**
+ * Download the per-subject report as a PDF.
+ */
+function downloadPerSubjectReportPdf() {
+  const modal = document.getElementById('perSubjectReportModal');
+  if (!modal || !modal.dataset.reportData) return;
+
+  let reportData;
+  try {
+    reportData = JSON.parse(modal.dataset.reportData);
+  } catch (e) {
+    alert('Report data is not available. Please reload the report.');
+    return;
+  }
+
+  fetch('generate_per_subject_report_pdf.php', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(reportData),
+  })
+    .then(r => {
+      if (!r.ok) throw new Error('PDF generation failed');
+      return r.blob();
+    })
+    .then(blob => {
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `Per_Subject_Report_${(reportData.facultyName || 'Faculty').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    })
+    .catch(err => {
+      console.error('PDF download error:', err);
+      alert('An error occurred while generating the PDF.');
+    });
+}

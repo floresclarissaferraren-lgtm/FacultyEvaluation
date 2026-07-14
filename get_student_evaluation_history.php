@@ -3,6 +3,7 @@ include_once 'session_config.php';
 session_start();
 header("Content-Type: application/json");
 include 'connect.php';
+require_once 'evaluation_schema.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
@@ -12,8 +13,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SES
 $student_id = intval($_SESSION['id']);
 
 try {
+    ensureEvaluationsSchema($conn);
+
     $query = "SELECT 
         e.id as evaluation_id,
+        e.subject_id,
+        e.class_id,
         e.overall_rating,
         e.feedback,
         e.created_at,
@@ -21,9 +26,15 @@ try {
         f.faculty_id,
         f.firstname,
         f.lastname,
-        f.suffix
+        f.suffix,
+        sub.subject_code,
+        sub.subject_desc,
+        ac.year_level AS class_year_level,
+        ac.block AS class_section
     FROM evaluations e
     INNER JOIN add_faculties f ON e.faculty_id = f.id
+    LEFT JOIN add_subjects sub ON sub.id = e.subject_id
+    LEFT JOIN add_classes ac ON ac.id = e.class_id
     WHERE e.student_id = ?
     ORDER BY e.created_at DESC";
     
@@ -42,6 +53,10 @@ try {
             'evaluation_id' => $row['evaluation_id'],
             'faculty_id' => $row['faculty_id'],
             'faculty_name' => $faculty_name,
+            'subject_id' => intval($row['subject_id'] ?? 0),
+            'class_id' => intval($row['class_id'] ?? 0),
+            'subject_label' => trim(($row['subject_code'] ?? '') . (($row['subject_desc'] ?? '') !== '' ? ' - ' . $row['subject_desc'] : '')),
+            'class_label' => trim(($row['class_year_level'] ?? '') . (($row['class_section'] ?? '') !== '' ? ' / ' . $row['class_section'] : '')),
             'overall_rating' => $row['overall_rating'],
             'rating_label' => $rating_label,
             'feedback' => $row['feedback'],

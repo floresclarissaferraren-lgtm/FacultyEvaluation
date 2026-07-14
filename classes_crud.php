@@ -108,26 +108,46 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
     }
     $subjectStmt->close();
 
+    $conn->query("CREATE TABLE IF NOT EXISTS student_subject_classes (
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        student_id int(11) NOT NULL,
+        subject_id int(11) NOT NULL,
+        class_id int(11) NOT NULL,
+        UNIQUE KEY unique_student_subject_class (student_id, subject_id),
+        KEY idx_ssc_student (student_id),
+        KEY idx_ssc_class (class_id)
+    )");
+
     $del = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
+    $delClass = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ?");
     $ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
-    if (!$del || !$ins) {
+    $insClass = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+    if (!$del || !$delClass || !$ins || !$insClass) {
         if ($del) $del->close();
+        if ($delClass) $delClass->close();
         if ($ins) $ins->close();
+        if ($insClass) $insClass->close();
         return;
     }
 
     foreach ($studentIds as $sid) {
         $del->bind_param("i", $sid);
         $del->execute();
+        $delClass->bind_param("i", $sid);
+        $delClass->execute();
 
         foreach ($subjectIds as $subjId) {
             $ins->bind_param("ii", $sid, $subjId);
             $ins->execute();
+            $insClass->bind_param("iii", $sid, $subjId, $class_id);
+            $insClass->execute();
         }
     }
 
     $del->close();
+    $delClass->close();
     $ins->close();
+    $insClass->close();
 }
 
 /* ========================= GET FACULTY BY SUBJECT ========================= */

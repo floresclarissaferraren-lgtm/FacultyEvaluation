@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 include 'connect.php';
+require_once 'evaluation_schema.php';
 
 try {
     $checkFacultyStatusColumn = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'status'");
@@ -8,20 +9,7 @@ try {
         $conn->query("ALTER TABLE add_faculties ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
     }
 
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS evaluations (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            student_id INT(11) NOT NULL,
-            faculty_id INT(11) NOT NULL,
-            overall_rating DECIMAL(4,2) NOT NULL DEFAULT 0.00,
-            feedback TEXT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uniq_student_faculty (student_id, faculty_id),
-            KEY idx_eval_faculty (faculty_id),
-            KEY idx_eval_student (student_id)
-        )
-    ");
+    ensureEvaluationsSchema($conn);
 
     $student_id = intval($_GET['student_id'] ?? 0);
     $year_level = trim($_GET['year_level'] ?? '');
@@ -76,11 +64,14 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
-                GROUP_CONCAT(
-                    CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
-                    ORDER BY s.subject_code
-                    SEPARATOR '||;||'
-                ) AS subjects_data
+                cs.subject_id,
+                ac.id AS class_id,
+                ac.year_level AS class_year_level,
+                ac.block AS class_section,
+                s.subject_code,
+                s.subject_desc,
+                s.year_level,
+                p.program_name
             FROM add_students st
             INNER JOIN add_classes ac
                 ON ac.program_id = ?
@@ -90,11 +81,13 @@ try {
             INNER JOIN add_subjects s ON s.id = cs.subject_id
             LEFT JOIN add_programs p ON s.program_id = p.id
             INNER JOIN add_faculties f ON f.id = cs.faculty_id
-            LEFT JOIN evaluations ev ON ev.student_id = st.id AND ev.faculty_id = f.id
+            LEFT JOIN evaluations ev
+                ON ev.student_id = st.id
+               AND ev.faculty_id = f.id
+               AND ev.subject_id = cs.subject_id
+               AND ev.class_id = ac.id
             WHERE st.id = ? AND cs.faculty_id > 0 AND ev.id IS NULL
-            GROUP BY 
-                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
-            ORDER BY f.lastname, f.firstname
+            ORDER BY f.lastname, f.firstname, s.subject_code
         ";
 
         $stmt = $conn->prepare($query);
@@ -104,6 +97,30 @@ try {
 
         // Fallback for legacy records: derive from student's assigned subjects + faculty_subjects.
         if ($result->num_rows === 0) {
+            $hasClassAssignments = false;
+            $classCheck = $conn->prepare("
+                SELECT cs.subject_id
+                FROM add_classes ac
+                INNER JOIN class_subjects cs ON cs.class_id = ac.id
+                WHERE ac.program_id = ?
+                  AND (ac.year_level = ? OR ac.year_level = ?)
+                  AND TRIM(UPPER(ac.block)) = TRIM(UPPER(?))
+                  AND cs.faculty_id > 0
+                LIMIT 1
+            ");
+            if ($classCheck) {
+                $classCheck->bind_param("isss", $program_id, $student_year_raw, $student_year_formatted, $student_section);
+                $classCheck->execute();
+                $hasClassAssignments = (bool)$classCheck->get_result()->fetch_assoc();
+                $classCheck->close();
+            }
+
+            if ($hasClassAssignments) {
+                echo json_encode([]);
+                $conn->close();
+                exit;
+            }
+
             $query = "
                 SELECT 
                     f.id,
@@ -114,21 +131,35 @@ try {
                     f.suffix,
                     f.photo,
                     f.status,
-                    GROUP_CONCAT(
-                        CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
-                        ORDER BY s.subject_code
-                        SEPARATOR '||;||'
-                    ) AS subjects_data
-                FROM add_faculties f
-                INNER JOIN faculty_subjects fs ON f.id = fs.faculty_id
-                INNER JOIN student_subjects ss ON fs.subject_id = ss.subject_id AND ss.student_id = ?
-                INNER JOIN add_subjects s ON fs.subject_id = s.id
+                    ss.subject_id,
+                    COALESCE(ssc.class_id, 0) AS class_id,
+                    ac.year_level AS class_year_level,
+                    ac.block AS class_section,
+                    s.subject_code,
+                    s.subject_desc,
+                    s.year_level,
+                    p.program_name
+                FROM student_subjects ss
+                LEFT JOIN student_subject_classes ssc
+                    ON ssc.student_id = ss.student_id
+                   AND ssc.subject_id = ss.subject_id
+                LEFT JOIN class_subjects cs
+                    ON cs.class_id = ssc.class_id
+                   AND cs.subject_id = ss.subject_id
+                   AND cs.faculty_id > 0
+                LEFT JOIN faculty_subjects fs ON fs.subject_id = ss.subject_id
+                INNER JOIN add_faculties f ON f.id = COALESCE(NULLIF(cs.faculty_id, 0), fs.faculty_id)
+                INNER JOIN add_subjects s ON ss.subject_id = s.id
                 LEFT JOIN add_programs p ON s.program_id = p.id
-                LEFT JOIN evaluations ev ON ev.student_id = ss.student_id AND ev.faculty_id = f.id
-                WHERE ev.id IS NULL
-                GROUP BY 
-                    f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
-                ORDER BY f.lastname, f.firstname
+                LEFT JOIN add_classes ac ON ac.id = COALESCE(ssc.class_id, 0)
+                LEFT JOIN evaluations ev
+                    ON ev.student_id = ss.student_id
+                   AND ev.faculty_id = f.id
+                   AND ev.subject_id = ss.subject_id
+                   AND ev.class_id = COALESCE(ssc.class_id, 0)
+                WHERE ss.student_id = ?
+                  AND ev.id IS NULL
+                ORDER BY f.lastname, f.firstname, s.subject_code
             ";
 
             $stmt = $conn->prepare($query);
@@ -147,18 +178,19 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
-                GROUP_CONCAT(
-                    CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
-                    ORDER BY s.subject_code
-                    SEPARATOR '||;||'
-                ) AS subjects_data
+                fs.subject_id,
+                0 AS class_id,
+                NULL AS class_year_level,
+                NULL AS class_section,
+                s.subject_code,
+                s.subject_desc,
+                s.year_level,
+                p.program_name
             FROM add_faculties f
             INNER JOIN faculty_subjects fs ON f.id = fs.faculty_id
             INNER JOIN add_subjects s ON fs.subject_id = s.id AND s.year_level = ?
             LEFT JOIN add_programs p ON s.program_id = p.id
-            GROUP BY 
-                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
-            ORDER BY f.lastname, f.firstname
+            ORDER BY f.lastname, f.firstname, s.subject_code
         ";
 
         $stmt = $conn->prepare($query);
@@ -176,18 +208,19 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
-                GROUP_CONCAT(
-                    CONCAT(s.subject_code, '|||', s.subject_desc, '|||', s.year_level, '|||', p.program_name)
-                    ORDER BY s.subject_code
-                    SEPARATOR '||;||'
-                ) AS subjects_data
+                fs.subject_id,
+                0 AS class_id,
+                NULL AS class_year_level,
+                NULL AS class_section,
+                s.subject_code,
+                s.subject_desc,
+                s.year_level,
+                p.program_name
             FROM add_faculties f
             LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
             LEFT JOIN add_subjects s ON fs.subject_id = s.id
             LEFT JOIN add_programs p ON s.program_id = p.id
-            GROUP BY 
-                f.id, f.faculty_id, f.email, f.firstname, f.lastname, f.suffix, f.photo, f.status
-            ORDER BY f.lastname, f.firstname
+            ORDER BY f.lastname, f.firstname, s.subject_code
         ";
 
         $result = $conn->query($query);
@@ -200,62 +233,100 @@ try {
         exit;
     }
 
-    // Debug: Show the query and number of results
-    error_log("Query: " . $query);
-    error_log("Number of rows: " . $result->num_rows);
+    if ($student_id > 0) {
+        // ── STUDENT PATH ─────────────────────────────────────────────────────
+        // Return one entry per faculty-subject pair so the student dashboard
+        // renders a separate evaluation card for every subject the professor
+        // teaches.  Each row from the query is already a unique
+        // faculty + subject + class combination (evaluated ones are excluded
+        // by the LEFT JOIN / ev.id IS NULL filter in the query above).
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            $subject = [
+                'subject_id'      => intval($row['subject_id'] ?? 0),
+                'class_id'        => intval($row['class_id']   ?? 0),
+                'class_year_level'=> $row['class_year_level']  ?? '',
+                'class_section'   => $row['class_section']     ?? '',
+                'subject_code'    => $row['subject_code']      ?? '',
+                'subject_desc'    => $row['subject_desc']      ?? '',
+                'year_level'      => $row['year_level']        ?? '',
+                'program_name'    => $row['program_name']      ?? '',
+            ];
+            $data[] = [
+                'id'            => intval($row['id']),
+                'faculty_id'    => $row['faculty_id'],
+                'email'         => $row['email'],
+                'firstname'     => $row['firstname'],
+                'lastname'      => $row['lastname'],
+                'suffix'        => $row['suffix']  ?? '',
+                'photo'         => $row['photo']   ?? '',
+                'status'        => $row['status']  ?? 'active',
+                // subjects array keeps the same shape the JS already reads
+                'subjects'      => [$subject],
+                'subject_codes' => [$subject['subject_code']],
+                // flat copies for legacy JS that reads top-level keys directly
+                'subject_id'    => $subject['subject_id'],
+                'class_id'      => $subject['class_id'],
+                'subject_code'  => $subject['subject_code'],
+                'subject_desc'  => $subject['subject_desc'],
+                'class_year_level' => $subject['class_year_level'],
+                'class_section'    => $subject['class_section'],
+            ];
+        }
+        echo json_encode($data);
 
-    $data = [];
+    } else {
+        // ── ADMIN / YEAR-LEVEL PATH ──────────────────────────────────────────
+        // Group every subject under its faculty so each faculty appears exactly
+        // once in the Faculty Management table.
+        $byId = [];
+        while ($row = $result->fetch_assoc()) {
+            $fid        = intval($row['id']);
+            $subjectCode = $row['subject_code'] ?? '';
+            $subject = [
+                'subject_id'      => intval($row['subject_id'] ?? 0),
+                'class_id'        => intval($row['class_id']   ?? 0),
+                'class_year_level'=> $row['class_year_level']  ?? '',
+                'class_section'   => $row['class_section']     ?? '',
+                'subject_code'    => $subjectCode,
+                'subject_desc'    => $row['subject_desc']      ?? '',
+                'year_level'      => $row['year_level']        ?? '',
+                'program_name'    => $row['program_name']      ?? '',
+            ];
 
-    while ($row = $result->fetch_assoc()) {
+            if (!isset($byId[$fid])) {
+                $byId[$fid] = [
+                    'id'            => $fid,
+                    'faculty_id'    => $row['faculty_id'],
+                    'email'         => $row['email'],
+                    'firstname'     => $row['firstname'],
+                    'lastname'      => $row['lastname'],
+                    'suffix'        => $row['suffix']  ?? '',
+                    'photo'         => $row['photo']   ?? '',
+                    'status'        => $row['status']  ?? 'active',
+                    'subjects'      => [],
+                    'subject_codes' => [],
+                ];
+            }
 
-        // Debug: Show the raw row data
-        error_log("Raw row data: " . json_encode($row));
-        
-        $subjects = [];
-        $subject_codes = [];
-
-        if (!empty($row['subjects_data'])) {
-            error_log("Subjects data found: " . $row['subjects_data']);
-            $subject_entries = explode('||;||', $row['subjects_data']);
-            error_log("Subject entries: " . json_encode($subject_entries));
-            
-            foreach ($subject_entries as $entry) {
-                $parts = explode('|||', $entry);
-                error_log("Entry parts: " . json_encode($parts));
-                if (count($parts) >= 4) {
-                    $subjects[] = [
-                        'subject_code' => $parts[0],
-                        'subject_desc' => $parts[1],
-                        'year_level' => $parts[2],
-                        'program_name' => $parts[3]
-                    ];
-                    $subject_codes[] = $parts[0]; // For simple display in table
+            if ($subjectCode !== '') {
+                // Guard against duplicate subject+class entries in the result.
+                $alreadyAdded = false;
+                foreach ($byId[$fid]['subjects'] as $existing) {
+                    if ($existing['subject_id'] === $subject['subject_id']
+                        && $existing['class_id']   === $subject['class_id']) {
+                        $alreadyAdded = true;
+                        break;
+                    }
+                }
+                if (!$alreadyAdded) {
+                    $byId[$fid]['subjects'][]      = $subject;
+                    $byId[$fid]['subject_codes'][] = $subjectCode;
                 }
             }
-        } else {
-            error_log("No subjects data found for faculty: " . $row['faculty_id']);
         }
-
-        $data[] = [
-            "id" => $row["id"],
-            "faculty_id" => $row["faculty_id"],
-            "email" => $row["email"],
-            "firstname" => $row["firstname"],
-            "lastname" => $row["lastname"],
-            "suffix" => $row["suffix"] ?? "",
-            "photo" => $row["photo"] ?? "",
-            "status" => $row["status"] ?? "active",
-            "subjects" => $subjects,
-            "subject_codes" => $subject_codes // For simple display
-        ];
-        
-        // Debug: Show the final data structure for this faculty
-        error_log("Final faculty data: " . json_encode(end($data)));
+        echo json_encode(array_values($byId));
     }
-
-    // Debug: Show the complete data structure
-    error_log("Complete data being returned: " . json_encode($data));
-    echo json_encode($data);
 
 } catch (Exception $e) {
 

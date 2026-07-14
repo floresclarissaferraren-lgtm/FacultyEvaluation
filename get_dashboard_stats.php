@@ -4,8 +4,10 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 include 'connect.php';
 require_once 'weighted_score_helper.php';
+require_once 'evaluation_schema.php';
 
 try {
+    ensureEvaluationsSchema($conn);
     // Get total faculty count
     $faculty_query = "SELECT COUNT(*) as total FROM add_faculties";
     $faculty_result = $conn->query($faculty_query);

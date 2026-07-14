@@ -2766,6 +2766,7 @@ function loadEvaluations() {
           row.innerHTML = `
             <td>
               <strong>${evaluation.name}</strong>
+              ${evaluation.subject_label ? `<small style="display:block;color:#64748b;margin-top:4px;">${evaluation.subject_label}${evaluation.class_label ? ` (${evaluation.class_label})` : ''}</small>` : ''}
             </td>
             <td>
               <div class="score-cell">
@@ -2781,7 +2782,7 @@ function loadEvaluations() {
               <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
             </td>
             <td>
-              <button class="view-btn" data-faculty-id="${evaluation.id}">
+              <button class="view-btn" data-faculty-id="${evaluation.id}" data-subject-id="${evaluation.subject_id || 0}" data-class-id="${evaluation.class_id || 0}">
                 <i class="ph ph-eye"></i> View
               </button>
             </td>
@@ -2790,7 +2791,7 @@ function loadEvaluations() {
           // Add event listener to view button
           const viewBtn = row.querySelector('.view-btn');
           viewBtn.addEventListener('click', () => {
-            viewEvaluationDetails(evaluation.id);
+            viewEvaluationDetails(evaluation.id, evaluation.subject_id || 0, evaluation.class_id || 0);
           });
           
           tbody.appendChild(row);
@@ -3073,7 +3074,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function viewEvaluationDetails(facultyId) {
+function viewEvaluationDetails(facultyId, subjectId = 0, classId = 0) {
   console.log('View button clicked for faculty ID:', facultyId);
 
   const modal = document.getElementById('facultyReportModal');
@@ -3101,7 +3102,13 @@ function viewEvaluationDetails(facultyId) {
   if (feedbackCountEl) feedbackCountEl.textContent = '0 comments';
   if (categoryListEl) categoryListEl.innerHTML = '<span class="category-list-empty">Loading categories...</span>';
   
-  fetch(`get_faculty_report.php?faculty_id=${facultyId}`)
+  const reportParams = new URLSearchParams({
+    faculty_id: facultyId,
+    subject_id: subjectId || 0,
+    class_id: classId || 0
+  });
+
+  fetch(`get_faculty_report.php?${reportParams.toString()}`)
     .then(r => r.json())
     .then(data => {
       if (data.success) {
@@ -3123,7 +3130,12 @@ function viewEvaluationDetails(facultyId) {
         const overallPercent = pctScore;
         
         if (nameElement) nameElement.textContent = data.data.name;
-        if (idElement) idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}`;
+        if (idElement) {
+          const subjectSuffix = data.data.subject_label
+            ? ` | ${data.data.subject_label}${data.data.class_label ? ` (${data.data.class_label})` : ''}`
+            : '';
+          idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}${subjectSuffix}`;
+        }
         if (ratingElement) ratingElement.textContent = `${data.data.overall_rating || '0.00'}`;
         if (overallPercentElement) overallPercentElement.textContent = `${pctScore.toFixed(1)}%`;
         if (overallProgressFill) overallProgressFill.style.width = `${Math.min(pctScore, 100)}%`;
@@ -3211,6 +3223,8 @@ function downloadFacultyReportPDF() {
   const pdfContent = {
     facultyName: currentFacultyData.name,
     facultyId: currentFacultyData.id, // Use database ID, not faculty_id
+    subjectLabel: currentFacultyData.subject_label || '',
+    classLabel: currentFacultyData.class_label || '',
     overallRating: currentFacultyData.overall_rating,
     totalResponses: currentFacultyData.total_responses,
     evaluationDetails: currentFacultyData.evaluation_details || [],

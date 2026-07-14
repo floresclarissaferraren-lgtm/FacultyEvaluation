@@ -538,9 +538,16 @@ async function loadStudentFacultyCards() {
 
     if (Array.isArray(facultyList) && facultyList.length > 0) {
       facultyList.forEach(faculty => {
-        const subjectLabels = Array.isArray(faculty.subjects)
-          ? faculty.subjects.map(sub => sub.subject_code || sub.subject_desc).join(', ')
-          : '';
+        const subject = Array.isArray(faculty.subjects) && faculty.subjects.length
+          ? faculty.subjects[0]
+          : faculty;
+        const subjectCode = subject.subject_code || faculty.subject_code || '';
+        const subjectDesc = subject.subject_desc || faculty.subject_desc || '';
+        const subjectLabels = [subjectCode, subjectDesc].filter(Boolean).join(' - ');
+        const classLabel = [
+          subject.class_year_level || faculty.class_year_level || '',
+          subject.class_section || faculty.class_section || ''
+        ].filter(Boolean).join(' / ');
 
         const nameParts = [
           faculty.firstname || '',
@@ -555,7 +562,12 @@ async function loadStudentFacultyCards() {
         card.onclick = () => {
           if (!studentActive) return showGlobalNotification("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again", "warning");
           if (!evaluationOpen) return showGlobalNotification("Evaluation is closed", "warning");
-          selectFaculty(faculty.id, fullName, subjectLabels);
+          selectFaculty(faculty.id, fullName, {
+            subject_id: Number(subject.subject_id || faculty.subject_id || 0),
+            class_id: Number(subject.class_id || faculty.class_id || 0),
+            subject_label: subjectLabels,
+            class_label: classLabel
+          });
         };
          
         const avatarHtml = faculty.photo
@@ -578,6 +590,7 @@ async function loadStudentFacultyCards() {
               <div class="faculty-info-text">
                 <span class="faculty-info-label">Assigned Subjects</span>
                 <span class="faculty-subjects">${subjectLabels || 'No subjects assigned'}</span>
+                ${classLabel ? `<span class="faculty-subjects faculty-class-label">${classLabel}</span>` : ''}
               </div>
             </div>
           </div>
@@ -611,12 +624,15 @@ function renderFacultyEmptyState(title, message, icon = "ph-chalkboard-teacher")
   `;
 }
 
-function selectFaculty(facultyId, facultyName, subjects) {
+function selectFaculty(facultyId, facultyName, assignment) {
   // Store selected faculty data
   window.selectedFaculty = {
     id: facultyId,
     name: facultyName,
-    subjects: subjects
+    subject_id: Number(assignment?.subject_id || 0),
+    class_id: Number(assignment?.class_id || 0),
+    subject_label: assignment?.subject_label || '',
+    class_label: assignment?.class_label || ''
   };
   
   // Hide faculty cards and show evaluation form
@@ -649,8 +665,14 @@ async function loadFacultyCategories() {
     // Create header section
     const headerSection = document.createElement("div");
     headerSection.className = "evaluation-header-section";
+    const selectedSubjectText = [
+      window.selectedFaculty?.name || '',
+      window.selectedFaculty?.subject_label || '',
+      window.selectedFaculty?.class_label || ''
+    ].filter(Boolean).join(' | ');
     headerSection.innerHTML = `
       <h2 class="performance-evaluation-title">Performance Evaluation</h2>
+      ${selectedSubjectText ? `<p class="performance-evaluation-subtitle">${selectedSubjectText}</p>` : ''}
       <div class="rating-legends-mini">
         <ul>
           <li><span class="dot dot5"></span>5 - Outstanding</li>
@@ -865,6 +887,7 @@ function updatePaginationButtons() {
 function submitEvaluation() {
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
   const facultyId = window.selectedFaculty?.id || '';
+  const subjectId = window.selectedFaculty?.subject_id || '';
   const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
 
   // Prevent submission when feedback has bad words
@@ -889,8 +912,8 @@ function submitEvaluation() {
   if (feedbackBox) feedbackBox.classList.remove("has-badwords");
   if (badwordsMsg) badwordsMsg.style.display = "none";
 
-  if (!facultyId) {
-    showGlobalNotification("Please select a faculty member to evaluate.", "warning");
+  if (!facultyId || !subjectId) {
+    showGlobalNotification("Please select a subject to evaluate.", "warning");
     updatePaginationButtons();
     return;
   }
@@ -956,6 +979,8 @@ function _doSubmitEvaluation() {
 
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
   const facultyId = window.selectedFaculty?.id || '';
+  const subjectId = window.selectedFaculty?.subject_id || '';
+  const classId = window.selectedFaculty?.class_id || 0;
   const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
   const selected = document.querySelectorAll('input[type="radio"]:checked');
   const data = {};
@@ -971,7 +996,10 @@ function _doSubmitEvaluation() {
   const submission = {
     student_id: studentId,
     faculty_id: facultyId,
+    subject_id: subjectId,
+    class_id: classId,
     faculty_name: facultyLabel,
+    subject_name: window.selectedFaculty?.subject_label || '',
     answers: data,
     feedback: feedbackText
   };
@@ -1201,6 +1229,8 @@ function displayEvaluationHistory(history) {
     ? `<p class="no-history">No evaluations submitted yet.</p>`
     : history.map(item => {
       const facultyName = escapeHistoryHtml(item.faculty_name);
+      const subjectName = escapeHistoryHtml(item.subject_label || item.subject_name || "");
+      const className = escapeHistoryHtml(item.class_label || "");
       const initial = facultyName.trim().charAt(0).toUpperCase() || "F";
       const label = escapeHistoryHtml(normalizeRatingLabel(item.rating_label));
       const ratingClass = label.toLowerCase().replace(/\s+/g, "-");
@@ -1215,6 +1245,7 @@ function displayEvaluationHistory(history) {
               <div class="history-avatar">${initial}</div>
               <div class="history-faculty-info">
                 <div class="faculty-name">${facultyName}</div>
+                ${subjectName ? `<div class="history-date">${subjectName}${className ? ` (${className})` : ""}</div>` : ""}
                 <div class="history-date">${date}</div>
               </div>
             </div>

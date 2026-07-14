@@ -3,6 +3,7 @@ include_once 'session_config.php';
 session_start();
 header("Content-Type: application/json");
 include "connect.php";
+require_once 'evaluation_schema.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty' || !isset($_SESSION['id'])) {
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
@@ -30,20 +31,7 @@ if (strtolower((string)($statusRow['status'] ?? 'active')) !== 'active') {
     exit;
 }
 
-$conn->query("
-    CREATE TABLE IF NOT EXISTS evaluations (
-        id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        student_id INT(11) NOT NULL,
-        faculty_id INT(11) NOT NULL,
-        overall_rating DECIMAL(4,2) NOT NULL DEFAULT 0.00,
-        feedback TEXT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uniq_student_faculty (student_id, faculty_id),
-        KEY idx_eval_faculty (faculty_id),
-        KEY idx_eval_student (student_id)
-    )
-");
+ensureEvaluationsSchema($conn);
 
 require_once 'weighted_score_helper.php';
 

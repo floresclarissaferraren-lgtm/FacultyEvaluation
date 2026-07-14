@@ -32,6 +32,9 @@ $totalResponses = cleanText($data['totalResponses'] ?? '0');
 $feedback      = cleanText($data['feedback'] ?? 'No feedback available');
 $evaluationDetails = is_array($data['evaluationDetails'] ?? null) ? $data['evaluationDetails'] : [];
 $allFeedback = cleanText($data['allFeedback'] ?? ($data['feedback'] ?? 'No feedback available'));
+$subjectLabel = cleanText($data['subjectLabel'] ?? '');
+$classLabel = cleanText($data['classLabel'] ?? '');
+$subjectContext = trim($subjectLabel . ($classLabel !== '' ? " ({$classLabel})" : ''));
 
 // Check if this is admin request (empty feedback indicates admin)
 $isAdminRequest = (empty($data['feedback']) || $data['feedback'] === '');
@@ -116,7 +119,7 @@ $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
 // =====================
 $boxX = 15; // Left margin
 $boxWidth = 180; // Full width minus margins
-$boxHeight = 45; // 4 rows * 10 + 5 padding
+$boxHeight = $subjectContext !== '' ? 55 : 45;
 $boxY = 60;
 
 $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
@@ -136,6 +139,16 @@ $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(60, 10, 'Faculty ID:', 0, 0);
 $pdf->SetFont('Arial', '', 12);
 $pdf->Cell(0, 10, $facultyIdDisplay, 0, 1);
+
+$pdf->SetX($boxX + 10);
+$pdf->SetFont('Arial', 'B', 12);
+if ($subjectContext !== '') {
+    $pdf->Cell(60, 10, 'Subject / Class:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 10, $subjectContext, 0, 1);
+    $pdf->SetX($boxX + 10);
+    $pdf->SetFont('Arial', 'B', 12);
+}
 
 $pdf->SetX($boxX + 10);
 $pdf->SetFont('Arial', 'B', 12);

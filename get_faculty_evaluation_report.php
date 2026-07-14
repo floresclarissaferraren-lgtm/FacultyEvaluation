@@ -4,6 +4,7 @@ session_start();
 header('Content-Type: application/json');
 include 'connect.php';
 require_once 'weighted_score_helper.php';
+require_once 'evaluation_schema.php';
 
 // Verify user is logged in as faculty
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
@@ -15,6 +16,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
 $data           = json_decode(file_get_contents('php://input'), true);
 $faculty_id     = isset($data['faculty_id']) ? trim($data['faculty_id']) : '';
 $program_filter = isset($data['program_filter']) ? trim($data['program_filter']) : '';
+$subject_id     = intval($data['subject_id'] ?? 0);
+$class_id       = isset($data['class_id']) ? intval($data['class_id']) : null;
+$classFilter    = $subject_id > 0 ? max(0, intval($class_id ?? 0)) : null;
 
 if (empty($faculty_id)) {
     echo json_encode(['success' => false, 'message' => 'Faculty ID is required.']);
@@ -60,6 +64,8 @@ if (strtolower((string)($status_row['status'] ?? 'active')) !== 'active') {
 }
 
 // --- Total responses & date range ---
+ensureEvaluationsSchema($conn);
+$subjectWhere = $subject_id > 0 ? " AND e.subject_id = ? AND e.class_id = ?" : "";
 if ($program_filter !== '') {
     // Filter by program name — join add_programs by code or numeric id
     $stmt = $conn->prepare("
@@ -71,18 +77,28 @@ if ($program_filter !== '') {
         LEFT  JOIN add_programs p ON TRIM(p.program_code) = TRIM(s.program)
                                   OR CAST(p.id AS CHAR)   = TRIM(s.program)
         WHERE e.faculty_id = ?
+          {$subjectWhere}
           AND p.program_name = ?
     ");
-    $stmt->bind_param("is", $numeric_faculty_id, $program_filter);
+    if ($subject_id > 0) {
+        $stmt->bind_param("iiis", $numeric_faculty_id, $subject_id, $classFilter, $program_filter);
+    } else {
+        $stmt->bind_param("is", $numeric_faculty_id, $program_filter);
+    }
 } else {
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS total_responses,
                MIN(DATE(created_at)) AS date_from,
                MAX(DATE(created_at)) AS date_to
-        FROM evaluations
-        WHERE faculty_id = ?
+        FROM evaluations e
+        WHERE e.faculty_id = ?
+          {$subjectWhere}
     ");
-    $stmt->bind_param("i", $numeric_faculty_id);
+    if ($subject_id > 0) {
+        $stmt->bind_param("iii", $numeric_faculty_id, $subject_id, $classFilter);
+    } else {
+        $stmt->bind_param("i", $numeric_faculty_id);
+    }
 }
 $stmt->execute();
 $stats = $stmt->get_result()->fetch_assoc();
@@ -93,11 +109,11 @@ $total_responses = intval($stats['total_responses'] ?? 0);
 // --- Weighted overall score ---
 if ($program_filter !== '') {
     $overall_rating = $total_responses > 0
-        ? calcWeightedScoreByProgram($conn, $numeric_faculty_id, $program_filter)
+        ? calcWeightedScoreByProgram($conn, $numeric_faculty_id, $program_filter, $subject_id ?: null, $classFilter)
         : 0.00;
 } else {
     $overall_rating = $total_responses > 0
-        ? calcWeightedScore($conn, $numeric_faculty_id)
+        ? calcWeightedScore($conn, $numeric_faculty_id, $subject_id ?: null, $classFilter)
         : 0.00;
 }
 
@@ -118,22 +134,32 @@ if ($program_filter !== '') {
         LEFT  JOIN add_programs p ON TRIM(p.program_code) = TRIM(s.program)
                                   OR CAST(p.id AS CHAR)   = TRIM(s.program)
         WHERE e.faculty_id = ?
+          {$subjectWhere}
           AND p.program_name = ?
           AND e.feedback IS NOT NULL
           AND e.feedback != ''
         ORDER BY e.created_at DESC
     ");
-    $stmt_feedback->bind_param("is", $numeric_faculty_id, $program_filter);
+    if ($subject_id > 0) {
+        $stmt_feedback->bind_param("iiis", $numeric_faculty_id, $subject_id, $classFilter, $program_filter);
+    } else {
+        $stmt_feedback->bind_param("is", $numeric_faculty_id, $program_filter);
+    }
 } else {
     $stmt_feedback = $conn->prepare("
-        SELECT feedback
-        FROM evaluations
-        WHERE faculty_id = ?
+        SELECT e.feedback
+        FROM evaluations e
+        WHERE e.faculty_id = ?
+          {$subjectWhere}
           AND feedback IS NOT NULL
           AND feedback != ''
         ORDER BY created_at DESC
     ");
-    $stmt_feedback->bind_param("i", $numeric_faculty_id);
+    if ($subject_id > 0) {
+        $stmt_feedback->bind_param("iii", $numeric_faculty_id, $subject_id, $classFilter);
+    } else {
+        $stmt_feedback->bind_param("i", $numeric_faculty_id);
+    }
 }
 $stmt_feedback->execute();
 $feedback_result   = $stmt_feedback->get_result();
@@ -145,8 +171,8 @@ $stmt_feedback->close();
 
 // --- Per-category stats with weights ---
 $category_stats  = $program_filter !== ''
-    ? getCategoryStatsByProgram($conn, $numeric_faculty_id, $program_filter)
-    : getCategoryStats($conn, $numeric_faculty_id);
+    ? getCategoryStatsByProgram($conn, $numeric_faculty_id, $program_filter, $subject_id ?: null, $classFilter)
+    : getCategoryStats($conn, $numeric_faculty_id, $subject_id ?: null, $classFilter);
 $category_totals = [];
 foreach ($category_stats as $cat) {
     $category_totals[] = [

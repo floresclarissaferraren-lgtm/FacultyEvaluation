@@ -19,6 +19,7 @@ if (!file_exists('connect.php')) {
 
 include 'connect.php';
 require_once 'weighted_score_helper.php';
+require_once 'evaluation_schema.php';
 
 function getRatingLabel($score) {
     $score = floatval($score);
@@ -49,8 +50,13 @@ if (!isset($_GET['faculty_id']) || empty($_GET['faculty_id'])) {
 }
 
 $faculty_id = $_GET['faculty_id'];
+$subject_id = intval($_GET['subject_id'] ?? 0);
+$class_id = isset($_GET['class_id']) ? intval($_GET['class_id']) : null;
+$classFilter = $subject_id > 0 ? max(0, intval($class_id ?? 0)) : null;
 
 try {
+    ensureEvaluationsSchema($conn);
+
     // Get faculty basic information
     $faculty_query = "SELECT id, CONCAT(firstname, ' ', lastname, ' ', suffix) as name, faculty_id 
                    FROM add_faculties WHERE id = ?";
@@ -70,47 +76,41 @@ try {
     $faculty = $faculty_result->fetch_assoc();
     
     // Get overall rating, total responses, and period range from evaluations
+    $subjectWhere = $subject_id > 0 ? " AND subject_id = ? AND class_id = ?" : "";
     $overall_query = "SELECT 
                         COUNT(id) as total_responses,
                         MIN(DATE(created_at)) as date_from,
                         MAX(DATE(created_at)) as date_to
                     FROM evaluations
-                    WHERE faculty_id = ?";
+                    WHERE faculty_id = ? {$subjectWhere}";
     $overall_stmt = $conn->prepare($overall_query);
-    $overall_stmt->bind_param("i", $faculty_id);
+    if ($subject_id > 0) {
+        $overall_stmt->bind_param("iii", $faculty_id, $subject_id, $classFilter);
+    } else {
+        $overall_stmt->bind_param("i", $faculty_id);
+    }
     $overall_stmt->execute();
     $overall_result = $overall_stmt->get_result();
     $overall_data   = $overall_result->fetch_assoc();
 
     // Weighted overall score (real-time)
     $totalResponses = intval($overall_data['total_responses'] ?? 0);
-    $overallScore   = $totalResponses > 0 ? calcWeightedScore($conn, intval($faculty_id)) : 0.00;
+    $overallScore   = $totalResponses > 0 ? calcWeightedScore($conn, intval($faculty_id), $subject_id ?: null, $classFilter) : 0.00;
     
-    // Create evaluations table if it doesn't exist
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS evaluations (
-            id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            student_id INT(11) NOT NULL,
-            faculty_id INT(11) NOT NULL,
-            overall_rating DECIMAL(4,2) NOT NULL DEFAULT 0.00,
-            feedback TEXT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uniq_student_faculty (student_id, faculty_id),
-            KEY idx_eval_faculty (faculty_id),
-            KEY idx_eval_student (student_id)
-        )
-    ");
-
     // Get all feedback comments for this faculty.
     $feedback_query = "SELECT feedback
                     FROM evaluations
                     WHERE faculty_id = ?
+                    {$subjectWhere}
                     AND feedback IS NOT NULL
                     AND TRIM(feedback) != ''
                     ORDER BY updated_at DESC, created_at DESC";
     $feedback_stmt = $conn->prepare($feedback_query);
-    $feedback_stmt->bind_param("i", $faculty_id);
+    if ($subject_id > 0) {
+        $feedback_stmt->bind_param("iii", $faculty_id, $subject_id, $classFilter);
+    } else {
+        $feedback_stmt->bind_param("i", $faculty_id);
+    }
     $feedback_stmt->execute();
     $feedback_result = $feedback_stmt->get_result();
 
@@ -123,7 +123,7 @@ try {
     $all_feedback = empty($feedback_comments) ? 'No feedback available' : implode("\n\n", $feedback_comments);
 
     // Get evaluation details by category with weights (real-time).
-    $category_stats  = getCategoryStats($conn, intval($faculty_id));
+    $category_stats  = getCategoryStats($conn, intval($faculty_id), $subject_id ?: null, $classFilter);
     $evaluation_details = [];
     $category_totals    = [];
     foreach ($category_stats as $cat) {
@@ -161,11 +161,37 @@ try {
     $overallStatus      = getRatingLabel($overallScore);
     $overallStatusClass = getRatingClass($overallScore);
 
+    $subjectLabel = '';
+    $classLabel = '';
+    if ($subject_id > 0) {
+        $subjectStmt = $conn->prepare("
+            SELECT s.subject_code, s.subject_desc, ac.year_level, ac.block
+            FROM add_subjects s
+            LEFT JOIN add_classes ac ON ac.id = ?
+            WHERE s.id = ?
+            LIMIT 1
+        ");
+        if ($subjectStmt) {
+            $subjectStmt->bind_param("ii", $classFilter, $subject_id);
+            $subjectStmt->execute();
+            $subjectRow = $subjectStmt->get_result()->fetch_assoc();
+            $subjectStmt->close();
+            if ($subjectRow) {
+                $subjectLabel = trim(($subjectRow['subject_code'] ?? '') . (($subjectRow['subject_desc'] ?? '') !== '' ? ' - ' . $subjectRow['subject_desc'] : ''));
+                $classLabel = trim(($subjectRow['year_level'] ?? '') . (($subjectRow['block'] ?? '') !== '' ? ' / ' . $subjectRow['block'] : ''));
+            }
+        }
+    }
+
     // Prepare response data
     $response_data = [
         'id'                  => $faculty['id'],
         'name'                => $faculty['name'],
         'faculty_id'          => $faculty['faculty_id'],
+        'subject_id'          => $subject_id,
+        'class_id'            => $classFilter ?? 0,
+        'subject_label'       => $subjectLabel,
+        'class_label'         => $classLabel,
         'overall_rating'      => $overallScore > 0 ? number_format($overallScore, 2) : '0.00',
         'percentage_score'    => $overallScore > 0 ? number_format(($overallScore / 5) * 100, 2) : '0.00',
         'total_responses'     => $totalResponses,

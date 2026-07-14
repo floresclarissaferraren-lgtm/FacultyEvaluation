@@ -90,11 +90,17 @@ if ($student_info) {
 
             if (!empty($subjectIds)) {
                 $ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
+                $insClass = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
                 foreach ($subjectIds as $sid) {
                     $ins->bind_param("ii", $student_id, $sid);
                     $ins->execute();
+                    if ($insClass) {
+                        $insClass->bind_param("iii", $student_id, $sid, $class_id);
+                        $insClass->execute();
+                    }
                 }
                 $ins->close();
+                if ($insClass) $insClass->close();
             }
         }
     }

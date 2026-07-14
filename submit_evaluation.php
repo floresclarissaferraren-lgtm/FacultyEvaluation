@@ -3,6 +3,7 @@ include_once 'session_config.php';
 session_start();
 header("Content-Type: application/json");
 include "connect.php";
+require_once 'evaluation_schema.php';
 date_default_timezone_set("Asia/Manila");
 
 $conn->query("
@@ -92,10 +93,12 @@ if (strtolower((string)($studentStatusRow['status'] ?? 'active')) !== 'active') 
 }
 
 $faculty_id = intval($payload['faculty_id'] ?? 0);
+$subject_id = intval($payload['subject_id'] ?? 0);
+$class_id = intval($payload['class_id'] ?? 0);
 $answers = $payload['answers'] ?? [];
 $feedback = trim($payload['feedback'] ?? '');
 
-if ($faculty_id <= 0 || !is_array($answers) || empty($answers)) {
+if ($faculty_id <= 0 || $subject_id <= 0 || !is_array($answers) || empty($answers)) {
     echo json_encode(["success" => false, "message" => "Invalid evaluation payload"]);
     exit;
 }
@@ -137,20 +140,7 @@ if ($feedback !== '') {
 }
 
 // Ensure evaluation tables exist.
-$conn->query("
-    CREATE TABLE IF NOT EXISTS evaluations (
-        id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        student_id INT(11) NOT NULL,
-        faculty_id INT(11) NOT NULL,
-        overall_rating DECIMAL(4,2) NOT NULL DEFAULT 0.00,
-        feedback TEXT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uniq_student_faculty (student_id, faculty_id),
-        KEY idx_eval_faculty (faculty_id),
-        KEY idx_eval_student (student_id)
-    )
-");
+ensureEvaluationsSchema($conn);
 
 $conn->query("
     CREATE TABLE IF NOT EXISTS evaluation_answers (
@@ -187,6 +177,67 @@ if ($count === 0) {
     exit;
 }
 
+$assignmentValid = false;
+if ($class_id > 0) {
+    $assignmentStmt = $conn->prepare("
+        SELECT cs.class_id
+        FROM class_subjects cs
+        LEFT JOIN student_subject_classes ssc
+            ON ssc.student_id = ?
+           AND ssc.subject_id = cs.subject_id
+           AND ssc.class_id = cs.class_id
+        LEFT JOIN add_students st ON st.id = ?
+        LEFT JOIN add_classes ac
+            ON ac.id = cs.class_id
+           AND (ac.year_level = st.yearlevel OR ac.year_level = CONCAT(st.yearlevel, CASE st.yearlevel WHEN '1' THEN 'st Year' WHEN '2' THEN 'nd Year' WHEN '3' THEN 'rd Year' ELSE 'th Year' END))
+           AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
+        LEFT JOIN add_programs p ON p.id = ac.program_id
+        WHERE cs.faculty_id = ?
+          AND cs.subject_id = ?
+          AND cs.class_id = ?
+          AND (
+              ssc.id IS NOT NULL
+              OR (
+                  ac.id IS NOT NULL
+                  AND (
+                      CAST(ac.program_id AS CHAR) = TRIM(st.program)
+                      OR TRIM(p.program_code) = TRIM(st.program)
+                      OR TRIM(p.program_name) = TRIM(st.program)
+                  )
+              )
+          )
+        LIMIT 1
+    ");
+    if ($assignmentStmt) {
+        $assignmentStmt->bind_param("iiiii", $student_id, $student_id, $faculty_id, $subject_id, $class_id);
+        $assignmentStmt->execute();
+        $assignmentValid = (bool)$assignmentStmt->get_result()->fetch_assoc();
+        $assignmentStmt->close();
+    }
+} else {
+    $assignmentStmt = $conn->prepare("
+        SELECT fs.faculty_id
+        FROM faculty_subjects fs
+        INNER JOIN student_subjects ss
+            ON ss.subject_id = fs.subject_id
+           AND ss.student_id = ?
+        WHERE fs.faculty_id = ?
+          AND fs.subject_id = ?
+        LIMIT 1
+    ");
+    if ($assignmentStmt) {
+        $assignmentStmt->bind_param("iii", $student_id, $faculty_id, $subject_id);
+        $assignmentStmt->execute();
+        $assignmentValid = (bool)$assignmentStmt->get_result()->fetch_assoc();
+        $assignmentStmt->close();
+    }
+}
+
+if (!$assignmentValid) {
+    echo json_encode(["success" => false, "message" => "This faculty-subject assignment is not available for your account"]);
+    exit;
+}
+
 // Use weighted category scoring instead of a flat mean.
 require_once 'weighted_score_helper.php';
 $overall = calcWeightedScoreFromAnswers($conn, $normalizedAnswers);
@@ -197,18 +248,18 @@ if ($overall <= 0 && $count > 0) {
 
 $conn->begin_transaction();
 try {
-    // Upsert one response per student/faculty.
+    // Upsert one response per student/faculty/subject/class.
     $upsert = $conn->prepare("
-        INSERT INTO evaluations (student_id, faculty_id, overall_rating, feedback)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO evaluations (student_id, faculty_id, subject_id, class_id, overall_rating, feedback)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE overall_rating = VALUES(overall_rating), feedback = VALUES(feedback)
     ");
-    $upsert->bind_param("iids", $student_id, $faculty_id, $overall, $feedback);
+    $upsert->bind_param("iiiids", $student_id, $faculty_id, $subject_id, $class_id, $overall, $feedback);
     $upsert->execute();
     $upsert->close();
 
-    $evalStmt = $conn->prepare("SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? LIMIT 1");
-    $evalStmt->bind_param("ii", $student_id, $faculty_id);
+    $evalStmt = $conn->prepare("SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? LIMIT 1");
+    $evalStmt->bind_param("iiii", $student_id, $faculty_id, $subject_id, $class_id);
     $evalStmt->execute();
     $evalRes = $evalStmt->get_result();
     $evalRow = $evalRes->fetch_assoc();

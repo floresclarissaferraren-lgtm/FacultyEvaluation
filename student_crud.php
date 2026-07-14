@@ -89,7 +89,7 @@ function assignStudentSubjects(mysqli $conn, int $student_id, string $program, s
 
     // Regular students: prioritize class-based subjects (program + year level + section/block).
     $class_subjects = $conn->prepare("
-        SELECT DISTINCT cs.subject_id
+        SELECT DISTINCT cs.subject_id, ac.id AS class_id
         FROM add_classes ac
         INNER JOIN class_subjects cs ON cs.class_id = ac.id
         WHERE ac.program_id = ?
@@ -101,14 +101,17 @@ function assignStudentSubjects(mysqli $conn, int $student_id, string $program, s
     $class_subjects->execute();
     $class_result = $class_subjects->get_result();
 
-    $subject_ids = [];
+    $subject_assignments = [];
     while ($row = $class_result->fetch_assoc()) {
-        $subject_ids[] = intval($row['subject_id']);
+        $subject_assignments[] = [
+            'subject_id' => intval($row['subject_id']),
+            'class_id' => intval($row['class_id'])
+        ];
     }
     $class_subjects->close();
 
     // Fallback for existing data setups without class_subjects yet.
-    if (empty($subject_ids)) {
+    if (empty($subject_assignments)) {
         $auto_subjects = $conn->prepare("
             SELECT id
             FROM add_subjects
@@ -120,21 +123,32 @@ function assignStudentSubjects(mysqli $conn, int $student_id, string $program, s
         $auto_result = $auto_subjects->get_result();
 
         while ($subject_row = $auto_result->fetch_assoc()) {
-            $subject_ids[] = intval($subject_row['id']);
+            $subject_assignments[] = [
+                'subject_id' => intval($subject_row['id']),
+                'class_id' => 0
+            ];
         }
         $auto_subjects->close();
     }
 
-    if (!empty($subject_ids)) {
+    if (!empty($subject_assignments)) {
         $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+        $ssc = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
         $inserted = 0;
-        foreach ($subject_ids as $subject_id) {
+        foreach ($subject_assignments as $assignment) {
+            $subject_id = intval($assignment['subject_id']);
+            $class_id = intval($assignment['class_id']);
             $sub->bind_param("ii", $student_id, $subject_id);
             if ($sub->execute()) {
                 $inserted++;
             }
+            if ($class_id > 0 && $ssc) {
+                $ssc->bind_param("iii", $student_id, $subject_id, $class_id);
+                $ssc->execute();
+            }
         }
         $sub->close();
+        if ($ssc) $ssc->close();
         return ['inserted' => $inserted, 'message' => $inserted > 0 ? '' : 'No regular subjects were inserted'];
     }
     return ['inserted' => 0, 'message' => 'No matching subjects found for the selected program/year/section'];

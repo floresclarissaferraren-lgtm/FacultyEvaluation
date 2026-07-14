@@ -262,6 +262,8 @@ CREATE TABLE `evaluations` (
   `id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `faculty_id` int(11) NOT NULL,
+  `subject_id` int(11) NOT NULL DEFAULT 0,
+  `class_id` int(11) NOT NULL DEFAULT 0,
   `overall_rating` decimal(4,2) NOT NULL DEFAULT 0.00,
   `feedback` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -610,9 +612,11 @@ ALTER TABLE `class_subjects`
 --
 ALTER TABLE `evaluations`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_student_faculty` (`student_id`,`faculty_id`),
+  ADD UNIQUE KEY `uniq_student_faculty_subject_class` (`student_id`,`faculty_id`,`subject_id`,`class_id`),
   ADD KEY `idx_eval_faculty` (`faculty_id`),
-  ADD KEY `idx_eval_student` (`student_id`);
+  ADD KEY `idx_eval_student` (`student_id`),
+  ADD KEY `idx_eval_subject` (`subject_id`),
+  ADD KEY `idx_eval_class` (`class_id`);
 
 --
 -- Indexes for table `evaluation_answers`

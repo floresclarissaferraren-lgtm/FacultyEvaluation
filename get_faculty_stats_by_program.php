@@ -3,6 +3,7 @@ include_once 'session_config.php';
 session_start();
 header("Content-Type: application/json");
 include "connect.php";
+require_once 'evaluation_schema.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty' || !isset($_SESSION['id'])) {
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
@@ -32,6 +33,7 @@ if (strtolower((string)($statusRow['status'] ?? 'active')) !== 'active') {
 }
 
 require_once 'weighted_score_helper.php';
+ensureEvaluationsSchema($conn);
 
 // Get optional program filter
 $program_filter = isset($_GET['program']) ? trim($_GET['program']) : '';
@@ -56,60 +58,7 @@ if ($program_filter !== '' && $program_filter !== 'all') {
 
     $total = $row ? intval($row['total_responses']) : 0;
 
-    // Calculate weighted score filtered by program
-    if ($total > 0) {
-        $sql = "
-            SELECT
-                c.id          AS cat_id,
-                COALESCE(c.weight, 0) AS cat_weight,
-                COALESCE(AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END), NULL) AS cat_avg
-            FROM add_categories c
-            LEFT JOIN add_questions q    ON q.category_id = c.id
-            LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
-            LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
-                                         AND e.faculty_id = ?
-            LEFT JOIN add_students s     ON s.id = e.student_id
-            LEFT JOIN add_programs p     ON (TRIM(p.program_code) = TRIM(s.program)
-                                         OR CAST(p.id AS CHAR) = TRIM(s.program))
-                                         AND p.program_name = ?
-            GROUP BY c.id, c.weight
-            ORDER BY c.section_number ASC
-        ";
-        $stmt2 = $conn->prepare($sql);
-        $stmt2->bind_param("is", $faculty_id, $program_filter);
-        $stmt2->execute();
-        $result2 = $stmt2->get_result();
-        $stmt2->close();
-
-        $rows = [];
-        while ($row2 = $result2->fetch_assoc()) {
-            if ($row2['cat_avg'] === null) continue;
-            $rows[] = [
-                'weight' => floatval($row2['cat_weight']),
-                'avg'    => floatval($row2['cat_avg']),
-            ];
-        }
-
-        if (empty($rows)) {
-            $overall = 0.00;
-        } else {
-            $totalWeight = array_sum(array_column($rows, 'weight'));
-            if ($totalWeight <= 0) {
-                $equalWeight = 100.0 / count($rows);
-                foreach ($rows as &$r) { $r['weight'] = $equalWeight; }
-                unset($r);
-                $totalWeight = 100.0;
-            }
-            $weighted = 0.0;
-            foreach ($rows as $r) {
-                $normalised = ($r['weight'] / $totalWeight) * 100.0;
-                $weighted  += $r['avg'] * ($normalised / 100.0);
-            }
-            $overall = round($weighted, 2);
-        }
-    } else {
-        $overall = 0.00;
-    }
+    $overall = $total > 0 ? calcWeightedScoreByProgram($conn, $faculty_id, $program_filter) : 0.00;
 } else {
     // No filter — use global stats
     $stmt = $conn->prepare("SELECT COUNT(*) AS total_responses FROM evaluations WHERE faculty_id = ?");

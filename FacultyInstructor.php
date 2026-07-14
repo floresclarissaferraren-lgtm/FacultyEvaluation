@@ -182,7 +182,12 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
-    <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Report</button>
+    <div class="report-btn-group">
+      <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Report</button>
+      <button class="report-btn per-subject-btn" onclick="showPerSubjectReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>
+        <i class="ph ph-books"></i> Per-Subject Report
+      </button>
+    </div>
   </div>
 
   <!-- Program Filter -->
@@ -222,6 +227,13 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
     </div>
 </div>
 
+
+<!-- Per-Subject Report Modal (populated by JS) -->
+<div id="perSubjectReportModal" class="per-subject-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="perSubjectModalTitle">
+  <div class="per-subject-modal-content">
+    <!-- filled dynamically by showPerSubjectReport() -->
+  </div>
+</div>
 
 <!-- JS FILE -->
 <script src="unified_notifications.js?v=<?=time()?>"></script>

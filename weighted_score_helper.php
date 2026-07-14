@@ -25,8 +25,40 @@
  * @param int    $faculty_id
  * @return float
  */
-function calcWeightedScore(mysqli $conn, int $faculty_id): float
+function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int $class_id = null): array
 {
+    $sql = '';
+    $types = '';
+    $params = [];
+
+    if ($subject_id !== null && $subject_id > 0) {
+        $sql .= " AND {$alias}.subject_id = ?";
+        $types .= 'i';
+        $params[] = $subject_id;
+    }
+
+    if ($class_id !== null) {
+        $sql .= " AND {$alias}.class_id = ?";
+        $types .= 'i';
+        $params[] = max(0, $class_id);
+    }
+
+    return ['sql' => $sql, 'types' => $types, 'params' => $params];
+}
+
+function bindDynamicParams(mysqli_stmt $stmt, string $types, array $params): void
+{
+    if ($types === '') return;
+    $refs = [$types];
+    foreach ($params as $key => $value) {
+        $refs[] = &$params[$key];
+    }
+    call_user_func_array([$stmt, 'bind_param'], $refs);
+}
+
+function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null): float
+{
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
     // Fetch per-category averages + weights in one query.
     $sql = "
         SELECT
@@ -38,13 +70,14 @@ function calcWeightedScore(mysqli $conn, int $faculty_id): float
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
+                                     {$context['sql']}
         GROUP BY c.id, c.weight
         ORDER BY c.section_number ASC
     ";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return 0.00;
-    $stmt->bind_param("i", $faculty_id);
+    bindDynamicParams($stmt, 'i' . $context['types'], array_merge([$faculty_id], $context['params']));
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
@@ -156,8 +189,9 @@ function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
  * @param int    $faculty_id
  * @return array
  */
-function getCategoryStats(mysqli $conn, int $faculty_id): array
+function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null): array
 {
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
     $sql = "
         SELECT
             c.id                                                            AS cat_id,
@@ -170,13 +204,14 @@ function getCategoryStats(mysqli $conn, int $faculty_id): array
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
+                                     {$context['sql']}
         GROUP BY c.id, c.category_name, c.weight
         ORDER BY c.section_number ASC
     ";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return [];
-    $stmt->bind_param("i", $faculty_id);
+    bindDynamicParams($stmt, 'i' . $context['types'], array_merge([$faculty_id], $context['params']));
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
@@ -210,8 +245,9 @@ function getCategoryStats(mysqli $conn, int $faculty_id): array
  * @param string $program_name  Full program name from add_programs.program_name
  * @return float
  */
-function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $program_name): float
+function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null): float
 {
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
     $sql = "
         SELECT
             c.id          AS cat_id,
@@ -222,6 +258,7 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
+                                     {$context['sql']}
         LEFT JOIN add_students s     ON s.id = e.student_id
         LEFT JOIN add_programs p     ON (TRIM(p.program_code) = TRIM(s.program)
                                      OR CAST(p.id AS CHAR) = TRIM(s.program))
@@ -233,7 +270,7 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return 0.00;
-    $stmt->bind_param("iss", $faculty_id, $program_name, $program_name);
+    bindDynamicParams($stmt, 'i' . $context['types'] . 'ss', array_merge([$faculty_id], $context['params'], [$program_name, $program_name]));
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
@@ -274,8 +311,9 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
  * @param string $program_name  Full program name from add_programs.program_name
  * @return array
  */
-function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $program_name): array
+function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null): array
 {
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
     $sql = "
         SELECT
             c.id                                                                    AS cat_id,
@@ -288,6 +326,7 @@ function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $progra
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
+                                     {$context['sql']}
         LEFT JOIN add_students s     ON s.id = e.student_id
         LEFT JOIN add_programs p     ON TRIM(p.program_code) = TRIM(s.program)
                                      OR CAST(p.id AS CHAR)   = TRIM(s.program)
@@ -297,7 +336,7 @@ function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $progra
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return [];
-    $stmt->bind_param("ssi", $program_name, $program_name, $faculty_id);
+    bindDynamicParams($stmt, 'ssi' . $context['types'], array_merge([$program_name, $program_name, $faculty_id], $context['params']));
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
