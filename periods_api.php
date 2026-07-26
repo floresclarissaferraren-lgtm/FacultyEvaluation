@@ -3,6 +3,8 @@ include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 header("Content-Type: application/json");
 include "connect.php";
+require_once 'mailer.php';
+require_once 'notify_evaluation_open.php';
 date_default_timezone_set("Asia/Manila");
 
 function ensurePeriodTables(mysqli $conn): void {
@@ -95,8 +97,7 @@ function closeExpiredActivePeriod(mysqli $conn): void {
     $stmt->close();
 
     if ($expired) {
-        $conn->query("UPDATE evaluation_periods SET is_active = 0");
-        $conn->query("UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1");
+        $conn->query("UPDATE evaluation_settings SET evaluation_open = 0 WHERE id = 1");
     }
 }
 
@@ -279,11 +280,6 @@ if ($action === "update") {
         echo json_encode(["success" => false, "message" => "End date must be after start date"]);
         exit;
     }
-    if ($start < todayDate()) {
-        echo json_encode(["success" => false, "message" => "Start date cannot be in the past"]);
-        exit;
-    }
-
     $stmt = $conn->prepare("UPDATE evaluation_periods SET ay = ?, semester = ?, start_date = ?, end_date = ? WHERE id = ?");
     $stmt->bind_param("ssssi", $ay, $semester, $start, $end, $id);
     $ok = $stmt->execute();
@@ -324,7 +320,6 @@ if ($action === "set_active") {
         exit;
     }
 
-    $today = todayDate();
     $periodStmt = $conn->prepare("SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
     $periodStmt->bind_param("i", $id);
     $periodStmt->execute();
@@ -335,12 +330,11 @@ if ($action === "set_active") {
         echo json_encode(["success" => false, "message" => "Period not found"]);
         exit;
     }
-    if ($period["start_date"] > $today) {
-        echo json_encode(["success" => false, "message" => "Period has not started yet"]);
-        exit;
-    }
-    if ($period["end_date"] < $today) {
-        echo json_encode(["success" => false, "message" => "Period has already ended"]);
+    if (($period["end_date"] ?? "") < todayDate()) {
+        echo json_encode([
+            "success" => false,
+            "message" => "This evaluation period has expired and can no longer be activated."
+        ]);
         exit;
     }
 
@@ -352,14 +346,18 @@ if ($action === "set_active") {
         $stmt->execute();
         $stmt->close();
 
-        // When active period set: open evaluation.
-        $stmt2 = $conn->prepare("UPDATE evaluation_settings SET evaluation_open = 1, active_period_id = ? WHERE id = 1");
+        // Activating a period only selects it; opening evaluations is a separate manual action.
+        $stmt2 = $conn->prepare("UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = ? WHERE id = 1");
         $stmt2->bind_param("i", $id);
         $stmt2->execute();
         $stmt2->close();
 
         $conn->commit();
-        echo json_encode(["success" => true]);
+
+        echo json_encode([
+            "success" => true,
+            "message" => "Period activated.",
+        ]);
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -416,7 +414,28 @@ if ($action === "set_open") {
     $ok = $stmt->execute();
     $stmt->close();
 
-    echo json_encode(["success" => $ok]);
+    $notifySent   = 0;
+    $notifyFailed = 0;
+    if ($ok && $open === 1) {
+        // Fetch the active period's AY and semester for the email
+        $settingsRow = $conn->query("
+            SELECT ep.ay, ep.semester
+            FROM evaluation_settings es
+            LEFT JOIN evaluation_periods ep ON ep.id = es.active_period_id
+            WHERE es.id = 1 LIMIT 1
+        ")->fetch_assoc();
+        $notifyAy       = $settingsRow['ay']       ?? '';
+        $notifySemester = $settingsRow['semester'] ?? '';
+        $notifyResult   = sendEvaluationOpenNotifications($conn, $notifyAy, $notifySemester);
+        $notifySent     = $notifyResult['sent']   ?? 0;
+        $notifyFailed   = $notifyResult['failed'] ?? 0;
+    }
+
+    echo json_encode([
+        "success"       => $ok,
+        "notify_sent"   => $notifySent,
+        "notify_failed" => $notifyFailed,
+    ]);
     exit;
 }
 

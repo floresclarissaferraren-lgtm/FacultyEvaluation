@@ -25,7 +25,7 @@
  * @param int    $faculty_id
  * @return float
  */
-function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int $class_id = null): array
+function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): array
 {
     $sql = '';
     $types = '';
@@ -43,6 +43,12 @@ function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int
         $params[] = max(0, $class_id);
     }
 
+    if ($period_id !== null && $period_id > 0) {
+        $sql .= " AND {$alias}.period_id = ?";
+        $types .= 'i';
+        $params[] = $period_id;
+    }
+
     return ['sql' => $sql, 'types' => $types, 'params' => $params];
 }
 
@@ -56,9 +62,9 @@ function bindDynamicParams(mysqli_stmt $stmt, string $types, array $params): voi
     call_user_func_array([$stmt, 'bind_param'], $refs);
 }
 
-function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null): float
+function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): float
 {
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
     // Fetch per-category averages + weights in one query.
     $sql = "
         SELECT
@@ -189,9 +195,9 @@ function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
  * @param int    $faculty_id
  * @return array
  */
-function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null): array
+function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): array
 {
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
     $sql = "
         SELECT
             c.id                                                            AS cat_id,

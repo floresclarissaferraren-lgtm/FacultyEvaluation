@@ -71,6 +71,7 @@ try {
                 s.subject_code,
                 s.subject_desc,
                 s.year_level,
+                p.program_code,
                 p.program_name
             FROM add_students st
             INNER JOIN add_classes ac
@@ -87,7 +88,7 @@ try {
                AND ev.subject_id = cs.subject_id
                AND ev.class_id = ac.id
             WHERE st.id = ? AND cs.faculty_id > 0 AND ev.id IS NULL
-            ORDER BY f.lastname, f.firstname, s.subject_code
+            ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
         ";
 
         $stmt = $conn->prepare($query);
@@ -138,6 +139,7 @@ try {
                     s.subject_code,
                     s.subject_desc,
                     s.year_level,
+                    p.program_code,
                     p.program_name
                 FROM student_subjects ss
                 LEFT JOIN student_subject_classes ssc
@@ -159,7 +161,7 @@ try {
                    AND ev.class_id = COALESCE(ssc.class_id, 0)
                 WHERE ss.student_id = ?
                   AND ev.id IS NULL
-                ORDER BY f.lastname, f.firstname, s.subject_code
+                ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
             ";
 
             $stmt = $conn->prepare($query);
@@ -185,12 +187,13 @@ try {
                 s.subject_code,
                 s.subject_desc,
                 s.year_level,
+                p.program_code,
                 p.program_name
             FROM add_faculties f
             INNER JOIN faculty_subjects fs ON f.id = fs.faculty_id
             INNER JOIN add_subjects s ON fs.subject_id = s.id AND s.year_level = ?
             LEFT JOIN add_programs p ON s.program_id = p.id
-            ORDER BY f.lastname, f.firstname, s.subject_code
+            ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
         ";
 
         $stmt = $conn->prepare($query);
@@ -215,12 +218,13 @@ try {
                 s.subject_code,
                 s.subject_desc,
                 s.year_level,
+                p.program_code,
                 p.program_name
             FROM add_faculties f
             LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
             LEFT JOIN add_subjects s ON fs.subject_id = s.id
             LEFT JOIN add_programs p ON s.program_id = p.id
-            ORDER BY f.lastname, f.firstname, s.subject_code
+            ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
         ";
 
         $result = $conn->query($query);
@@ -250,6 +254,7 @@ try {
                 'subject_code'    => $row['subject_code']      ?? '',
                 'subject_desc'    => $row['subject_desc']      ?? '',
                 'year_level'      => $row['year_level']        ?? '',
+                'program_code'    => $row['program_code']      ?? '',
                 'program_name'    => $row['program_name']      ?? '',
             ];
             $data[] = [
@@ -291,6 +296,7 @@ try {
                 'subject_code'    => $subjectCode,
                 'subject_desc'    => $row['subject_desc']      ?? '',
                 'year_level'      => $row['year_level']        ?? '',
+                'program_code'    => $row['program_code']      ?? '',
                 'program_name'    => $row['program_name']      ?? '',
             ];
 

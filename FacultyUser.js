@@ -544,6 +544,7 @@ async function loadStudentFacultyCards() {
         const subjectCode = subject.subject_code || faculty.subject_code || '';
         const subjectDesc = subject.subject_desc || faculty.subject_desc || '';
         const subjectLabels = [subjectCode, subjectDesc].filter(Boolean).join(' - ');
+        const programCode = subject.program_code || faculty.program_code || '';
         const classLabel = [
           subject.class_year_level || faculty.class_year_level || '',
           subject.class_section || faculty.class_section || ''
@@ -585,6 +586,14 @@ async function loadStudentFacultyCards() {
             </div>
           </div>
           <div class="faculty-info">
+            ${programCode ? `
+            <div class="faculty-info-row">
+              <i class="ph ph-buildings faculty-info-icon"></i>
+              <div class="faculty-info-text">
+                <span class="faculty-info-label">Program</span>
+                <span class="faculty-subjects">${programCode}</span>
+              </div>
+            </div>` : ''}
             <div class="faculty-info-row">
               <i class="ph ph-book-open faculty-info-icon"></i>
               <div class="faculty-info-text">

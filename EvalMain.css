@@ -559,16 +559,33 @@ body.modal-open{overflow:hidden}
   text-align:left;
 }
 
+#forgotForm{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+#forgotForm .modern-input-group{
+  margin-bottom:0;
+}
+
+#forgotForm .error-message:empty{
+  display:none;
+  margin-top:0;
+  min-height:0;
+}
+
 .modern-input-group{
   position:relative;
-  margin-bottom:16px;
+  margin-bottom:10px;
+  --input-control-height: 49px;
 }
 
 .modern-input-group input{
   width:100%;
-  padding:16px 20px 16px 20px;
+  padding:13px 20px;
   border:2px solid #e2e8f0;
-  border-radius:16px;
+  border-radius:14px;
   font-size:15px;
   color:#1e293b;
   background:#ffffff;
@@ -577,11 +594,15 @@ body.modal-open{overflow:hidden}
 }
 
 .modern-input-group.has-icon input{
-  padding:16px 50px 16px 20px;
+  padding:13px 48px 13px 20px;
 }
 
 .modern-input-group.has-toggle input{
-  padding:16px 50px 16px 20px;
+  padding:13px 48px 13px 20px;
+}
+
+.input-wrap{
+  position:relative;
 }
 
 .modern-input-group input::placeholder{
@@ -599,33 +620,54 @@ body.modal-open{overflow:hidden}
 .input-icon{
   position:absolute;
   right:16px;
-  top:40%;
+  top:calc(var(--input-control-height) / 2);
   transform:translateY(-50%);
   color:#94a3b8;
-  font-size:20px;
+  font-size:18px;
   pointer-events:none;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 20px;
+  width: 20px;
 }
 
-.modern-input-group input:focus + .input-icon{
+.input-wrap .input-icon{
+  top:50%;
+}
+
+.input-icon i,
+.password-toggle i{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+}
+
+.modern-input-group input:focus + .input-icon,
+.modern-input-group input:focus ~ .input-icon{
   color:#3b82f6;
 }
 
 .password-toggle{
   position:absolute;
   right:16px;
-  top:40%;
+  top:calc(var(--input-control-height) / 2);
   transform:translateY(-50%);
   color:#94a3b8;
-  font-size:20px;
+  font-size:18px;
   cursor:pointer;
   transition:color .2s ease;
   pointer-events:auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 20px;
+  width: 20px;
+}
+
+.input-wrap .password-toggle{
+  top:50%;
 }
 
 .password-toggle:hover{
@@ -652,15 +694,15 @@ body.modal-open{overflow:hidden}
 /* Form links */
 .form-links{
   text-align:right;
-  margin-bottom:20px;
+  margin-bottom:14px;
+  margin-top:2px;
 }
 
 .forgot-link{
   display:inline-block;
-  transform:translateY(-8px);
   color:#3b82f6;
   text-decoration:none;
-  font-size:14px;
+  font-size:13.5px;
   font-weight:500;
   transition:all .2s ease;
 }
@@ -676,9 +718,9 @@ body.modal-open{overflow:hidden}
   background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color:#ffffff;
   border:0;
-  padding:18px 24px;
-  border-radius:16px;
-  font-size:16px;
+  padding:14px 24px;
+  border-radius:14px;
+  font-size:15px;
   font-weight:700;
   cursor:pointer;
   transition:all .3s ease;
@@ -686,6 +728,10 @@ body.modal-open{overflow:hidden}
   text-transform:uppercase;
   letter-spacing:0.5px;
   margin-bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
 
 .modern-login-btn:hover{
@@ -743,8 +789,8 @@ body.modal-open{overflow:hidden}
 /* Admin Skeleton Styles */
 .skeleton-sidebar {
   width: 260px;
-  background: #eef2fc;
-  border-right: 1px solid #d6e0f8;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -816,8 +862,8 @@ body.modal-open{overflow:hidden}
 
 .skeleton-navbar {
   height: 64px;
-  background: #ffffff;
-  border-bottom: 1px solid #dde6f5;
+  background: #1565c0;
+  border-bottom: none;
   display: flex;
   justify-content: space-between;
   align-items: center;

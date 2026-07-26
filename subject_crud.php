@@ -206,10 +206,10 @@ if ($action === "get_all") {
     ensureSubjectSemesterColumn($conn);
 
     $stmt = $conn->prepare("
-        SELECT s.id, s.subject_code, s.subject_desc, s.semester, s.year_level, p.program_name
+        SELECT s.id, s.subject_code, s.subject_desc, s.semester, s.year_level, p.program_code, p.program_name
         FROM add_subjects s
         LEFT JOIN add_programs p ON s.program_id = p.id
-        ORDER BY p.program_name ASC, s.semester ASC, s.year_level ASC, s.subject_code ASC
+        ORDER BY p.program_code ASC, p.program_name ASC, s.year_level ASC, s.semester ASC, s.subject_code ASC
     ");
 
     $stmt->execute();

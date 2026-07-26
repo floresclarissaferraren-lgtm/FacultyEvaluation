@@ -61,8 +61,11 @@ $conn->close();
     <span class="logo-text main-title">Faculty Evaluation System</span>
   </div>
   <div class="user-menu">
+    <button class="navbar-bell-btn" title="Notifications" aria-label="Notifications">
+      <i class="ph ph-bell"></i>
+    </button>
     <div class="student-box" onclick="toggleDropdown()">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Student Logo" class="logo-img">
+      <i class="ph ph-gear navbar-settings-icon"></i>
       <span>Student</span>
       <i class="ph ph-caret-down"></i>
     </div>

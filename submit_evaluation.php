@@ -45,8 +45,7 @@ $expiredStmt->execute();
 $expired = $expiredStmt->get_result()->fetch_assoc();
 $expiredStmt->close();
 if ($expired) {
-    $conn->query("UPDATE evaluation_periods SET is_active = 0");
-    $conn->query("UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1");
+    $conn->query("UPDATE evaluation_settings SET evaluation_open = 0 WHERE id = 1");
 }
 
 $settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
@@ -250,16 +249,16 @@ $conn->begin_transaction();
 try {
     // Upsert one response per student/faculty/subject/class.
     $upsert = $conn->prepare("
-        INSERT INTO evaluations (student_id, faculty_id, subject_id, class_id, overall_rating, feedback)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO evaluations (student_id, faculty_id, subject_id, class_id, overall_rating, feedback, period_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE overall_rating = VALUES(overall_rating), feedback = VALUES(feedback)
     ");
-    $upsert->bind_param("iiiids", $student_id, $faculty_id, $subject_id, $class_id, $overall, $feedback);
+    $upsert->bind_param("iiiidsi", $student_id, $faculty_id, $subject_id, $class_id, $overall, $feedback, $activePeriodId);
     $upsert->execute();
     $upsert->close();
 
-    $evalStmt = $conn->prepare("SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? LIMIT 1");
-    $evalStmt->bind_param("iiii", $student_id, $faculty_id, $subject_id, $class_id);
+    $evalStmt = $conn->prepare("SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? AND period_id = ? LIMIT 1");
+    $evalStmt->bind_param("iiiii", $student_id, $faculty_id, $subject_id, $class_id, $activePeriodId);
     $evalStmt->execute();
     $evalRes = $evalStmt->get_result();
     $evalRow = $evalRes->fetch_assoc();

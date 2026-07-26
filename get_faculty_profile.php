@@ -67,14 +67,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
             $subjects   = [];
 
             $subj_sql = "
-                SELECT DISTINCT s.subject_code, s.subject_desc
+                SELECT DISTINCT
+                    s.subject_code,
+                    s.subject_desc,
+                    s.year_level,
+                    s.semester,
+                    p.program_code,
+                    p.program_name
                 FROM add_subjects s
+                LEFT JOIN add_programs p ON s.program_id = p.id
                 WHERE s.id IN (
                     SELECT subject_id FROM class_subjects   WHERE faculty_id = ?
                     UNION
                     SELECT subject_id FROM faculty_subjects WHERE faculty_id = ?
                 )
-                ORDER BY s.subject_code ASC
+                ORDER BY
+                    COALESCE(p.program_code, p.program_name, 'ZZZ') ASC,
+                    CASE
+                        WHEN LOWER(s.year_level) LIKE '1%' THEN 1
+                        WHEN LOWER(s.year_level) LIKE '2%' THEN 2
+                        WHEN LOWER(s.year_level) LIKE '3%' THEN 3
+                        WHEN LOWER(s.year_level) LIKE '4%' THEN 4
+                        ELSE 99
+                    END ASC,
+                    s.semester ASC,
+                    s.subject_code ASC
             ";
             $subj_stmt = $conn->prepare($subj_sql);
             if ($subj_stmt) {
@@ -85,6 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
                     $subjects[] = [
                         'code' => $srow['subject_code'],
                         'name' => $srow['subject_desc'],
+                        'year_level' => $srow['year_level'],
+                        'semester' => $srow['semester'],
+                        'program_code' => $srow['program_code'] ?: 'N/A',
+                        'program_name' => $srow['program_name'] ?: 'Unassigned Program',
                     ];
                 }
                 $subj_stmt->close();

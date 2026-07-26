@@ -44,7 +44,26 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#f8fafc;color
 .logo-img:hover{transform:scale(1.1)}
 
 /* Dropdown ==================================================================================================== */
-.user-menu{position:relative}
+.user-menu{position:relative;display:flex;align-items:center;gap:10px}
+
+.navbar-bell-btn{
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+  flex-shrink: 0;
+}
+.navbar-bell-btn i{font-size:20px;line-height:1}
+.navbar-bell-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+
+.navbar-settings-icon{font-size:18px;color:rgba(255,255,255,.9)}
 .student-box{display: flex;align-items: center;gap: 8px;cursor: pointer;color: #dbeafe;font-weight: 500;
   padding: 8px 16px;border-radius: 20px;background: rgba(255, 255, 255, 0.1);border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);transition: all 0.2s ease;}
@@ -175,7 +194,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#f8fafc;color
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
   gap:20px;
-  align-items:start;
+  align-items:stretch;
 }
 
 .faculty-card{
@@ -190,7 +209,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#f8fafc;color
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 200px;
+  height: 100%;
 }
 
 .faculty-card::before{
@@ -276,6 +295,9 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#f8fafc;color
 .faculty-info{
   padding: 16px 20px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .faculty-info-row{
@@ -488,7 +510,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#f8fafc;color
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px 16px;
+  padding: 20px 28px 18px;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -519,7 +541,7 @@ body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:#f8fafc;color
 }
 
 .sp-body {
-  padding: 20px;
+  padding: 24px 28px;
 }
 
 .sp-name-row {
@@ -757,6 +779,7 @@ body.modal-open{overflow:hidden}
 }
 
 .modern-input-group{
+  position:relative;
   margin-bottom:20px;
 }
 

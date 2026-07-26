@@ -66,7 +66,7 @@ include 'totalstudents_dashcount.php';
       <p class="alert-modal-message" id="alertModalMessage"></p>
     </div>
     <button class="alert-modal-close" id="alertModalClose">
-      <i class="ph ph-x"></i>
+      <i class="ph ph-arrow-clockwise"></i>
     </button>
   </div>
 </div>
@@ -336,10 +336,9 @@ include 'totalstudents_dashcount.php';
              <h3>Period</h3>
             <div class="period-box" id="activePeriodBox">No Active Period</div>
            </div>
-          <p class="system-status" id="evaluationStatusText">Evaluation is Open</p>
+          <p class="system-status" id="evaluationStatusText">Evaluation is Closed</p>
           <div class="period-actions">
-            <button class="btn-open" style="display:none;">Open</button>
-            <button class="btn-close">Close</button>
+            <button class="btn-close" style="display:none;">Close</button>
             <button class="btn-manage">Manage</button>
           </div>
         </div>
@@ -405,6 +404,9 @@ include 'totalstudents_dashcount.php';
         </div>
       </div>
       <div class="programs-actions">
+        <button type="button" class="clear-search-btn" data-clear-targets="program-search" title="Clear search" aria-label="Clear program search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
         <div class="search-wrapper">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="program-search" placeholder="Search program..."/>
@@ -470,6 +472,9 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
     <div class="header-actions-section">
+      <button type="button" id="manage-clear-search" class="clear-search-btn" data-clear-targets="manage-search" title="Clear search" aria-label="Clear class search">
+        <i class="ph ph-arrow-clockwise"></i>
+      </button>
       <div class="search-wrapper">
         <input type="text" id="manage-search" placeholder="Search records...">
         <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
@@ -501,6 +506,9 @@ include 'totalstudents_dashcount.php';
           <option value="3rd Year">3rd Year</option>
           <option value="4th Year">4th Year</option>
         </select>
+        <button type="button" class="clear-search-btn" data-clear-targets="manage-subjects-search,manage-subjects-semester-filter,manage-subjects-year-filter" title="Clear search" aria-label="Clear subject search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
       </div>
       <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
@@ -631,6 +639,9 @@ include 'totalstudents_dashcount.php';
       <option value="3rd Year">3rd Year</option>
       <option value="4th Year">4th Year</option>
     </select>
+    <button type="button" class="clear-search-btn" data-clear-targets="subjects-search,subjects-year-filter" title="Clear search" aria-label="Clear subject search">
+      <i class="ph ph-arrow-clockwise"></i>
+    </button>
   </div>
   <div class="table-wrapper">
     <div class="table-scroll-container">
@@ -754,28 +765,32 @@ include 'totalstudents_dashcount.php';
     </div>
   </div>
 
-  <div class="table-wrapper">
-    <div class="table-header">
-      <div class="search-filters-container">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input id="faculty-search" placeholder="Search faculty...">
-        </div>
-        <div class="filter-wrapper">
-          <i class="ph ph-funnel" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
-          <select id="faculty-status-filter" class="status-dropdown">
-            <option value="">Filter by Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="on leave">On Leave</option>
-          </select>
-        </div>
+  <div class="faculty-toolbar">
+    <div class="search-filters-container">
+      <div class="search-wrapper">
+        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+        <input id="faculty-search" placeholder="Search faculty...">
       </div>
-      <div class="header-actions">
-        <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
-        <button class="show-archived-faculty-btn">Show Archived</button>
+      <div class="filter-wrapper">
+        <i class="ph ph-funnel" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
+        <select id="faculty-status-filter" class="status-dropdown">
+          <option value="">Filter by Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="on leave">On Leave</option>
+        </select>
       </div>
+      <button type="button" class="clear-search-btn" data-clear-targets="faculty-search,faculty-status-filter" title="Clear search" aria-label="Clear faculty search">
+        <i class="ph ph-arrow-clockwise"></i>
+      </button>
     </div>
+    <div class="header-actions">
+      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
+      <button class="show-archived-faculty-btn">Show Archived</button>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
@@ -792,7 +807,16 @@ include 'totalstudents_dashcount.php';
         <h3>Archived Faculty</h3>
         <span>Faculty records moved out of the active list</span>
       </div>
-      <button class="back-to-faculty-btn">Back to Faculty</button>
+      <div class="archived-faculty-header-actions">
+        <button class="clear-search-btn" id="archived-faculty-clear-btn" type="button" title="Clear search" aria-label="Clear archived search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
+        <div class="archived-search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input type="text" id="archived-faculty-search" placeholder="Search archived faculty...">
+        </div>
+        <button class="back-to-faculty-btn"><i class="ph ph-arrow-left"></i> Back to Faculty</button>
+      </div>
     </div>
     <div class="table-scroll-container">
       <table class="faculties-table archived-faculties-table">
@@ -911,38 +935,42 @@ include 'totalstudents_dashcount.php';
     </div>
   </div>
 
-  <div class="table-wrapper">
-    <div class="table-header">
-      <div class="student-toolbar">
-        <div class="student-header-actions">
-          <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
-          <button class="show-archived-student-btn">Show Archived</button>
+  <div class="student-toolbar-box">
+    <div class="student-toolbar">
+      <div class="student-header-actions">
+        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
+        <button class="show-archived-student-btn">Show Archived</button>
+      </div>
+      <div class="student-filter-row">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input id="student-search" placeholder="Search student...">
         </div>
-        <div class="student-filter-row">
-          <div class="search-wrapper">
-            <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-            <input id="student-search" placeholder="Search student...">
-          </div>
-          <div class="program-filter-wrapper">
-            <i class="ph ph-funnel"></i>
-            <select id="student-program-filter" class="program-dropdown">
-              <option value="">All Programs</option>
-            </select>
-          </div>
-          <div class="program-filter-wrapper">
-            <i class="ph ph-graduation-cap"></i>
-            <select id="student-yearlevel-filter" class="program-dropdown">
-              <option value="">-- All Year Levels --</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-              <option value="irregular">Irregular</option>
-            </select>
-          </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-funnel"></i>
+          <select id="student-program-filter" class="program-dropdown">
+            <option value="">All Programs</option>
+          </select>
         </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-graduation-cap"></i>
+          <select id="student-yearlevel-filter" class="program-dropdown">
+            <option value="">-- All Year Levels --</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+            <option value="irregular">Irregular</option>
+          </select>
+        </div>
+        <button type="button" class="clear-search-btn" data-clear-targets="student-search,student-program-filter,student-yearlevel-filter" title="Clear search" aria-label="Clear student search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
       </div>
     </div>
+  </div>
+
+  <div class="table-wrapper">
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
@@ -959,7 +987,16 @@ include 'totalstudents_dashcount.php';
         <h3>Archived Students</h3>
         <span>Student records moved out of the active list</span>
       </div>
-      <button class="back-to-student-btn">Back to Students</button>
+      <div class="archived-student-header-actions">
+        <button class="clear-search-btn" id="archived-student-clear-btn" type="button" title="Clear search" aria-label="Clear archived search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
+        <div class="archived-search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input type="text" id="archived-student-search" placeholder="Search archived students...">
+        </div>
+        <button class="back-to-student-btn"><i class="ph ph-arrow-left"></i> Back to Students</button>
+      </div>
     </div>
     <div class="table-scroll-container">
       <table class="students-table archived-students-table">
@@ -1213,6 +1250,15 @@ include 'totalstudents_dashcount.php';
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="searchInput" placeholder="Search Faculty...">
         </div>
+        <select id="report-ay-filter" class="program-dropdown">
+          <option value="">All Academic Years</option>
+        </select>
+        <select id="report-semester-filter" class="program-dropdown">
+          <option value="">All Semesters</option>
+          <option value="1st Semester">1st Semester</option>
+          <option value="2nd Semester">2nd Semester</option>
+          <option value="Summer">Summer</option>
+        </select>
       </div>
       <div class="header-actions">
         <button class="generate-report-btn" onclick="generateEvaluationReport()">
@@ -1225,6 +1271,7 @@ include 'totalstudents_dashcount.php';
         <thead>
           <tr>
             <th>Faculty Name</th>
+            <th>Academic Year / Semester</th>
             <th>Overall Rating</th>
             <th>Responses</th>
             <th>Status</th>
@@ -1298,7 +1345,7 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <div class="student-info-header">
         <div class="student-avatar">
-          <i class="fas fa-chalkboard-teacher"></i>
+          <i class="ph ph-chalkboard-teacher"></i>
         </div>
         <div class="student-details">
           <h4 id="viewClassName">Class Name</h4>
@@ -1530,21 +1577,26 @@ include 'totalstudents_dashcount.php';
       </div>
 
       <div class="evaluation-details-table-wrap">
-        <table class="evaluation-details-table">
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Overall Rating</th>
-              <th>Responses</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="reportEvaluationDetailsBody">
-            <tr>
-              <td colspan="4" style="padding: 14px; text-align: center; color: #6b7280;">Loading...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="eval-details-label">
+          <h4><i class="ph ph-list-checks"></i> Evaluation Details</h4>
+        </div>
+        <div class="table-scroll">
+          <table class="evaluation-details-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Overall Rating</th>
+                <th>Responses</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="reportEvaluationDetailsBody">
+              <tr>
+                <td colspan="4" style="padding: 14px; text-align: center; color: #6b7280;">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="feedback-section">

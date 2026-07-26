@@ -227,13 +227,7 @@ function showProfile(e){
     const subjects = (additionalData?.data?.subjects) || [];
 
     // Build subjects HTML
-    const subjectsHtml = subjects.length > 0
-      ? subjects.map(s => `
-          <div class="sp-subject-item">
-            <span class="sp-subject-code">${escapeHtml(s.code)}</span>
-            <span class="sp-subject-desc">${escapeHtml(s.name)}</span>
-          </div>`).join('')
-      : '<span class="sp-no-subjects">No subjects assigned</span>';
+    const subjectsHtml = buildAssignedSubjectsHtml(subjects);
 
     // Create profile modal content with real data matching student profile design
     const profileContent = `
@@ -311,6 +305,77 @@ function showProfile(e){
   }).catch(error => {
     console.error('Error fetching faculty profile data:', error);
   });
+}
+
+function getYearOrder(yearLevel) {
+  const value = String(yearLevel || '').trim().toLowerCase();
+  if (value.startsWith('1')) return 1;
+  if (value.startsWith('2')) return 2;
+  if (value.startsWith('3')) return 3;
+  if (value.startsWith('4')) return 4;
+  return 99;
+}
+
+function formatYearLevel(yearLevel) {
+  const order = getYearOrder(yearLevel);
+  if (order === 1) return '1st Year';
+  if (order === 2) return '2nd Year';
+  if (order === 3) return '3rd Year';
+  if (order === 4) return '4th Year';
+  return yearLevel ? String(yearLevel) : 'No year level';
+}
+
+function buildAssignedSubjectsHtml(subjects) {
+  if (!Array.isArray(subjects) || subjects.length === 0) {
+    return '<span class="sp-no-subjects">No subjects assigned</span>';
+  }
+
+  const grouped = subjects.reduce((groups, subject) => {
+    const programCode = String(subject.program_code || 'N/A').trim() || 'N/A';
+    const programName = String(subject.program_name || 'Unassigned Program').trim() || 'Unassigned Program';
+    const key = `${programCode}__${programName}`;
+
+    if (!groups[key]) {
+      groups[key] = {
+        programCode,
+        programName,
+        subjects: []
+      };
+    }
+
+    groups[key].subjects.push(subject);
+    return groups;
+  }, {});
+
+  return Object.values(grouped)
+    .sort((a, b) => a.programCode.localeCompare(b.programCode) || a.programName.localeCompare(b.programName))
+    .map(group => {
+      const itemsHtml = group.subjects
+        .sort((a, b) => {
+          const yearDiff = getYearOrder(a.year_level) - getYearOrder(b.year_level);
+          if (yearDiff !== 0) return yearDiff;
+          return String(a.code || '').localeCompare(String(b.code || ''));
+        })
+        .map(s => `
+          <div class="sp-subject-item">
+            <div class="sp-subject-main">
+              <span class="sp-subject-code">${escapeHtml(s.code)}</span>
+              <span class="sp-subject-desc">${escapeHtml(s.name)}</span>
+            </div>
+            <span class="sp-subject-year">${escapeHtml(formatYearLevel(s.year_level))}</span>
+          </div>`).join('');
+
+      return `
+        <div class="sp-program-group">
+          <div class="sp-program-header">
+            <span class="sp-program-code">${escapeHtml(group.programCode)}</span>
+            <span class="sp-program-name">${escapeHtml(group.programName)}</span>
+          </div>
+          <div class="sp-program-subjects">
+            ${itemsHtml}
+          </div>
+        </div>`;
+    }).join('');
 }
 
 // Function to fetch additional faculty profile data from database

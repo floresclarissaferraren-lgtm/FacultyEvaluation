@@ -53,6 +53,7 @@ $faculty_id = $_GET['faculty_id'];
 $subject_id = intval($_GET['subject_id'] ?? 0);
 $class_id = isset($_GET['class_id']) ? intval($_GET['class_id']) : null;
 $classFilter = $subject_id > 0 ? max(0, intval($class_id ?? 0)) : null;
+$period_id = intval($_GET['period_id'] ?? 0);
 
 try {
     ensureEvaluationsSchema($conn);
@@ -76,16 +77,25 @@ try {
     $faculty = $faculty_result->fetch_assoc();
     
     // Get overall rating, total responses, and period range from evaluations
-    $subjectWhere = $subject_id > 0 ? " AND subject_id = ? AND class_id = ?" : "";
+    $subjectWhere = $subject_id > 0 ? " AND e.subject_id = ? AND e.class_id = ?" : "";
+    $periodWhere = $period_id > 0 ? " AND e.period_id = ?" : "";
     $overall_query = "SELECT 
-                        COUNT(id) as total_responses,
-                        MIN(DATE(created_at)) as date_from,
-                        MAX(DATE(created_at)) as date_to
-                    FROM evaluations
-                    WHERE faculty_id = ? {$subjectWhere}";
+                        COUNT(e.id) as total_responses,
+                        MIN(DATE(e.created_at)) as date_from,
+                        MAX(DATE(e.created_at)) as date_to,
+                        ep.ay,
+                        ep.semester
+                    FROM evaluations e
+                    LEFT JOIN evaluation_periods ep ON ep.id = e.period_id
+                    WHERE e.faculty_id = ? {$subjectWhere} {$periodWhere}
+                    GROUP BY ep.ay, ep.semester";
     $overall_stmt = $conn->prepare($overall_query);
-    if ($subject_id > 0) {
+    if ($subject_id > 0 && $period_id > 0) {
+        $overall_stmt->bind_param("iiii", $faculty_id, $subject_id, $classFilter, $period_id);
+    } elseif ($subject_id > 0) {
         $overall_stmt->bind_param("iii", $faculty_id, $subject_id, $classFilter);
+    } elseif ($period_id > 0) {
+        $overall_stmt->bind_param("ii", $faculty_id, $period_id);
     } else {
         $overall_stmt->bind_param("i", $faculty_id);
     }
@@ -95,19 +105,24 @@ try {
 
     // Weighted overall score (real-time)
     $totalResponses = intval($overall_data['total_responses'] ?? 0);
-    $overallScore   = $totalResponses > 0 ? calcWeightedScore($conn, intval($faculty_id), $subject_id ?: null, $classFilter) : 0.00;
+    $overallScore   = $totalResponses > 0 ? calcWeightedScore($conn, intval($faculty_id), $subject_id ?: null, $classFilter, $period_id ?: null) : 0.00;
     
     // Get all feedback comments for this faculty.
-    $feedback_query = "SELECT feedback
-                    FROM evaluations
-                    WHERE faculty_id = ?
+    $feedback_query = "SELECT e.feedback
+                    FROM evaluations e
+                    WHERE e.faculty_id = ?
                     {$subjectWhere}
-                    AND feedback IS NOT NULL
-                    AND TRIM(feedback) != ''
-                    ORDER BY updated_at DESC, created_at DESC";
+                    {$periodWhere}
+                    AND e.feedback IS NOT NULL
+                    AND TRIM(e.feedback) != ''
+                    ORDER BY e.updated_at DESC, e.created_at DESC";
     $feedback_stmt = $conn->prepare($feedback_query);
-    if ($subject_id > 0) {
+    if ($subject_id > 0 && $period_id > 0) {
+        $feedback_stmt->bind_param("iiii", $faculty_id, $subject_id, $classFilter, $period_id);
+    } elseif ($subject_id > 0) {
         $feedback_stmt->bind_param("iii", $faculty_id, $subject_id, $classFilter);
+    } elseif ($period_id > 0) {
+        $feedback_stmt->bind_param("ii", $faculty_id, $period_id);
     } else {
         $feedback_stmt->bind_param("i", $faculty_id);
     }
@@ -123,7 +138,7 @@ try {
     $all_feedback = empty($feedback_comments) ? 'No feedback available' : implode("\n\n", $feedback_comments);
 
     // Get evaluation details by category with weights (real-time).
-    $category_stats  = getCategoryStats($conn, intval($faculty_id), $subject_id ?: null, $classFilter);
+    $category_stats  = getCategoryStats($conn, intval($faculty_id), $subject_id ?: null, $classFilter, $period_id ?: null);
     $evaluation_details = [];
     $category_totals    = [];
     foreach ($category_stats as $cat) {
@@ -152,7 +167,9 @@ try {
     }
     
     $periodText = 'All evaluation periods';
-    if (!empty($overall_data['date_from']) && !empty($overall_data['date_to'])) {
+    if (!empty($overall_data['ay']) && !empty($overall_data['semester'])) {
+        $periodText = $overall_data['ay'] . ' - ' . $overall_data['semester'];
+    } elseif (!empty($overall_data['date_from']) && !empty($overall_data['date_to'])) {
         $start = date('F j, Y', strtotime($overall_data['date_from']));
         $end = date('F j, Y', strtotime($overall_data['date_to']));
         $periodText = $start === $end ? $start : "$start - $end";
