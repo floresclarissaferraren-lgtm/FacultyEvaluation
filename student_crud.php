@@ -2,19 +2,13 @@
 header("Content-Type: application/json");
 include 'connect.php';
 require_once 'mailer.php';
+require_once 'ensure_schema_column.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
-$checkStudentTypeColumn = $conn->query("SHOW COLUMNS FROM add_students LIKE 'student_type'");
-if ($checkStudentTypeColumn && $checkStudentTypeColumn->num_rows === 0) {
-    $conn->query("ALTER TABLE add_students ADD COLUMN student_type VARCHAR(20) DEFAULT 'regular' AFTER section");
-}
-
-$checkStudentStatusColumn = $conn->query("SHOW COLUMNS FROM add_students LIKE 'status'");
-if ($checkStudentStatusColumn && $checkStudentStatusColumn->num_rows === 0) {
-    $conn->query("ALTER TABLE add_students ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active' AFTER student_type");
-}
+ensureColumnExists($conn, 'add_students', 'student_type', 'VARCHAR(20) DEFAULT "regular"', 'section');
+ensureColumnExists($conn, 'add_students', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"', 'student_type');
 
 function resolveProgramId(mysqli $conn, string $program): int {
     $program = trim($program);

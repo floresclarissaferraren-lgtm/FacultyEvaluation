@@ -1,5 +1,9 @@
 
 <?php
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin' || !isset($_SESSION['id'])) {
@@ -18,7 +22,13 @@ include 'totalstudents_dashcount.php';
   <link rel="stylesheet" href="unified_notifications.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <script>
+    window.addEventListener("pageshow", event => {
+      if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+        window.location.reload();
+      }
+    });
+  </script>
 </head>
 <body>
 

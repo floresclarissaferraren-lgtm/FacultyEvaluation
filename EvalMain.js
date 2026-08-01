@@ -106,6 +106,27 @@ function closeModal(modal) {
   }
 }
 
+function clearLoginFormFields() {
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+
+  if (usernameInput) usernameInput.value = '';
+  if (passwordInput) passwordInput.value = '';
+
+  const usernameError = document.getElementById('usernameError');
+  const passwordError = document.getElementById('passwordError');
+  if (usernameError) usernameError.textContent = '';
+  if (passwordError) passwordError.textContent = '';
+}
+
+window.addEventListener('pageshow', event => {
+  if (event.persisted || (performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+    clearLoginFormFields();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', clearLoginFormFields);
+
 // ===================== Switch between login and forgot modals =====================
 function switchModal(closeModalEl, openModalEl) {
   if (closeModalEl && openModalEl) {
@@ -190,13 +211,16 @@ if (loginForm) {
     // Show full-page loading spinner
     fullscreenSpinner.classList.remove('hidden');
 
-    // Predict loading type based on username prefix GC-
+    // Predict loading type based on username prefix
     if (username.toUpperCase().startsWith('GC-')) {
       fullscreenSpinner.classList.add('loading-student');
-      fullscreenSpinner.classList.remove('loading-admin');
+      fullscreenSpinner.classList.remove('loading-admin', 'loading-faculty');
+    } else if (username.toUpperCase().startsWith('FC-')) {
+      fullscreenSpinner.classList.add('loading-faculty');
+      fullscreenSpinner.classList.remove('loading-admin', 'loading-student');
     } else {
       fullscreenSpinner.classList.add('loading-admin');
-      fullscreenSpinner.classList.remove('loading-student');
+      fullscreenSpinner.classList.remove('loading-student', 'loading-faculty');
     }
 
     try {
@@ -214,7 +238,7 @@ if (loginForm) {
       if (data.success) {
         if (data.role === 'student') {
           fullscreenSpinner.classList.add('loading-student');
-          fullscreenSpinner.classList.remove('loading-admin');
+          fullscreenSpinner.classList.remove('loading-admin', 'loading-faculty');
           // Wait for minimum display time before redirecting
           const elapsedTime = Date.now() - startTime;
           if (elapsedTime < minDisplayTime) {
@@ -225,8 +249,8 @@ if (loginForm) {
             window.location.href = 'FacultyUser.php';
           }
         } else if (data.role === 'faculty') {
-          fullscreenSpinner.classList.add('loading-admin');
-          fullscreenSpinner.classList.remove('loading-student');
+          fullscreenSpinner.classList.add('loading-faculty');
+          fullscreenSpinner.classList.remove('loading-admin', 'loading-student');
           const elapsedTime = Date.now() - startTime;
           if (elapsedTime < minDisplayTime) {
             setTimeout(() => {
@@ -237,7 +261,7 @@ if (loginForm) {
           }
         } else if (data.role === 'admin') {
           fullscreenSpinner.classList.add('loading-admin');
-          fullscreenSpinner.classList.remove('loading-student');
+          fullscreenSpinner.classList.remove('loading-student', 'loading-faculty');
           const elapsedTime = Date.now() - startTime;
           if (elapsedTime < minDisplayTime) {
             setTimeout(() => {
@@ -249,18 +273,18 @@ if (loginForm) {
         } else {
           document.getElementById('passwordError').textContent = 'Login successful, but role is unknown.';
           fullscreenSpinner.classList.add('hidden');
-          fullscreenSpinner.classList.remove('loading-student', 'loading-admin');
+          fullscreenSpinner.classList.remove('loading-student', 'loading-admin', 'loading-faculty');
         }
       } else {
         document.getElementById('passwordError').textContent = data.message || 'Login failed';
         fullscreenSpinner.classList.add('hidden');
-        fullscreenSpinner.classList.remove('loading-student', 'loading-admin');
+        fullscreenSpinner.classList.remove('loading-student', 'loading-admin', 'loading-faculty');
       }
     } catch (err) {
       console.error('Login error:', err);
       document.getElementById('passwordError').textContent = 'An error occurred. Please try again.';
       fullscreenSpinner.classList.add('hidden');
-      fullscreenSpinner.classList.remove('loading-student', 'loading-admin');
+      fullscreenSpinner.classList.remove('loading-student', 'loading-admin', 'loading-faculty');
     }
   });
 }

@@ -547,7 +547,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutModal.style.display = "none";
   }
   function confirmLogout() {
-    window.location.href = "EvalMain.php";
+    window.location.replace("logout.php");
   }
 
   logoutContent.addEventListener("click", e => e.stopPropagation());

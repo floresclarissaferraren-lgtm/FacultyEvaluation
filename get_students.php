@@ -2,11 +2,6 @@
 header("Content-Type: application/json");
 require 'connect.php';
 
-$checkStudentStatusColumn = $conn->query("SHOW COLUMNS FROM add_students LIKE 'status'");
-if ($checkStudentStatusColumn && $checkStudentStatusColumn->num_rows === 0) {
-    $conn->query("ALTER TABLE add_students ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active' AFTER student_type");
-}
-
 function formattedYearLevel(string $yearlevel): string {
     $val = trim($yearlevel);
     if (ctype_digit($val)) {

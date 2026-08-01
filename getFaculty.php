@@ -2,12 +2,10 @@
 header("Content-Type: application/json");
 include 'connect.php';
 require_once 'evaluation_schema.php';
+require_once 'ensure_schema_column.php';
 
 try {
-    $checkFacultyStatusColumn = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'status'");
-    if ($checkFacultyStatusColumn && $checkFacultyStatusColumn->num_rows === 0) {
-        $conn->query("ALTER TABLE add_faculties ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
-    }
+    ensureColumnExists($conn, 'add_faculties', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"');
 
     ensureEvaluationsSchema($conn);
 

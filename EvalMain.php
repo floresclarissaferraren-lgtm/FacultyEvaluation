@@ -1,3 +1,21 @@
+<?php
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
+    session_start();
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
+    session_unset();
+    session_destroy();
+    header('Location: EvalMain.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -295,6 +313,62 @@
 
 <div id="fullscreen-spinner" class="hidden">
 
+  <!-- Faculty Layout Skeleton -->
+  <div class="faculty-skeleton">
+    <div class="skeleton-navbar">
+      <div class="skeleton-nav-left">
+        <div class="skeleton-logo"></div>
+        <div class="skeleton-nav-title" style="width: 180px;"></div>
+      </div>
+      <div class="skeleton-user-box">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-name" style="width: 74px;"></div>
+      </div>
+    </div>
+
+    <div class="faculty-skeleton-content">
+      <div class="faculty-hero-card">
+        <div class="faculty-hero-image"></div>
+        <div class="faculty-hero-copy">
+          <div class="skeleton-title" style="width: 420px; height: 34px; margin-bottom: 20px;"></div>
+          <div class="skeleton-badge" style="width: 300px; margin-bottom: 24px;"></div>
+          <div class="skeleton-text" style="width: 88%; height: 14px; margin-bottom: 10px;"></div>
+          <div class="skeleton-text" style="width: 76%; height: 14px;"></div>
+        </div>
+      </div>
+
+      <div class="faculty-hub-panel">
+        <div class="faculty-name-block">
+          <div class="skeleton-title" style="width: 240px; height: 26px; margin-bottom: 8px;"></div>
+          <div class="skeleton-text" style="width: 120px; height: 14px;"></div>
+        </div>
+        <div class="faculty-actions">
+          <div class="skeleton-btn" style="width: 130px; height: 44px;"></div>
+          <div class="skeleton-btn" style="width: 200px; height: 44px;"></div>
+        </div>
+      </div>
+
+      <div class="faculty-filter-row">
+        <div class="skeleton-text" style="width: 120px; height: 14px;"></div>
+        <div class="skeleton-dropdown" style="width: 220px; height: 42px;"></div>
+      </div>
+
+      <div class="faculty-stats-row">
+        <div class="faculty-stat-card">
+          <div class="skeleton-title" style="width: 150px; height: 18px; margin-bottom: 18px;"></div>
+          <div class="skeleton-title" style="width: 150px; height: 36px; margin-bottom: 10px;"></div>
+          <div class="skeleton-text" style="width: 80px; height: 12px; margin-bottom: 18px;"></div>
+          <div class="skeleton-progress-line" style="width: 100%;"></div>
+        </div>
+        <div class="faculty-stat-card">
+          <div class="skeleton-title" style="width: 150px; height: 18px; margin-bottom: 18px;"></div>
+          <div class="skeleton-title" style="width: 120px; height: 36px; margin-bottom: 10px;"></div>
+          <div class="skeleton-progress-line" style="width: 120px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Admin Dashboard Layout Skeleton -->
   <div class="admin-skeleton">
     <div class="skeleton-sidebar">
@@ -451,7 +525,6 @@
 
   <!-- Student Dashboard Layout Skeleton -->
   <div class="student-skeleton">
-    <!-- Navbar -->
     <div class="skeleton-navbar">
       <div class="skeleton-nav-left">
         <div class="skeleton-logo"></div>
@@ -462,18 +535,16 @@
         <div class="skeleton-user-name" style="width: 50px;"></div>
       </div>
     </div>
-    <!-- Main Content -->
-    <div class="skeleton-content-container">
-      <div class="skeleton-main-box">
-        <div class="skeleton-main-left">
-          <div class="skeleton-img"></div>
-        </div>
-        <div class="skeleton-main-right">
-          <div class="skeleton-title" style="width: 250px; height: 28px; margin-bottom: 20px;"></div>
-          <div class="skeleton-badge" style="width: 280px; height: 38px; margin-bottom: 14px;"></div>
-          <div class="skeleton-badge" style="width: 180px; height: 38px; margin-bottom: 14px;"></div>
-          <div class="skeleton-text" style="width: 90%; height: 14px; margin-bottom: 10px;"></div>
-          <div class="skeleton-text" style="width: 80%; height: 14px; margin-bottom: 24px;"></div>
+
+    <div class="student-skeleton-content">
+      <div class="student-hero-card">
+        <div class="student-hero-image"></div>
+        <div class="student-hero-copy">
+          <div class="skeleton-title" style="width: 360px; height: 34px; margin-bottom: 20px;"></div>
+          <div class="skeleton-badge" style="width: 290px; margin-bottom: 14px;"></div>
+          <div class="skeleton-badge" style="width: 220px; margin-bottom: 18px;"></div>
+          <div class="skeleton-text" style="width: 88%; height: 14px; margin-bottom: 10px;"></div>
+          <div class="skeleton-text" style="width: 72%; height: 14px; margin-bottom: 24px;"></div>
           <div class="skeleton-btn" style="width: 150px; height: 44px;"></div>
         </div>
       </div>

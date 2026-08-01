@@ -20,7 +20,13 @@ function closeLogoutModal(){
 }
 
 function confirmLogout(){
-  window.location.href = "EvalMain.php";}
+  window.location.replace("logout.php");}
+
+window.addEventListener("pageshow", event => {
+  if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+    window.location.reload();
+  }
+});
 
 function showPasswordForm(e){
   if (e) e.preventDefault();

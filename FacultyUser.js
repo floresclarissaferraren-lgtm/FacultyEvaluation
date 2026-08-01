@@ -13,11 +13,17 @@ window.closeLogoutModal = () => {
   document.getElementById("logoutModal").style.display = "none";
 };
 
-window.confirmLogout = () => location.href = "EvalMain.php?logout=true";
+window.confirmLogout = () => location.replace("logout.php");
 window.logout = e => { 
   e.preventDefault(); 
   showLogoutModal(); 
 };
+
+window.addEventListener("pageshow", event => {
+  if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+    window.location.reload();
+  }
+});
 
 document.addEventListener("click", e => {
   const m = document.getElementById("dropdownMenu"),

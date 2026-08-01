@@ -2,6 +2,7 @@
 header("Content-Type: application/json");
 include 'connect.php';
 require_once 'mailer.php';
+require_once 'ensure_schema_column.php';
 
 // Generate random password function
 function generateRandomPassword($length = 8) {
@@ -12,10 +13,7 @@ function generateRandomPassword($length = 8) {
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
-$checkFacultyStatusColumn = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'status'");
-if ($checkFacultyStatusColumn && $checkFacultyStatusColumn->num_rows === 0) {
-    $conn->query("ALTER TABLE add_faculties ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
-}
+ensureColumnExists($conn, 'add_faculties', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"');
 
 /* =========================
    ADD NEW FACULTY

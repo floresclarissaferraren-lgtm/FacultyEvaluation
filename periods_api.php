@@ -346,8 +346,8 @@ if ($action === "set_active") {
         $stmt->execute();
         $stmt->close();
 
-        // Activating a period only selects it; opening evaluations is a separate manual action.
-        $stmt2 = $conn->prepare("UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = ? WHERE id = 1");
+        // Activating a period also opens the evaluation for students in that period.
+        $stmt2 = $conn->prepare("UPDATE evaluation_settings SET evaluation_open = 1, active_period_id = ? WHERE id = 1");
         $stmt2->bind_param("i", $id);
         $stmt2->execute();
         $stmt2->close();
@@ -356,7 +356,7 @@ if ($action === "set_active") {
 
         echo json_encode([
             "success" => true,
-            "message" => "Period activated.",
+            "message" => "Period activated and evaluation opened.",
         ]);
     } catch (Exception $e) {
         $conn->rollback();

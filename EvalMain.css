@@ -1141,6 +1141,204 @@ body.modal-open{overflow:hidden}
   to { transform: translate(-50%,-50%) rotate(360deg); }
 }
 
+/* Faculty Skeleton Styles */
+.faculty-skeleton {
+  display: none;
+  width: 100%;
+  height: 100vh;
+  flex-direction: column;
+  background: #f8fafc;
+}
+
+#fullscreen-spinner.loading-faculty .faculty-skeleton {
+  display: flex;
+}
+
+#fullscreen-spinner.loading-faculty .admin-skeleton,
+#fullscreen-spinner.loading-faculty .student-skeleton {
+  display: none;
+}
+
+.faculty-skeleton .skeleton-navbar {
+  height: 64px;
+  background: #0d4781;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 28px;
+  box-shadow: 0 8px 20px rgba(0, 31, 63, 0.22);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.faculty-skeleton .skeleton-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.faculty-skeleton .skeleton-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.faculty-skeleton .skeleton-nav-title {
+  height: 20px;
+  border-radius: 4px;
+}
+
+.faculty-skeleton .skeleton-user-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.faculty-skeleton .skeleton-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.faculty-skeleton .skeleton-user-name {
+  height: 14px;
+  border-radius: 3px;
+}
+
+.faculty-skeleton-content {
+  width: 100%;
+  max-width: 980px;
+  margin: 26px auto 0;
+  padding: 0 18px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.faculty-hero-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 26px 30px;
+  border: 1px solid #dbe6ff;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 26px;
+  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
+}
+
+.faculty-hero-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 18px;
+}
+
+.faculty-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.faculty-hub-panel {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px 30px;
+  border: 1px solid #dbe6ff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
+}
+
+.faculty-name-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.faculty-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.faculty-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.faculty-stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.faculty-stat-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #dbe6ff;
+  padding: 24px 26px;
+  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
+}
+
+.skeleton-progress-line {
+  height: 8px;
+  border-radius: 999px;
+}
+
+.faculty-skeleton .skeleton-logo,
+.faculty-skeleton .skeleton-nav-title,
+.faculty-skeleton .skeleton-avatar,
+.faculty-skeleton .skeleton-user-name,
+.faculty-skeleton .skeleton-icon,
+.faculty-skeleton .faculty-hero-image,
+.faculty-skeleton .skeleton-title,
+.faculty-skeleton .skeleton-badge,
+.faculty-skeleton .skeleton-text,
+.faculty-skeleton .skeleton-btn,
+.faculty-skeleton .skeleton-dropdown,
+.faculty-skeleton .skeleton-progress-line {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.4s infinite;
+}
+
+@media (max-width: 920px) {
+  .faculty-hero-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .faculty-hero-copy {
+    align-items: center;
+  }
+
+  .faculty-hub-panel,
+  .faculty-filter-row,
+  .faculty-stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .faculty-hub-panel,
+  .faculty-filter-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .faculty-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
 /* Student Skeleton Styles */
 .student-skeleton {
   display: none;
@@ -1154,7 +1352,8 @@ body.modal-open{overflow:hidden}
   display: flex;
 }
 
-#fullscreen-spinner.loading-student .admin-skeleton {
+#fullscreen-spinner.loading-student .admin-skeleton,
+#fullscreen-spinner.loading-student .faculty-skeleton {
   display: none;
 }
 
@@ -1208,50 +1407,35 @@ body.modal-open{overflow:hidden}
   border-radius: 3px;
 }
 
-.student-skeleton .skeleton-content-container {
+.student-skeleton-content {
   width: 100%;
-  padding: 84px 12px 24px;
+  max-width: 980px;
+  margin: 26px auto 0;
+  padding: 0 18px 32px;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-.student-skeleton .skeleton-main-box {
-  width: min(920px, 100%);
-  margin-inline: auto;
-  padding: 30px;
-  border-radius: 24px;
-  box-shadow: 0 18px 45px rgba(15, 46, 117, 0.18);
-  border-left: 8px solid #0d4781;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.student-hero-card {
   background: #ffffff;
-  box-sizing: border-box;
+  border-radius: 18px;
+  padding: 26px 30px;
+  border: 1px solid #dbe6ff;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 26px;
+  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
 }
 
-.student-skeleton .skeleton-main-left {
-  flex: 0 0 220px;
-  text-align: center;
-  border-right: 1px solid #f3f4f6;
-  padding-right: 24px;
-  display: flex;
-  justify-content: center;
-}
-
-.student-skeleton .skeleton-img {
+.student-hero-image {
   width: 200px;
   height: 200px;
   border-radius: 18px;
 }
 
-.student-skeleton .skeleton-main-right {
-  flex: 1;
-  padding-left: 40px;
-  text-align: left;
+.student-hero-copy {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .student-skeleton .skeleton-title {
@@ -1279,7 +1463,7 @@ body.modal-open{overflow:hidden}
 .student-skeleton .skeleton-nav-title,
 .student-skeleton .skeleton-avatar,
 .student-skeleton .skeleton-user-name,
-.student-skeleton .skeleton-img,
+.student-skeleton .student-hero-image,
 .student-skeleton .skeleton-title,
 .student-skeleton .skeleton-badge,
 .student-skeleton .skeleton-text,
@@ -1289,35 +1473,22 @@ body.modal-open{overflow:hidden}
   animation: skeleton-loading 1.4s infinite;
 }
 
-/* Responsive adjustment for student skeleton */
 @media(max-width:920px) {
-  .student-skeleton .skeleton-main-box {
-    padding: clamp(20px, 4vw, 30px);
-    flex-direction: column;
-  }
-  .student-skeleton .skeleton-main-left {
-    border-right: none;
-    border-bottom: 1px solid #f3f4f6;
-    padding-right: 0;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-    width: 100%;
-  }
-  .student-skeleton .skeleton-img {
-    width: 160px;
-    height: 160px;
-  }
-  .student-skeleton .skeleton-main-right {
-    padding-left: 0;
+  .student-hero-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
     text-align: center;
+  }
+
+  .student-hero-copy {
     align-items: center;
-    width: 100%;
   }
 }
+
 @media(max-width:768px) {
-  .student-skeleton .skeleton-img {
-    width: 140px;
-    height: 140px;
+  .student-hero-image {
+    width: 160px;
+    height: 160px;
   }
 }
 

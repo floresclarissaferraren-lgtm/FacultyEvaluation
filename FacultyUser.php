@@ -1,4 +1,8 @@
 <?php
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 include_once 'session_config.php'; // Load session settings BEFORE session_start
 session_start();
 include 'connect.php';
@@ -49,7 +53,13 @@ $conn->close();
   <link rel="stylesheet" href="FacultyUser.css?v=<?=time()?>">
   <link rel="stylesheet" href="unified_notifications.css?v=<?=time()?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-
+  <script>
+    window.addEventListener("pageshow", event => {
+      if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+        window.location.reload();
+      }
+    });
+  </script>
 </head>
 <body>
 
@@ -61,9 +71,6 @@ $conn->close();
     <span class="logo-text main-title">Faculty Evaluation System</span>
   </div>
   <div class="user-menu">
-    <button class="navbar-bell-btn" title="Notifications" aria-label="Notifications">
-      <i class="ph ph-bell"></i>
-    </button>
     <div class="student-box" onclick="toggleDropdown()">
       <i class="ph ph-gear navbar-settings-icon"></i>
       <span>Student</span>
