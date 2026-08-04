@@ -503,19 +503,25 @@ include 'totalstudents_dashcount.php';
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="manage-subjects-search" placeholder="Search subjects...">
         </div>
-        <select id="manage-subjects-semester-filter" class="program-dropdown">
-          <option value="">-- All Semesters --</option>
-          <option value="1st Semester">1st Semester</option>
-          <option value="2nd Semester">2nd Semester</option>
-          <option value="Summer">Summer</option>
-        </select>
-        <select id="manage-subjects-year-filter" class="program-dropdown">
-          <option value="">-- All Year Levels --</option>
-          <option value="1st Year">1st Year</option>
-          <option value="2nd Year">2nd Year</option>
-          <option value="3rd Year">3rd Year</option>
-          <option value="4th Year">4th Year</option>
-        </select>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-calendar-blank"></i>
+          <select id="manage-subjects-semester-filter" class="program-dropdown">
+            <option value="">-- All Semesters --</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
+          </select>
+        </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-graduation-cap"></i>
+          <select id="manage-subjects-year-filter" class="program-dropdown">
+            <option value="">-- All Year Levels --</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+          </select>
+        </div>
         <button type="button" class="clear-search-btn" data-clear-targets="manage-subjects-search,manage-subjects-semester-filter,manage-subjects-year-filter" title="Clear search" aria-label="Clear subject search">
           <i class="ph ph-arrow-clockwise"></i>
         </button>
@@ -781,8 +787,8 @@ include 'totalstudents_dashcount.php';
         <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         <input id="faculty-search" placeholder="Search faculty...">
       </div>
-      <div class="filter-wrapper">
-        <i class="ph ph-funnel" style="color: #64748b; font-size: 16px; margin-right: 8px;"></i>
+      <div class="program-filter-wrapper">
+        <i class="ph ph-funnel"></i>
         <select id="faculty-status-filter" class="status-dropdown">
           <option value="">Filter by Status</option>
           <option value="active">Active</option>
@@ -1260,15 +1266,21 @@ include 'totalstudents_dashcount.php';
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="searchInput" placeholder="Search Faculty...">
         </div>
-        <select id="report-ay-filter" class="program-dropdown">
-          <option value="">All Academic Years</option>
-        </select>
-        <select id="report-semester-filter" class="program-dropdown">
-          <option value="">All Semesters</option>
-          <option value="1st Semester">1st Semester</option>
-          <option value="2nd Semester">2nd Semester</option>
-          <option value="Summer">Summer</option>
-        </select>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-calendar-blank"></i>
+          <select id="report-ay-filter" class="program-dropdown">
+            <option value="">All Academic Years</option>
+          </select>
+        </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-calendar"></i>
+          <select id="report-semester-filter" class="program-dropdown">
+            <option value="">All Semesters</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
+          </select>
+        </div>
       </div>
       <div class="header-actions">
         <button class="generate-report-btn" onclick="generateEvaluationReport()">

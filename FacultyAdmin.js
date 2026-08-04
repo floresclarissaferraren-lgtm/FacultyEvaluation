@@ -2944,6 +2944,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function applyReportSearchFilter() {
+    const searchInput = document.getElementById("searchInput");
+    const tbody = document.getElementById("evaluationTableBody");
+    if (!searchInput || !tbody) return;
+
+    const term = (searchInput.value || "").trim().toLowerCase();
+    const rows = Array.from(tbody.querySelectorAll("tr[data-evaluation-row='true']"));
+    let visibleRows = 0;
+
+    rows.forEach(row => {
+      const haystack = (row.dataset.searchText || "").toLowerCase();
+      const matches = !term || haystack.includes(term);
+      row.style.display = matches ? "" : "none";
+      if (matches) visibleRows++;
+    });
+
+    const emptyRow = tbody.querySelector(".report-empty-row");
+    if (emptyRow) {
+      emptyRow.style.display = visibleRows > 0 ? "none" : "";
+    }
+  }
+
   function loadEvaluations() {
     console.log('Loading evaluations...');
     const reportParams = getReportPeriodParams();
@@ -2957,33 +2979,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.success) {
           if (!data.data || data.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No evaluation data available</td></tr>';
+            tbody.innerHTML = '<tr class="report-empty-row"><td colspan="6" class="report-empty-state">No evaluation data available</td></tr>';
             return;
           }
 
           data.data.forEach(evaluation => {
             const pct = parseFloat(evaluation.percentage_score || 0);
             const pctText = `${pct.toFixed(1)}%`;
+            const ratingClass = evaluation.rating_class || 'na';
+            const ratingText = evaluation.rating || 'N/A';
 
             const row = document.createElement("tr");
+            row.dataset.evaluationRow = "true";
+            row.dataset.searchText = [
+              evaluation.name,
+              evaluation.period_label || 'Unassigned Period',
+              ratingText,
+              evaluation.total_responses,
+              Number(evaluation.average_score).toFixed(2)
+            ].join(' ').toLowerCase();
             row.innerHTML = `
             <td>
-              <strong>${evaluation.name}</strong>
-              ${evaluation.subject_label ? `<small style="display:block;color:#64748b;margin-top:4px;">${evaluation.subject_label}${evaluation.class_label ? ` (${evaluation.class_label})` : ''}</small>` : ''}
+              <strong>${escapeHtml(evaluation.name)}</strong>
             </td>
             <td>${escapeHtml(evaluation.period_label || 'Unassigned Period')}</td>
             <td>
               <div class="score-cell">
                 <span class="score-pct">${pctText}</span>
                 <div class="score-mini-track">
-                  <div class="score-mini-fill ${evaluation.rating_class}" style="width:${Math.min(pct, 100)}%"></div>
+                  <div class="score-mini-fill ${escapeHtml(ratingClass)}" style="width:${Math.min(pct, 100)}%"></div>
                 </div>
                 <span class="score-raw">${Number(evaluation.average_score).toFixed(2)} / 5.00</span>
               </div>
             </td>
             <td>${evaluation.total_responses}</td>
             <td>
-              <span class="badge ${evaluation.rating_class}">${evaluation.rating}</span>
+              <span class="badge ${escapeHtml(ratingClass)}">${escapeHtml(ratingText)}</span>
             </td>
             <td>
               <button class="view-btn" data-faculty-id="${evaluation.id}" data-subject-id="${evaluation.subject_id || 0}" data-class-id="${evaluation.class_id || 0}" data-period-id="${evaluation.period_id || 0}">
@@ -2992,7 +3023,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </td>
           `;
 
-            // Add event listener to view button
             const viewBtn = row.querySelector('.view-btn');
             viewBtn.addEventListener('click', () => {
               viewEvaluationDetails(evaluation.id, evaluation.subject_id || 0, evaluation.class_id || 0, evaluation.period_id || 0);
@@ -3001,22 +3031,16 @@ document.addEventListener("DOMContentLoaded", () => {
             tbody.appendChild(row);
           });
 
-          // Add search functionality
-          document.getElementById("searchInput").oninput = e => {
-            const term = e.target.value.toLowerCase();
-            [...tbody.rows].forEach(r =>
-              r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none"
-            );
-          };
+          applyReportSearchFilter();
         } else {
           console.error("Error loading evaluations:", data.message);
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Error loading evaluation data</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Error loading evaluation data</td></tr>';
         }
       })
       .catch(err => {
         console.error("Network error:", err);
         const tbody = document.getElementById("evaluationTableBody");
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Network error loading data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Network error loading data</td></tr>';
       });
   }
 
@@ -3077,6 +3101,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  const reportSearchInput = document.getElementById("searchInput");
+  if (reportSearchInput) {
+    reportSearchInput.addEventListener("input", applyReportSearchFilter);
   }
 
   document.getElementById("report-ay-filter")?.addEventListener("change", loadEvaluations);
