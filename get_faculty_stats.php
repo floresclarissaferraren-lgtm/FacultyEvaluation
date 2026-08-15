@@ -4,6 +4,7 @@ session_start();
 header("Content-Type: application/json");
 include "connect.php";
 require_once 'evaluation_schema.php';
+require_once 'evaluation_period_helper.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty' || !isset($_SESSION['id'])) {
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
@@ -25,6 +26,20 @@ if (strtolower((string)($statusRow['status'] ?? 'active')) !== 'active') {
         "message" => "Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.",
         "overall_rating" => "0.00",
         "rating_label" => "No Data",
+        "total_responses" => 0
+    ]);
+    $conn->close();
+    exit;
+}
+
+if (isEvaluationOngoing($conn)) {
+    echo json_encode([
+        "success" => true,
+        "evaluation_ongoing" => true,
+        "message" => "Evaluation results are unavailable while the evaluation process is still ongoing.",
+        "overall_rating" => "0.00",
+        "percentage_score" => "0.00",
+        "rating_label" => "Unavailable",
         "total_responses" => 0
     ]);
     $conn->close();

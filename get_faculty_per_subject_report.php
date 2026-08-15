@@ -22,6 +22,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
 include 'connect.php';
 require_once 'weighted_score_helper.php';
 require_once 'evaluation_schema.php';
+require_once 'evaluation_period_helper.php';
 
 /* ── helpers ───────────────────────────────────────────────────────────── */
 function ratingLabel(float $score): string {
@@ -88,6 +89,8 @@ if (strtolower((string)($sRow['status'] ?? 'active')) !== 'active') {
     ]);
     exit;
 }
+
+blockFacultyResultsWhileEvaluationOngoing($conn);
 
 ensureEvaluationsSchema($conn);
 

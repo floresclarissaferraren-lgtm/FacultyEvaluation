@@ -1,5 +1,13 @@
 <?php
+include_once 'session_config.php';
+session_start();
 include 'connect.php';
+require_once 'evaluation_period_helper.php';
+
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty' && isEvaluationOngoing($conn)) {
+    http_response_code(403);
+    exit('Evaluation results are unavailable while the evaluation process is still ongoing.');
+}
 
 // Get JSON data
 $data = json_decode(file_get_contents('php://input'), true);

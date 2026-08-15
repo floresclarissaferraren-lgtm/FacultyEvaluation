@@ -5,6 +5,7 @@ header("Content-Type: application/json");
 include "connect.php";
 require_once 'mailer.php';
 require_once 'notify_evaluation_open.php';
+require_once 'evaluation_period_helper.php';
 date_default_timezone_set("Asia/Manila");
 
 function ensurePeriodTables(mysqli $conn): void {
@@ -81,24 +82,7 @@ function todayDate(): string {
 }
 
 function closeExpiredActivePeriod(mysqli $conn): void {
-    $today = todayDate();
-    $stmt = $conn->prepare("
-        SELECT es.active_period_id
-        FROM evaluation_settings es
-        JOIN evaluation_periods ep ON ep.id = es.active_period_id
-        WHERE es.id = 1
-          AND es.active_period_id IS NOT NULL
-          AND ep.end_date < ?
-        LIMIT 1
-    ");
-    $stmt->bind_param("s", $today);
-    $stmt->execute();
-    $expired = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if ($expired) {
-        $conn->query("UPDATE evaluation_settings SET evaluation_open = 0 WHERE id = 1");
-    }
+    closeExpiredEvaluationPeriod($conn);
 }
 
 ensurePeriodTables($conn);

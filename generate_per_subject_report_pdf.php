@@ -6,10 +6,18 @@
  * Accepts POST JSON with the same structure returned by
  * get_faculty_per_subject_report.php.
  */
+include_once 'session_config.php';
+session_start();
 include 'connect.php';
+require_once 'evaluation_period_helper.php';
 require('fpdf.php');
 define('FPDF_FONTPATH', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'font' . DIRECTORY_SEPARATOR);
 date_default_timezone_set('Asia/Manila');
+
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty' && isEvaluationOngoing($conn)) {
+    http_response_code(403);
+    exit('Evaluation results are unavailable while the evaluation process is still ongoing.');
+}
 
 function ct($text) {
     return iconv('UTF-8', 'windows-1252//TRANSLIT', (string)$text);

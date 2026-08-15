@@ -438,6 +438,7 @@ include 'totalstudents_dashcount.php';
     <div class="modal-body">
       <label for="program-code">Program Code</label>
       <input type="text" id="program-code" placeholder="eg. BSIT">
+      <small id="program-code-message" class="program-validation-message" style="display:none;"></small>
       <label for="program-name">Program Name</label>
       <input type="text" id="program-name" placeholder="eg. Bachelor of Information Technology">
       <button id="save-program-btn" class="submit-btn">SAVE PROGRAM</button>

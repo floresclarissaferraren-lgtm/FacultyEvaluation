@@ -3,6 +3,7 @@ header("Content-Type: application/json");
 include 'connect.php';
 require_once 'evaluation_schema.php';
 require_once 'ensure_schema_column.php';
+require_once 'evaluation_period_helper.php';
 
 try {
     ensureColumnExists($conn, 'add_faculties', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"');
@@ -11,6 +12,12 @@ try {
 
     $student_id = intval($_GET['student_id'] ?? 0);
     $year_level = trim($_GET['year_level'] ?? '');
+
+    if ($student_id > 0 && !isEvaluationOngoing($conn)) {
+        echo json_encode([]);
+        $conn->close();
+        exit;
+    }
 
     $student_year_raw = '';
     $student_year_formatted = '';

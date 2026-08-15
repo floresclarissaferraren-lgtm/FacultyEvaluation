@@ -5,6 +5,7 @@ header('Content-Type: application/json');
 include 'connect.php';
 require_once 'weighted_score_helper.php';
 require_once 'evaluation_schema.php';
+require_once 'evaluation_period_helper.php';
 
 // Verify user is logged in as faculty
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
@@ -62,6 +63,8 @@ if (strtolower((string)($status_row['status'] ?? 'active')) !== 'active') {
     ]);
     exit;
 }
+
+blockFacultyResultsWhileEvaluationOngoing($conn);
 
 // --- Total responses & date range ---
 ensureEvaluationsSchema($conn);

@@ -4,10 +4,33 @@ include 'connect.php';
 // 🔥 IMPORTANT: set JSON header
 header('Content-Type: application/json');
 
+function normalizeProgramCodeInput(string $code): string {
+    $code = trim($code);
+    $code = preg_replace('/\\\\[rnt]/i', '', $code);
+    $code = preg_replace('/\s+/', '', $code);
+    return strtoupper($code);
+}
+
+function programCodeExists(mysqli $conn, string $normalizedCode, int $excludeId): bool {
+    $result = $conn->query("SELECT id, program_code FROM add_programs");
+    if (!$result) return false;
+
+    while ($row = $result->fetch_assoc()) {
+        if (intval($row['id']) === $excludeId) {
+            continue;
+        }
+        if (normalizeProgramCodeInput((string)$row['program_code']) === $normalizedCode) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id   = $_POST['id'];
-    $code = $_POST['program_code'];
-    $name = $_POST['program_name'];
+    $id   = intval($_POST['id'] ?? 0);
+    $code = normalizeProgramCodeInput($_POST['program_code'] ?? '');
+    $name = trim($_POST['program_name'] ?? '');
 
     // basic validation
     if (empty($code) || empty($name)) {
@@ -18,25 +41,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // check if program code already exists (excluding current record, case-insensitive)
-    $check = $conn->prepare("SELECT id FROM add_programs WHERE LOWER(program_code) = LOWER(?) AND id != ?");
-    $check->bind_param("si", $code, $id);
-    $check->execute();
-    $check->store_result();
-
-    if ($check->num_rows > 0) {
+    if (programCodeExists($conn, $code, $id)) {
         echo json_encode([
             "status" => "error",
-            "message" => "Program Code already exists"
+            "message" => "Program code already exists. Please use a different program code."
         ]);
-        $check->close();
         exit;
     }
-
-    $check->close();
-
-    // Convert program code to uppercase for consistency
-    $code = strtoupper($code);
     
     $stmt = $conn->prepare("UPDATE add_programs SET program_code=?, program_name=? WHERE id=?");
     $stmt->bind_param("ssi", $code, $name, $id);

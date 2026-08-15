@@ -3,10 +3,11 @@ include "connect.php";
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $program_code = $_POST['program_code'] ?? '';
+    $program_id = isset($_POST['id']) && is_numeric($_POST['id']) ? intval($_POST['id']) : 0;
+    $program_code = trim($_POST['program_code'] ?? '');
 
-    if (empty($program_code)) {
-        echo json_encode(['success' => false, 'error' => 'Missing program_code']);
+    if ($program_id <= 0 && $program_code === '') {
+        echo json_encode(['success' => false, 'error' => 'Missing program id or program_code']);
         exit;
     }
 
@@ -14,18 +15,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->begin_transaction();
 
     try {
-        // Get program ID first
-        $program_stmt = $conn->prepare("SELECT id FROM add_programs WHERE program_code = ?");
-        $program_stmt->bind_param("s", $program_code);
+        // Get program details first
+        if ($program_id > 0) {
+            $program_stmt = $conn->prepare("SELECT id, program_code FROM add_programs WHERE id = ? LIMIT 1");
+            $program_stmt->bind_param("i", $program_id);
+        } else {
+            $program_stmt = $conn->prepare("SELECT id, program_code FROM add_programs WHERE TRIM(program_code) = TRIM(?) LIMIT 1");
+            $program_stmt->bind_param("s", $program_code);
+        }
         $program_stmt->execute();
         $program_result = $program_stmt->get_result();
         
         if ($program_result->num_rows === 0) {
+            $conn->rollback();
             echo json_encode(['success' => false, 'error' => 'Program not found']);
             exit;
         }
         
-        $program_id = $program_result->fetch_assoc()['id'];
+        $program = $program_result->fetch_assoc();
+        $program_id = intval($program['id']);
+        $program_code = $program['program_code'];
         $program_stmt->close();
 
         // Get all subjects under this program
@@ -60,15 +69,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $delete_classes->execute();
         $delete_classes->close();
 
-        // Delete students (using program field that stores program_id)
-        $delete_students = $conn->prepare("DELETE FROM add_students WHERE program = ?");
-        $delete_students->bind_param("s", $program_id);
+        // Delete students (program may store program_id, code, or old code text)
+        $program_id_text = (string)$program_id;
+        $delete_students = $conn->prepare("DELETE FROM add_students WHERE program = ? OR TRIM(program) = TRIM(?)");
+        $delete_students->bind_param("ss", $program_id_text, $program_code);
         $delete_students->execute();
         $delete_students->close();
 
         // Delete the program itself
-        $delete_program = $conn->prepare("DELETE FROM add_programs WHERE program_code = ?");
-        $delete_program->bind_param("s", $program_code);
+        $delete_program = $conn->prepare("DELETE FROM add_programs WHERE id = ?");
+        $delete_program->bind_param("i", $program_id);
         $delete_program->execute();
         
         if ($delete_program->affected_rows > 0) {

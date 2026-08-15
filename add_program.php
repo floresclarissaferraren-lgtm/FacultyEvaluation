@@ -4,10 +4,30 @@ include 'connect.php';
 // 🔥 IMPORTANT: set JSON header
 header('Content-Type: application/json');
 
+function normalizeProgramCodeInput(string $code): string {
+  $code = trim($code);
+  $code = preg_replace('/\\\\[rnt]/i', '', $code);
+  $code = preg_replace('/\s+/', '', $code);
+  return strtoupper($code);
+}
+
+function programCodeExists(mysqli $conn, string $normalizedCode): bool {
+  $result = $conn->query("SELECT program_code FROM add_programs");
+  if (!$result) return false;
+
+  while ($row = $result->fetch_assoc()) {
+    if (normalizeProgramCodeInput((string)$row['program_code']) === $normalizedCode) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-  $code = $_POST['program_code'] ?? '';
-  $name = $_POST['program_name'] ?? '';
+  $code = normalizeProgramCodeInput($_POST['program_code'] ?? '');
+  $name = trim($_POST['program_name'] ?? '');
 
   // basic validation
   if (empty($code) || empty($name)) {
@@ -18,25 +38,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
   }
 
-  // check if program code already exists (case-insensitive)
-  $check = $conn->prepare("SELECT id FROM add_programs WHERE LOWER(program_code) = LOWER(?)");
-  $check->bind_param("s", $code);
-  $check->execute();
-  $check->store_result();
-
-  if ($check->num_rows > 0) {
+  if (programCodeExists($conn, $code)) {
     echo json_encode([
       "status" => "error",
-      "message" => "Program Code already exists"
+      "message" => "Program code already exists. Please use a different program code."
     ]);
-    $check->close();
     exit;
   }
-
-  $check->close();
-
-  // Convert program code to uppercase for consistency
-  $code = strtoupper($code);
   
   $stmt = $conn->prepare("INSERT INTO add_programs (program_code, program_name) VALUES (?, ?)");
   $stmt->bind_param("ss", $code, $name);

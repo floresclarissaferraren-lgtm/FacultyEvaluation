@@ -4,49 +4,12 @@ session_start();
 header("Content-Type: application/json");
 include "connect.php";
 require_once 'evaluation_schema.php';
+require_once 'evaluation_period_helper.php';
 date_default_timezone_set("Asia/Manila");
 
-$conn->query("
-    CREATE TABLE IF NOT EXISTS evaluation_periods (
-        id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        ay VARCHAR(20) NOT NULL,
-        semester VARCHAR(20) NOT NULL,
-        start_date DATE NOT NULL,
-        end_date DATE NOT NULL,
-        is_active TINYINT(1) NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        KEY idx_active (is_active)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-");
-
-$conn->query("
-    CREATE TABLE IF NOT EXISTS evaluation_settings (
-        id INT(11) NOT NULL PRIMARY KEY,
-        evaluation_open TINYINT(1) NOT NULL DEFAULT 0,
-        active_period_id INT(11) NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        KEY idx_active_period (active_period_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-");
-$conn->query("INSERT IGNORE INTO evaluation_settings (id, evaluation_open, active_period_id) VALUES (1, 0, NULL)");
+ensureEvaluationPeriodTables($conn);
+closeExpiredEvaluationPeriod($conn);
 $today = date("Y-m-d");
-$expiredStmt = $conn->prepare("
-    SELECT es.active_period_id
-    FROM evaluation_settings es
-    JOIN evaluation_periods ep ON ep.id = es.active_period_id
-    WHERE es.id = 1
-      AND es.active_period_id IS NOT NULL
-      AND ep.end_date < ?
-    LIMIT 1
-");
-$expiredStmt->bind_param("s", $today);
-$expiredStmt->execute();
-$expired = $expiredStmt->get_result()->fetch_assoc();
-$expiredStmt->close();
-if ($expired) {
-    $conn->query("UPDATE evaluation_settings SET evaluation_open = 0 WHERE id = 1");
-}
 
 $settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
 $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;

@@ -150,6 +150,26 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
     $insClass->close();
 }
 
+function validateClassSubjectAssignments(array $subjects, array $faculty_assignments): array {
+    if (empty($subjects)) {
+        return ["valid" => false, "message" => "Please select at least one subject."];
+    }
+
+    foreach ($subjects as $subject_id) {
+        $subjectId = intval($subject_id);
+        $facultyId = intval($faculty_assignments[$subject_id] ?? $faculty_assignments[(string)$subject_id] ?? 0);
+
+        if ($subjectId <= 0 || $facultyId <= 0) {
+            return [
+                "valid" => false,
+                "message" => "You must complete all required selections before adding a class subject."
+            ];
+        }
+    }
+
+    return ["valid" => true, "message" => ""];
+}
+
 /* ========================= GET FACULTY BY SUBJECT ========================= */
 if ($action === "get_faculty_by_subject") {
     $subject_id = $_GET['subject_id'] ?? 0;
@@ -417,6 +437,12 @@ if ($action === "add") {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
         exit;
     }
+
+    $assignmentValidation = validateClassSubjectAssignments($subjects, $faculty_assignments);
+    if (!$assignmentValidation["valid"]) {
+        echo json_encode(["status" => "error", "message" => $assignmentValidation["message"]]);
+        exit;
+    }
     
     // Check for duplicate class (same year level and section in same program)
     $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ?");
@@ -471,7 +497,6 @@ if ($action === "add") {
             foreach ($subjects as $subject_id) {
                 $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
                 error_log("ADD CLASS - Adding subject $subject_id with faculty $faculty_id to class $class_id");
-                // Allow faculty_id to be 0 for now, faculty can be assigned later
                 $sub_stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
                 $sub_stmt->execute();
                 error_log("ADD CLASS - Successfully inserted subject $subject_id");
@@ -524,6 +549,12 @@ if ($action === "edit") {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
         exit;
     }
+
+    $assignmentValidation = validateClassSubjectAssignments($subjects, $faculty_assignments);
+    if (!$assignmentValidation["valid"]) {
+        echo json_encode(["status" => "error", "message" => $assignmentValidation["message"]]);
+        exit;
+    }
     
     // Check for duplicate class (same year level and section in same program), excluding current class
     $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND id != ?");
@@ -561,7 +592,6 @@ if ($action === "edit") {
             $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
             foreach ($subjects as $subject_id) {
                 $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
-                // Allow faculty_id to be 0 for now, faculty can be assigned later
                 $sub_stmt->bind_param("iii", $id, $subject_id, $faculty_id);
                 $sub_stmt->execute();
             }
@@ -587,8 +617,11 @@ if ($action === "add_subject_to_class") {
     $subject_id = $_POST['subject_id'] ?? 0;
     $faculty_id = $_POST['faculty_id'] ?? 0;
     
-    if (!$class_id || !$subject_id) {
-        echo json_encode(["status" => "error", "message" => "Missing class ID or subject ID"]);
+    if (!$class_id || !$subject_id || !$faculty_id) {
+        echo json_encode([
+            "status" => "error",
+            "message" => "You must complete all required selections before adding a class subject."
+        ]);
         exit;
     }
 

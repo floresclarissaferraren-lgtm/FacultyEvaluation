@@ -137,6 +137,55 @@ function formatRatingPercentage(score) {
   return `${getRatingPercentageValue(score).toFixed(0)}%`;
 }
 
+function isFacultyInactive() {
+  return (document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active";
+}
+
+function isEvaluationOngoing() {
+  return (document.getElementById("evaluationOngoing")?.value || "0") === "1";
+}
+
+function setFacultyResultCardsUnavailable(message = "Unavailable") {
+  setFacultyStatsLoading(false);
+
+  const ratingNumberEl = document.getElementById("overallRatingNumber");
+  const ratingPctEl    = document.getElementById("overallRatingPercentage");
+  const ratingStatusEl = document.getElementById("overallRatingStatus");
+  const responsesEl    = document.getElementById("totalResponsesValue");
+  const progressFill   = document.getElementById("overallRatingProgressFill");
+
+  if (ratingNumberEl) ratingNumberEl.textContent = "0.00 / 5.00";
+  if (ratingPctEl)    ratingPctEl.textContent = "0%";
+  if (ratingStatusEl) ratingStatusEl.textContent = message;
+  if (responsesEl)    responsesEl.textContent = "0";
+  if (progressFill)   progressFill.style.width = "0%";
+}
+
+function setFacultyStatsLoading(isLoading) {
+  const cards = document.querySelector(".faculty-cards");
+  if (!cards) return;
+
+  cards.classList.toggle("stats-loading", Boolean(isLoading));
+  cards.setAttribute("aria-busy", isLoading ? "true" : "false");
+}
+
+function updateFacultyResultAccess(evaluationOpen) {
+  const hidden = document.getElementById("evaluationOngoing");
+  if (hidden) hidden.value = evaluationOpen ? "1" : "0";
+
+  const locked = isFacultyInactive() || evaluationOpen;
+  document.querySelectorAll(".report-btn-group .report-btn").forEach(btn => {
+    btn.disabled = locked;
+    btn.title = evaluationOpen
+      ? "Evaluation results are available after the current evaluation process closes."
+      : "";
+  });
+
+  if (evaluationOpen) {
+    setFacultyResultCardsUnavailable("Unavailable");
+  }
+}
+
 function formatFeedbackForHtml(feedback) {
   const text = String(feedback || 'No feedback available').trim() || 'No feedback available';
   return escapeHtml(text).replace(/\n/g, '<br>');
@@ -648,26 +697,29 @@ document.getElementById("logoutModal").addEventListener("click", function(e){
 });
 
 function loadFacultyStats(program = 'all') {
-  if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
-    const ratingNumberEl     = document.getElementById("overallRatingNumber");
-    const ratingPctEl        = document.getElementById("overallRatingPercentage");
-    const ratingStatusEl     = document.getElementById("overallRatingStatus");
-    const responsesEl        = document.getElementById("totalResponsesValue");
-    const progressFill       = document.getElementById("overallRatingProgressFill");
-    if (ratingNumberEl)  ratingNumberEl.textContent  = "0.00 / 5.00";
-    if (ratingPctEl)     ratingPctEl.textContent      = "0%";
-    if (ratingStatusEl)  ratingStatusEl.textContent   = "No Data";
-    if (responsesEl)     responsesEl.textContent       = "0";
-    if (progressFill)    progressFill.style.width      = "0%";
+  if (isFacultyInactive()) {
+    setFacultyResultCardsUnavailable("No Data");
+    return;
+  }
+
+  if (isEvaluationOngoing()) {
+    setFacultyResultCardsUnavailable("Unavailable");
     return;
   }
 
   const url = `get_faculty_stats_by_program.php${program && program !== 'all' ? '?program=' + encodeURIComponent(program) : ''}`;
 
+  setFacultyStatsLoading(true);
+
   fetch(url)
     .then(r => r.json())
     .then(data => {
+      setFacultyStatsLoading(false);
       if (!data.success) return;
+      if (data.evaluation_ongoing) {
+        updateFacultyResultAccess(true);
+        return;
+      }
 
       const ratingNumberEl = document.getElementById("overallRatingNumber");
       const ratingPctEl    = document.getElementById("overallRatingPercentage");
@@ -691,6 +743,7 @@ function loadFacultyStats(program = 'all') {
       }
     })
     .catch(err => {
+      setFacultyStatsLoading(false);
       console.error("Failed to load faculty stats:", err);
     });
 }
@@ -724,8 +777,12 @@ function onProgramFilterChange(program) {
 }
 
 function showEvaluationReport() {
-  if ((document.getElementById("facultyStatus")?.value || "active").toLowerCase() !== "active") {
+  if (isFacultyInactive()) {
     alert("Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.");
+    return;
+  }
+  if (isEvaluationOngoing()) {
+    alert("Evaluation results are unavailable while the evaluation process is still ongoing.");
     return;
   }
 
@@ -762,6 +819,11 @@ function showEvaluationReport() {
   })
   .then(response => response.json())
   .then(data => {
+    if (!data.success && data.evaluation_ongoing) {
+      updateFacultyResultAccess(true);
+      alert(data.message || "Evaluation results are unavailable while the evaluation process is still ongoing.");
+      return;
+    }
     // Always show the modal with back button
     const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
     const totalResponses = data.success ? (data.total_responses || 0) : 0;
@@ -968,6 +1030,9 @@ function updateInstructorAcademicPeriodDisplay(status) {
   const periodEl = document.getElementById("instructorAcademicPeriod");
   if (!periodEl) return;
 
+  periodEl.classList.remove("academic-year-loading");
+  periodEl.setAttribute("aria-busy", "false");
+
   const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
   const semester = (status?.current_semester || status?.active_semester || "").trim();
 
@@ -985,7 +1050,14 @@ async function loadInstructorAcademicPeriod() {
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
-    if (status && status.success) updateInstructorAcademicPeriodDisplay(status);
+    if (status && status.success) {
+      updateInstructorAcademicPeriodDisplay(status);
+      const wasOngoing = isEvaluationOngoing();
+      updateFacultyResultAccess(!!status.evaluation_open);
+      if (wasOngoing && !status.evaluation_open && !isFacultyInactive()) {
+        loadFacultyStats(document.getElementById("programFilterSelect")?.value || "all");
+      }
+    }
   } catch (err) {
     console.error("Failed to load academic period:", err);
     updateInstructorAcademicPeriodDisplay(null);
@@ -1012,8 +1084,12 @@ document.addEventListener("DOMContentLoaded", function() {
  * Open the per-subject evaluation report modal for the logged-in faculty.
  */
 function showPerSubjectReport() {
-  if ((document.getElementById('facultyStatus')?.value || 'active').toLowerCase() !== 'active') {
+  if (isFacultyInactive()) {
     alert('Your account has been set to inactive by an admin. You cannot generate or view results until your account is active again.');
+    return;
+  }
+  if (isEvaluationOngoing()) {
+    alert('Evaluation results are unavailable while the evaluation process is still ongoing.');
     return;
   }
 
@@ -1024,7 +1100,7 @@ function showPerSubjectReport() {
   const modalContent = modal.querySelector('.per-subject-modal-content');
 
   // Show loading state
-  modalContent.innerHTML = '<div class="psm-loading"><i class="ph ph-spinner-gap psm-spin"></i><p>Loading per-subject report…</p></div>';
+  modalContent.innerHTML = buildPerSubjectReportSkeletonHtml();
   openPerSubjectModal();
 
   fetch('get_faculty_per_subject_report.php', {
@@ -1048,6 +1124,78 @@ function showPerSubjectReport() {
       console.error('Per-subject report error:', err);
       modalContent.innerHTML = `<div class="psm-error"><i class="ph ph-warning-circle"></i><p>An error occurred while loading the report.</p><button class="psm-close-btn" onclick="closePerSubjectReport()">Close</button></div>`;
     });
+}
+
+function buildPerSubjectReportSkeletonHtml() {
+  return `
+    <div class="psm-skeleton" aria-label="Loading per-subject report" aria-busy="true">
+      <div class="psm-header psm-skeleton-header">
+        <div class="psm-header-left">
+          <div class="psm-logo psm-skeleton-block"></div>
+          <div class="psm-skeleton-heading">
+            <span class="psm-skeleton-line psm-title-line"></span>
+            <span class="psm-skeleton-line psm-subtitle-line"></span>
+          </div>
+        </div>
+        <div class="psm-header-actions">
+          <span class="psm-skeleton-button"></span>
+          <span class="psm-skeleton-icon-button"></span>
+        </div>
+      </div>
+
+      <div class="psm-body">
+        <div class="psm-overall-section">
+          <div class="psm-skeleton-section-title">
+            <span class="psm-skeleton-icon"></span>
+            <span class="psm-skeleton-line psm-section-line"></span>
+          </div>
+          <span class="psm-skeleton-line psm-section-subline"></span>
+
+          <div class="psm-summary-cards">
+            ${Array.from({ length: 4 }).map(() => `
+              <div class="psm-card psm-card-skeleton">
+                <span class="psm-skeleton-line psm-card-label-skeleton"></span>
+                <span class="psm-skeleton-line psm-card-value-skeleton"></span>
+                <span class="psm-skeleton-line psm-card-note-skeleton"></span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="category-table-wrap psm-table-skeleton">
+            <div class="psm-table-row psm-table-head"></div>
+            <div class="psm-table-row"></div>
+            <div class="psm-table-row"></div>
+            <div class="psm-table-row"></div>
+          </div>
+        </div>
+
+        <div class="psm-subjects-section">
+          <section class="psm-dept psm-dept-skeleton">
+            <div class="psm-dept-header">
+              <span class="psm-skeleton-icon"></span>
+              <span class="psm-skeleton-line psm-dept-line"></span>
+            </div>
+            ${Array.from({ length: 2 }).map(() => `
+              <div class="psm-subject-card">
+                <div class="psm-subject-header">
+                  <div class="psm-subject-title-row psm-skeleton-subject-lines">
+                    <span class="psm-skeleton-line psm-code-line"></span>
+                    <span class="psm-skeleton-line psm-desc-line"></span>
+                  </div>
+                  <span class="psm-skeleton-line psm-period-line"></span>
+                </div>
+                <div class="psm-subject-meta">
+                  <span class="psm-meta-item psm-meta-skeleton"></span>
+                  <span class="psm-meta-item psm-meta-skeleton"></span>
+                  <span class="psm-meta-item psm-meta-skeleton"></span>
+                </div>
+                <div class="psm-comments psm-comments-skeleton"></div>
+              </div>
+            `).join('')}
+          </section>
+        </div>
+      </div>
+    </div>`;
 }
 
 function openPerSubjectModal() {

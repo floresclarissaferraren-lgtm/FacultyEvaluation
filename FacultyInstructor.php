@@ -11,9 +11,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
 }
 
 include 'connect.php';
+require_once 'evaluation_period_helper.php';
 
 // Fetch faculty data
 $faculty_id = $_SESSION['id'];
+$evaluation_ongoing = isEvaluationOngoing($conn);
 $stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email, status, photo FROM add_faculties WHERE id = ?");
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
@@ -94,7 +96,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
   </div>
   <div class="main-right">
     <h1>Welcome, <?php echo htmlspecialchars($faculty_name); ?></h1>
-    <div class="academic-year" id="instructorAcademicPeriod">
+    <div class="academic-year academic-year-loading" id="instructorAcademicPeriod" aria-busy="true">
       <i class="ph ph-calendar"></i> Academic Year: Loading...
     </div>
     <p class="subtitle">
@@ -105,6 +107,11 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       <div class="inactive-account-message">
         <i class="ph ph-warning-circle"></i>
         <span>Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.</span>
+      </div>
+    <?php elseif ($evaluation_ongoing): ?>
+      <div class="inactive-account-message">
+        <i class="ph ph-warning-circle"></i>
+        <span>Evaluation results will be available after the current evaluation process closes.</span>
       </div>
     <?php endif; ?>
   </div>
@@ -178,6 +185,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 <input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
 <input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
 <input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars($faculty_status); ?>">
+<input type="hidden" id="evaluationOngoing" value="<?php echo $evaluation_ongoing ? '1' : '0'; ?>">
 
 <!-- Faculty Info Box -->
 <div class="faculty-box">
@@ -187,8 +195,10 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
     </div>
     <div class="report-btn-group">
-      <button class="report-btn" onclick="showEvaluationReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>Report</button>
-      <button class="report-btn per-subject-btn" onclick="showPerSubjectReport()" <?php echo $faculty_status !== 'active' ? 'disabled' : ''; ?>>
+      <button class="report-btn" onclick="showEvaluationReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
+        <i class="ph ph-chart-bar"></i> Evaluation Report
+      </button>
+      <button class="report-btn per-subject-btn" onclick="showPerSubjectReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
         <i class="ph ph-books"></i> Per-Subject Report
       </button>
     </div>
@@ -229,6 +239,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
         <span class="card-value" id="totalResponsesValue">0</span>
       </div>
     </div>
+  </div>
 </div>
 
 

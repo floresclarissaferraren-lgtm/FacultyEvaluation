@@ -13,6 +13,132 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentRow = null;
   let deleteTarget = null;
   let deleteType = "";
+
+  const sectionSkeletons = {
+    "dashboard-section": `
+      <div class="dashboard-period-toolbar admin-skeleton-toolbar">
+        <div><span class="admin-skeleton-line label"></span><span class="admin-skeleton-line control"></span></div>
+        <div><span class="admin-skeleton-line label"></span><span class="admin-skeleton-line control"></span></div>
+      </div>
+      <div class="dashboard admin-skeleton-grid">
+        ${Array.from({ length: 4 }).map(() => `
+          <div class="dashboard-card admin-skeleton-card">
+            <div class="dashboard-content">
+              <div class="admin-skeleton-stack">
+                <span class="admin-skeleton-line title"></span>
+                <span class="admin-skeleton-line value"></span>
+                <span class="admin-skeleton-line meta"></span>
+              </div>
+              <span class="icon-box admin-skeleton-icon"></span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="dashboard-row-2 admin-skeleton-grid">
+        <div class="dashboard-card admin-skeleton-card admin-skeleton-chart-card">
+          <div class="dashboard-content">
+            <span class="admin-skeleton-line title"></span>
+            <span class="admin-skeleton-chart"></span>
+            <div class="admin-skeleton-list">${Array.from({ length: 5 }).map(() => `<span class="admin-skeleton-line"></span>`).join("")}</div>
+          </div>
+        </div>
+        <div class="dashboard-card admin-skeleton-card">
+          <div class="dashboard-content">
+            <span class="admin-skeleton-line title"></span>
+            <div class="admin-skeleton-list">${Array.from({ length: 5 }).map(() => `<span class="admin-skeleton-line row"></span>`).join("")}</div>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-row-3 admin-skeleton-grid">
+        <div class="period-container"><div class="dashboard-card admin-skeleton-card"><div class="dashboard-content admin-skeleton-stack"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line control short"></span></div></div></div>
+        <div class="dashboard-card admin-skeleton-card"><div class="dashboard-content admin-skeleton-stack"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line meta"></span></div></div>
+      </div>
+    `,
+    "programs-section": `
+      <div class="programs-container-box admin-skeleton-card">
+        <div class="programs-header">
+          <div class="programs-stats"><span class="stats-icon admin-skeleton-icon"></span><span class="admin-skeleton-line value"></span></div>
+          <div class="programs-actions"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control short"></span></div>
+        </div>
+        <div class="programs-cards-container">${Array.from({ length: 6 }).map(() => `<div class="program-card admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line meta"></span><div class="program-card-actions"><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span></div></div>`).join("")}</div>
+      </div>
+    `,
+    "faculties-section": buildPeopleSkeleton("faculty-stats-container", 3, "faculty-toolbar", 6),
+    "students-section": buildPeopleSkeleton("student-stats-container", 4, "student-toolbar-box", 5),
+    "subjects-section": buildTableSkeleton("subjects-grid", 4, 5),
+    "criteria-section": `
+      <div class="section-header admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line control short"></span></div>
+      <div class="criteria-layout">
+        <div class="categories-column">${Array.from({ length: 4 }).map(() => `<div class="admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line row"></span><span class="admin-skeleton-line row short"></span></div>`).join("")}</div>
+        <div class="summary-panel admin-skeleton-card"><span class="admin-skeleton-line title"></span>${Array.from({ length: 7 }).map(() => `<span class="admin-skeleton-line row"></span>`).join("")}</div>
+      </div>
+    `,
+    "report-section": buildTableSkeleton("table-wrapper", 6, 6)
+  };
+
+  function buildPeopleSkeleton(statsClass, statCount, toolbarClass, columnCount) {
+    return `
+      <div class="${statsClass}">
+        ${Array.from({ length: statCount }).map(() => `
+          <div class="admin-skeleton-stat-card">
+            <div class="stat-content">
+              <div class="stat-info admin-skeleton-stack">
+                <span class="admin-skeleton-line title"></span>
+                <span class="admin-skeleton-line value"></span>
+                <span class="admin-skeleton-line meta"></span>
+              </div>
+              <span class="stat-icon admin-skeleton-icon"></span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="${toolbarClass} admin-skeleton-toolbar">
+        <div class="search-filters-container"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control short"></span></div>
+        <div class="header-actions"><span class="admin-skeleton-line control short"></span><span class="admin-skeleton-line control short"></span></div>
+      </div>
+      ${buildTableSkeleton("table-wrapper", columnCount, 6)}
+    `;
+  }
+
+  function buildTableSkeleton(wrapperClass, columnCount, rowCount) {
+    const cells = Array.from({ length: columnCount }).map((_, index) => `<span class="admin-skeleton-cell ${index === 1 ? "wide" : ""}"></span>`).join("");
+    return `
+      <div class="${wrapperClass} admin-skeleton-table-card">
+        <div class="table-header admin-skeleton-toolbar">
+          <div class="search-filters-container"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control"></span></div>
+          <div class="header-actions"><span class="admin-skeleton-line control short"></span></div>
+        </div>
+        <div class="table-scroll-container">
+          <div class="admin-skeleton-table" style="--skeleton-columns:${columnCount};">
+            <div class="admin-skeleton-table-row head">${cells}</div>
+            ${Array.from({ length: rowCount }).map(() => `<div class="admin-skeleton-table-row">${cells}</div>`).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function showSectionSkeleton(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section || !sectionSkeletons[sectionId] || section.querySelector(":scope > .admin-section-skeleton")) return;
+
+    const skeleton = document.createElement("div");
+    skeleton.className = "admin-section-skeleton";
+    skeleton.setAttribute("aria-hidden", "true");
+    skeleton.innerHTML = sectionSkeletons[sectionId];
+    section.prepend(skeleton);
+    section.classList.add("admin-section-loading");
+    section.setAttribute("aria-busy", "true");
+  }
+
+  function hideSectionSkeleton(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    section.querySelector(":scope > .admin-section-skeleton")?.remove();
+    section.classList.remove("admin-section-loading");
+    section.removeAttribute("aria-busy");
+  }
   // ------------------- Notification (now using unified system) ==========================================================================================
   // Note: showNotification and showAlertModal are now provided by unified_notifications.js
   // These use consistent styling across all pages
@@ -475,6 +601,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("deleteModal");
   modal.querySelector(".cancel-btn").onclick = closeDeleteModal;
   modal.querySelector(".submit-btn").onclick = confirmDelete;
+  window.closeDeleteModal = closeDeleteModal;
+  window.confirmDelete = confirmDelete;
 
   // ===================== Archive Confirmation Modal ==========================================================
   let _archivePending = null; // stores { row, record, statusMenu, type }
@@ -561,8 +689,31 @@ document.addEventListener("DOMContentLoaded", () => {
     programSubmitBtn = document.getElementById("save-program-btn"),
     programHeader = addProgramModal.querySelector("h3"),
     programCodeInput = document.getElementById("program-code"),
-    programNameInput = document.getElementById("program-name");
+    programNameInput = document.getElementById("program-name"),
+    programCodeMessage = document.getElementById("program-code-message");
   let editRowProgram = null;
+
+  function normalizeProgramCode(code) {
+    return String(code || "").replace(/\\[rnt]/gi, "").replace(/\s+/g, "").toUpperCase();
+  }
+
+  function setProgramCodeMessage(message, type = "error") {
+    if (!programCodeMessage) return;
+    programCodeMessage.textContent = message;
+    programCodeMessage.style.display = message ? "block" : "none";
+    programCodeMessage.style.color = type === "success" ? "#2e7d32" : "#f44336";
+  }
+
+  function getExistingProgramCodes() {
+    return Array.from(document.querySelectorAll(".program-card"))
+      .filter(card => !editRowProgram || card.dataset.id !== editRowProgram.dataset.id)
+      .map(card => normalizeProgramCode(card.dataset.programCode))
+      .filter(Boolean);
+  }
+
+  function isDuplicateProgramCode(code) {
+    return getExistingProgramCodes().includes(normalizeProgramCode(code));
+  }
 
   // OPEN ADD MODAL
   document.querySelector(".add-program-btn")?.addEventListener("click", () => {
@@ -571,6 +722,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clear validation states
     programCodeInput.style.borderColor = "";
     programCodeInput.title = "";
+    setProgramCodeMessage("");
     addProgramModal.style.display = "flex";
     addProgramModal.style.zIndex = "10001";
     addProgramModal.style.position = "fixed";
@@ -587,27 +739,22 @@ document.addEventListener("DOMContentLoaded", () => {
       programCodeInput.setSelectionRange(cursorPos, cursorPos);
     }
 
-    const code = programCodeInput.value.trim();
+    const code = normalizeProgramCode(programCodeInput.value);
     if (!code || code.length < 2) {
       programCodeInput.style.borderColor = "";
+      programCodeInput.title = "";
+      setProgramCodeMessage("");
       return;
     }
 
-    // Check against existing programs in table
-    const existingCodes = [];
-    document.querySelectorAll(".programs-table tbody tr").forEach(row => {
-      const rowCode = row.cells[0]?.textContent?.trim().toUpperCase();
-      if (rowCode && (!editRowProgram || row.dataset.id !== editRowProgram.dataset.id)) {
-        existingCodes.push(rowCode);
-      }
-    });
-
-    if (existingCodes.includes(code.toUpperCase())) {
+    if (isDuplicateProgramCode(code)) {
       programCodeInput.style.borderColor = "#f44336";
-      programCodeInput.title = "Program Code already exists";
+      programCodeInput.title = "Program code already exists";
+      setProgramCodeMessage("Program code already exists. Please use a different program code.");
     } else {
       programCodeInput.style.borderColor = "#4caf50";
       programCodeInput.title = "";
+      setProgramCodeMessage("");
     }
   });
 
@@ -620,26 +767,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Simple validation using existing table data
-    const existingCodes = [];
-    document.querySelectorAll(".programs-table tbody tr").forEach(row => {
-      const rowCode = row.cells[0]?.textContent?.trim().toUpperCase();
-      if (rowCode && (!editRowProgram || row.dataset.id !== editRowProgram.dataset.id)) {
-        existingCodes.push(rowCode);
-      }
-    });
-
-    if (existingCodes.includes(code.toUpperCase())) {
-      showNotification("Program Code already exists. Please use a different code.", "#f44336", 4000);
+    if (isDuplicateProgramCode(code)) {
+      const message = "Program code already exists. Please use a different program code.";
+      setProgramCodeMessage(message);
+      showNotification(message, "#f44336", 4000);
       programCodeInput.focus();
       return;
     }
 
     const url = editRowProgram ? "edit_program.php" : "add_program.php";
-    const body = editRowProgram ? `id=${editRowProgram.dataset.id}&program_code=${encodeURIComponent(code)}
-  &program_name=${encodeURIComponent(name)}` : `program_code=${encodeURIComponent(code)}&program_name=${encodeURIComponent(name)}`;
+    const params = new URLSearchParams();
+    if (editRowProgram) params.set("id", editRowProgram.dataset.id);
+    params.set("program_code", normalizeProgramCode(code));
+    params.set("program_name", name);
 
-    fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body })
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() })
       .then(r => r.text()).then(t => { try { return JSON.parse(t); } catch { return t; } })
       .then(res => {
         const ok = (typeof res === "object" && res.status === "success") || (typeof res === "string" && res.toLowerCase().includes("success"));
@@ -653,6 +795,8 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           // Show simple notification for duplicate program errors
           if (typeof res === "object" && res.message && res.message.includes("already exists")) {
+            setProgramCodeMessage(res.message);
+            programCodeInput.style.borderColor = "#f44336";
             showNotification(res.message, "#f44336", 4000);
           } else {
             showNotification(res.message || res || "Error updating Program.", "#f44336", 4000);
@@ -673,6 +817,7 @@ document.addEventListener("DOMContentLoaded", () => {
     row.querySelector(".edit-btn")?.addEventListener("click", () => {
       programHeader.innerText = "EDIT PROGRAM"; programSubmitBtn.innerText = "UPDATE PROGRAM";
       programCodeInput.value = row.cells[0].innerText; programNameInput.value = row.cells[1].innerText;
+      setProgramCodeMessage("");
       editRowProgram = row;
       // Clear validation states
       programCodeInput.style.borderColor = "";
@@ -684,6 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // LOAD PROGRAMS
   function loadPrograms() {
+    showSectionSkeleton("programs-section");
     fetch("getProgram.php")
       .then(r => r.json())
       .then(data => {
@@ -742,10 +888,19 @@ document.addEventListener("DOMContentLoaded", () => {
           container.appendChild(card);
         });
       })
-      .catch(err => console.error("FETCH ERROR:", err));
+      .catch(err => console.error("FETCH ERROR:", err))
+      .finally(() => hideSectionSkeleton("programs-section"));
   }
   // CLOSE MODAL
-  function closeProgramModal() { programCodeInput.value = ""; programNameInput.value = ""; editRowProgram = null; addProgramModal.style.display = "none"; }
+  function closeProgramModal() {
+    programCodeInput.value = "";
+    programNameInput.value = "";
+    programCodeInput.style.borderColor = "";
+    programCodeInput.title = "";
+    setProgramCodeMessage("");
+    editRowProgram = null;
+    addProgramModal.style.display = "none";
+  }
 
   document.getElementById("program-search")?.addEventListener("input", e => {
     const term = e.target.value.toLowerCase();
@@ -799,6 +954,9 @@ document.addEventListener("DOMContentLoaded", () => {
     programSubmitBtn.innerText = "UPDATE PROGRAM";
     programCodeInput.value = code;
     programNameInput.value = name;
+    programCodeInput.style.borderColor = "";
+    programCodeInput.title = "";
+    setProgramCodeMessage("");
     editRowProgram = { dataset: { id: id } };
     addProgramModal.style.display = "flex";
     addProgramModal.style.zIndex = "10001";
@@ -806,7 +964,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function deleteProgram(id, code) {
-    openDeleteModal("program", code, { dataset: { id: id } });
+    const card = Array.from(document.querySelectorAll(".program-card"))
+      .find(item => String(item.dataset.id) === String(id));
+
+    const target = card || {
+      dataset: { id: String(id), program_code: code, programCode: code },
+      remove: () => loadPrograms()
+    };
+    if (target.dataset) {
+      target.dataset.program_code = code;
+      target.dataset.programCode = code;
+    }
+
+    openDeleteModal("program", code, target);
   }
 
   document.addEventListener("DOMContentLoaded", loadPrograms);
@@ -974,6 +1144,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // LOAD ALL SUBJECTS
   function loadSubjectsMainTable() {
+    showSectionSkeleton("subjects-section");
     fetch("subject_crud.php?action=get_all")
       .then(r => r.json())
       .then(data => {
@@ -983,7 +1154,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => {
         console.error("Error loading subjects:", err);
         subjectsMainTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">Error loading subjects</td></tr>';
-      });
+      })
+      .finally(() => hideSectionSkeleton("subjects-section"));
   }
 
   function renderSubjectsMainTable() {
@@ -1971,6 +2143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const assignments = {};
+    const missingFacultySubjects = [];
     checked.forEach(subjectId => {
       const select = document.querySelector(`#faculty-list select[data-subject-id="${subjectId}"]`);
       if (select && select.value) {
@@ -1978,9 +2151,14 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (isEditing && Object.prototype.hasOwnProperty.call(existingAssignments, subjectId)) {
         assignments[subjectId] = existingAssignments[subjectId];
       } else {
-        assignments[subjectId] = 0; // No faculty assigned yet
+        missingFacultySubjects.push(subjectId);
       }
     });
+
+    if (missingFacultySubjects.length > 0) {
+      showGlobalNotification("You must complete all required selections before adding a class subject.", "warning");
+      return;
+    }
 
     const action = isEditing ? "edit" : "add";
     let body = `action=${action}&program_id=${currentProgramId}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
@@ -2147,7 +2325,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`)
       .then(r => r.json())
       .then(faculty => {
-        facultySelect.innerHTML = '<option value="0">Unassigned</option>';
+        facultySelect.innerHTML = '<option value="">Select faculty</option>';
         faculty.forEach(f => {
           const option = document.createElement('option');
           option.value = f.id;
@@ -2214,6 +2392,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const classId = modal.dataset.classId;
     const subjectId = modal.dataset.subjectId;
     const facultyId = document.getElementById("editFacultySelect").value;
+
+    if (!classId || !subjectId || !facultyId || facultyId === "0") {
+      showNotification("You must complete all required selections before adding a class subject.", "#f59e0b", 3500);
+      return;
+    }
 
     // First remove the existing assignment, then add new one
     fetch(`classes_crud.php?action=delete_subject`, {
@@ -2512,6 +2695,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------- Load Faculty -------------------
   function loadFaculty() {
     console.log("Loading faculty data...");
+    showSectionSkeleton("faculties-section");
     fetch("getFaculty.php?t=" + Date.now())
       .then(r => r.json())
       .then(data => {
@@ -2711,7 +2895,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .then(() => refreshSectionStats())
-      .catch(err => console.error("Load error:", err));
+      .catch(err => console.error("Load error:", err))
+      .finally(() => hideSectionSkeleton("faculties-section"));
   }
 
   // ADD BUTTON -------------------
@@ -2968,6 +3153,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadEvaluations() {
     console.log('Loading evaluations...');
+    showSectionSkeleton("report-section");
     const reportParams = getReportPeriodParams();
     const query = reportParams.toString();
     fetch(`get_evaluations.php${query ? `?${query}` : ""}`)
@@ -3041,7 +3227,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Network error:", err);
         const tbody = document.getElementById("evaluationTableBody");
         tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Network error loading data</td></tr>';
-      });
+      })
+      .finally(() => hideSectionSkeleton("report-section"));
   }
 
   function buildEvaluationReportPdfUrl(downloadMode = false) {
@@ -3590,6 +3777,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadDashboardStats() {
     console.log("Loading dashboard stats...");
+    showSectionSkeleton("dashboard-section");
     fetch("get_dashboard_stats.php?cb=" + Date.now(), { cache: "no-store" })
       .then(r => {
         console.log("Response status:", r.status);
@@ -3696,7 +3884,8 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error("Error loading dashboard stats:", data.message);
         }
       })
-      .catch(err => console.error("Network error:", err));
+      .catch(err => console.error("Network error:", err))
+      .finally(() => hideSectionSkeleton("dashboard-section"));
   }
 
   function updateDepartmentGraph(departments) {
@@ -4230,13 +4419,14 @@ document.addEventListener("DOMContentLoaded", () => {
   //  Load Students -------------------
   function loadStudents() {
     console.log("Loading students...");
+    showSectionSkeleton("students-section");
 
     // First load programs, then load students
     loadStudentPrograms().then(() => {
       // Populate program dropdown
       populateProgramDropdown();
 
-      fetch("get_students.php")
+      return fetch("get_students.php")
         .then(r => {
           console.log("Response status:", r.status);
           if (!r.ok) {
@@ -4635,7 +4825,9 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(() => refreshSectionStats())
         .catch(err => console.error("Error loading students:", err));
-    });
+    })
+      .catch(err => console.error("Error preparing student list:", err))
+      .finally(() => hideSectionSkeleton("students-section"));
   }
 
   // ========================= Subject Selection for Students =========================
@@ -4710,23 +4902,26 @@ document.addEventListener("DOMContentLoaded", () => {
           selectedSubject.instructor_name = matched.instructor_name || selectedSubject.instructor_name || "Unassigned";
         }
       }
-      const optionHtml = options.length > 0
+      const hasClassOptions = options.length > 0;
+      const optionHtml = hasClassOptions
         ? options.map(opt => {
           const label = `${opt.year_level} - ${opt.section}`;
           const sel = selectedClassId && selectedClassId === String(opt.class_id) ? "selected" : "";
           return `<option value="${opt.class_id}" ${sel}>${label}</option>`;
         }).join("")
-        : '<option value="">No class found</option>';
+        : "";
 
       row.innerHTML = `
-      <td><input type="checkbox" value="${subject.id}" ${isSelected ? 'checked' : ''}></td>
+      <td><input type="checkbox" value="${subject.id}" ${isSelected && hasClassOptions ? 'checked' : ''} ${hasClassOptions ? '' : 'disabled'}></td>
       <td>${subject.subject_code}</td>
       <td>${subject.subject_desc}</td>
       <td>
-        <select class="subject-class-select" data-subject-id="${subject.id}">
-          <option value="">Select Year & Section</option>
-          ${optionHtml}
-        </select>
+        ${hasClassOptions ? `
+          <select class="subject-class-select" data-subject-id="${subject.id}">
+            <option value="">Select Year & Section</option>
+            ${optionHtml}
+          </select>
+        ` : `<div class="subject-class-empty">No class found</div>`}
       </td>
     `;
 
@@ -4988,13 +5183,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ... (rest of the code remains the same)
   // Select all checkbox
   document.getElementById("select-all-subjects")?.addEventListener("change", (e) => {
-    const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
+    const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:not(:disabled)");
     checkboxes.forEach(cb => cb.checked = e.target.checked);
   });
 
   // Confirm subject selection
   document.getElementById("confirm-subject-selection")?.addEventListener("click", () => {
-    const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:checked");
+    const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:checked:not(:disabled)");
     let hasMissingClass = false;
 
     console.log("Confirming subject selection. Checked checkboxes:", checkboxes.length);
@@ -5471,6 +5666,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   //  LOAD CATEGORIES ========================= //
   function loadCategories() {
+    showSectionSkeleton("criteria-section");
     fetch("get_category.php")
       .then(r => r.json())
       .then(cats => {
@@ -5569,8 +5765,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         document.getElementById("criteria-section").style.display = "block";
         updateCriteriaLockUI();
+        hideSectionSkeleton("criteria-section");
       })
-      .catch(err => console.error("Failed to load categories:", err));
+      .catch(err => {
+        console.error("Failed to load categories:", err);
+        hideSectionSkeleton("criteria-section");
+      });
   }
 
   /**

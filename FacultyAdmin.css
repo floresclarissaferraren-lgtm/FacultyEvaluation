@@ -7711,6 +7711,24 @@ div#report-section .evaluation-table .badge.na {
   height: 18px;
 }
 
+.subjects-selection-table input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.subject-class-empty {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: .875rem;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -11363,4 +11381,252 @@ main,
     grid-template-columns: 1fr 2fr 2fr 1fr;
   }
   .student-skeleton-row .student-skeleton-cell:last-child { display: none; }
+}
+
+/* =====================================================================
+   ADMIN SECTION SKELETON LOADER
+   Reuses each section's existing grid/flex containers so placeholders
+   track the same responsive layout as the real admin content.
+   ===================================================================== */
+
+@keyframes adminSkeletonShimmer {
+  0% { background-position: -720px 0; }
+  100% { background-position: 720px 0; }
+}
+
+.admin-section-loading {
+  position: relative;
+}
+
+.admin-section-loading > :not(.admin-section-skeleton):not(.modal) {
+  display: none !important;
+}
+
+.admin-section-skeleton {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg, 24px);
+  pointer-events: none;
+}
+
+.admin-section-skeleton *,
+.admin-section-skeleton *::before,
+.admin-section-skeleton *::after {
+  box-sizing: border-box;
+}
+
+.admin-section-skeleton .dashboard-card::before,
+.admin-section-skeleton .dashboard-card::after,
+.admin-section-skeleton .student-stat-card::before,
+.admin-section-skeleton .student-stat-card::after,
+.admin-section-skeleton .faculty-stat-card::before,
+.admin-section-skeleton .faculty-stat-card::after,
+.admin-section-skeleton .program-card::before,
+.admin-section-skeleton .program-card::after {
+  display: none !important;
+}
+
+.admin-skeleton-card,
+.admin-skeleton-stat-card,
+.admin-skeleton-table-card {
+  background: #ffffff !important;
+  border: 1px solid #e5edf7 !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .06) !important;
+  color: transparent !important;
+  overflow: hidden;
+}
+
+.admin-skeleton-stat-card {
+  min-height: 128px;
+  border-radius: 8px;
+  padding: var(--spacing-lg, 24px);
+}
+
+.faculty-stats-container .admin-skeleton-stat-card,
+.student-stats-container .admin-skeleton-stat-card {
+  min-width: 0;
+}
+
+.admin-skeleton-toolbar {
+  background: #f8fafc !important;
+  border-color: #e5edf7 !important;
+}
+
+.admin-skeleton-toolbar .search-filters-container,
+.admin-skeleton-toolbar .header-actions,
+.admin-skeleton-toolbar .programs-actions,
+.admin-skeleton-toolbar .programs-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-skeleton-stack,
+.admin-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.admin-skeleton-line,
+.admin-skeleton-icon,
+.admin-skeleton-chart,
+.admin-skeleton-cell {
+  display: block;
+  background: linear-gradient(90deg, #e6edf7 25%, #f5f8fc 50%, #e6edf7 75%);
+  background-size: 720px 100%;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.admin-skeleton-line {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.admin-skeleton-line.label { width: 46%; height: 11px; }
+.admin-skeleton-line.title { width: min(72%, 220px); height: 16px; }
+.admin-skeleton-line.value { width: min(48%, 150px); height: 34px; border-radius: 10px; }
+.admin-skeleton-line.meta { width: min(62%, 180px); height: 12px; }
+.admin-skeleton-line.control { width: min(100%, 260px); height: 44px; border-radius: 10px; }
+.admin-skeleton-line.control.short { width: 132px; }
+.admin-skeleton-line.button { width: 88px; height: 36px; border-radius: 8px; }
+.admin-skeleton-line.row { width: 100%; height: 18px; }
+.admin-skeleton-line.short { width: 52%; }
+
+.admin-skeleton-icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.admin-section-skeleton .dashboard-card .dashboard-content,
+.admin-section-skeleton .stat-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md, 16px);
+}
+
+.admin-skeleton-chart {
+  width: min(170px, 60vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  align-self: center;
+  margin: 8px 0;
+}
+
+.admin-skeleton-table-card {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.admin-skeleton-table {
+  min-width: 680px;
+}
+
+.admin-skeleton-table-row {
+  display: grid;
+  grid-template-columns: repeat(var(--skeleton-columns, 5), minmax(110px, 1fr));
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.admin-skeleton-table-row.head {
+  background: #f3f6fa;
+}
+
+.admin-skeleton-table-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-skeleton-cell {
+  height: 14px;
+  width: 72%;
+  border-radius: 999px;
+}
+
+.admin-skeleton-cell.wide {
+  width: 94%;
+}
+
+.programs-container-box.admin-skeleton-card {
+  padding: 0;
+}
+
+.programs-container-box .programs-cards-container .admin-skeleton-card {
+  min-height: 168px;
+  padding: var(--spacing-lg, 24px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.criteria-layout .admin-skeleton-card {
+  padding: var(--spacing-lg, 24px);
+  border-radius: 12px;
+}
+
+@media (max-width: 900px) {
+  .admin-section-skeleton {
+    gap: var(--spacing-md, 16px);
+  }
+
+  .admin-skeleton-toolbar .search-filters-container,
+  .admin-skeleton-toolbar .header-actions,
+  .admin-skeleton-toolbar .programs-actions,
+  .admin-skeleton-toolbar .programs-stats {
+    width: 100%;
+  }
+
+  .admin-skeleton-line.control,
+  .admin-skeleton-line.control.short,
+  .admin-skeleton-line.button {
+    flex: 1 1 180px;
+    width: auto;
+  }
+
+  .criteria-layout {
+    flex-direction: column;
+  }
+
+  .criteria-layout .categories-column,
+  .criteria-layout .summary-panel {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-skeleton-stat-card,
+  .admin-section-skeleton .dashboard-card {
+    min-height: 116px;
+    padding: 18px;
+  }
+
+  .admin-skeleton-table {
+    min-width: 560px;
+  }
+
+  .admin-skeleton-table-row {
+    grid-template-columns: repeat(var(--skeleton-columns, 5), minmax(92px, 1fr));
+    gap: 12px;
+    padding: 12px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-skeleton-line,
+  .admin-skeleton-icon,
+  .admin-skeleton-chart,
+  .admin-skeleton-cell {
+    animation: none;
+    background: #e9eff7;
+  }
 }

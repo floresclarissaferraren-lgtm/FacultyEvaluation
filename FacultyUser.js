@@ -898,6 +898,13 @@ function updatePaginationButtons() {
   }
 }
 
+function setFeedbackBadwordsState(hasBadWords) {
+  const feedbackBox = document.querySelector(".feedback-box");
+  const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
+  if (feedbackBox) feedbackBox.classList.toggle("has-badwords", hasBadWords);
+  if (badwordsMsg) badwordsMsg.style.display = hasBadWords ? "block" : "none";
+}
+
 // ================= SUBMIT =================
 function submitEvaluation() {
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
@@ -913,19 +920,12 @@ function submitEvaluation() {
   ].some(w => normalizedFeedback.includes(` ${w} `));
 
   if (hasBadWords) {
-    const feedbackBox = document.querySelector(".feedback-box");
-    const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
-    if (feedbackBox) feedbackBox.classList.add("has-badwords");
-    if (badwordsMsg) badwordsMsg.style.display = "block";
-    showGlobalNotification("Bad words is not allowed", "error");
+    setFeedbackBadwordsState(true);
     updatePaginationButtons();
     return;
   }
 
-  const feedbackBox = document.querySelector(".feedback-box");
-  const badwordsMsg = document.getElementById("feedbackBadwordsMsg");
-  if (feedbackBox) feedbackBox.classList.remove("has-badwords");
-  if (badwordsMsg) badwordsMsg.style.display = "none";
+  setFeedbackBadwordsState(false);
 
   if (!facultyId || !subjectId) {
     showGlobalNotification("Please select a subject to evaluate.", "warning");
@@ -952,34 +952,112 @@ function submitEvaluation() {
   showFinalReviewModal();
 }
 
+function escapeReviewHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function getEvaluationReviewSummary() {
+  const feedback = document.getElementById('studentFeedback')?.value.trim() || '';
+  const categories = Array.from(document.querySelectorAll('.evaluationform')).map(table => {
+    const title = table.querySelector('thead th:first-child')?.textContent?.trim() || 'Evaluation';
+    const questions = Array.from(table.querySelectorAll('tbody tr')).map(row => {
+      const question = row.querySelector('.question-list')?.textContent?.trim() || '';
+      const selected = row.querySelector('input[type="radio"]:checked')?.value || '';
+
+      return { question, selected };
+    }).filter(item => item.question);
+
+    return { title, questions };
+  }).filter(category => category.questions.length);
+
+  return {
+    categories,
+    feedback: feedback || "No feedback provided."
+  };
+}
+
 function showFinalReviewModal() {
   let modal = document.getElementById('finalReviewModal');
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'finalReviewModal';
     modal.className = 'final-review-overlay';
-    modal.innerHTML = `
-      <div class="final-review-card" role="dialog" aria-modal="true" aria-labelledby="frTitle">
-        <div class="fr-icon-wrap">
-          <i class="ph ph-paper-plane-tilt fr-icon"></i>
-        </div>
-        <h2 class="fr-title" id="frTitle">Final Review</h2>
-        <p class="fr-sub">Submit this evaluation?</p>
-        <p class="fr-warning">This cannot be undone.</p>
-        <button class="fr-submit-btn" onclick="_doSubmitEvaluation()">
-          <i class="ph ph-check-circle"></i> YES, SUBMIT NOW
-        </button>
-        <button class="fr-cancel-btn" onclick="closeFinalReviewModal()">
-          Review Again
-        </button>
-      </div>
-    `;
     modal.addEventListener('click', e => {
       if (e.target === modal) closeFinalReviewModal();
     });
     document.body.appendChild(modal);
   }
+  modal.innerHTML = `
+    <div class="final-review-card" role="dialog" aria-modal="true" aria-labelledby="frTitle">
+      <div class="fr-icon-wrap">
+        <i class="ph ph-paper-plane-tilt fr-icon"></i>
+      </div>
+      <h2 class="fr-title" id="frTitle">Final Review</h2>
+      <p class="fr-sub">Submit this evaluation?</p>
+      <p class="fr-warning">This cannot be undone.</p>
+      <button class="fr-submit-btn" onclick="_doSubmitEvaluation()">
+        <i class="ph ph-check-circle"></i> YES, SUBMIT NOW
+      </button>
+      <button class="fr-cancel-btn" onclick="showReviewAgainSummaryModal()">
+        Review Again
+      </button>
+    </div>
+  `;
   requestAnimationFrame(() => modal.classList.add('fr-visible'));
+}
+
+function showReviewAgainSummaryModal() {
+  const modal = document.getElementById('finalReviewModal');
+  if (!modal) return;
+
+  const summary = getEvaluationReviewSummary();
+  const summaryHtml = summary.categories.map(category => `
+    <div class="fr-mini-category">
+      <div class="fr-mini-category-title">${escapeReviewHtml(category.title)}</div>
+      <div class="fr-mini-table" role="table" aria-label="${escapeReviewHtml(category.title)}">
+        <div class="fr-mini-head" role="row">
+          <span>Question</span>
+          <span>5</span>
+          <span>4</span>
+          <span>3</span>
+          <span>2</span>
+          <span>1</span>
+        </div>
+        ${category.questions.map(item => `
+          <div class="fr-mini-row" role="row">
+            <span class="fr-mini-question">${escapeReviewHtml(item.question)}</span>
+            ${[5, 4, 3, 2, 1].map(score => `
+              <span class="fr-mini-rating ${String(score) === item.selected ? 'is-selected' : ''}" aria-label="${String(score) === item.selected ? `Selected ${score}` : `Not selected ${score}`}"></span>
+            `).join("")}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `).join("");
+
+  modal.innerHTML = `
+    <div class="final-review-card fr-summary-card" role="dialog" aria-modal="true" aria-labelledby="frSummaryTitle">
+      <h2 class="fr-title" id="frSummaryTitle">Review Evaluation</h2>
+      <div class="fr-mini-summary">
+        ${summaryHtml}
+      </div>
+      <div class="fr-feedback-preview">
+        <span>Feedback</span>
+        <p>${escapeReviewHtml(summary.feedback)}</p>
+      </div>
+      <div class="fr-summary-actions">
+        <button class="fr-back-btn" onclick="closeFinalReviewModal()">Go Back to Form</button>
+        <button class="fr-submit-btn" onclick="_doSubmitEvaluation()">
+          <i class="ph ph-check-circle"></i> Submit
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 function closeFinalReviewModal() {
@@ -1028,6 +1106,11 @@ function _doSubmitEvaluation() {
     .then(r => r.json())
     .then(async res => {
       if (!res.success) {
+        if ((res.message || "").toLowerCase().includes("bad words")) {
+          setFeedbackBadwordsState(true);
+          updatePaginationButtons();
+          return;
+        }
         showGlobalNotification(res.message || "Failed to submit evaluation.", "error");
         updatePaginationButtons();
         return;
