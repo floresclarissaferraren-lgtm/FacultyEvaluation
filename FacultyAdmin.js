@@ -6366,9 +6366,17 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           const result = await res.json().catch(() => null);
           if (!result || !result.success) {
-            showAlertModal((result && result.message) || "Unable to activate period.");
+            showNotification((result && result.message) || "Unable to activate period.", "#f59e0b", 4000);
           } else {
-            showNotification(result.message || "Period activated.", "#10b981", 5000);
+            const sent   = result.notify_sent   ?? 0;
+            const failed = result.notify_failed ?? 0;
+            if (sent > 0 || failed > 0) {
+              const msg = `Evaluation opened. Email notifications sent to ${sent} student${sent !== 1 ? "s" : ""}` +
+                          (failed > 0 ? ` (${failed} failed).` : ".");
+              showNotification(msg, "#10b981", 6000);
+            } else {
+              showNotification("Period activated successfully.", "#10b981", 4000);
+            }
           }
           await loadPeriods();
           await refreshPeriodCard();
