@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('student');
 include_once 'session_config.php';
 session_start();
 include 'connect.php';
@@ -10,8 +12,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
-    $student_id = $_POST['student_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $student_id = (int)($_SESSION['id'] ?? 0);
     
     try {
         // Fetch comprehensive student profile data
@@ -27,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
                 s.yearlevel,
                 s.program,
                 s.section,
+                s.student_type,
                 s.status,
                 s.enrollment_date,
                 p.program_name
@@ -56,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
                     'yearlevel' => $student_data['yearlevel'] ?: 'Not specified',
                     'program' => $student_data['program'],
                     'section' => $student_data['section'] ?: 'Not assigned',
+                    'student_type' => $student_data['student_type'] ?: 'Regular',
                     'status' => $student_data['status'] ?: 'Active',
                     'enrollment_date' => $student_data['enrollment_date'] ? date('F d, Y', strtotime($student_data['enrollment_date'])) : 'Not specified',
                     'program_name' => $student_data['program_name'] ?: 'Not assigned'

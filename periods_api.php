@@ -14,14 +14,18 @@ function ensurePeriodTables(mysqli $conn): void {
             id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
             ay VARCHAR(20) NOT NULL,
             semester VARCHAR(20) NOT NULL,
-            start_date DATE NOT NULL,
-            end_date DATE NOT NULL,
+            start_date DATE NULL,
+            end_date DATE NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             KEY idx_active (is_active)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+
+    // Modify existing columns to allow NULL
+    $conn->query("ALTER TABLE evaluation_periods MODIFY start_date DATE NULL");
+    $conn->query("ALTER TABLE evaluation_periods MODIFY end_date DATE NULL");
 
     $conn->query("
         CREATE TABLE IF NOT EXISTS evaluation_settings (
@@ -109,7 +113,6 @@ if ($action === "status") {
     $currentSemester = $settings ? (string)(($settings["display_semester"] ?? "") ?: ($settings["selected_semester"] ?? "")) : "";
     $activeInDuration = false;
     if ($activePeriodId > 0) {
-        $today = todayDate();
         $stmt = $conn->prepare("SELECT ay, semester, start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
         $stmt->bind_param("i", $activePeriodId);
         $stmt->execute();
@@ -125,7 +128,11 @@ if ($action === "status") {
             if (stripos($sem, "1st") !== false) $prefix = "1st";
             else if (stripos($sem, "2nd") !== false) $prefix = "2nd";
             $activeName = trim($prefix . " " . $activeAcademicYear);
-            $activeInDuration = ($row["start_date"] <= $today && $row["end_date"] >= $today);
+            $today = todayDate();
+            $activeInDuration = !empty($row["start_date"])
+                && !empty($row["end_date"])
+                && $row["start_date"] <= $today
+                && $row["end_date"] >= $today;
         }
     }
     $evaluationOpen = $evaluationOpen && $activePeriodId > 0 && $activeInDuration;
@@ -155,8 +162,8 @@ if ($action === "list") {
                 "id" => intval($row["id"]),
                 "ay" => $row["ay"],
                 "semester" => $row["semester"],
-                "start_date" => $row["start_date"],
-                "end_date" => $row["end_date"],
+                "start_date" => $row["start_date"] ?? null,
+                "end_date" => $row["end_date"] ?? null,
                 "is_active" => intval($row["is_active"]) === 1
             ];
         }
@@ -206,22 +213,30 @@ if ($action === "create") {
         exit;
     }
 
-    // Default duration: today -> +1 month (server time). Client may override.
-    $start = date("Y-m-d");
-    $end = date("Y-m-d", strtotime("+1 month"));
+    // Check if dates are provided
+    if ($startDate === "" || $endDate === "") {
+        // Insert with NULL dates - admin must set dates before activating
+        $stmt = $conn->prepare("INSERT INTO evaluation_periods (ay, semester, start_date, end_date, is_active) VALUES (?, ?, NULL, NULL, 0)");
+        $stmt->bind_param("ss", $ay, $semester);
+        $ok = $stmt->execute();
+        $newId = $stmt->insert_id;
+        $stmt->close();
 
-    if ($startDate !== "" && $endDate !== "") {
-        $startTs = strtotime($startDate);
-        $endTs = strtotime($endDate);
-        if ($startTs === false || $endTs === false) {
-            echo json_encode(["success" => false, "message" => "Invalid dates"]);
-            exit;
-        }
-        $start = date("Y-m-d", $startTs);
-        $end = date("Y-m-d", $endTs);
+        echo json_encode(["success" => $ok, "id" => $newId]);
+        exit;
     }
 
-    if (strtotime($start) === false || strtotime($end) === false || strtotime($start) >= strtotime($end)) {
+    // Validate provided dates
+    $startTs = strtotime($startDate);
+    $endTs = strtotime($endDate);
+    if ($startTs === false || $endTs === false) {
+        echo json_encode(["success" => false, "message" => "Invalid dates"]);
+        exit;
+    }
+    $start = date("Y-m-d", $startTs);
+    $end = date("Y-m-d", $endTs);
+
+    if (strtotime($start) >= strtotime($end)) {
         echo json_encode(["success" => false, "message" => "End date must be after start date"]);
         exit;
     }
@@ -247,11 +262,23 @@ if ($action === "update") {
     $startDate = trim((string)($payload["start_date"] ?? ""));
     $endDate = trim((string)($payload["end_date"] ?? ""));
 
-    if ($id <= 0 || $ay === "" || $semester === "" || $startDate === "" || $endDate === "") {
-        echo json_encode(["success" => false, "message" => "Missing fields"]);
+    if ($id <= 0 || $ay === "" || $semester === "") {
+        echo json_encode(["success" => false, "message" => "Missing required fields"]);
         exit;
     }
 
+    // If dates are not provided or empty, keep them as NULL
+    if ($startDate === "" || $endDate === "") {
+        $stmt = $conn->prepare("UPDATE evaluation_periods SET ay = ?, semester = ? WHERE id = ?");
+        $stmt->bind_param("ssi", $ay, $semester, $id);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        echo json_encode(["success" => $ok]);
+        exit;
+    }
+
+    // Validate dates if provided
     $startTs = strtotime($startDate);
     $endTs = strtotime($endDate);
     if ($startTs === false || $endTs === false) {
@@ -314,6 +341,16 @@ if ($action === "set_active") {
         echo json_encode(["success" => false, "message" => "Period not found"]);
         exit;
     }
+
+    // Check if dates are set
+    if (empty($period["start_date"]) || empty($period["end_date"])) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Cannot activate period without dates. Please set start and end dates first."
+        ]);
+        exit;
+    }
+
     if (($period["end_date"] ?? "") < todayDate()) {
         echo json_encode([
             "success" => false,
@@ -338,9 +375,30 @@ if ($action === "set_active") {
 
         $conn->commit();
 
+        // Send email notifications to students
+        $notifySent   = 0;
+        $notifyFailed = 0;
+        
+        // Fetch the activated period's AY and semester for the email
+        $periodInfoStmt = $conn->prepare("SELECT ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1");
+        $periodInfoStmt->bind_param("i", $id);
+        $periodInfoStmt->execute();
+        $periodInfo = $periodInfoStmt->get_result()->fetch_assoc();
+        $periodInfoStmt->close();
+        
+        if ($periodInfo) {
+            $notifyAy       = $periodInfo['ay']       ?? '';
+            $notifySemester = $periodInfo['semester'] ?? '';
+            $notifyResult   = sendEvaluationOpenNotifications($conn, $notifyAy, $notifySemester);
+            $notifySent     = $notifyResult['sent']   ?? 0;
+            $notifyFailed   = $notifyResult['failed'] ?? 0;
+        }
+
         echo json_encode([
             "success" => true,
             "message" => "Period activated and evaluation opened.",
+            "notify_sent" => $notifySent,
+            "notify_failed" => $notifyFailed,
         ]);
     } catch (Exception $e) {
         $conn->rollback();
@@ -383,10 +441,6 @@ if ($action === "set_open") {
             exit;
         }
         $today = todayDate();
-        if (($row["start_date"] ?? "") > $today) {
-            echo json_encode(["success" => false, "message" => "Period has not started yet"]);
-            exit;
-        }
         if (($row["end_date"] ?? "") < $today) {
             echo json_encode(["success" => false, "message" => "Period has already ended"]);
             exit;

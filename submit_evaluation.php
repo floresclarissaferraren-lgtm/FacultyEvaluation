@@ -1,4 +1,7 @@
 <?php
+require_once 'security.php';
+requireRole('student');
+requireMethod('POST');
 include_once 'session_config.php';
 session_start();
 header("Content-Type: application/json");
@@ -9,12 +12,11 @@ date_default_timezone_set("Asia/Manila");
 
 ensureEvaluationPeriodTables($conn);
 closeExpiredEvaluationPeriod($conn);
-$today = date("Y-m-d");
-
 $settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
 $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
 $evaluationOpen = $settings ? intval($settings["evaluation_open"]) === 1 : false;
 $activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
+$today = date("Y-m-d");
 
 if ($evaluationOpen && $activePeriodId > 0) {
     $periodStmt = $conn->prepare("SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
@@ -22,7 +24,11 @@ if ($evaluationOpen && $activePeriodId > 0) {
     $periodStmt->execute();
     $period = $periodStmt->get_result()->fetch_assoc();
     $periodStmt->close();
-    if (!$period || $period["start_date"] > $today || $period["end_date"] < $today) {
+    if (!$period
+        || empty($period["start_date"])
+        || empty($period["end_date"])
+        || $period["start_date"] > $today
+        || $period["end_date"] < $today) {
         $evaluationOpen = false;
     }
 }
@@ -62,6 +68,30 @@ $feedback = trim($payload['feedback'] ?? '');
 
 if ($faculty_id <= 0 || $subject_id <= 0 || !is_array($answers) || empty($answers)) {
     echo json_encode(["success" => false, "message" => "Invalid evaluation payload"]);
+    exit;
+}
+
+$submittedQuestionIds = [];
+foreach (array_keys($answers) as $answerKey) {
+    if (preg_match('/^q_(\d+)$/', (string)$answerKey, $match)) {
+        $submittedQuestionIds[] = intval($match[1]);
+    }
+}
+$submittedQuestionIds = array_values(array_unique(array_filter($submittedQuestionIds, static fn($id) => $id > 0)));
+if (empty($submittedQuestionIds)) {
+    echo json_encode(["success" => false, "message" => "No valid questions submitted"]);
+    exit;
+}
+
+$questionCheck = $conn->query("SELECT id FROM add_questions");
+$knownQuestionIds = [];
+if ($questionCheck) {
+    while ($questionRow = $questionCheck->fetch_assoc()) {
+        $knownQuestionIds[] = intval($questionRow['id']);
+    }
+}
+if (count(array_diff($submittedQuestionIds, $knownQuestionIds)) > 0) {
+    echo json_encode(["success" => false, "message" => "Invalid evaluation question submitted"]);
     exit;
 }
 

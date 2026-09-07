@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
 include "connect.php";
 
 header("Content-Type: application/json");
@@ -8,6 +10,11 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $action = $_REQUEST['action'] ?? "";
+if (in_array($action, ['get', 'get_all', 'get_by_year', 'get_all_by_program'], true)) {
+    requireMethod('GET');
+} else {
+    requireMethod('POST');
+}
 
 function ensureSubjectSemesterColumn(mysqli $conn): void {
     $check = $conn->query("SHOW COLUMNS FROM add_subjects LIKE 'semester'");

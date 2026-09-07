@@ -69,6 +69,7 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
+                ev.id AS evaluation_id,
                 cs.subject_id,
                 ac.id AS class_id,
                 ac.year_level AS class_year_level,
@@ -92,7 +93,7 @@ try {
                AND ev.faculty_id = f.id
                AND ev.subject_id = cs.subject_id
                AND ev.class_id = ac.id
-            WHERE st.id = ? AND cs.faculty_id > 0 AND ev.id IS NULL
+                WHERE st.id = ? AND cs.faculty_id > 0
             ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
         ";
 
@@ -137,6 +138,7 @@ try {
                     f.suffix,
                     f.photo,
                     f.status,
+                    ev.id AS evaluation_id,
                     ss.subject_id,
                     COALESCE(ssc.class_id, 0) AS class_id,
                     ac.year_level AS class_year_level,
@@ -163,9 +165,8 @@ try {
                     ON ev.student_id = ss.student_id
                    AND ev.faculty_id = f.id
                    AND ev.subject_id = ss.subject_id
-                   AND ev.class_id = COALESCE(ssc.class_id, 0)
-                WHERE ss.student_id = ?
-                  AND ev.id IS NULL
+                         AND ev.class_id = COALESCE(ssc.class_id, 0)
+                     WHERE ss.student_id = ?
                 ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
             ";
 
@@ -271,6 +272,7 @@ try {
                 'suffix'        => $row['suffix']  ?? '',
                 'photo'         => $row['photo']   ?? '',
                 'status'        => $row['status']  ?? 'active',
+                'evaluation_id' => intval($row['evaluation_id'] ?? 0),
                 // subjects array keeps the same shape the JS already reads
                 'subjects'      => [$subject],
                 'subject_codes' => [$subject['subject_code']],

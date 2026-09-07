@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
 include 'connect.php';
 require('fpdf.php');
 require_once 'weighted_score_helper.php';
@@ -94,8 +96,8 @@ $textColor = [50, 50, 50];
 $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
 $pdf->Rect(10, 10, 190, 30, 'F');
 
-if (file_exists('logo.png')) {
-    $pdf->Image('logo.png', 15, 14, 20);
+if (file_exists(__DIR__ . '/assets/images/logo.png')) {
+    $pdf->Image(__DIR__ . '/assets/images/logo.png', 15, 14, 20);
 }
 
 $pdf->SetTextColor(255, 255, 255);

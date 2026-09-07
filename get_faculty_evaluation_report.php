@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('admin', 'faculty');
 include_once 'session_config.php';
 session_start();
 header('Content-Type: application/json');

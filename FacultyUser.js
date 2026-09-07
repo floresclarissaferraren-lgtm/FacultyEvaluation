@@ -1,14 +1,36 @@
 
 
 //walang password open ================= DROPDOWN =================
+function closeStudentDropdown() {
+  const menu = document.getElementById("dropdownMenu");
+  const trigger = document.querySelector(".student-box");
+  if (menu) {
+    menu.classList.remove("show");
+    menu.style.display = "";
+  }
+  if (trigger) {
+    trigger.classList.remove("is-open");
+    trigger.setAttribute("aria-expanded", "false");
+  }
+}
+
 function toggleDropdown() {
   const menu = document.getElementById("dropdownMenu");
-  menu.style.display = (menu.style.display === "block") ? "none" : "block";
+  const trigger = document.querySelector(".student-box");
+  if (!menu) return;
+  menu.style.display = "";
+  const isOpen = menu.classList.toggle("show");
+  if (trigger) {
+    trigger.classList.toggle("is-open", isOpen);
+    trigger.setAttribute("aria-expanded", String(isOpen));
+  }
 }
+
 window.showLogoutModal = () => {
   document.getElementById("logoutModal").style.display = "flex";
-  document.getElementById("dropdownMenu").style.display = "none";
+  closeStudentDropdown();
 };
+
 window.closeLogoutModal = () => {
   document.getElementById("logoutModal").style.display = "none";
 };
@@ -28,17 +50,18 @@ window.addEventListener("pageshow", event => {
 document.addEventListener("click", e => {
   const m = document.getElementById("dropdownMenu"),
         t = document.querySelector(".student-box");
-  if (m.style.display === "block" && !t.contains(e.target) && !m.contains(e.target)) {
-    m.style.display = "none";
+  if (m.classList.contains("show") && !t.contains(e.target) && !m.contains(e.target)) {
+    closeStudentDropdown();
   }
 });
+
 document.getElementById("logoutModal").addEventListener("click", e => {
   if (e.target === document.getElementById("logoutModal")) closeLogoutModal();
 });
 
 function showPasswordForm(e){
   if (e) e.preventDefault();
-  document.getElementById("dropdownMenu").style.display = "none";
+  closeStudentDropdown();
   
   const passwordForm = document.getElementById("passwordForm");
   const formContent = passwordForm.querySelector(".LoginForm-content");
@@ -98,10 +121,28 @@ function closePasswordForm(){
     submitBtn.style.cursor = "pointer";
   }
 }
+function formatStudentYearLevel(value) {
+  const level = String(value || "").trim();
+  if (!level) return "N/A";
+  if (/^irregular$/i.test(level)) return "Irregular";
+  if (/year$/i.test(level)) return level;
+  const suffix = level === "1" ? "st" : level === "2" ? "nd" : level === "3" ? "rd" : "th";
+  return `${level}${suffix} Year`;
+}
+
+function formatStudentStatus(value) {
+  const status = String(value || "Active").trim();
+  return status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : "Active";
+}
+
+function formatStudentType(value) {
+  const type = String(value || "Regular").trim();
+  return type ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase() : "Regular";
+}
+
 function showProfile(e){
   if (e) e.preventDefault();
-  // Close dropdown first
-  document.getElementById("dropdownMenu").style.display = "none";
+  closeStudentDropdown();
   
   // Get student information from hidden fields
   const studentId = document.getElementById("studentId")?.value;
@@ -117,7 +158,6 @@ function showProfile(e){
     const profileContent = `
       <div class="sp-modal">
         <div class="sp-header">
-          <h3 class="sp-title">Student Profile</h3>
           <button class="sp-close-btn" onclick="closeProfileModal()" aria-label="Close">
             <i class="ph ph-x"></i>
           </button>
@@ -144,19 +184,31 @@ function showProfile(e){
             <div class="sp-info-row">
               <div class="sp-info-content">
                 <span class="sp-info-label">Program</span>
-                <span class="sp-info-value">${studentProgram || 'N/A'}</span>
-              </div>
-            </div>
-            <div class="sp-info-row">
-              <div class="sp-info-content">
-                <span class="sp-info-label">Year Level</span>
-                <span class="sp-info-value">${studentYearLevel ? studentYearLevel + (studentYearLevel == 1 ? 'st' : studentYearLevel == 2 ? 'nd' : studentYearLevel == 3 ? 'rd' : 'th') + ' Year' : 'N/A'}</span>
+                <span class="sp-info-value">${additionalData.program_name || studentProgram || 'N/A'}</span>
               </div>
             </div>
             <div class="sp-info-row">
               <div class="sp-info-content">
                 <span class="sp-info-label">Section</span>
                 <span class="sp-info-value">${studentSection || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Year Level</span>
+                <span class="sp-info-value">${formatStudentYearLevel(studentYearLevel)}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Status</span>
+                <span class="sp-info-value">${formatStudentStatus(additionalData.status)}</span>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <div class="sp-info-content">
+                <span class="sp-info-label">Type</span>
+                <span class="sp-info-value">${formatStudentType(additionalData.student_type)}</span>
               </div>
             </div>
           </div>
@@ -396,6 +448,7 @@ function togglePassword(id, icon) {
 // ================= switch section =================
 
 function updateStudentAcademicPeriodDisplay(status) {
+  console.log("updateStudentAcademicPeriodDisplay called with:", status);
   const periodEl = document.getElementById("studentAcademicPeriod");
   if (!periodEl) return;
 
@@ -411,15 +464,28 @@ function updateStudentAcademicPeriodDisplay(status) {
   }
 
   // Update Evaluate Now button state in real-time
-  const evaluateBtn = document.querySelector(".evaluate-btn");
+  const evaluateBtn = document.querySelector(".evaluate-now-btn");
   if (evaluateBtn) {
-    const studentActive = (document.getElementById("studentStatus")?.value || "active").toLowerCase() === "active";
+    const studentActive = (document.getElementById("studentStatus")?.value || "active").trim().toLowerCase() === "active";
     const evaluationOpen = !!(status && status.success && status.evaluation_open);
+    console.log("Button state check - Student Active:", studentActive, "Evaluation Open:", evaluationOpen);
     if (studentActive && evaluationOpen) {
+      console.log("ENABLING button");
       evaluateBtn.removeAttribute("disabled");
+      evaluateBtn.disabled = false;
+      evaluateBtn.setAttribute("aria-disabled", "false");
+      evaluateBtn.style.opacity = "1";
+      evaluateBtn.style.cursor = "pointer";
     } else {
+      console.log("DISABLING button - studentActive:", studentActive, "evaluationOpen:", evaluationOpen);
       evaluateBtn.setAttribute("disabled", "true");
+      evaluateBtn.disabled = true;
+      evaluateBtn.setAttribute("aria-disabled", "true");
+      evaluateBtn.style.opacity = "0.5";
+      evaluateBtn.style.cursor = "not-allowed";
     }
+  } else {
+    console.error("Evaluate button not found!");
   }
 }
 
@@ -427,14 +493,21 @@ async function loadStudentAcademicPeriod() {
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
-    if (status && status.success) updateStudentAcademicPeriodDisplay(status);
-  } catch (_) {
+    console.log("Period status received:", status);
+    if (status && status.success) {
+      updateStudentAcademicPeriodDisplay(status);
+    } else {
+      console.error("Status check failed:", status);
+      updateStudentAcademicPeriodDisplay(null);
+    }
+  } catch (error) {
+    console.error("Error loading period status:", error);
     updateStudentAcademicPeriodDisplay(null);
   }
 }
 
 async function showEvaluateSection() {
-  if ((document.getElementById("studentStatus")?.value || "active").toLowerCase() !== "active") {
+  if ((document.getElementById("studentStatus")?.value || "active").trim().toLowerCase() !== "active") {
     alert("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.");
     return;
   }
@@ -453,10 +526,15 @@ async function showEvaluateSection() {
     return;
   }
 
-  document.getElementById("mainPage").style.display = "none";
-  document.getElementById("evaluateSection").style.display = "block";
-  document.getElementById("facultyCards").style.display = "block";
-  document.getElementById("evaluationContainer").style.display = "none";
+  const mainPage = document.getElementById("mainPage");
+  const evaluateSection = document.getElementById("evaluateSection");
+  const facultyCards = document.getElementById("facultyCards");
+  const evaluationContainer = document.getElementById("evaluationContainer");
+
+  if (mainPage) mainPage.style.display = "none";
+  if (evaluateSection) evaluateSection.style.display = "block";
+  if (facultyCards) facultyCards.style.display = "block";
+  if (evaluationContainer) evaluationContainer.style.display = "none";
 
   await loadStudentFacultyCards();
 }
@@ -476,7 +554,7 @@ function goBackToMain() {
     if (evaluateSection) evaluateSection.style.display = "none";
     if (evalContainer) evalContainer.style.display = "none";
     if (facultyCards) facultyCards.style.display = "none";
-    if (mainPage) mainPage.style.display = "flex";
+    if (mainPage) mainPage.style.display = "block";
   }
 }
 
@@ -517,7 +595,7 @@ async function loadStudentFacultyCards() {
   if (!container) return;
 
   // Block evaluate when evaluation is closed
-  const studentActive = (document.getElementById("studentStatus")?.value || "active").toLowerCase() === "active";
+  const studentActive = (document.getElementById("studentStatus")?.value || "active").trim().toLowerCase() === "active";
   let evaluationOpen = false;
   try {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
@@ -540,10 +618,20 @@ async function loadStudentFacultyCards() {
     const res = await fetch(`getFaculty.php?${params.toString()}`);
     const facultyList = await res.json();
 
+    const assignments = Array.isArray(facultyList) ? facultyList : [];
+    const evaluatedCount = assignments.filter(faculty => Number(faculty.evaluation_id || 0) > 0).length;
+    const pendingCount = assignments.length - evaluatedCount;
+    updateEvaluationSummary(pendingCount, evaluatedCount);
+    const periodLabel = document.getElementById("studentAcademicPeriod")?.textContent || "";
+    const periodLabelEl = document.getElementById("evaluationPeriodLabel");
+    const subjectCountEl = document.getElementById("evaluationSubjectCount");
+    if (periodLabelEl) periodLabelEl.textContent = periodLabel.replace(/^Academic Year:\s*/i, "— ");
+    if (subjectCountEl) subjectCountEl.textContent = `${assignments.length} subject${assignments.length === 1 ? "" : "s"}`;
+
     container.innerHTML = '';
 
-    if (Array.isArray(facultyList) && facultyList.length > 0) {
-      facultyList.forEach(faculty => {
+    if (assignments.length > 0) {
+      assignments.forEach(faculty => {
         const subject = Array.isArray(faculty.subjects) && faculty.subjects.length
           ? faculty.subjects[0]
           : faculty;
@@ -563,10 +651,13 @@ async function loadStudentFacultyCards() {
         ].filter(Boolean);
 
         const fullName = nameParts.join(' ');
+        const isEvaluated = Number(faculty.evaluation_id || 0) > 0;
+        const facultyInitials = `${(faculty.firstname || 'F').charAt(0)}${(faculty.lastname || '').charAt(0)}`.toUpperCase();
 
         const card = document.createElement('div');
-        card.className = 'faculty-card';
+        card.className = 'faculty-evaluation-row';
         card.onclick = () => {
+          if (isEvaluated) return;
           if (!studentActive) return showGlobalNotification("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again", "warning");
           if (!evaluationOpen) return showGlobalNotification("Evaluation is closed", "warning");
           selectFaculty(faculty.id, fullName, {
@@ -577,49 +668,23 @@ async function loadStudentFacultyCards() {
           });
         };
          
-        const avatarHtml = faculty.photo
-          ? `<img src="${faculty.photo}" class="faculty-avatar" alt="${fullName}">`
-          : `<div class="faculty-avatar placeholder">${(faculty.firstname || 'F').charAt(0).toUpperCase()}</div>`;
-
         card.innerHTML = `
-          <div class="faculty-header">
-            <div class="faculty-avatar-wrapper">
-              ${avatarHtml}
-            </div>
-            <div class="faculty-title-area">
-              <h3 class="faculty-name">${fullName}</h3>
-              <span class="faculty-role">Instructor</span>
-            </div>
+          <div class="subject-code-badge faculty-initials-badge">${facultyInitials}</div>
+          <div class="faculty-evaluation-details">
+            <h3 class="faculty-name">${fullName || 'Faculty Member'}</h3>
+            <p class="faculty-evaluation-meta">${subjectDesc || subjectLabels || 'Assigned Subject'}${programCode ? ` <span>·</span> ${programCode}` : ''}</p>
           </div>
-          <div class="faculty-info">
-            ${programCode ? `
-            <div class="faculty-info-row">
-              <i class="ph ph-buildings faculty-info-icon"></i>
-              <div class="faculty-info-text">
-                <span class="faculty-info-label">Program</span>
-                <span class="faculty-subjects">${programCode}</span>
-              </div>
-            </div>` : ''}
-            <div class="faculty-info-row">
-              <i class="ph ph-book-open faculty-info-icon"></i>
-              <div class="faculty-info-text">
-                <span class="faculty-info-label">Assigned Subjects</span>
-                <span class="faculty-subjects">${subjectLabels || 'No subjects assigned'}</span>
-                ${classLabel ? `<span class="faculty-subjects faculty-class-label">${classLabel}</span>` : ''}
-              </div>
-            </div>
-          </div>
-          <div class="evaluate-action">
-            <button class="evaluate-faculty-btn" ${evaluationOpen ? "" : "disabled"}>
-              <i class="ph ph-note-pencil"></i> Evaluate Now
-            </button>
-          </div>
+            <button class="evaluate-faculty-btn ${isEvaluated ? "evaluated" : ""}" ${evaluationOpen && !isEvaluated ? "" : "disabled"}>
+              <i class="ph ${isEvaluated ? "ph-check-circle" : "ph-note-pencil"}"></i> ${isEvaluated ? "Evaluated" : "Evaluate Now"}
+          </button>
         `;
         
         container.appendChild(card);
       });
     } else {
-      container.innerHTML = renderFacultyEmptyState("No Faculty Available", "There are no instructors assigned to your account for evaluation right now.");
+      container.innerHTML = evaluatedCount > 0
+        ? renderFacultyEmptyState("All Done!", "You have completed all evaluations.", "ph-check-circle")
+        : renderFacultyEmptyState("No Faculty Available", "There are no instructors assigned to your account for evaluation right now.");
     }
   } catch (err) {
     console.error('Error loading faculty cards:', err);
@@ -637,6 +702,22 @@ function renderFacultyEmptyState(title, message, icon = "ph-chalkboard-teacher")
       </div>
     </div>
   `;
+}
+
+function updateEvaluationSummary(pendingCount, evaluatedCount) {
+  const total = pendingCount + evaluatedCount;
+  const percent = total > 0 ? Math.round((evaluatedCount / total) * 100) : 100;
+  const percentEl = document.getElementById("summaryPercent");
+  const totalEl = document.getElementById("summaryTotal");
+  const evaluatedEl = document.getElementById("summaryEvaluated");
+  const pendingEl = document.getElementById("summaryPending");
+  const progressEl = document.querySelector(".summary-progress");
+
+  if (percentEl) percentEl.textContent = `${percent}%`;
+  if (progressEl) progressEl.style.setProperty("--progress", percent);
+  if (totalEl) totalEl.textContent = total;
+  if (evaluatedEl) evaluatedEl.textContent = evaluatedCount;
+  if (pendingEl) pendingEl.textContent = pendingCount;
 }
 
 function selectFaculty(facultyId, facultyName, assignment) {
@@ -702,6 +783,17 @@ async function loadFacultyCategories() {
     // Create form content area
     const formContentArea = document.createElement("div");
     formContentArea.className = "evaluation-form-area";
+
+    const timeline = document.createElement("div");
+    timeline.className = "evaluation-timeline";
+    timeline.setAttribute("aria-label", "Evaluation pages");
+    timeline.innerHTML = categories.map((category, index) => `
+      <div class="evaluation-timeline-step${index === 0 ? " active" : ""}" data-page="${index}">
+        <span class="evaluation-timeline-dot">${index + 1}</span>
+        <span class="evaluation-timeline-label">${category.category_name}</span>
+      </div>
+    `).join("");
+    formContentArea.appendChild(timeline);
 
     criteriaTables = [];
     currentCriteria = 0;
@@ -876,10 +968,16 @@ function updatePaginationButtons() {
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
   const feedbackSubmitContainer = document.getElementById("feedbackSubmitContainer");
+  const timelineSteps = document.querySelectorAll(".evaluation-timeline-step");
   
   if (pageInfo) {
     pageInfo.textContent = `${currentCriteria + 1} / ${criteriaTables.length}`;
   }
+
+  timelineSteps.forEach((step, index) => {
+    step.classList.toggle("active", index === currentCriteria);
+    step.classList.toggle("completed", index < currentCriteria);
+  });
   
   if (prevBtn) {
     prevBtn.disabled = currentCriteria === 0;
@@ -1177,6 +1275,8 @@ function closeSuccessModal() {
 // Add event listener for password form back button
 document.addEventListener("DOMContentLoaded", function() {
   loadStudentAcademicPeriod();
+  setInterval(loadStudentAcademicPeriod, 15000);
+  loadStudentStats(); // Load stats for the dashboard
 
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {
@@ -1187,11 +1287,44 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// ================= LOAD STUDENT STATS =================
+async function loadStudentStats() {
+  const studentId = document.getElementById('studentId')?.value.trim();
+  if (!studentId) return;
+
+  try {
+    // Get evaluations done count
+    const evalResponse = await fetch(`get_student_evaluations.php?student_id=${studentId}`);
+    const evalData = await evalResponse.json();
+    
+    if (evalData && evalData.success) {
+      const evaluationsDone = evalData.count || 0;
+      const evaluationsDoneEl = document.getElementById('evaluationsDone');
+      if (evaluationsDoneEl) {
+        evaluationsDoneEl.textContent = evaluationsDone;
+      }
+    }
+
+    // Get pending faculty count
+    const facultyResponse = await fetch(`getFaculty.php?student_id=${studentId}`);
+    const facultyData = await facultyResponse.json();
+    
+    if (Array.isArray(facultyData)) {
+      const pendingFaculty = facultyData.length;
+      const pendingFacultyEl = document.getElementById('pendingFaculty');
+      if (pendingFacultyEl) {
+        pendingFacultyEl.textContent = pendingFaculty;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading student stats:', error);
+  }
+}
+
 // ================= EVALUATION HISTORY =================
 async function showEvaluationHistory(event) {
   if (event) event.preventDefault();
-  const dropdown = document.getElementById("dropdownMenu");
-  if (dropdown) dropdown.style.display = "none";
+  closeStudentDropdown();
 
   const studentId = document.getElementById('studentId')?.value.trim();
   

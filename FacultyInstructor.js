@@ -1,8 +1,30 @@
 // DROPDOWN
 function toggleDropdown() {
   const menu = document.getElementById("dropdownMenu");
+  menu.style.display = (menu.style.display === "block") ? "none" : "block";
+}
 
-  menu.style.display = (menu.style.display === "block") ? "none" : "block";}
+// TAB FUNCTIONALITY
+document.addEventListener('DOMContentLoaded', function() {
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const targetTab = this.getAttribute('data-tab');
+      
+      // Remove active class from all tabs and contents
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding content
+      this.classList.add('active');
+      const contentId = targetTab + '-tab';
+      document.getElementById(contentId)?.classList.add('active');
+    });
+  });
+});
+
 function logout(e){
   e.preventDefault();
   // Calculate scrollbar width before hiding overflow
@@ -288,7 +310,6 @@ function showProfile(e){
     const profileContent = `
       <div class="sp-modal">
         <div class="sp-header">
-          <h3 class="sp-title">Faculty Profile</h3>
           <button class="sp-close-btn" onclick="closeProfileModal()" aria-label="Close">
             <i class="ph ph-x"></i>
           </button>
@@ -842,7 +863,7 @@ function showEvaluationReport() {
       <div class="report-content">
         <div class="report-header">
           <div class="header-left">
-            <img src="logo.png" alt="College Logo" class="college-logo">
+            <img src="assets/images/logo.png" alt="College Logo" class="college-logo">
             <div class="college-info">
               <h2>Faculty Evaluation Report</h2>
               <p class="report-subtitle">${selectedProgramLabel ? `Program: <strong>${escapeHtml(selectedProgramLabel)}</strong>` : 'A summary of student feedback and performance indicators.'}</p>
@@ -1059,7 +1080,7 @@ async function loadInstructorAcademicPeriod() {
       }
     }
   } catch (err) {
-    console.error("Failed to load academic period:", err);
+console.error("Failed to load academic period:", err);
     updateInstructorAcademicPeriodDisplay(null);
   }
 }
@@ -1070,15 +1091,69 @@ function startInstructorPeriodRefresh() {
   setInterval(loadInstructorAcademicPeriod, 1000); // Then every 1 second
 }
 
+function loadUploadedPDFs() {
+  const container = document.getElementById("uploadedReportsContainer");
+  if (!container) return;
+
+  container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text);"><i class="ph ph-circle-notch" style="font-size: 24px; animation: spin 1s linear infinite; margin-right: 8px; display: inline-block;"></i>Loading uploaded reports...</div>';
+
+  fetch('get_uploaded_reports.php')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success || !data.reports || data.reports.length === 0) {
+        container.innerHTML = `
+          <div class="no-uploaded-reports">
+            <i class="ph ph-file-pdf"></i>
+            <p>No evaluation PDF reports uploaded to your account yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="pdf-reports-grid">';
+      data.reports.forEach(report => {
+        const uploadedDate = new Date(report.uploaded_at).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        html += `
+          <div class="pdf-report-card">
+            <div class="pdf-report-icon">
+              <i class="ph ph-file-pdf"></i>
+            </div>
+            <div class="pdf-report-details">
+              <span class="pdf-report-title">${escapeHtml(report.file_name)}</span>
+              <span class="pdf-report-meta">Period: ${escapeHtml(report.academic_year)} • ${escapeHtml(report.semester)}</span>
+              <span class="pdf-report-date">Uploaded: ${uploadedDate}</span>
+            </div>
+            <div class="pdf-report-actions">
+              <a href="download_report.php?id=${report.id}" class="pdf-download-link" title="Download Report">
+                <i class="ph ph-download-simple"></i> Download
+              </a>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Error loading uploaded reports:', err);
+      container.innerHTML = '<div style="padding: 20px; text-align: center; color: #dc2626;"><i class="ph ph-warning-circle" style="font-size: 24px; margin-right: 8px; display: inline-block;"></i>Failed to load uploaded reports.</div>';
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   loadFacultyStats();
   startInstructorPeriodRefresh();
+  loadUploadedPDFs();
 });
-
 
 /* ═══════════════════════════════════════════════════════════════════════
    PER-SUBJECT REPORT
-   ═══════════════════════════════════════════════════════════════════════ */
 
 /**
  * Open the per-subject evaluation report modal for the logged-in faculty.
@@ -1248,7 +1323,7 @@ function buildPerSubjectReportHtml(facultyName, facultyId, departments, overall)
   return `
     <div class="psm-header">
       <div class="psm-header-left">
-        <img src="logo.png" alt="Logo" class="psm-logo">
+        <img src="assets/images/logo.png" alt="Logo" class="psm-logo">
         <div>
           <h2 id="perSubjectModalTitle">Per-Subject Evaluation Report</h2>
           <p class="psm-subtitle">${escapeHtml(facultyName)}</p>

@@ -4,6 +4,7 @@ const addStudentModal = document.getElementById("addStudentModal");
 const addCategoryModal = document.getElementById("addCategoryModal");
 const addQuestionModal = document.getElementById("addQuestionModal");
 const subjectSelectionModal = document.getElementById("subjectSelectionModal");
+const facultySubjectSelectionModal = document.getElementById("facultySubjectSelectionModal");
 const viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsModal");
 const viewFacultySubjectsModal = document.getElementById("viewFacultySubjectsModal");
 const managePeriodsModal = document.getElementById("managePeriodsModal");
@@ -13,13 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentRow = null;
   let deleteTarget = null;
   let deleteType = "";
+  let allFacultySubjects = [];
+  let selectedFacultySubjects = [];
 
   const sectionSkeletons = {
     "dashboard-section": `
-      <div class="dashboard-period-toolbar admin-skeleton-toolbar">
-        <div><span class="admin-skeleton-line label"></span><span class="admin-skeleton-line control"></span></div>
-        <div><span class="admin-skeleton-line label"></span><span class="admin-skeleton-line control"></span></div>
-      </div>
       <div class="dashboard admin-skeleton-grid">
         ${Array.from({ length: 4 }).map(() => `
           <div class="dashboard-card admin-skeleton-card">
@@ -204,6 +203,85 @@ document.addEventListener("DOMContentLoaded", () => {
   //         okBtn.style.cursor = "pointer";
   //     }
   // });
+
+  const adminNotificationButton = document.getElementById("adminNotificationBtn");
+  const adminNotificationPanel = document.getElementById("adminNotificationPanel");
+  const adminNotificationList = document.getElementById("adminNotificationList");
+  const notificationDot = document.querySelector(".notification-dot");
+
+  function getDaysUntil(dateString) {
+    if (!dateString) return null;
+    const [year, month, day] = String(dateString).split("-").map(Number);
+    if (!year || !month || !day) return null;
+
+    const today = new Date();
+    const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    const endUtc = Date.UTC(year, month - 1, day);
+    return Math.round((endUtc - todayUtc) / 86400000);
+  }
+
+  function formatNotificationDate(dateString) {
+    const [year, month, day] = String(dateString).split("-").map(Number);
+    if (!year || !month || !day) return dateString;
+    return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric"
+    });
+  }
+
+  function renderAdminNotifications(periods) {
+    const closingPeriods = periods.filter(period => {
+      const daysLeft = getDaysUntil(period.end_date);
+      return period.is_active && daysLeft >= 1 && daysLeft <= 3;
+    });
+
+    if (notificationDot) notificationDot.hidden = closingPeriods.length === 0;
+    if (!adminNotificationList) return;
+
+    if (closingPeriods.length === 0) {
+      adminNotificationList.innerHTML = '<div class="admin-notification-empty"><i class="ph ph-check-circle"></i><span>No upcoming evaluation deadlines.</span></div>';
+      return;
+    }
+
+    adminNotificationList.innerHTML = closingPeriods.map(period => {
+      const daysLeft = getDaysUntil(period.end_date);
+      const label = daysLeft === 1 ? "1 day left" : `${daysLeft} days left`;
+      const periodName = `${period.semester || "Evaluation"} ${period.ay || ""}`.trim();
+      return `<div class="admin-notification-item">
+        <span class="admin-notification-icon"><i class="ph ph-warning"></i></span>
+        <div><strong>Evaluation is closing soon</strong><p>${periodName} ends on ${formatNotificationDate(period.end_date)} (${label}).</p></div>
+      </div>`;
+    }).join("");
+  }
+
+  async function loadAdminNotifications() {
+    try {
+      const response = await fetch("periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+      const data = await response.json();
+      renderAdminNotifications(data.success && Array.isArray(data.periods) ? data.periods : []);
+    } catch (error) {
+      console.error("Failed to load admin notifications:", error);
+      if (notificationDot) notificationDot.hidden = true;
+      if (adminNotificationList) adminNotificationList.innerHTML = '<div class="admin-notification-empty">Unable to load notifications.</div>';
+    }
+  }
+
+  adminNotificationButton?.addEventListener("click", event => {
+    event.stopPropagation();
+    if (adminNotificationPanel) adminNotificationPanel.hidden = !adminNotificationPanel.hidden;
+  });
+
+  document.addEventListener("click", event => {
+    if (adminNotificationPanel && !adminNotificationPanel.hidden &&
+        !adminNotificationPanel.contains(event.target) && !adminNotificationButton?.contains(event.target)) {
+      adminNotificationPanel.hidden = true;
+    }
+  });
+
+  loadAdminNotifications();
+  window.setInterval(loadAdminNotifications, 15 * 60 * 1000);
+
   // ================= Sidebar Toggle ==========================================================================================
   window.toggleSidebar = () => {
     const s = document.getElementById("sidebar"), m = document.querySelector("main"), navbar = document.querySelector(".navbar");
@@ -278,6 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "faculties-section": "Faculty Management",
       "students-section": "Student Management",
       "criteria-section": "Evaluation Criteria List",
+      "academic-year-section": "Academic Year Management",
       "report-section": "Evaluation Report",
       "subjects-section": "Subjects Management",
       "manage-section": "Manage Program"
@@ -289,6 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "faculties-section": "This section contains all faculty members with their profiles and teaching assignments",
       "students-section": "This section shows all students with their basic details and records for easy management",
       "criteria-section": "This section shows the list of criteria used for evaluating faculty performance",
+      "academic-year-section": "Manage evaluation periods and academic year settings",
       "report-section": "This section shows faculty evaluation results and performance ratings",
       "subjects-section": "Manage and update subjects offered across different programs",
       "manage-section": "Manage subjects and classes for this program"
@@ -312,6 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadFaculty?.();
     }
     if (id === "criteria-section") loadCategories?.();
+    if (id === "academic-year-section") window.loadAcademicYearSection?.();
     if (id === "report-section") {
       loadReportPeriodFilters?.();
       loadEvaluations?.();
@@ -502,6 +583,9 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteTarget.closest("tr")?.remove();
             loadPeriods?.();
             refreshPeriodCard?.();
+            // Refresh dashboard dropdowns after deleting a period
+            syncDashboardPeriodSetting?.();
+            refreshAcademicYearTable?.();
           } else {
             deleteTarget.remove();
           }
@@ -601,6 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("deleteModal");
   modal.querySelector(".cancel-btn").onclick = closeDeleteModal;
   modal.querySelector(".submit-btn").onclick = confirmDelete;
+  window.openDeleteModal = openDeleteModal;
   window.closeDeleteModal = closeDeleteModal;
   window.confirmDelete = confirmDelete;
 
@@ -675,7 +760,21 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutModal.style.display = "none";
   }
   function confirmLogout() {
-    window.location.replace("logout.php");
+    if (submitBtn.dataset.loggingOut === "true") return;
+
+    submitBtn.dataset.loggingOut = "true";
+    submitBtn.disabled = true;
+    submitBtn.classList.add("loading");
+    submitBtn.innerHTML = `
+      <span class="logout-loading-text">Logging out</span>
+      <span class="logout-dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    `;
+
+    setTimeout(() => {
+      window.location.replace("logout.php");
+    }, 900);
   }
 
   logoutContent.addEventListener("click", e => e.stopPropagation());
@@ -865,14 +964,16 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="program-card-actions">
-            <button class="btn-manage">
-              <i class="ph ph-sliders"></i> Manage
-            </button>
-            <button class="btn-edit">
-              <i class="ph ph-pencil-simple"></i> Edit
-            </button>
+            <div class="left-buttons">
+              <button class="btn-manage">
+                <i class="ph ph-sliders"></i> Manage
+              </button>
+              <button class="btn-edit">
+                <i class="ph ph-note-pencil"></i> Edit
+              </button>
+            </div>
             <button class="btn-delete">
-              <i class="ph ph-trash"></i> Delete
+              <i class="ph ph-trash"></i>
             </button>
           </div>`;
 
@@ -1042,6 +1143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveMainSubjectBtn = document.getElementById("save-main-subject-btn"),
     subjectsMainTbody = document.getElementById("subjects-main-tbody");
   let subjectsMainData = [];
+  let editingMainSubjectId = null;
   let selectedClassSemester = "";
   let selectedAcademicYear = "";
   let editingPeriodId = null;
@@ -1058,9 +1160,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addBtn) {
       addBtn.addEventListener("click", () => {
         console.log("Add Subject button clicked");
+        editingMainSubjectId = null;
         // Clear form
         document.getElementById("main-subject-code").value = "";
         document.getElementById("main-subject-desc").value = "";
+        document.getElementById("main-program-select").disabled = false;
         document.getElementById("main-program-select").selectedIndex = 0;
         document.getElementById("main-semester-select").selectedIndex = 0;
         document.getElementById("main-year-select").selectedIndex = 0;
@@ -1090,7 +1194,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // LOAD PROGRAMS FOR DROPDOWN
   function loadProgramsForDropdown() {
-    fetch("getProgram.php")
+    return fetch("getProgram.php")
       .then(r => r.json())
       .then(data => {
         const select = document.getElementById("main-program-select");
@@ -1121,17 +1225,22 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const body = editingMainSubjectId
+      ? `action=edit&id=${encodeURIComponent(editingMainSubjectId)}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`
+      : `action=add&program_id=${encodeURIComponent(program)}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`;
+
     fetch("subject_crud.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `action=add&program_id=${program}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`
+      body
     })
       .then(r => r.json())
       .then(res => {
         if (res.status === "success") {
           addSubjectMainModal.style.display = "none";
+          editingMainSubjectId = null;
           loadSubjectsMainTable();
-          showNotification("Subject added successfully!", "#4caf50");
+          showNotification("Subject saved successfully!", "#4caf50");
         } else {
           alert("Error: " + (res.message || "Failed to add subject"));
         }
@@ -1189,16 +1298,30 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${s.year_level}</td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-              <button class="delete-btn"><i class="ph ph-trash"></i></button>
+              <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
+              <button class="action-icon-btn delete-btn"><i class="ph ph-trash"></i></button>
             </div>
           </td>
         `;
 
       // EDIT BUTTON
       row.querySelector(".edit-btn").addEventListener("click", () => {
-        // TODO: Implement edit functionality
-        alert("Edit functionality coming soon");
+        editingMainSubjectId = s.id;
+        const modal = addSubjectMainModal;
+        const programSelect = document.getElementById("main-program-select");
+        document.getElementById("main-subject-code").value = s.subject_code || "";
+        document.getElementById("main-subject-desc").value = s.subject_desc || "";
+        document.getElementById("main-semester-select").value = s.semester || "";
+        document.getElementById("main-year-select").value = s.year_level || "";
+        loadProgramsForDropdown().then(() => {
+          if (programSelect) {
+            programSelect.value = s.program_id || "";
+            programSelect.disabled = true;
+          }
+          modal.style.display = "flex";
+          modal.style.zIndex = "10001";
+          modal.style.position = "fixed";
+        });
       });
 
       // DELETE BUTTON
@@ -1221,30 +1344,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${startYear}-${startYear + 1}`;
   }
 
-  function populateAcademicYearSelect() {
-    const select = document.getElementById("dashboard-ay-select");
-    if (!select) return;
-
-    const baseYear = new Date().getFullYear();
-    const years = [];
-    for (let year = baseYear - 1; year <= baseYear + 3; year++) {
-      years.push(`${year}-${year + 1}`);
-    }
-
-    select.innerHTML = '<option value="">Select Academic Year</option>' +
-      years.map(ay => `<option value="${ay}">${ay}</option>`).join("");
-
-    if (!selectedAcademicYear) selectedAcademicYear = defaultAcademicYear();
-    select.value = selectedAcademicYear;
-  }
-
-  function syncDashboardPeriodSetting() {
-    populateAcademicYearSelect();
-    const semSelect = document.getElementById("dashboard-semester-select");
-    if (semSelect) semSelect.value = selectedClassSemester;
+  async function syncDashboardPeriodSetting() {
     syncPeriodFormDefaults();
     updateDashboardPeriodBox();
   }
+  window.syncDashboardPeriodSetting = syncDashboardPeriodSetting;
 
   async function loadDashboardPeriodSetting() {
     try {
@@ -1287,12 +1391,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (semSelect && !editingPeriodId) semSelect.value = selectedClassSemester || "";
   }
 
-  syncDashboardPeriodSetting();
-  document.addEventListener("DOMContentLoaded", () => {
-    syncDashboardPeriodSetting();
-    loadDashboardPeriodSetting();
-  });
-
   function handleSetClassSemester(semester) {
     if (!semester) return showNotification("Please select semester first", "#f44336");
     selectedClassSemester = semester;
@@ -1313,20 +1411,6 @@ document.addEventListener("DOMContentLoaded", () => {
       loadSubjectsByYear(classYear);
     }
   }
-
-  document.getElementById("dashboard-ay-select")?.addEventListener("change", (e) => {
-    selectedAcademicYear = e.target.value;
-    try {
-      localStorage.setItem("selectedAcademicYear", selectedAcademicYear);
-    } catch (err) { }
-    syncPeriodFormDefaults();
-    updateDashboardPeriodBox();
-    saveDashboardPeriodSetting();
-  });
-
-  document.getElementById("dashboard-semester-select")?.addEventListener("change", (e) => {
-    handleSetClassSemester(e.target.value);
-  });
 
   // CLOSE MODAL
   addSubjectMainModal?.querySelector(".close-btn")?.addEventListener("click", () => {
@@ -1365,6 +1449,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!s || !c) return;
 
+    const manageAddButton = document.querySelector(".add-manage-btn");
+
     if (tab === "subjects") {
       s.style.display = "block";
       c.style.display = "none";
@@ -1372,6 +1458,9 @@ document.addEventListener("DOMContentLoaded", () => {
       cb?.classList.remove("active");
       if (mw) mw.style.display = "none";
       if (mc) mc.style.display = "none";
+      if (manageAddButton) {
+        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Subject';
+      }
     } else {
       s.style.display = "none";
       c.style.display = "block";
@@ -1379,6 +1468,9 @@ document.addEventListener("DOMContentLoaded", () => {
       cb?.classList.add("active");
       if (mw) mw.style.display = "flex";
       if (mc) mc.style.display = "inline-flex";
+      if (manageAddButton) {
+        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Classes';
+      }
     }
   }
 
@@ -1491,6 +1583,12 @@ document.addEventListener("DOMContentLoaded", () => {
         subjectsAllData = Array.isArray(data) ? data : [];
         subjectsCurrentPage = 1;
         applyManageSubjectFilters();
+        
+        // Update total subjects count
+        const totalSubjectsCount = document.getElementById('totalSubjectsCount');
+        if (totalSubjectsCount) {
+          totalSubjectsCount.textContent = subjectsAllData.length;
+        }
       });
   }
 
@@ -1508,6 +1606,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     subjectsCurrentPage = 1;
     renderManageSubjectsTable();
+    
+    // Update total subjects count
+    const totalSubjectsCount = document.getElementById('totalSubjectsCount');
+    if (totalSubjectsCount) {
+      totalSubjectsCount.textContent = subjectsAllData.length;
+    }
   }
 
   function renderManageSubjectsTable() {
@@ -1544,8 +1648,8 @@ document.addEventListener("DOMContentLoaded", () => {
       <td>${s.year_level}</td>
       <td class="action-cell">
         <div class="action-buttons">
-          <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-          <button class="delete-btn"><i class="ph ph-trash"></i></button>
+              <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
+              <button class="action-icon-btn delete-btn"><i class="ph ph-trash"></i></button>
         </div>
       </td>
     `;
@@ -1962,9 +2066,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         classesTableBody.innerHTML = "";
+        
+        // Update active classes count
+        const activeClassesCount = document.getElementById('activeClassesCount');
+        const classCount = (data && Array.isArray(data)) ? data.length : 0;
+        if (activeClassesCount) {
+          activeClassesCount.textContent = classCount;
+        }
 
         if (!data || data.length === 0) {
-          classesTableBody.innerHTML = "<tr><td colspan='5'>No classes found for this program</td></tr>";
+          classesTableBody.innerHTML = "<tr><td colspan='4'>No classes found for this program</td></tr>";
           return;
         }
 
@@ -1979,9 +2090,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <td><span class="status-badge active">Loading...</span></td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
-              <button class="edit-btn" title="Edit Class"><i class="ph ph-pencil-simple"></i></button>
-              <button class="delete-btn" title="Delete Class"><i class="ph ph-trash"></i></button>
+              <button class="action-icon-btn view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
+              <button class="action-icon-btn edit-btn" title="Edit Class"><i class="ph ph-note-pencil"></i></button>
+              <button class="action-icon-btn delete-btn" title="Delete Class"><i class="ph ph-trash"></i></button>
             </div>
           </td>
         `;
@@ -2068,7 +2179,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => {
         console.error("Error loading classes:", err);
         if (classesTableBody) {
-          classesTableBody.innerHTML = `<tr><td colspan='5'>Error loading classes: ${err.message}</td></tr>`;
+          classesTableBody.innerHTML = `<tr><td colspan='4'>Error loading classes: ${err.message}</td></tr>`;
         }
       });
   }
@@ -2504,7 +2615,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const current = normalizeStatusValue(currentStatus);
     return `
     <div class="status-action-menu">
-      <button class="settings-btn" title="Change Status"><i class="ph ph-gear-six"></i></button>
+      <button class="action-icon-btn settings-btn" title="Change Status"><i class="ph ph-gear-six"></i></button>
       <div class="status-dropdown-menu">
         ${options.map(status => `
           <button type="button" class="status-option ${current === status ? "selected" : ""}" data-status="${status}">
@@ -2696,7 +2807,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadFaculty() {
     console.log("Loading faculty data...");
     showSectionSkeleton("faculties-section");
-    fetch("getFaculty.php?t=" + Date.now())
+    fetch("getFaculty.php?t=" + Date.now(), { cache: "no-store" })
       .then(r => r.json())
       .then(data => {
         console.log("Raw faculty data received:", data);
@@ -2747,15 +2858,15 @@ document.addEventListener("DOMContentLoaded", () => {
           const initials = ((f.firstname || "").charAt(0) + (f.lastname || "").charAt(0)).toUpperCase() || "?";
           const avatarHtml = f.photo
             ? `<img src="${f.photo}" class="table-avatar" alt="${f.firstname} ${f.lastname}">`
-            : `<div class="table-avatar placeholder faculty-initials-avatar">${initials}</div>`;
+            : `<div class="table-avatar placeholder faculty-placeholder-avatar" aria-label="No profile image for ${f.firstname} ${f.lastname}" title="No profile image">${initials}</div>`;
 
           if (normalizeStatusValue(f.status) === "archived") {
             row.innerHTML = `
             <td>${avatarHtml}</td>
-            <td><strong>${f.faculty_id}</strong></td>
+            <td><span class="person-id-badge">${f.faculty_id}</span></td>
             <td>
               <div>
-                <div style="font-weight: 600; color: var(--primary-900);">${f.firstname} ${f.lastname} ${f.suffix || ""}</div>
+                <div class="faculty-name-text">${f.firstname} ${f.lastname} ${f.suffix || ""}</div>
                 <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
               </div>
             </td>
@@ -2770,10 +2881,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           row.innerHTML = `
           <td>${avatarHtml}</td>
-          <td><strong>${f.faculty_id}</strong></td>
+          <td><span class="person-id-badge">${f.faculty_id}</span></td>
           <td>
             <div>
-              <div style="font-weight: 600; color: var(--primary-900);">${f.firstname} ${f.lastname} ${f.suffix || ""}</div>
+              <div class="faculty-name-text">${f.firstname} ${f.lastname} ${f.suffix || ""}</div>
               <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
             </div>
           </td>
@@ -2782,10 +2893,10 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
           <td>${statusPillHtml(f.status)}</td>
           <td class="action-cell"><div class="action-buttons">
-            <button class="view-btn"><i class="ph ph-eye"></i></button>
-            <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+            <button class="action-icon-btn view-btn"><i class="ph ph-eye"></i></button>
+            <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
             ${statusMenuHtml("faculty", f.status)}
-            <button class="archive-btn" title="Archive Faculty">Archived</button>
+            <button class="action-icon-btn archive-btn" title="Archive Faculty" aria-label="Archive Faculty"><i class="ph ph-archive"></i></button>
           </div></td>`;
 
           facultyTbody.appendChild(row);
@@ -2810,13 +2921,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Load subjects and check faculty's existing subjects
             loadAllFacultySubjects().then(() => {
-              if (f.subjects && f.subjects.length > 0) {
-                const assignedSubjectIds = f.subjects.map(subject => String(subject.subject_id || subject.id || ""));
-                const checkboxes = document.querySelectorAll('#faculty-subjects-list input[type="checkbox"]');
-                checkboxes.forEach(checkbox => {
-                  checkbox.checked = assignedSubjectIds.includes(String(checkbox.value));
-                });
-              }
+              const assignedSubjectIds = new Set((f.subjects || [])
+                .map(subject => String(subject.subject_id || subject.id || "")));
+              selectedFacultySubjects = allFacultySubjects.filter(subject => assignedSubjectIds.has(String(subject.id)));
+              renderSelectedFacultySubjects();
             });
 
             addFacultyModal.dataset.editRow = f.id;
@@ -2826,7 +2934,12 @@ document.addEventListener("DOMContentLoaded", () => {
           // VIEW ----------------------
           row.querySelector(".view-btn").onclick = () => {
             // Set faculty name in modal
-            document.getElementById("viewFacultyName").textContent = `${f.firstname} ${f.lastname} ${f.suffix || ""}`;
+            const facultyFirstName = String(f.firstname || "").trim();
+            const facultyLastName = String(f.lastname || "").trim();
+            document.getElementById("viewFacultyName").textContent = `${facultyFirstName} ${facultyLastName} ${f.suffix || ""}`.trim();
+            document.getElementById("viewFacultyInitials").textContent = `${facultyFirstName.charAt(0)}${facultyLastName.charAt(0)}`.toUpperCase() || "FA";
+            document.querySelector("#viewFacultyMeta .faculty-header-id").textContent = f.faculty_id || f.id || "N/A";
+            document.getElementById("viewFacultySubjectCount").textContent = `${(f.subjects || []).length} ${(f.subjects || []).length === 1 ? "subject" : "subjects"}`;
 
             // Show faculty subjects in modal
             const subjectsList = document.getElementById("viewFacultySubjectsList");
@@ -2917,8 +3030,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (i.id !== "faculty-number") i.value = "";
     });
 
-    document.getElementById("faculty-subjects-list").innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects available</p>';
-
+    selectedFacultySubjects = [];
+    renderSelectedFacultySubjects();
     loadAllFacultySubjects();
 
     document.getElementById("faculty-photo-preview").hidden = true;
@@ -2949,7 +3062,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // SUBMIT (ADD/EDIT) ----------
+  let facultySaveInProgress = false;
   addFacultyModal.querySelector(".submit-btn").onclick = async () => {
+    if (facultySaveInProgress) return;
+    facultySaveInProgress = true;
+    const submitButton = addFacultyModal.querySelector(".submit-btn");
+    submitButton.disabled = true;
+
     const n = document.getElementById("faculty-number").value.trim(),
       e = document.getElementById("faculty-email").value.trim(),
       f = document.getElementById("faculty-firstname").value.trim(),
@@ -2957,13 +3076,11 @@ document.addEventListener("DOMContentLoaded", () => {
       s = document.getElementById("faculty-suffix").value.trim(),
       photo = document.getElementById("faculty-photo-preview").hidden ? "" : document.getElementById("faculty-photo-preview").src;
 
-    if (!n || !e || !f || !l) return showNotification("Required fields missing!", "#f44336");
-
-    // Get selected subjects
-    const selectedSubjects = [];
-    document.querySelectorAll('#faculty-subjects-list input[type="checkbox"]:checked').forEach(checkbox => {
-      selectedSubjects.push(parseInt(checkbox.value));
-    });
+    if (!n || !e || !f || !l) {
+      facultySaveInProgress = false;
+      submitButton.disabled = false;
+      return showNotification("Required fields missing!", "#f44336");
+    }
 
     const action = addFacultyModal.dataset.editRow ? "edit" : "add";
     const facultyData = {
@@ -2974,7 +3091,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lastname: l,
       suffix: s,
       photo: photo,
-      subjects: selectedSubjects
+      subjects: selectedFacultySubjects.map(subject => Number(subject.id))
     };
 
     // Add ID for edit
@@ -2999,22 +3116,19 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Faculty creation response:", result);
 
       if (result.success) {
-        console.log("Faculty added successfully, reloading faculty list...");
-        loadFaculty();
+        console.log("Faculty saved successfully, reloading faculty list...");
+        await loadFaculty();
         closeModal(addFacultyModal);
         showNotification(result.message, "#10b981");
-
-        // Force a refresh after a short delay to ensure photo data is loaded
-        setTimeout(() => {
-          console.log("Force refreshing faculty list...");
-          loadFaculty();
-        }, 500);
       } else {
         showNotification(result.message, "#f44336");
       }
     } catch (err) {
       console.error("Save error:", err);
       showNotification("Network error. Please try again.", "#f44336");
+    } finally {
+      facultySaveInProgress = false;
+      submitButton.disabled = false;
     }
   };
 
@@ -3117,12 +3231,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
       const years = [...new Set(periods.map(period => period.ay).filter(Boolean))].sort().reverse();
+      const semesterSelect = document.getElementById("report-semester-filter");
       years.forEach(year => {
         const option = document.createElement("option");
         option.value = year;
         option.textContent = year;
         aySelect.appendChild(option);
       });
+      if (semesterSelect) {
+        const selectedSemester = semesterSelect.value;
+        const semesters = [...new Set(periods.map(period => String(period.semester || "").trim()).filter(Boolean))];
+        semesterSelect.querySelectorAll("option:not(:first-child)").forEach(option => option.remove());
+        semesters.forEach(semester => {
+          const option = document.createElement("option");
+          option.value = semester;
+          option.textContent = semester;
+          semesterSelect.appendChild(option);
+        });
+        semesterSelect.value = semesters.includes(selectedSemester) ? selectedSemester : "";
+      }
       reportPeriodFiltersLoaded = true;
     } catch (err) {
       console.error("Failed to load report period filters:", err);
@@ -3156,6 +3283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showSectionSkeleton("report-section");
     const reportParams = getReportPeriodParams();
     const query = reportParams.toString();
+    loadReportAnalytics(reportParams);
     fetch(`get_evaluations.php${query ? `?${query}` : ""}`)
       .then(r => r.json())
       .then(data => {
@@ -3202,10 +3330,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>
               <span class="badge ${escapeHtml(ratingClass)}">${escapeHtml(ratingText)}</span>
             </td>
-            <td>
-              <button class="view-btn" data-faculty-id="${evaluation.id}" data-subject-id="${evaluation.subject_id || 0}" data-class-id="${evaluation.class_id || 0}" data-period-id="${evaluation.period_id || 0}">
-                <i class="ph ph-eye"></i> View
-              </button>
+            <td class="action-cell">
+              <div class="action-buttons">
+                <button class="action-icon-btn view-btn" title="View Evaluation" aria-label="View Evaluation" data-faculty-id="${evaluation.id}" data-subject-id="${evaluation.subject_id || 0}" data-class-id="${evaluation.class_id || 0}" data-period-id="${evaluation.period_id || 0}">
+                  <i class="ph ph-eye"></i>
+                </button>
+              </div>
             </td>
           `;
 
@@ -3229,6 +3359,53 @@ document.addEventListener("DOMContentLoaded", () => {
         tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Network error loading data</td></tr>';
       })
       .finally(() => hideSectionSkeleton("report-section"));
+  }
+
+  async function loadReportAnalytics(reportParams) {
+    try {
+      const query = reportParams.toString();
+      const response = await fetch(`get_report_analytics.php${query ? `?${query}` : ""}`, { cache: "no-store", credentials: "same-origin" });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || "Unable to load analytics");
+      renderReportAnalytics(result.data || {});
+    } catch (error) {
+      console.error("Failed to load report analytics:", error);
+      renderReportAnalytics({});
+    }
+  }
+
+  function renderReportAnalytics(data) {
+    const labels = ["Excellent", "Very Good", "Good", "Fair", "Poor"];
+    const colors = ["#059669", "#0ea5e9", "#f59e0b", "#f97316", "#ef4444"];
+    const distribution = data.distribution || {};
+    const values = labels.map(label => Number(distribution[label] || 0));
+    const total = Number(data.total || 0);
+
+    const donutCanvas = document.getElementById("reportRatingDistributionChart");
+    if (donutCanvas) {
+      window.reportRatingChart?.destroy();
+      window.reportRatingChart = new Chart(donutCanvas, { type: "doughnut", data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: "#fff", borderWidth: 3 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "66%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `${context.label}: ${context.parsed} (${total ? Math.round(context.parsed / total * 100) : 0}%)` } } } } });
+    }
+    const legend = document.getElementById("reportRatingLegend");
+    if (legend) legend.innerHTML = labels.map((label, index) => {
+      const percentage = total ? Math.round(values[index] / total * 100) : 0;
+      return `<div class="report-legend-item"><div class="report-legend-label"><span class="report-legend-dot" style="background:${colors[index]}"></span><span>${label}</span><strong>${percentage}%</strong></div><div class="report-legend-track"><span style="width:${percentage}%;background:${colors[index]}"></span></div></div>`;
+    }).join("");
+
+    const programs = data.programs || [];
+    const programCanvas = document.getElementById("reportProgramRatingsChart");
+    if (programCanvas) {
+      window.reportProgramChart?.destroy();
+      window.reportProgramChart = new Chart(programCanvas, { type: "bar", data: { labels: programs.map(item => item.label), datasets: [{ label: "Average rating", data: programs.map(item => item.average), backgroundColor: "#2563eb", borderRadius: 5, maxBarThickness: 34 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+    }
+    const trend = data.trend || [];
+    const trendCanvas = document.getElementById("reportRatingsTrendChart");
+    if (trendCanvas) {
+      window.reportTrendChart?.destroy();
+      window.reportTrendChart = new Chart(trendCanvas, { type: "line", data: { labels: trend.map(item => item.label), datasets: [{ label: "Average rating", data: trend.map(item => item.average), borderColor: "#0f766e", backgroundColor: "rgba(15, 118, 110, .12)", fill: true, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+    }
+    const rankings = document.getElementById("reportFacultyRankings");
+    if (rankings) rankings.innerHTML = (data.rankings || []).map((item, index) => `<div class="report-ranking-item"><div class="report-ranking-meta"><span class="report-ranking-name"><b>${index + 1}</b>${escapeHtml(item.label)}</span><strong>${Number(item.average).toFixed(2)} / 5</strong></div><div class="report-ranking-track"><span style="width:${Math.min(Number(item.average) / 5 * 100, 100)}%"></span></div></div>`).join("") || '<p class="report-no-data">No rating data available</p>';
   }
 
   function buildEvaluationReportPdfUrl(downloadMode = false) {
@@ -3397,19 +3574,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return Object.values(grouped)
       .sort((a, b) => a.programCode.localeCompare(b.programCode) || a.programName.localeCompare(b.programName))
       .map(group => {
-        const cards = group.subjects
+        const rows = group.subjects
           .sort((a, b) => {
             const yearDiff = getSubjectYearOrder(a.year_level) - getSubjectYearOrder(b.year_level);
             if (yearDiff !== 0) return yearDiff;
             return String(a.subject_code || "").localeCompare(String(b.subject_code || ""));
           })
           .map(subject => `
-          <div class="subject-card">
-            <div class="subject-header">
-              <strong>${escapeHtml(subject.subject_code || "")}</strong>
-              <span class="year-badge">${escapeHtml(formatSubjectYearLevel(subject.year_level))}</span>
+          <div class="faculty-subject-row">
+            <span class="faculty-subject-code">${escapeHtml(subject.subject_code || "")}</span>
+            <div class="faculty-subject-info">
+              <strong>${escapeHtml(subject.subject_desc || "")}</strong>
+              <span>${escapeHtml(formatSubjectYearLevel(subject.year_level))}</span>
             </div>
-            <p class="subject-desc">${escapeHtml(subject.subject_desc || "")}</p>
           </div>
         `).join("");
 
@@ -3419,7 +3596,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="faculty-program-code">${escapeHtml(group.programCode)}</span>
             <span class="faculty-program-name">${escapeHtml(group.programName)}</span>
           </div>
-          <div class="subjects-grid">${cards}</div>
+          <div class="faculty-subject-rows">${rows}</div>
         </div>
       `;
       }).join("");
@@ -3807,6 +3984,16 @@ document.addEventListener("DOMContentLoaded", () => {
           if (progressFillEl && progressTextEl) {
             const submittedEvaluations = Number(data.data.totalEvaluationsSubmitted) || 0;
             const totalActiveStudents = Number(data.data.activeStudents) || 0;
+            const pendingEvaluations = Math.max(totalActiveStudents - submittedEvaluations, 0);
+            const completionPercent = totalActiveStudents > 0
+              ? Math.min(100, (submittedEvaluations / totalActiveStudents) * 100)
+              : 0;
+            const completionRateEl = document.getElementById("evaluationCompletionRate");
+            const submissionCountEl = document.getElementById("evaluationSubmissionCount");
+            const pendingCountEl = document.getElementById("evaluationPendingCount");
+            if (completionRateEl) completionRateEl.textContent = `${completionPercent.toFixed(1)}%`;
+            if (submissionCountEl) submissionCountEl.textContent = submittedEvaluations.toLocaleString();
+            if (pendingCountEl) pendingCountEl.textContent = pendingEvaluations.toLocaleString();
 
             if (submittedEvaluations <= 0 || totalActiveStudents <= 0) {
               progressFillEl.style.width = "0%";
@@ -3879,6 +4066,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Update department graph (if canvas exists)
           updateDepartmentGraph(data.data.departments);
+
+          // Update rating distribution donut without changing the legend layout
+          initRatingDistributionChart(data.data.ratingDistribution);
 
         } else {
           console.error("Error loading dashboard stats:", data.message);
@@ -4293,15 +4483,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function facultySubjectSearchText(subject) {
-    return [
-      subject.program_code,
-      subject.program_name,
-      subject.subject_code,
-      subject.subject_desc,
-      subject.year_level,
-      `year ${subject.year_level || ""}`,
-      `${subject.year_level || ""} year`
-    ].join(" ").toLowerCase();
+    return [subject.subject_code, subject.subject_desc].join(" ").toLowerCase();
   }
 
   function groupSubjectsByProgram(subjects) {
@@ -4320,81 +4502,154 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderFacultySubjectList(subjects) {
-    const subjectsList = document.getElementById("faculty-subjects-list");
-    if (!subjectsList) return;
+    const tbody = document.getElementById("faculty-subject-selection-tbody");
+    if (!tbody) return;
 
     if (!subjects || subjects.length === 0) {
-      subjectsList.innerHTML = `${facultySubjectSearchHtml()}<small>No subjects available</small>`;
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No subjects available</td></tr>';
       return;
     }
 
-    const grouped = groupSubjectsByProgram(subjects);
-    const rows = Object.values(grouped)
-      .sort((a, b) => a.programCode.localeCompare(b.programCode) || a.programName.localeCompare(b.programName))
-      .map(group => {
-        const subjectRows = group.subjects
-          .sort((a, b) => {
-            const yearDiff = getSubjectYearOrder(a.year_level) - getSubjectYearOrder(b.year_level);
-            if (yearDiff !== 0) return yearDiff;
-            const semDiff = String(a.semester || "").localeCompare(String(b.semester || ""));
-            if (semDiff !== 0) return semDiff;
-            return String(a.subject_code || "").localeCompare(String(b.subject_code || ""));
-          })
-          .map(subject => `
-          <label class="subject-checkbox-item faculty-subject-item" data-search="${escapeHtml(facultySubjectSearchText(subject))}">
-            <input type="checkbox" value="${subject.id}" class="faculty-subject-checkbox">
-            <span class="subject-info">
-              <span class="subject-code">${escapeHtml(subject.subject_code)}</span>
-              <span class="subject-desc">${escapeHtml(subject.subject_desc)}</span>
-              <span class="subject-year-level">${escapeHtml(formatSubjectYearLevel(subject.year_level))}</span>
-            </span>
-          </label>
-        `).join("");
-
-        return `
-        <div class="faculty-subject-program-group">
-          <div class="faculty-subject-program-header">
-            <div class="faculty-subject-program-title">
-              <span class="faculty-subject-program-code">${escapeHtml(group.programCode)}</span>
-              <span class="faculty-subject-program-name">${escapeHtml(group.programName)}</span>
-            </div>
-            <span class="faculty-subject-program-count">${group.subjects.length}</span>
-          </div>
-          <div class="faculty-subject-program-items">
-            ${subjectRows}
-          </div>
-        </div>
-      `;
-      }).join("");
-
-    subjectsList.innerHTML = `${facultySubjectSearchHtml()}<div class="faculty-subjects-checkboxes">${rows}</div>`;
-    attachFacultySubjectSearch();
+    const selectedIds = new Set(selectedFacultySubjects.map(subject => String(subject.id)));
+    tbody.innerHTML = subjects
+      .slice()
+      .sort((a, b) => String(a.subject_code || "").localeCompare(String(b.subject_code || "")))
+      .map(subject => `
+        <tr class="faculty-subject-selection-row" data-search="${escapeHtml(facultySubjectSearchText(subject))}" data-year="${getSubjectYearOrder(subject.year_level)}" data-program="${escapeHtml(subject.program_code || subject.program_name || "N/A")}">
+          <td><input type="checkbox" class="faculty-subject-selection-checkbox" value="${subject.id}" ${selectedIds.has(String(subject.id)) ? "checked" : ""}></td>
+          <td>${escapeHtml(subject.subject_code || "")}</td>
+          <td>${escapeHtml(subject.subject_desc || "")}</td>
+          <td>${escapeHtml(formatSubjectYearLevel(subject.year_level))}</td>
+          <td>${escapeHtml(subject.program_code || subject.program_name || "N/A")}</td>
+        </tr>
+      `).join("");
   }
 
   function attachFacultySubjectSearch() {
-    const searchInput = document.getElementById("faculty-subject-search");
-    const subjectsList = document.getElementById("faculty-subjects-list");
-    if (!searchInput || !subjectsList) return;
+    const searchInput = document.getElementById("faculty-subject-selection-search");
+    const yearFilter = document.getElementById("faculty-subject-year-filter");
+    const programFilter = document.getElementById("faculty-subject-program-filter");
+    const subjectsList = document.getElementById("faculty-subject-selection-tbody");
+    if (!searchInput || !yearFilter || !programFilter || !subjectsList || searchInput.dataset.bound === "true") return;
 
-    searchInput.addEventListener("input", () => {
+    searchInput.dataset.bound = "true";
+
+    const applyFacultySubjectFilters = () => {
       const term = searchInput.value.trim().toLowerCase();
-      subjectsList.querySelectorAll(".faculty-subject-item").forEach(item => {
-        item.hidden = Boolean(term && !item.dataset.search.includes(term));
+      const selectedYear = yearFilter.value;
+      const selectedProgram = programFilter.value;
+      subjectsList.querySelectorAll(".faculty-subject-selection-row").forEach(item => {
+        const matchesSearch = !term || item.dataset.search.includes(term);
+        const matchesYear = selectedYear === "all" || item.dataset.year === selectedYear;
+        const matchesProgram = selectedProgram === "all" || item.dataset.program === selectedProgram;
+        item.hidden = !(matchesSearch && matchesYear && matchesProgram);
       });
-      subjectsList.querySelectorAll(".faculty-subject-program-group").forEach(group => {
-        const hasVisibleSubject = Array.from(group.querySelectorAll(".faculty-subject-item"))
-          .some(item => !item.hidden);
-        const headerText = group.querySelector(".faculty-subject-program-header")?.textContent.toLowerCase() || "";
-        group.hidden = Boolean(term && !hasVisibleSubject && !headerText.includes(term));
+    };
+
+    searchInput.addEventListener("input", applyFacultySubjectFilters);
+    yearFilter.addEventListener("change", applyFacultySubjectFilters);
+    programFilter.addEventListener("change", applyFacultySubjectFilters);
+
+    if (subjectsList.dataset.rowSelectionBound !== "true") {
+      subjectsList.dataset.rowSelectionBound = "true";
+      subjectsList.addEventListener("click", event => {
+        if (event.target.closest("input[type='checkbox']")) return;
+
+        const row = event.target.closest(".faculty-subject-selection-row");
+        const checkbox = row?.querySelector("input[type='checkbox']");
+        if (checkbox) checkbox.checked = !checkbox.checked;
+      });
+    }
+  }
+
+  function populateFacultyProgramFilter(subjects) {
+    const programFilter = document.getElementById("faculty-subject-program-filter");
+    if (!programFilter) return;
+
+    const programs = new Map();
+    (subjects || []).forEach(subject => {
+      const value = String(subject.program_code || subject.program_name || "N/A").trim() || "N/A";
+      const label = subject.program_code && subject.program_name
+        ? `${subject.program_code} - ${subject.program_name}`
+        : value;
+      programs.set(value, label);
+    });
+
+    programFilter.innerHTML = '<option value="all">All Programs</option>';
+    Array.from(programs.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .forEach(([value, label]) => {
+        programFilter.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`);
+      });
+  }
+
+  function renderSelectedFacultySubjects() {
+    const container = document.getElementById("selected-faculty-subjects");
+    if (!container) return;
+
+    if (selectedFacultySubjects.length === 0) {
+      container.innerHTML = '<p class="empty-subject-message">No subjects selected</p>';
+      return;
+    }
+
+    container.innerHTML = selectedFacultySubjects.map(subject => `
+      <div class="selected-subject-item">
+        <span>
+          <strong>${escapeHtml(subject.subject_code || "")}</strong>
+          <span>${escapeHtml(subject.subject_desc || "")}</span>
+          <small>${escapeHtml(subject.program_code || subject.program_name || "N/A")} | ${escapeHtml(formatSubjectYearLevel(subject.year_level))}</small>
+        </span>
+        <button type="button" class="remove-faculty-subject" data-id="${subject.id}" aria-label="Remove ${escapeHtml(subject.subject_code || "subject")}">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+    `).join("");
+
+    container.querySelectorAll(".remove-faculty-subject").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedFacultySubjects = selectedFacultySubjects.filter(subject => String(subject.id) !== String(button.dataset.id));
+        renderSelectedFacultySubjects();
       });
     });
   }
+
+  function openFacultySubjectSelection() {
+    if (!facultySubjectSelectionModal) return;
+    const searchInput = document.getElementById("faculty-subject-selection-search");
+    const yearFilter = document.getElementById("faculty-subject-year-filter");
+    const programFilter = document.getElementById("faculty-subject-program-filter");
+    if (searchInput) searchInput.value = "";
+    if (yearFilter) yearFilter.value = "all";
+    if (programFilter) programFilter.value = "all";
+    renderFacultySubjectList(allFacultySubjects);
+    attachFacultySubjectSearch();
+    facultySubjectSelectionModal.style.display = "flex";
+    facultySubjectSelectionModal.style.zIndex = "100001";
+  }
+
+  document.getElementById("open-faculty-subject-selection")?.addEventListener("click", openFacultySubjectSelection);
+  document.getElementById("cancel-faculty-subject-selection")?.addEventListener("click", () => {
+    if (facultySubjectSelectionModal) facultySubjectSelectionModal.style.display = "none";
+  });
+  facultySubjectSelectionModal?.querySelector(".close-btn")?.addEventListener("click", () => {
+    facultySubjectSelectionModal.style.display = "none";
+  });
+  document.getElementById("confirm-faculty-subject-selection")?.addEventListener("click", () => {
+    const selectedIds = new Set(Array.from(document.querySelectorAll("#faculty-subject-selection-tbody input:checked"))
+      .map(input => String(input.value)));
+    selectedFacultySubjects = allFacultySubjects.filter(subject => selectedIds.has(String(subject.id)));
+    renderSelectedFacultySubjects();
+    facultySubjectSelectionModal.style.display = "none";
+  });
 
   function loadAllFacultySubjects() {
     return fetch("subject_crud.php?action=get_all")
       .then(r => r.json())
       .then(data => {
-        renderFacultySubjectList(data);
+        allFacultySubjects = Array.isArray(data) ? data : [];
+        populateFacultyProgramFilter(allFacultySubjects);
+        renderFacultySubjectList(allFacultySubjects);
+        renderSelectedFacultySubjects();
         return data;
       })
       .catch(err => {
@@ -4405,15 +4660,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const subjectsList = document.getElementById("faculty-subjects-list");
   loadAllFacultySubjects().then(data => {
-    if (data.length === 0) {
-      subjectsList.innerHTML = `${facultySubjectSearchHtml()}<p style="color: #6b7280; font-size: 0.9em;">No subjects found</p>`;
-    } else {
-      renderFacultySubjectList(data);
-    }
+    renderFacultySubjectList(data);
+    renderSelectedFacultySubjects();
   })
     .catch(err => {
       console.error("Error fetching faculty subjects:", err);
-      subjectsList.innerHTML = '<p style="color: #dc2626; font-size: 0.9em;">Error loading subjects</p>';
+      const tbody = document.getElementById("faculty-subject-selection-tbody");
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#dc2626;">Error loading subjects</td></tr>';
     });
 
   //  Load Students -------------------
@@ -4440,7 +4693,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Check for error response from PHP
           if (data.error) {
             console.error("Database error:", data.error);
-            studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: red;">Error loading students</td></tr>';
+            studentTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Error loading students</td></tr>';
             return;
           }
 
@@ -4450,9 +4703,9 @@ document.addEventListener("DOMContentLoaded", () => {
           // Check if data is empty or not an array
           if (!data || !Array.isArray(data) || data.length === 0) {
             console.log("No students found");
-            studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No students found</td></tr>';
+            studentTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No students found</td></tr>';
             if (archivedStudentTbody) {
-              archivedStudentTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No archived students found</td></tr>';
+              archivedStudentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No archived students found</td></tr>';
             }
             return;
           }
@@ -4470,33 +4723,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (normalizeStatusValue(stu.status) === "archived") {
               row.innerHTML = `
-            <td>${stu.student_number || ''}</td>
-            <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix || ""}</div>
-                <small style="color:#6b7280;">${stu.email || ''}</small>
+            <td><span class="person-id-badge">${stu.student_number || ''}</span></td>
+            <td><div class="student-name-cell"><strong>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix || ""}</strong>
+                <small>${stu.email || ''}</small></div>
             </td>
-            <td><div>${stu.yearlevel === 'irregular' ? 'irregular' : (stu.yearlevel || '') + (stu.section || '')}</div>
-                <small style="color:#6b7280;">${getProgramName(stu.program)}</small>
+            <td><div class="student-program-cell"><strong>${stu.yearlevel === 'irregular' ? 'Irregular' : (stu.yearlevel || '') + (stu.section || '')}</strong>
+                <small>${getProgramName(stu.program)}</small></div>
             </td>
-            <td>${statusPillHtml(stu.status)}</td>`;
+            <td>${statusPillHtml(stu.status)}</td>
+            <td><span class="student-type-badge ${stu.yearlevel === 'irregular' ? 'irregular' : 'regular'}">${stu.yearlevel === 'irregular' ? 'Irregular' : 'Regular'}</span></td>`;
               if (archivedStudentTbody) archivedStudentTbody.appendChild(row);
               return;
             }
 
             row.innerHTML = `
-          <td>${stu.student_number || ''}</td>
-          <td><div>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix || ""}</div>
-              <small style="color:#6b7280;">${stu.email || ''}</small>
+          <td><span class="person-id-badge">${stu.student_number || ''}</span></td>
+          <td><div class="student-name-cell"><strong>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix || ""}</strong>
+              <small>${stu.email || ''}</small></div>
           </td>
-          <td><div>${stu.yearlevel === 'irregular' ? 'irregular' : (stu.yearlevel || '') + (stu.section || '')}</div>
-              <small style="color:#6b7280;">${getProgramName(stu.program)}</small>
+          <td><div class="student-program-cell"><strong>${stu.yearlevel === 'irregular' ? 'Irregular' : (stu.yearlevel || '') + (stu.section || '')}</strong>
+              <small>${getProgramName(stu.program)}</small></div>
           </td>
           <td>${statusPillHtml(stu.status)}</td>
+          <td><span class="student-type-badge ${stu.yearlevel === 'irregular' ? 'irregular' : 'regular'}">${stu.yearlevel === 'irregular' ? 'Irregular' : 'Regular'}</span></td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button class="view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
-              <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
+              <button class="action-icon-btn view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
+              <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
               ${statusMenuHtml("student", stu.status)}
-              <button class="archive-btn" title="Archive Student">Archived</button>
+              <button class="action-icon-btn archive-btn" title="Archive Student" aria-label="Archive Student"><i class="ph ph-archive"></i></button>
             </div>
           </td>`;
 
@@ -5262,9 +5517,13 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedSubjects.forEach(subject => {
         console.log("Adding subject to display:", subject);
         html += `
-        <div class="selected-subject-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 5px; background: #f3f4f6; border-radius: 4px; border: 1px solid #d1d5db;">
-          <span>${subject.subject_code} - ${subject.subject_desc} (${subject.class_year_level || subject.year_level}${subject.class_section ? " / " + subject.class_section : ""})${subject.instructor_name ? " - " + subject.instructor_name : ""}</span>
-          <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+        <div class="selected-subject-item">
+          <span>
+            <strong>${subject.subject_code || ""}</strong>
+            <span>${subject.subject_desc || ""}</span>
+            <small>${subject.class_year_level || subject.year_level || ""}${subject.class_section ? " / " + subject.class_section : ""}${subject.instructor_name ? " - " + subject.instructor_name : ""}</small>
+          </span>
+          <button type="button" class="remove-subject" data-id="${subject.id}" aria-label="Remove ${subject.subject_code || "subject"}">
             <i class="ph ph-x"></i>
           </button>
         </div>
@@ -5317,9 +5576,13 @@ document.addEventListener("DOMContentLoaded", () => {
         html += '<div class="selected-subjects-list">';
         selectedSubjects.forEach(subject => {
           html += `
-          <div class="selected-subject-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px; margin-bottom: 3px; background: #dbeafe; border-radius: 4px;">
-            <span>${subject.subject_code} - ${subject.subject_desc}</span>
-            <button type="button" class="remove-subject" data-id="${subject.id}" style="background: #dc2626; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;">
+          <div class="selected-subject-item">
+            <span>
+              <strong>${subject.subject_code || ""}</strong>
+              <span>${subject.subject_desc || ""}</span>
+              <small>${subject.year_level || ""}</small>
+            </span>
+            <button type="button" class="remove-subject" data-id="${subject.id}" aria-label="Remove ${subject.subject_code || "subject"}">
               <i class="ph ph-x"></i>
             </button>
           </div>
@@ -5641,6 +5904,15 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  function formatCategoryName(name) {
+    if (!name) return "";
+    return String(name)
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, char => char.toUpperCase());
+  }
+
   function bindQuestionActions(item) {
     const cat = item.closest(".criteria-category");
 
@@ -5715,21 +5987,22 @@ document.addEventListener("DOMContentLoaded", () => {
           cat.dataset.category_id = c.id;
           cat.dataset.weight = parseFloat(c.weight || 0);
 
+          const displayCategoryName = formatCategoryName(c.category_name);
+
           cat.innerHTML = `
           <div class="category-header">
             <div class="title-block">
-              <i class="ph ph-chalkboard-teacher"></i>
+              <i class="ph ph-folder-open"></i>
               <div class="text-block">
                 <div class="section-number">SECTION ${c.section_number}</div>
-                <div class="category-name">${c.category_name}</div>
+                <div class="category-name" style="text-transform: none !important; letter-spacing: normal !important;">${displayCategoryName}</div>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-              <span class="category-weight-badge" title="Category weight (contribution to overall score)">${normW}%</span>
               <div class="action-buttons">
                 <button class="add-btn"><i class="ph ph-plus"></i></button>
-                <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-                <button class="delete-btn"><i class="ph ph-trash"></i></button>
+                <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
+                <button class="action-icon-btn delete-btn"><i class="ph ph-trash"></i></button>
               </div>
             </div>
           </div>
@@ -5751,8 +6024,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.innerHTML = `
                 <span class="question-text">${q.question_text}</span>
                 <div class="actions">
-                  <button class="edit-btn"><i class="ph ph-pencil-simple"></i></button>
-                  <button class="delete-btn"><i class="ph ph-trash"></i></button>
+                  <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
+                  <button class="action-icon-btn delete-btn"><i class="ph ph-trash"></i></button>
                 </div>
               `;
                 list.appendChild(item);
@@ -5766,6 +6039,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("criteria-section").style.display = "block";
         updateCriteriaLockUI();
         hideSectionSkeleton("criteria-section");
+        
+        // Update weight distribution visualization
+        setTimeout(updateWeightDistribution, 300);
       })
       .catch(err => {
         console.error("Failed to load categories:", err);
@@ -5835,16 +6111,113 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("DOMContentLoaded", loadCategories);
 
+  // ========================= Criteria Search Functionality =========================
+  const criteriaSearchInput = document.getElementById('criteria-search-input');
+  const criteriaSearchClear = document.getElementById('criteria-search-clear');
+  if (criteriaSearchInput) {
+    const filterCriteria = () => {
+      const searchTerm = criteriaSearchInput.value.toLowerCase().trim();
+      const categories = document.querySelectorAll('.criteria-category');
+      
+      categories.forEach(category => {
+        const categoryName = category.querySelector('.category-name')?.textContent.toLowerCase() || '';
+        const questions = category.querySelectorAll('.question-item');
+        let categoryHasMatch = categoryName.includes(searchTerm);
+        let visibleQuestionsCount = 0;
+        
+        questions.forEach(question => {
+          const questionText = question.querySelector('.question-text')?.textContent.toLowerCase() || '';
+          const questionMatches = questionText.includes(searchTerm);
+          
+          if (searchTerm === '' || categoryHasMatch || questionMatches) {
+            question.style.display = '';
+            visibleQuestionsCount++;
+          } else {
+            question.style.display = 'none';
+          }
+        });
+        
+        // Show category if: no search term, category name matches, or has visible questions
+        if (searchTerm === '' || categoryHasMatch || visibleQuestionsCount > 0) {
+          category.style.display = '';
+        } else {
+          category.style.display = 'none';
+        }
+      });
+    };
+
+    criteriaSearchInput.addEventListener('input', filterCriteria);
+    criteriaSearchClear?.addEventListener('click', () => {
+      criteriaSearchInput.value = '';
+      filterCriteria();
+      criteriaSearchInput.focus();
+    });
+  }
+
+  // ========================= Weight Distribution Visualization =========================
+  function updateWeightDistribution() {
+    const categories = document.querySelectorAll('.criteria-category');
+    const weightListContainer = document.getElementById('weight-list-container');
+    const weightDistributionSection = document.getElementById('weight-distribution-section');
+    
+    if (!weightListContainer || categories.length === 0) {
+      if (weightDistributionSection) weightDistributionSection.style.display = 'none';
+      return;
+    }
+    
+    // Calculate total weight
+    let totalWeight = 0;
+    const categoryData = [];
+    
+    categories.forEach((cat) => {
+      const weight = parseFloat(cat.dataset.weight || 0);
+      const name = cat.querySelector('.category-name')?.textContent || '';
+      totalWeight += weight;
+      categoryData.push({ name, weight });
+    });
+    
+    // Determine if using equal split
+    const useEqualSplit = totalWeight <= 0;
+    const equalWeight = categories.length > 0 ? (100 / categories.length) : 0;
+    
+    // Show weight distribution section
+    if (weightDistributionSection) {
+      weightDistributionSection.style.display = 'block';
+      weightListContainer.innerHTML = '';
+      
+      categoryData.forEach(cat => {
+        const normalizedWeight = useEqualSplit 
+          ? equalWeight 
+          : (cat.weight / totalWeight) * 100;
+        
+        const listItem = document.createElement('div');
+        listItem.className = 'weight-list-item';
+        listItem.innerHTML = `
+          <span class="weight-category-name" title="${cat.name}">${cat.name}</span>
+          <span class="weight-percentage">${normalizedWeight.toFixed(2)}%</span>
+        `;
+        weightListContainer.appendChild(listItem);
+      });
+    }
+  }
+
   // ========================= View Student Subjects =========================
   function viewStudentSubjects(student) {
     console.log("viewStudentSubjects called with student:", student);
 
     const modal = document.getElementById("viewStudentSubjectsModal");
-    const subjectsList = document.getElementById("viewStudentSubjectsList");
+    const subjectsList = document.getElementById("studentSubjectRows");
     const studentNameElement = document.getElementById("viewStudentName");
+    const studentMetaElement = document.getElementById("viewStudentMeta");
+    const subjectCountElement = document.getElementById("viewStudentSubjectCount");
+    const studentInitialsElement = document.getElementById("viewStudentInitials");
 
     // Set student name in header
-    studentNameElement.textContent = `${student.firstname} ${student.lastname} ${student.suffix || ""}`.trim();
+    const firstName = String(student.firstname || "").trim();
+    const lastName = String(student.lastname || "").trim();
+    studentNameElement.textContent = `${firstName} ${lastName} ${student.suffix || ""}`.trim();
+    studentInitialsElement.textContent = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "ST";
+    studentMetaElement.textContent = `${student.student_number || "No student number"} · ${getProgramName(student.program)} · ${student.yearlevel || "Year level unavailable"}`;
 
     subjectsList.innerHTML = "<div class='loading'>Loading subjects...</div>";
     modal.style.display = "flex";
@@ -5854,25 +6227,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Display subjects that are already loaded with student data
     if (student.subjects && Array.isArray(student.subjects)) {
+      subjectCountElement.textContent = `${student.subjects.length} ${student.subjects.length === 1 ? "subject" : "subjects"}`;
       if (student.subjects.length === 0) {
         subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
       } else {
-        let html = "<div class='subjects-grid'>";
+        let html = "";
         student.subjects.forEach(subject => {
           html += `
-          <div class='subject-card'>
-            <div class='subject-header'>
-              <strong>${subject.subject_code}</strong>
-              <span class='year-badge'>${subject.year_level}</span>
+          <div class='student-subject-row'>
+            <span class='student-subject-code'>${subject.subject_code}</span>
+            <div class='student-subject-info'>
+              <strong>${subject.subject_desc}</strong>
+              <span class='student-subject-year'>${subject.year_level || ''}</span>
+              <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
             </div>
-            <p class='subject-desc'>${subject.subject_desc}</p>
-            ${subject.class_year_level || subject.class_section ? `<p class='subject-desc'><strong>Class:</strong> ${subject.class_year_level || ''}${subject.class_section ? ' - ' + subject.class_section : ''}</p>` : ''}
-            <p class='subject-desc'><strong>Instructor:</strong> ${subject.instructor_name || 'Unassigned'}</p>
-            ${subject.program_name ? `<span class='program-badge'>${subject.program_name}</span>` : ''}
           </div>
         `;
         });
-        html += "</div>";
         subjectsList.innerHTML = html;
       }
     } else {
@@ -5891,23 +6262,21 @@ document.addEventListener("DOMContentLoaded", () => {
               subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
             } else {
               console.log("Displaying", currentStudent.subjects.length, "subjects");
-              let html = "<div class='subjects-grid'>";
+              subjectCountElement.textContent = `${currentStudent.subjects.length} ${currentStudent.subjects.length === 1 ? "subject" : "subjects"}`;
+              let html = "";
               currentStudent.subjects.forEach(subject => {
                 console.log("Adding subject to display:", subject);
                 html += `
-                <div class='subject-card'>
-                  <div class='subject-header'>
-                    <strong>${subject.subject_code}</strong>
-                    <span class='year-badge'>${subject.year_level}</span>
+                <div class='student-subject-row'>
+                  <span class='student-subject-code'>${subject.subject_code}</span>
+                  <div class='student-subject-info'>
+                    <strong>${subject.subject_desc}</strong>
+                    <span class='student-subject-year'>${subject.year_level || ''}</span>
+                    <span>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
                   </div>
-                  <p class='subject-desc'>${subject.subject_desc}</p>
-                  ${subject.class_year_level || subject.class_section ? `<p class='subject-desc'><strong>Class:</strong> ${subject.class_year_level || ''}${subject.class_section ? ' - ' + subject.class_section : ''}</p>` : ''}
-                  <p class='subject-desc'><strong>Instructor:</strong> ${subject.instructor_name || 'Unassigned'}</p>
-                  ${subject.program_name ? `<span class='program-badge'>${subject.program_name}</span>` : ''}
                 </div>
               `;
               });
-              html += "</div>";
               subjectsList.innerHTML = html;
             }
           } else {
@@ -6219,6 +6588,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function formatRange(startDate, endDate) {
+    // Handle NULL or empty dates
+    if (!startDate || !endDate || startDate === 'null' || endDate === 'null') {
+      return '<span style="color: #f59e0b; font-style: italic;">No dates set</span>';
+    }
+    
     const start = parseDateOnly(startDate);
     const end = parseDateOnly(endDate);
     const startStr = start.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
@@ -6234,9 +6608,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const activeBox = document.getElementById("activePeriodBox");
       const statusText = document.getElementById("evaluationStatusText");
+      const academicYearEl = document.getElementById("dashboardAcademicYear");
+      const semesterEl = document.getElementById("dashboardSemester");
       const btnClose = document.querySelector(".btn-close");
 
       updateDashboardPeriodBox(data.active_period_name || "");
+      if (academicYearEl) {
+        academicYearEl.textContent = data.current_academic_year || data.active_academic_year || "Not set";
+      }
+      if (semesterEl) {
+        semesterEl.textContent = data.current_semester || data.active_semester || "Not set";
+      }
       if (statusText) {
         statusText.textContent = data.evaluation_open ? "Evaluation is Open" : "Evaluation is Closed";
       }
@@ -6268,7 +6650,8 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({})
           });
         } finally {
-          refreshPeriodCard();
+          await refreshPeriodCard();
+          await refreshAcademicYearTable();
         }
       });
     }
@@ -6284,9 +6667,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openManagePeriodsModal() {
+    // Reload values from localStorage
+    try {
+      selectedAcademicYear = localStorage.getItem("selectedAcademicYear") || "";
+      selectedClassSemester = localStorage.getItem("selectedClassSemester") || "";
+    } catch (err) {
+      console.error("Failed to load from localStorage:", err);
+    }
+    
     resetPeriodForm();
     if (!selectedAcademicYear || !selectedClassSemester) {
       showNotification("Set academic year and semester on the dashboard first", "#f44336");
+      return;
     }
 
     // Load existing periods
@@ -6296,6 +6688,9 @@ document.addEventListener("DOMContentLoaded", () => {
     managePeriodsModal.style.display = "flex";
     managePeriodsModal.style.zIndex = "9999";
   }
+
+  // Make function globally accessible
+  window.openManagePeriodsModal = openManagePeriodsModal;
 
   async function loadPeriods() {
     const tbody = document.getElementById("periods-tbody");
@@ -6343,66 +6738,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${statusHtml}</td>
         <td class="action-cell">
           <div class="action-buttons">
-            <button class="edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period">
-              <i class="ph ph-pencil-simple"></i>
+            <button class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period">
+              <i class="ph ph-note-pencil"></i>
             </button>
           </div>
         </td>
       `;
 
         tbody.appendChild(tr);
-      });
-
-      // Delegate click handlers
-      tbody.querySelectorAll("[data-action='set-active']").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const id = parseInt(e.currentTarget.dataset.id, 10);
-          if (!id) return;
-          const res = await fetch("periods_api.php?action=set_active", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id })
-          });
-          const result = await res.json().catch(() => null);
-          if (!result || !result.success) {
-            showNotification((result && result.message) || "Unable to activate period.", "#f59e0b", 4000);
-          } else {
-            const sent   = result.notify_sent   ?? 0;
-            const failed = result.notify_failed ?? 0;
-            if (sent > 0 || failed > 0) {
-              const msg = `Evaluation opened. Email notifications sent to ${sent} student${sent !== 1 ? "s" : ""}` +
-                          (failed > 0 ? ` (${failed} failed).` : ".");
-              showNotification(msg, "#10b981", 6000);
-            } else {
-              showNotification("Period activated successfully.", "#10b981", 4000);
-            }
-          }
-          await loadPeriods();
-          await refreshPeriodCard();
-        });
-      });
-
-      tbody.querySelectorAll("[data-action='deactivate']").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          await fetch("periods_api.php?action=deactivate", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({})
-          });
-          await loadPeriods();
-          await refreshPeriodCard();
-        });
-      });
-
-      tbody.querySelectorAll("[data-action='edit']").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const id = parseInt(e.currentTarget.dataset.id, 10);
-          if (!id) return;
-          const period = periods.find(item => Number(item.id) === id);
-          if (period) editPeriod(period);
-        });
       });
     } catch (err) {
       console.error("Failed to load periods:", err);
@@ -6421,6 +6764,12 @@ document.addEventListener("DOMContentLoaded", () => {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  async function refreshAcademicYearTable() {
+    if (typeof window.loadAcademicYearSection === "function") {
+      await window.loadAcademicYearSection();
+    }
   }
 
   function editPeriod(period) {
@@ -6472,11 +6821,14 @@ document.addEventListener("DOMContentLoaded", () => {
       body: JSON.stringify({ ay, semester: sem, start_date: start, end_date: end })
     })
       .then(r => r.json())
-      .then(d => {
+      .then(async d => {
         if (d && d.success) {
           showNotification("Period added successfully!", "#4caf50");
           resetPeriodForm();
-          loadPeriods();
+          await loadPeriods();
+          // Refresh dashboard dropdowns to show the newly added period
+          await syncDashboardPeriodSetting();
+          await refreshAcademicYearTable();
         } else {
           alert((d && d.message) || "Error adding period.");
         }
@@ -6514,11 +6866,14 @@ document.addEventListener("DOMContentLoaded", () => {
       body: JSON.stringify({ id: periodId, ay, semester: sem, start_date: start, end_date: end })
     })
       .then(r => r.json())
-      .then(d => {
+      .then(async d => {
         if (d && d.success) {
           showNotification("Period updated successfully!", "#4caf50");
           resetPeriodForm();
-          loadPeriods();
+          await loadPeriods();
+          // Refresh dashboard dropdowns to show the updated period
+          await syncDashboardPeriodSetting();
+          await refreshAcademicYearTable();
         } else {
           alert((d && d.message) || "Error updating period.");
         }
@@ -6533,6 +6888,89 @@ document.addEventListener("DOMContentLoaded", () => {
   managePeriodsModal?.querySelector(".close-btn")?.addEventListener("click", () => {
     managePeriodsModal.style.display = "none";
   });
+
+  // Event delegation for status buttons in periods table
+  const periodsTbody = document.getElementById("periods-tbody");
+  if (periodsTbody) {
+    periodsTbody.addEventListener("click", async (e) => {
+      const statusBtn = e.target.closest(".period-status-btn");
+      if (!statusBtn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const action = statusBtn.dataset.action;
+      const id = parseInt(statusBtn.dataset.id, 10);
+
+      if (!action || !id) return;
+
+      if (action === "set-active") {
+        const res = await fetch("periods_api.php?action=set_active", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        });
+        const result = await res.json().catch(() => null);
+        if (!result || !result.success) {
+          showNotification((result && result.message) || "Unable to activate period.", "#f59e0b", 4000);
+        } else {
+          const sent = result.notify_sent ?? 0;
+          const failed = result.notify_failed ?? 0;
+          if (sent > 0 || failed > 0) {
+            const msg = `Evaluation opened. Email notifications sent to ${sent} student${sent !== 1 ? "s" : ""}` +
+              (failed > 0 ? ` (${failed} failed).` : ".");
+            showNotification(msg, "#10b981", 6000);
+          } else {
+            showNotification("Period activated successfully.", "#10b981", 4000);
+          }
+        }
+        await loadPeriods();
+        await refreshPeriodCard();
+        await syncDashboardPeriodSetting();
+        await refreshAcademicYearTable();
+      } else if (action === "deactivate") {
+        const res = await fetch("periods_api.php?action=deactivate", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const result = await res.json().catch(() => null);
+        if (!result || !result.success) {
+          showNotification((result && result.message) || "Unable to deactivate period.", "#f59e0b", 4000);
+        } else {
+          showNotification("Period deactivated successfully.", "#10b981", 4000);
+        }
+        await loadPeriods();
+        await refreshPeriodCard();
+        await syncDashboardPeriodSetting();
+        await refreshAcademicYearTable();
+      }
+    });
+
+    // Event delegation for edit buttons
+    periodsTbody.addEventListener("click", (e) => {
+      const editBtn = e.target.closest("[data-action='edit']");
+      if (!editBtn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const id = parseInt(editBtn.dataset.id, 10);
+      if (!id) return;
+
+      // We need access to the periods array, so let's store it globally
+      fetch("periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" })
+        .then(res => res.json())
+        .then(data => {
+          const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+          const period = periods.find(item => Number(item.id) === id);
+          if (period) editPeriod(period);
+        })
+        .catch(err => console.error("Failed to fetch period for edit:", err));
+    });
+  }
 
   // Tooltip functionality for A.Y. field
   function initAYTooltip() {
@@ -6718,46 +7156,38 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Rating Distribution Donut Chart
-function initRatingDistributionChart() {
+function initRatingDistributionChart(ratingDistribution = {}) {
   const canvas = document.getElementById('ratingDistributionChart');
   const chartWrapper = document.querySelector('.rating-chart-wrapper');
   const legendContainer = document.getElementById('ratingLegend');
+  const ratingData = [
+    { label: 'Excellent', value: Number(ratingDistribution.Excellent) || 0, color: '#1e3a8a' },
+    { label: 'Very Good', value: Number(ratingDistribution['Very Good']) || 0, color: '#1d4ed8' },
+    { label: 'Good', value: Number(ratingDistribution.Good) || 0, color: '#facc15' },
+    { label: 'Fair', value: Number(ratingDistribution.Fair) || 0, color: '#f59e0b' },
+    { label: 'Poor', value: Number(ratingDistribution.Poor) || 0, color: '#bfdbfe' }
+  ];
+  const hasRatings = ratingData.some(item => item.value > 0);
 
-  // Always show chart and legend
   if (chartWrapper) {
     chartWrapper.style.display = 'flex';
+    chartWrapper.style.visibility = hasRatings ? 'visible' : 'hidden';
   }
   if (legendContainer) {
     legendContainer.style.display = 'flex';
   }
 
-  // Remove "No ratings yet" text if it exists
-  const existingNoRatings = document.querySelector('.no-ratings-text');
-  if (existingNoRatings) {
-    existingNoRatings.remove();
+  if (window.ratingChartInstance) {
+    window.ratingChartInstance.destroy();
+    window.ratingChartInstance = null;
   }
 
-  // Draw the chart with sample data
-  if (canvas) {
-    // Sample data for rating distribution
-    const ratingData = [
-      { label: 'Excellent', value: 15, color: '#1d4ed8' },
-      { label: 'Very Good', value: 35, color: '#ab7dfa' },
-      { label: 'Good', value: 25, color: '#f59e0b' },
-      { label: 'Fair', value: 20, color: '#ffe16a' },
-      { label: 'Poor', value: 5, color: '#ef4444' }
-    ];
-
+  if (canvas && hasRatings) {
     drawRatingDonutChart(canvas, ratingData);
   }
 }
 
 function drawRatingDonutChart(canvas, data) {
-  // Destroy existing chart instance if it exists
-  if (window.ratingChartInstance) {
-    window.ratingChartInstance.destroy();
-  }
-
   const ctx = canvas.getContext('2d');
 
   // Prepare data for Chart.js
@@ -6806,4 +7236,289 @@ function drawRatingDonutChart(canvas, data) {
 // Initialize rating chart when page loads
 document.addEventListener('DOMContentLoaded', function () {
   setTimeout(initRatingDistributionChart, 100);
+});
+
+// ========================= ACADEMIC YEAR MODAL =========================
+document.addEventListener('DOMContentLoaded', function () {
+  const addAcademicYearBtn = document.getElementById('addAcademicYearBtn');
+  const addAcademicYearModal = document.getElementById('addAcademicYearModal');
+  const closeBtn = addAcademicYearModal?.querySelector('.close-btn');
+  const saveBtn = document.getElementById('save-academic-year-btn');
+  const academicYearInput = document.getElementById('academic-year');
+  const semesterSelect = document.getElementById('semester');
+  const tableBody = document.getElementById('academicYearTableBody');
+  let academicPeriods = [];
+
+  function showAcademicYearEmpty(message = 'No academic years added yet. Click "Add New" to get started.') {
+    if (!tableBody) return;
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
+          <i class="ph ph-calendar-blank" style="font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5;"></i>
+          ${message}
+        </td>
+      </tr>
+    `;
+  }
+
+  function setAcademicYearLoading() {
+    if (!tableBody) return;
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 24px; color: #64748b;">Loading academic years...</td>
+      </tr>
+    `;
+  }
+
+  function resetAcademicYearModal() {
+    if (academicYearInput) academicYearInput.value = '';
+    if (semesterSelect) semesterSelect.value = '';
+    if (!addAcademicYearModal) return;
+    delete addAcademicYearModal.dataset.editingId;
+    delete addAcademicYearModal.dataset.originalStartDate;
+    delete addAcademicYearModal.dataset.originalEndDate;
+  }
+
+  function closeAcademicYearModal() {
+    resetAcademicYearModal();
+    if (addAcademicYearModal) addAcademicYearModal.style.display = 'none';
+  }
+
+  // Open modal
+  addAcademicYearBtn?.addEventListener('click', function () {
+    resetAcademicYearModal();
+    addAcademicYearModal.style.display = 'flex';
+  });
+
+  // Close modal
+  closeBtn?.addEventListener('click', function () {
+    closeAcademicYearModal();
+  });
+
+  // Close modal when clicking outside
+  addAcademicYearModal?.addEventListener('click', function (e) {
+    if (e.target === addAcademicYearModal) {
+      closeAcademicYearModal();
+    }
+  });
+
+  // Save button handler
+  saveBtn?.addEventListener('click', async function () {
+    const academicYear = academicYearInput.value.trim();
+    const semester = semesterSelect.value;
+
+    if (!academicYear) {
+      alert('Please enter an academic year');
+      return;
+    }
+
+    if (!semester) {
+      alert('Please select a semester');
+      return;
+    }
+
+    const editingId = Number(addAcademicYearModal.dataset.editingId || 0);
+    
+    // When creating, send only ay and semester (no dates)
+    // When updating, preserve the original dates
+    const payload = editingId
+      ? {
+          id: editingId,
+          ay: academicYear,
+          semester,
+          start_date: addAcademicYearModal.dataset.originalStartDate || '',
+          end_date: addAcademicYearModal.dataset.originalEndDate || ''
+        }
+      : { 
+          ay: academicYear, 
+          semester 
+          // No dates - will be NULL in database
+        };
+
+    saveBtn.disabled = true;
+    try {
+      const res = await fetch(`periods_api.php?action=${editingId ? 'update' : 'create'}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json().catch(() => null);
+      if (!result || !result.success) {
+        alert((result && result.message) || 'Unable to save academic year.');
+        return;
+      }
+
+      closeAcademicYearModal();
+      await loadAcademicYearSection();
+      if (typeof syncDashboardPeriodSetting === 'function') {
+        await syncDashboardPeriodSetting();
+      }
+    } catch (err) {
+      console.error('Failed to save academic year:', err);
+      alert('Unable to save academic year.');
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  function renderAcademicYearRow(period) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-id', period.id);
+    row.setAttribute('data-academic-year', period.ay);
+    row.setAttribute('data-semester', period.semester);
+    row.innerHTML = `
+      <td>${escapeAcademicHtml(period.ay)}</td>
+      <td>${escapeAcademicHtml(period.semester)}</td>
+      <td><span class="status-badge ${period.is_active ? 'active' : 'inactive'}">${period.is_active ? 'Active' : 'Inactive'}</span></td>
+      <td class="action-cell">
+        <div class="action-buttons">
+          <button class="manage-period-btn" title="Manage Period" aria-label="Manage Period">
+            <i class="ph ph-calendar-dots"></i>
+          </button>
+          <button class="action-icon-btn edit-btn" title="Edit" aria-label="Edit Academic Year">
+            <i class="ph ph-note-pencil"></i>
+          </button>
+          <button class="action-icon-btn delete-btn" title="Delete" aria-label="Delete Academic Year">
+            <i class="ph ph-trash"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+    const managePeriodBtn = row.querySelector('.manage-period-btn');
+    const editBtn = row.querySelector('.edit-btn');
+    const deleteBtn = row.querySelector('.delete-btn');
+
+    managePeriodBtn?.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      try {
+        localStorage.setItem('selectedAcademicYear', period.ay);
+        localStorage.setItem('selectedClassSemester', period.semester);
+      } catch (err) {
+        console.error('Failed to save to localStorage:', err);
+      }
+
+      window.openManagePeriodsModal();
+    });
+
+    editBtn?.addEventListener('click', function () {
+      academicYearInput.value = period.ay || '';
+      semesterSelect.value = period.semester || '';
+      addAcademicYearModal.dataset.editingId = String(period.id || '');
+      addAcademicYearModal.dataset.originalStartDate = period.start_date || '';
+      addAcademicYearModal.dataset.originalEndDate = period.end_date || '';
+      addAcademicYearModal.style.display = 'flex';
+    });
+
+    deleteBtn?.addEventListener('click', function () {
+      if (typeof window.openDeleteModal === 'function') {
+        window.openDeleteModal('period', `${period.ay} - ${period.semester}`, row);
+      }
+    });
+
+    return row;
+  }
+
+  function escapeAcademicHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Function to update academic year filter dropdown
+  function updateAcademicYearFilter() {
+    const filterSelect = document.getElementById('academic-year-filter');
+    const academicYears = new Set();
+    if (!filterSelect) return;
+
+    academicPeriods.forEach(period => {
+      if (period.ay) academicYears.add(period.ay);
+    });
+
+    const previousValue = filterSelect.value;
+    filterSelect.innerHTML = '<option value="">All Academic Years</option>';
+    Array.from(academicYears).sort().forEach(ay => {
+      const option = document.createElement('option');
+      option.value = ay;
+      option.textContent = ay;
+      filterSelect.appendChild(option);
+    });
+    filterSelect.value = Array.from(academicYears).includes(previousValue) ? previousValue : '';
+  }
+
+  // Filter functionality
+  const searchInput = document.getElementById('academic-year-search');
+  const ayFilter = document.getElementById('academic-year-filter');
+  const semesterFilter = document.getElementById('semester-filter');
+
+  function filterTable() {
+    const searchTerm = searchInput?.value.toLowerCase() || '';
+    const selectedAY = ayFilter?.value || '';
+    const selectedSemester = semesterFilter?.value || '';
+    if (!tableBody) return;
+
+    tableBody.querySelectorAll('tr[data-academic-year]').forEach(row => {
+      const ay = row.getAttribute('data-academic-year').toLowerCase();
+      const semester = row.getAttribute('data-semester');
+
+      const matchesSearch = ay.includes(searchTerm);
+      const matchesAY = !selectedAY || row.getAttribute('data-academic-year') === selectedAY;
+      const matchesSemester = !selectedSemester || semester === selectedSemester;
+
+      if (matchesSearch && matchesAY && matchesSemester) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  searchInput?.addEventListener('input', filterTable);
+  ayFilter?.addEventListener('change', filterTable);
+  semesterFilter?.addEventListener('change', filterTable);
+
+  async function loadAcademicYearSection() {
+    if (!tableBody) return;
+    setAcademicYearLoading();
+
+    try {
+      const res = await fetch('periods_api.php?action=list', {
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+      const data = await res.json().catch(() => null);
+      academicPeriods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+
+      if (academicPeriods.length === 0) {
+        updateAcademicYearFilter();
+        showAcademicYearEmpty();
+        return;
+      }
+
+      tableBody.innerHTML = '';
+      academicPeriods.forEach(period => tableBody.appendChild(renderAcademicYearRow(period)));
+      updateAcademicYearFilter();
+      filterTable();
+    } catch (err) {
+      console.error('Failed to load academic years:', err);
+      showAcademicYearEmpty('Failed to load academic years. Please refresh and try again.');
+    }
+  }
+
+  window.loadAcademicYearSection = loadAcademicYearSection;
+  loadAcademicYearSection();
+
+  // Clear search button
+  document.querySelector('.clear-search-btn[data-clear-targets*="academic-year-search"]')?.addEventListener('click', function() {
+    if (searchInput) searchInput.value = '';
+    if (ayFilter) ayFilter.value = '';
+    if (semesterFilter) semesterFilter.value = '';
+    filterTable();
+  });
 });

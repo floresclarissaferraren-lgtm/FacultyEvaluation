@@ -1,4 +1,7 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
+requireMethod('POST');
 header("Content-Type: application/json");
 include 'connect.php';
 require_once 'mailer.php';
@@ -106,16 +109,43 @@ if ($action === "add") {
             );
         }
 
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            if ($stmt->errno === 1062) {
+                throw new RuntimeException("Faculty already exists");
+            }
+            throw new RuntimeException("Unable to save faculty profile: " . $stmt->error);
+        }
         $faculty_db_id = $stmt->insert_id;
         $stmt->close();
 
         // create login credentials for faculty
         $faculty_username = $faculty_id;
         $loginStmt = $conn->prepare("INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)");
+        if (!$loginStmt) {
+            throw new RuntimeException("Unable to prepare faculty login credentials: " . $conn->error);
+        }
         $loginStmt->bind_param("iss", $faculty_db_id, $faculty_username, $hashed_password);
-        $loginStmt->execute();
+        if (!$loginStmt->execute()) {
+            throw new RuntimeException("Unable to save faculty login credentials: " . $loginStmt->error);
+        }
         $loginStmt->close();
+
+        // Confirm that the exact username and password hash were saved before committing.
+        $verifyLogin = $conn->prepare("SELECT faculty_password FROM faculty_login WHERE faculty_id = ? AND faculty_username = ? LIMIT 1");
+        if (!$verifyLogin) {
+            throw new RuntimeException("Unable to verify faculty login credentials: " . $conn->error);
+        }
+        $verifyLogin->bind_param("is", $faculty_db_id, $faculty_username);
+        if (!$verifyLogin->execute()) {
+            throw new RuntimeException("Unable to verify faculty login credentials: " . $verifyLogin->error);
+        }
+        $verifyResult = $verifyLogin->get_result();
+        $verifyRow = $verifyResult ? $verifyResult->fetch_assoc() : null;
+        $verifyLogin->close();
+
+        if (!$verifyRow || !password_verify($password, $verifyRow['faculty_password'])) {
+            throw new RuntimeException("Faculty login credentials could not be verified");
+        }
 
         /* subjects */
         if (!empty($subjects)) {
@@ -144,22 +174,36 @@ if ($action === "add") {
     }
 
     /* ================= EMAIL WITH PASSWORD ================= */
-    $body = "
-        <h2>Welcome to Faculty Evaluation System</h2>
-        <p>Hello $firstname $lastname</p>
-        <p>Your account has been created successfully.</p>
-        <p><b>Faculty Number:</b> $faculty_id</p>
-        <p><b>Temporary Password:</b> $password</p>
-        <hr>
-        <p>Please use this username and password to login to the Faculty Evaluation System.</p>
-        <p>You can change your password after logging in.</p>
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $baseUrl = $protocol . '://' . $host . '/FacultyEvaluation';
+
+    $title = "Welcome to Faculty Evaluation System";
+    $greeting = "Hello Professor " . htmlspecialchars($firstname . ' ' . $lastname, ENT_QUOTES, 'UTF-8') . ",";
+    $content_html = "
+        <p style='margin: 0 0 16px 0;'>Your faculty instructor account has been successfully created. You can now access the Faculty Evaluation System using your credentials below.</p>
+        <p style='margin: 0 0 16px 0;'><strong>Faculty Number / Username:</strong> " . htmlspecialchars($faculty_id, ENT_QUOTES, 'UTF-8') . "</p>
+        <p style='margin: 0 0 16px 0;'>For security reasons, we strongly recommend that you change your password immediately after logging in for the first time.</p>
     ";
+
+    $highlight_box = [
+        'label' => 'Temporary Password',
+        'value' => $password,
+        'subtext' => 'Keep this password secure'
+    ];
+
+    $cta = [
+        'label' => 'Log In to Dashboard',
+        'url' => $baseUrl . '/EvalMain.php'
+    ];
+
+    $body = getEmailHTML($title, $greeting, $content_html, $highlight_box, $cta);
 
     // Send email asynchronously to avoid blocking
     $sent = sendEmail(
         $email,
         "$firstname $lastname",
-        "Faculty Evaluation System",
+        "Welcome to Faculty Evaluation System",
         $body
     );
 
@@ -169,7 +213,9 @@ if ($action === "add") {
 
     echo json_encode([
         "success" => true,
-        "message" => $sent ? "Faculty added successfully and email sent with password" : "Faculty added successfully but email failed to send"
+        "message" => $sent ? "Faculty added successfully and email sent with password" : "Faculty added successfully but email failed to send",
+        "username" => $faculty_username,
+        "temporary_password" => $password
     ]);
 }
 

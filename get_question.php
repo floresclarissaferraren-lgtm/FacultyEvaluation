@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('admin', 'faculty', 'student');
 include 'connect.php';
 header('Content-Type: application/json');
 

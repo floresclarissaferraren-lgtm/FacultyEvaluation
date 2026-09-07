@@ -1,10 +1,13 @@
 <?php
+require_once 'security.php';
+requireRole('student');
+requireMethod('POST');
 header('Content-Type: application/json');
 include 'connect.php'; 
 
 // Get JSON input
 $data = json_decode(file_get_contents('php://input'), true);
-$student_id   = isset($data['student_id'])   ? trim($data['student_id'])   : '';
+$student_id   = (string)($_SESSION['id'] ?? '');
 $old_password = isset($data['old_password']) ? trim($data['old_password']) : '';
 $new_password = isset($data['new_password']) ? trim($data['new_password']) : '';
 

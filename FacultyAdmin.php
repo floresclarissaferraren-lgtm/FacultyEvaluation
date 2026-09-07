@@ -51,6 +51,19 @@ include 'totalstudents_dashcount.php';
 
   <!-- Right Side User Menu -->
   <div class="user-menu">
+    <button type="button" class="admin-notification-btn" id="adminNotificationBtn" title="Notifications" aria-label="Notifications">
+      <i class="ph ph-bell"></i>
+      <span class="notification-dot" aria-hidden="true"></span>
+    </button>
+    <div class="admin-notification-panel" id="adminNotificationPanel" role="status" aria-live="polite" hidden>
+      <div class="admin-notification-panel-header">
+        <strong>Notifications</strong>
+        <i class="ph ph-bell-ringing" aria-hidden="true"></i>
+      </div>
+      <div class="admin-notification-list" id="adminNotificationList">
+        <div class="admin-notification-empty">Checking evaluation deadlines...</div>
+      </div>
+    </div>
     <div class="admin-box">
       <div class="admin-icon">
         <span>SA</span>
@@ -115,7 +128,7 @@ include 'totalstudents_dashcount.php';
   <!-- Logo Top -->
   <div class="sidebar-top">
     <div class="logo-title-container">
-      <img src="schoollogo.png" class="sidebar-logo">
+      <img src="assets/images/schoollogo.png" class="sidebar-logo">
       <div class="title-container">
         <h1>FaculRate</h1>
         <span class="subtitle">Faculty Evaluation System</span>
@@ -166,6 +179,11 @@ include 'totalstudents_dashcount.php';
           <i class="ph ph-clipboard-text"></i>
           <span>Evaluation Criteria</span>
         </a>
+        <a href="#" data-section="academic-year-section"
+           onclick="showSection('academic-year-section', event)">
+          <i class="ph ph-calendar-blank"></i>
+          <span>Academic Year</span>
+        </a>
       </div>
     </div>
 
@@ -198,25 +216,38 @@ include 'totalstudents_dashcount.php';
 <main>
 <!-- Dashboard Section  =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
-  <div class="dashboard-period-toolbar">
-    <div>
-      <label for="dashboard-ay-select">Academic Year</label>
-      <select id="dashboard-ay-select"></select>
+  <div class="admin-welcome-box">
+    <div class="admin-welcome-icon" aria-hidden="true">
+      <i class="ph ph-hand-waving"></i>
     </div>
     <div>
-      <label for="dashboard-semester-select">Semester</label>
-      <select id="dashboard-semester-select">
-        <option value="">Select Semester</option>
-        <option value="1st Semester">1st Semester</option>
-        <option value="2nd Semester">2nd Semester</option>
-        <option value="Summer">Summer</option>
-      </select>
+      <h1>Admin Overview</h1>
+      <p>Here's an overview of the Faculty Evaluation System.</p>
+    </div>
+    <div class="admin-period-summary" aria-label="Current academic period">
+      <div class="admin-period-item">
+        <i class="ph ph-calendar-blank" aria-hidden="true"></i>
+        <div>
+          <span>Academic Year</span>
+          <strong id="dashboardAcademicYear">Not set</strong>
+        </div>
+      </div>
+      <div class="admin-period-item">
+        <i class="ph ph-book-open" aria-hidden="true"></i>
+        <div>
+          <span>Semester</span>
+          <strong id="dashboardSemester">Not set</strong>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="dashboard">
 
     <!-- Faculty Card -->
-    <div class="dashboard-card faculty">
+    <div class="dashboard-card faculty" role="button" tabindex="0"
+         onclick="showSection('faculties-section', event)"
+         onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showSection('faculties-section', event); }">
       <div class="dashboard-content">
         <div>
           <h3>Total Faculty</h3>
@@ -228,7 +259,9 @@ include 'totalstudents_dashcount.php';
     </div>
 
     <!-- Students Card -->
-    <div class="dashboard-card students">
+        <div class="dashboard-card students" role="button" tabindex="0"
+          onclick="showSection('students-section', event)"
+          onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showSection('students-section', event); }">
       <div class="dashboard-content">
         <div>
           <h3>Total Students</h3>
@@ -339,26 +372,24 @@ include 'totalstudents_dashcount.php';
 
   <!-- Third Row -->
   <div class="dashboard-row-3">
-    <div class="period-container">
-      <div class="dashboard-card period">
-        <div class="dashboard-content">
-          <div class="period-header">
-             <h3>Period</h3>
-            <div class="period-box" id="activePeriodBox">No Active Period</div>
-           </div>
-          <p class="system-status" id="evaluationStatusText">Evaluation is Closed</p>
-          <div class="period-actions">
-            <button class="btn-close" style="display:none;">Close</button>
-            <button class="btn-manage">Manage</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="dashboard-card evaluation-progress">
       <div class="dashboard-content">
         <div class="rating-header">
           <h3>Evaluation Progress</h3>
+        </div>
+        <div class="evaluation-progress-stats">
+          <div class="evaluation-progress-stat completion">
+            <strong id="evaluationCompletionRate">0.0%</strong>
+            <span>Completion Rate</span>
+          </div>
+          <div class="evaluation-progress-stat submissions">
+            <strong id="evaluationSubmissionCount">0</strong>
+            <span>Submissions</span>
+          </div>
+          <div class="evaluation-progress-stat pending">
+            <strong id="evaluationPendingCount">0</strong>
+            <span>Pending</span>
+          </div>
         </div>
         <div class="progress-list">
           <div class="progress-item">
@@ -474,23 +505,43 @@ include 'totalstudents_dashcount.php';
 
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
-  <div class="section-header">
-    <div class="header-title-section">
-      <h2 id="manageTitle">Manage Program</h2>
-      <div class="manage-buttons">
-        <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
-        <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
+  
+  <!-- Blue Banner with Program Info and Stats -->
+  <div class="manage-program-banner">
+    <div class="program-banner-header">
+      <div class="program-badge" id="manageProgramBadge">BSED</div>
+      <div class="program-info">
+        <h2 id="manageTitle">Bachelor of Science in Education in Math Major</h2>
+        <p class="program-meta"><span id="manageProgramType">Academic Program</span> · <span id="manageProgramStatus">Active</span></p>
       </div>
     </div>
-    <div class="header-actions-section">
-      <button type="button" id="manage-clear-search" class="clear-search-btn" data-clear-targets="manage-search" title="Clear search" aria-label="Clear class search">
-        <i class="ph ph-arrow-clockwise"></i>
-      </button>
-      <div class="search-wrapper">
-        <input type="text" id="manage-search" placeholder="Search records...">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+    
+    <div class="program-stats-row">
+      <div class="program-stat-item">
+        <i class="ph ph-book"></i>
+        <div class="stat-content">
+          <span class="stat-number" id="totalSubjectsCount">38</span>
+          <span class="stat-label">Total Subjects</span>
+        </div>
       </div>
-      <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add</button>
+      <div class="program-stat-item">
+        <i class="ph ph-users-three"></i>
+        <div class="stat-content">
+          <span class="stat-number" id="activeClassesCount">9</span>
+          <span class="stat-label">Active Classes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs and Actions Row -->
+  <div class="manage-tabs-row">
+    <div class="manage-tabs">
+      <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
+      <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
+    </div>
+    <div class="manage-actions">
+      <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add Subject</button>
       <button class="back-btn"><i class="ph ph-arrow-left"></i> Back</button>
     </div>
   </div>
@@ -883,12 +934,69 @@ include 'totalstudents_dashcount.php';
       <div class="section-box">
         <div id="faculty-subjects-list" class="subjects-list">
           <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
-          <div class="subject-filters">
-            <input type="text" id="faculty-subject-search" placeholder="Search subjects, program, year level..." class="subject-search-input">
+          <button type="button" id="open-faculty-subject-selection" class="button-gradient">
+            <i class="ph ph-plus"></i> Add Subjects
+          </button>
+          <div id="selected-faculty-subjects" class="selected-subjects">
+            <p class="empty-subject-message">No subjects selected</p>
           </div>
         </div>
       </div>
       <button class="submit-btn">SAVE FACULTY</button>
+    </div>
+  </div>
+</div>
+
+<!-- Faculty Subject Selection Modal -->
+<div id="facultySubjectSelectionModal" class="modal" style="display:none;">
+  <div class="modal-content faculty-subject-selection-content">
+    <div class="modal-header">
+      <h3>Select Faculty Subjects</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div>
+          <label for="faculty-subject-selection-search">Search Subject Code or Name</label>
+          <input type="text" id="faculty-subject-selection-search" placeholder="Search subject code or name...">
+        </div>
+        <div>
+          <label for="faculty-subject-year-filter">Year Level</label>
+          <select id="faculty-subject-year-filter">
+            <option value="all">All Years</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
+        </div>
+        <div>
+          <label for="faculty-subject-program-filter">Program</label>
+          <select id="faculty-subject-program-filter">
+            <option value="all">All Programs</option>
+          </select>
+        </div>
+      </div>
+      <div class="subjects-table-wrapper faculty-subject-selection-wrapper">
+        <table class="subjects-selection-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Subject Code</th>
+              <th>Subject Name</th>
+              <th>Year</th>
+              <th>Program</th>
+            </tr>
+          </thead>
+          <tbody id="faculty-subject-selection-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:20px;">Loading subjects...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="cancel-faculty-subject-selection" class="cancel-btn">Cancel</button>
+        <button type="button" id="confirm-faculty-subject-selection" class="submit-btn">Add Selected Subjects</button>
+      </div>
     </div>
   </div>
 </div>
@@ -952,7 +1060,8 @@ include 'totalstudents_dashcount.php';
     </div>
   </div>
 
-  <div class="student-toolbar-box">
+  <div class="student-table-box">
+    <div class="student-toolbar-box">
     <div class="student-toolbar">
       <div class="student-header-actions">
         <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
@@ -985,16 +1094,17 @@ include 'totalstudents_dashcount.php';
         </button>
       </div>
     </div>
-  </div>
+    </div>
 
-  <div class="table-wrapper">
+    <div class="table-wrapper">
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Type</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
+    </div>
     </div>
   </div>
 
@@ -1018,7 +1128,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-scroll-container">
       <table class="students-table archived-students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Type</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1167,42 +1277,90 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Evaluation Criteria Section ================================================================================= -->
 <div id="criteria-section" class="section" style="display:none;">
-  <div class="section-header">
-    <div class="header-title-section">
-    </div>
-    <div class="header-actions" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding-right:0; margin-left:0;">
-      <span style="font-size: 15px; color: #64748b; display:flex; align-items:center; gap:8px;">
-        <i class="ph ph-info"></i>
-        This section shows the list of criteria used for evaluating faculty performance.
-      </span>
-      <button id="addCategoryBtn" class="add-program-btn button-gradient">
-        <i class="ph ph-plus"></i> Add Category
-      </button>
+  <div class="section-header criteria-header-enhanced">
+    <div class="criteria-header-top">
+      <div class="header-title-section">
+        <h2 class="section-title">
+          <i class="ph ph-clipboard-text"></i>
+          Evaluation Criteria List
+        </h2>
+        <p class="section-subtitle">
+          <i class="ph ph-info"></i>
+          Manage the criteria used for evaluating faculty performance.
+        </p>
+      </div>
+      <div class="criteria-header-controls">
+        <div class="criteria-search-container">
+          <div class="search-wrapper">
+            <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+            <input type="text" id="criteria-search-input" placeholder="Search questions or categories...">
+          </div>
+          <button type="button" class="clear-search-btn" id="criteria-search-clear" title="Clear search" aria-label="Clear criteria search">
+            <i class="ph ph-arrow-clockwise"></i>
+          </button>
+        </div>
+        <div class="header-actions">
+          <button id="addCategoryBtn" class="add-program-btn button-gradient">
+            <i class="ph ph-plus"></i> Add Category
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-
 
   <div class="criteria-layout" style="display:flex; gap:24px; align-items:flex-start;">
     <div class="categories-column" id="categoriesColumn" style="flex:2;"></div>
 
     <div class="summary-panel" style="flex:1;">
-      <h4><i class="ph ph-clipboard-check"></i> Summary</h4>
-      <p><strong>Categories:</strong> <span id="total-categories">0</span></p>
-      <p><strong>Total Questions:</strong> <span id="total-questions">0</span></p>
-      <p id="weight-sum-row" style="display:none;">
-        <strong>Total Weight:</strong>
-        <span id="total-weight-display" style="font-weight:700;">0%</span>
-        <span id="weight-sum-status" style="font-size:11px;margin-left:6px;"></span>
-      </p>
-      <div class="legend">
-        <h5><i class="ph ph-list-bullets"></i> LEGEND</h5>
-        <ul>
-          <li data-value="5"><span class="badge">5</span> Strongly Agree - Excellent</li>
-          <li data-value="4"><span class="badge">4</span> Agree - Very Good</li>
-          <li data-value="3"><span class="badge">3</span> Neutral - Satisfactory</li>
-          <li data-value="2"><span class="badge">2</span> Disagree - Fair</li>
-          <li data-value="1"><span class="badge">1</span> Strongly Disagree - Poor</li>
-        </ul>
+      <h4>Summary</h4>
+      
+      <div class="summary-stats-simple">
+        <div class="summary-row">
+          <span class="summary-label">Categories</span>
+          <span class="summary-value" id="total-categories">3</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Total Questions</span>
+          <span class="summary-value" id="total-questions">13</span>
+        </div>
+        <div class="summary-row" id="weight-sum-row">
+          <span class="summary-label">Total Weight</span>
+          <span class="summary-value summary-weight" id="total-weight-display">
+            100.00%
+            <i class="ph ph-check-circle" id="weight-check-icon" style="color:#10b981; font-size:1rem; margin-left:4px;"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Weight Distribution -->
+      <div class="weight-distribution-section" id="weight-distribution-section">
+        <h5>WEIGHT DISTRIBUTION</h5>
+        <div class="weight-list" id="weight-list-container"></div>
+      </div>
+
+      <!-- Rating Scale -->
+      <div class="rating-scale-section">
+        <h5>Rating Scale</h5>
+        <div class="rating-item">
+          <div class="rating-badge rating-5">5</div>
+          <span class="rating-text">Strongly Agree</span>
+        </div>
+        <div class="rating-item">
+          <div class="rating-badge rating-4">4</div>
+          <span class="rating-text">Agree</span>
+        </div>
+        <div class="rating-item">
+          <div class="rating-badge rating-3">3</div>
+          <span class="rating-text">Neutral</span>
+        </div>
+        <div class="rating-item">
+          <div class="rating-badge rating-2">2</div>
+          <span class="rating-text">Disagree</span>
+        </div>
+        <div class="rating-item">
+          <div class="rating-badge rating-1">1</div>
+          <span class="rating-text">Strongly Disagree</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1258,6 +1416,95 @@ include 'totalstudents_dashcount.php';
   </div>
 </div>
 
+
+<!-- Academic Year Section =========================================================================================================-->
+<div id="academic-year-section" class="section" style="display:none;">
+
+  <!-- Table Header with Search and Filters -->
+  <div class="table-wrapper academic-year-controls">
+    <div class="table-header">
+      <div class="search-filters-container">
+        <div class="search-wrapper">
+          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <input type="text" id="academic-year-search" placeholder="Search academic year...">
+        </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-calendar-blank"></i>
+          <select id="academic-year-filter" class="program-dropdown">
+            <option value="">All Academic Years</option>
+          </select>
+        </div>
+        <div class="program-filter-wrapper">
+          <i class="ph ph-calendar"></i>
+          <select id="semester-filter" class="program-dropdown">
+            <option value="">All Semesters</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
+          </select>
+        </div>
+        <button type="button" class="clear-search-btn" data-clear-targets="academic-year-search,academic-year-filter,semester-filter" title="Clear search" aria-label="Clear academic year search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
+      </div>
+      <div class="header-actions">
+        <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
+          <i class="ph ph-plus"></i> Add New
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Academic Year Table -->
+  <div class="table-wrapper academic-year-results">
+    <div class="table-scroll-container">
+      <table class="academic-year-table">
+        <thead>
+          <tr>
+            <th>Academic Year</th>
+            <th>Semester</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="academicYearTableBody">
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
+              <i class="ph ph-calendar-blank" style="font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5;"></i>
+              No academic years added yet. Click "Add New" to get started.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add Academic Year Modal -->
+<div id="addAcademicYearModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>ADD ACADEMIC YEAR</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <label for="academic-year">Academic Year</label>
+      <input type="text" id="academic-year" placeholder="e.g., 2024-2025">
+      
+      <label for="semester">Semester</label>
+      <select id="semester">
+        <option value="">Select Semester</option>
+        <option value="1st Semester">1st Semester</option>
+        <option value="2nd Semester">2nd Semester</option>
+        <option value="Summer">Summer</option>
+      </select>
+      
+      <button id="save-academic-year-btn" class="submit-btn">SAVE</button>
+    </div>
+  </div>
+</div>
+
 <!-- Report Section =========================================================================================================-->
 <div id="report-section" class="section" style="display:none;">
   <div class="table-wrapper">
@@ -1284,6 +1531,9 @@ include 'totalstudents_dashcount.php';
         </div>
       </div>
       <div class="header-actions">
+        <button type="button" class="clear-search-btn report-clear-btn" data-clear-targets="searchInput,report-ay-filter,report-semester-filter" title="Clear report filters" aria-label="Clear report filters">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
         <button class="generate-report-btn" onclick="generateEvaluationReport()">
           <i class="ph ph-download-simple"></i> Generate Report
         </button>
@@ -1306,28 +1556,49 @@ include 'totalstudents_dashcount.php';
         </tbody>
       </table>
     </div>
+    <div class="report-analytics" aria-label="Evaluation report analytics">
+      <div class="report-chart-card report-distribution-card">
+        <div class="report-chart-heading">
+          <div><h3>Overall Rating Distribution</h3></div>
+        </div>
+        <div class="report-donut-layout"><div class="report-donut-canvas"><canvas id="reportRatingDistributionChart"></canvas></div><div id="reportRatingLegend" class="report-chart-legend"></div></div>
+      </div>
+      <div class="report-chart-card report-program-card">
+        <div class="report-chart-heading"><div><h3>Average Ratings by Program</h3></div></div>
+        <div class="report-bar-canvas"><canvas id="reportProgramRatingsChart"></canvas></div>
+      </div>
+      <div class="report-chart-card report-trend-card">
+        <div class="report-chart-heading"><div><h3>Ratings Trend Over Time</h3></div></div>
+        <div class="report-line-canvas"><canvas id="reportRatingsTrendChart"></canvas></div>
+      </div>
+      <div class="report-chart-card report-ranking-card">
+        <div class="report-chart-heading"><div><h3>Top Faculty Rankings</h3></div></div>
+        <div id="reportFacultyRankings" class="report-rankings"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- View Faculty Subjects Modal -->
 <div id="viewFacultySubjectsModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:700px;">
-    <div class="modal-header">
-      <h3>Faculty Subjects</h3>
+  <div class="modal-content faculty-profile-modal-content" style="max-width:700px;">
+    <div class="faculty-profile-header">
+      <div id="viewFacultyInitials" class="faculty-profile-avatar">FA</div>
+      <div class="faculty-profile-details">
+        <h3 id="viewFacultyName">Faculty Name</h3>
+        <p id="viewFacultyMeta"><span class="faculty-header-id">Faculty ID</span></p>
+      </div>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <div class="student-info-header">
-        <div class="student-avatar">
-          <i class="ph ph-user"></i>
+      <div class="faculty-subject-list">
+        <div class="faculty-subjects-heading">
+          <h4>Assigned Subjects</h4>
+          <span id="viewFacultySubjectCount" class="faculty-subject-count">0 subjects</span>
         </div>
-        <div class="student-details">
-          <h4 id="viewFacultyName">Faculty Name</h4>
-          <p class="student-subtitle">Assigned Subjects</p>
+        <div id="viewFacultySubjectsList" class="subjects-container">
+          <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
         </div>
-      </div>
-      <div id="viewFacultySubjectsList" class="subjects-container">
-        <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
       </div>
     </div>
   </div>
@@ -1335,24 +1606,24 @@ include 'totalstudents_dashcount.php';
 
 <!-- View Student Subjects Modal -->
 <div id="viewStudentSubjectsModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:700px;">
-    <div class="modal-header">
-      <h3>Student Subjects</h3>
+  <div class="modal-content student-profile-modal-content" style="max-width:700px;">
+    <div class="student-profile-header">
+      <div id="viewStudentInitials" class="student-profile-avatar">ST</div>
+      <div class="student-profile-details">
+        <h3 id="viewStudentName">Student Name</h3>
+        <p id="viewStudentMeta">Student information</p>
+      </div>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <div class="student-info-header">
-        <div class="student-avatar">
-          <i class="ph ph-graduation-cap"></i>
+      <div id="viewStudentSubjectsList" class="subjects-container student-subject-list">
+        <div class="student-subjects-heading">
+          <h4>Enrolled Subjects</h4>
+          <span id="viewStudentSubjectCount" class="student-subject-count">0 subjects</span>
         </div>
-        <div class="student-details">
-          <h4 id="viewStudentName">Student Name</h4>
-          <p class="student-subtitle">Enrolled Subjects</p>
+        <div id="studentSubjectRows">
+          <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
         </div>
-      </div>
-      
-      <div id="viewStudentSubjectsList" class="subjects-container">
-        <p style="text-align: center; color: #6b7280; padding: 40px;">Loading subjects...</p>
       </div>
     </div>
   </div>
@@ -1424,11 +1695,11 @@ include 'totalstudents_dashcount.php';
               <i class="ph ph-calendar-blank calendar-icon" data-target="period-start"></i>
               <div class="calendar-picker" id="period-start-calendar">
                 <div class="calendar-header">
-                  <button class="calendar-nav" data-direction="prev" type="button" aria-label="Previous month">
+                  <button class="action-icon-btn calendar-nav" data-direction="prev" type="button" aria-label="Previous month">
                     <i class="ph ph-caret-left"></i>
                   </button>
                   <span class="calendar-month-year"></span>
-                  <button class="calendar-nav" data-direction="next" type="button" aria-label="Next month">
+                  <button class="action-icon-btn calendar-nav" data-direction="next" type="button" aria-label="Next month">
                     <i class="ph ph-caret-right"></i>
                   </button>
                 </div>
@@ -1452,11 +1723,11 @@ include 'totalstudents_dashcount.php';
               <i class="ph ph-calendar-blank calendar-icon" data-target="period-end"></i>
               <div class="calendar-picker" id="period-end-calendar">
                 <div class="calendar-header">
-                  <button class="calendar-nav" data-direction="prev" type="button" aria-label="Previous month">
+                  <button class="action-icon-btn calendar-nav" data-direction="prev" type="button" aria-label="Previous month">
                     <i class="ph ph-caret-left"></i>
                   </button>
                   <span class="calendar-month-year"></span>
-                  <button class="calendar-nav" data-direction="next" type="button" aria-label="Next month">
+                  <button class="action-icon-btn calendar-nav" data-direction="next" type="button" aria-label="Next month">
                     <i class="ph ph-caret-right"></i>
                   </button>
                 </div>

@@ -32,7 +32,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 <!-- NAVBAR -->
 <nav>
   <div class="logo-container">
-    <img class="logo-img" src="schoollogo.png">
+    <img class="logo-img" src="assets/images/schoollogo.png">
     <div class="logo-text">
       <span class="main-title">Faculty Evaluation</span>
       <span class="sub-title">Granby Colleges of Science and Technology</span>
@@ -189,7 +189,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     <div class="wave-bg wave-2"></div>
     <div class="wave-bg wave-3"></div>
     <div class="LoginForm-header">
-      <img src="logo.png" class="logo">
+      <img src="assets/images/logo.png" class="logo">
       <div class="back-btn" id="closeLogin">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     <div class="login-form-container">
@@ -220,7 +220,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     <div class="wave-bg wave-2"></div>
     <div class="wave-bg wave-3"></div>
     <div class="LoginForm-header">
-      <img src="logo.png" class="logo">
+      <img src="assets/images/logo.png" class="logo">
       <div class="back-btn" id="closeForgot">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     <div class="login-form-container">
@@ -247,7 +247,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     <div class="wave-bg wave-2"></div>
     <div class="wave-bg wave-3"></div>
     <div class="LoginForm-header">
-      <img src="logo.png" class="logo">
+      <img src="assets/images/logo.png" class="logo">
       <div class="back-btn" id="closeOtp">Back<i class="ph ph-arrow-up-right"></i></div>
     </div>
     <div class="login-form-container">
@@ -282,7 +282,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     <div class="wave-bg wave-2"></div>
     <div class="wave-bg wave-3"></div>
     <div class="LoginForm-header">
-      <img src="logo.png" class="logo">
+      <img src="assets/images/logo.png" class="logo">
       <div class="back-btn" id="closeNewPass">Cancel<i class="ph ph-arrow-up-right"></i></div>
     </div>
     <div class="login-form-container">

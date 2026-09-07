@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Student Evaluate Button</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e3a8a;
+        }
+        .status-box {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        .status-box.success {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+        .status-box.error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .status-box.warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        .button-demo {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+        .evaluate-now-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .evaluate-now-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .evaluate-now-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .info-item {
+            padding: 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #374151;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #1f2937;
+        }
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        .refresh-btn:hover {
+            background: #059669;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1f2937;
+            color: #d1d5db;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+        }
+        .log-time {
+            color: #9ca3af;
+        }
+        .log-success {
+            color: #10b981;
+        }
+        .log-error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Student Evaluate Button Test</h1>
+        <p>This page tests if the "Evaluate Now" button responds to evaluation status changes.</p>
+
+        <div id="statusDisplay"></div>
+
+        <div class="button-demo">
+            <h3>Button Demo:</h3>
+            <button class="evaluate-now-btn" id="testButton" onclick="handleEvaluateClick()">
+                <i class="ph ph-clipboard-text"></i> Evaluate Now
+            </button>
+            <p id="buttonStatus" style="margin-top: 10px; font-size: 14px; color: #6b7280;"></p>
+        </div>
+
+        <div class="info-grid" id="infoGrid"></div>
+
+        <div>
+            <button class="refresh-btn" onclick="checkStatus()">🔄 Check Status Now</button>
+            <button class="refresh-btn" onclick="clearLog()" style="background: #6b7280;">Clear Log</button>
+            <label style="margin-left: 15px;">
+                <input type="checkbox" id="autoRefresh" checked> Auto-refresh every 2 seconds
+            </label>
+        </div>
+
+        <div class="log" id="logContainer">
+            <div class="log-entry">Initializing test...</div>
+        </div>
+    </div>
+
+    <script>
+        let refreshInterval = null;
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString();
+            const logClass = type === 'success' ? 'log-success' : type === 'error' ? 'log-error' : '';
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${logClass}">${message}</span>`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry">Log cleared.</div>';
+        }
+
+        function updateButton(evaluationOpen, studentActive = true) {
+            const button = document.getElementById('testButton');
+            const buttonStatus = document.getElementById('buttonStatus');
+
+            if (studentActive && evaluationOpen) {
+                button.removeAttribute('disabled');
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+                buttonStatus.textContent = '✅ Button is ENABLED - Students can evaluate';
+                buttonStatus.style.color = '#10b981';
+                log('Button ENABLED - evaluation_open = true', 'success');
+            } else {
+                button.setAttribute('disabled', 'true');
+                button.style.opacity = '0.5';
+                button.style.cursor = 'not-allowed';
+                buttonStatus.textContent = '❌ Button is DISABLED - Evaluation is closed';
+                buttonStatus.style.color = '#ef4444';
+                log('Button DISABLED - evaluation_open = false', 'error');
+            }
+        }
+
+        function handleEvaluateClick() {
+            log('Button clicked! User is trying to evaluate.', 'success');
+            alert('Evaluate Now button clicked!');
+        }
+
+        async function checkStatus() {
+            log('Fetching evaluation status from API...');
+            
+            try {
+                const response = await fetch('periods_api.php?action=status', {
+                    cache: 'no-store',
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (data && data.success) {
+                    const evaluationOpen = data.evaluation_open || false;
+                    const activePeriodId = data.active_period_id || null;
+                    const activePeriodName = data.active_period_name || 'None';
+                    
+                    // Update status display
+                    const statusHTML = evaluationOpen 
+                        ? `<div class="status-box success">
+                            <strong>✅ EVALUATION IS OPEN</strong><br>
+                            Students can now evaluate their instructors!
+                           </div>`
+                        : `<div class="status-box error">
+                            <strong>❌ EVALUATION IS CLOSED</strong><br>
+                            Students cannot evaluate at this time.
+                           </div>`;
+                    
+                    document.getElementById('statusDisplay').innerHTML = statusHTML;
+                    
+                    // Update info grid
+                    document.getElementById('infoGrid').innerHTML = `
+                        <div class="info-item">
+                            <span class="info-label">evaluation_open</span>
+                            <span class="info-value">${evaluationOpen ? '✅ TRUE (1)' : '❌ FALSE (0)'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">active_period_id</span>
+                            <span class="info-value">${activePeriodId || 'NULL'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">active_period_name</span>
+                            <span class="info-value">${activePeriodName}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Current Time</span>
+                            <span class="info-value">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                    `;
+                    
+                    // Update button
+                    updateButton(evaluationOpen);
+                    
+                    log(`API Response: evaluation_open=${evaluationOpen}, active_period_id=${activePeriodId}`, 'success');
+                } else {
+                    throw new Error('Invalid API response');
+                }
+            } catch (error) {
+                log('❌ Error fetching status: ' + error.message, 'error');
+                document.getElementById('statusDisplay').innerHTML = `
+                    <div class="status-box error">
+                        <strong>⚠️ ERROR</strong><br>
+                        Could not fetch evaluation status. ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-refresh toggle
+        document.getElementById('autoRefresh').addEventListener('change', function() {
+            if (this.checked) {
+                log('Auto-refresh ENABLED (every 2 seconds)');
+                refreshInterval = setInterval(checkStatus, 2000);
+            } else {
+                log('Auto-refresh DISABLED');
+                clearInterval(refreshInterval);
+            }
+        });
+
+        // Initial check
+        checkStatus();
+        
+        // Start auto-refresh
+        refreshInterval = setInterval(checkStatus, 2000);
+    </script>
+</body>
+</html>

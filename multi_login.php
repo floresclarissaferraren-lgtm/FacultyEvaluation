@@ -51,6 +51,7 @@ if (str_starts_with($username, 'GC-')) {
             $log->execute();
             $log->close();
 
+            session_regenerate_id(true);
             $_SESSION['role'] = 'student';
             $_SESSION['id'] = $row['id'];
             $_SESSION['username'] = $username;
@@ -77,10 +78,16 @@ if (str_starts_with($username, 'GC-')) {
 // Faculty login
 
 $stmt = $conn->prepare("
-    SELECT fl.faculty_id, fl.faculty_username, fl.faculty_password, COALESCE(af.status, 'active') AS status
-    FROM faculty_login fl
-    LEFT JOIN add_faculties af ON af.id = fl.faculty_id
-    WHERE fl.faculty_username = ?
+    SELECT
+        af.id AS profile_id,
+        COALESCE(fl.faculty_id, af.id) AS faculty_id,
+        COALESCE(fl.faculty_username, af.faculty_id) AS faculty_username,
+        COALESCE(fl.faculty_password, af.password) AS faculty_password,
+        (fl.faculty_id IS NULL) AS login_missing,
+        COALESCE(af.status, 'active') AS status
+    FROM add_faculties af
+    LEFT JOIN faculty_login fl ON fl.faculty_id = af.id
+    WHERE af.faculty_id = ?
 ");
 $stmt->bind_param("s", $username);
 $stmt->execute();
@@ -89,6 +96,15 @@ $result = $stmt->get_result();
 if ($result && $result->num_rows === 1) {
     $user = $result->fetch_assoc();
     if (password_verify($password, $user['faculty_password'])) {
+        if ((int)$user['login_missing'] === 1) {
+            $repairStmt = $conn->prepare("INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)");
+            if ($repairStmt) {
+                $repairStmt->bind_param("iss", $user['profile_id'], $user['faculty_username'], $user['faculty_password']);
+                $repairStmt->execute();
+                $repairStmt->close();
+            }
+        }
+        session_regenerate_id(true);
         $_SESSION['role'] = 'faculty';
         $_SESSION['id'] = $user['faculty_id'];
         $_SESSION['username'] = $user['faculty_username'];
@@ -119,6 +135,7 @@ $result = $stmt->get_result();
 if ($result && $result->num_rows === 1) {
     $user = $result->fetch_assoc();
     if (password_verify($password, $user['admin_password'])) {
+        session_regenerate_id(true);
         $_SESSION['role'] = 'admin';
         $_SESSION['id'] = $user['admin_id'];
         $_SESSION['username'] = $user['admin_username'];

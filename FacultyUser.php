@@ -34,7 +34,7 @@ if ($result && $result->num_rows === 1) {
     $studentProgram = $student['program_name'] ?? '';
     $studentProgramCode = $student['program_code'] ?? '';
     $studentSection = $student['section'] ?? '';
-    $studentStatus = strtolower($student['status'] ?? 'active');
+    $studentStatus = strtolower(trim((string)($student['status'] ?? 'active')));
 } else {
     $stmt->close();
     $conn->close();
@@ -67,20 +67,52 @@ $conn->close();
 
 <div class="navbar">
   <div class="brand"> 
-    <img src="schoollogo.png" alt="Logo" class="navbar-logo">
-    <span class="logo-text main-title">Faculty Evaluation System</span>
+    <img src="assets/images/schoollogo.png" alt="Logo" class="navbar-logo">
+    <div class="brand-text">
+      <span class="logo-text main-title">Faculty Evaluation System</span>
+      <span class="logo-subtitle">STUDENT PORTAL</span>
+    </div>
   </div>
   <div class="user-menu">
-    <div class="student-box" onclick="toggleDropdown()">
-      <i class="ph ph-gear navbar-settings-icon"></i>
-      <span>Student</span>
-      <i class="ph ph-caret-down"></i>
+    <div class="student-box" onclick="toggleDropdown()" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+      <i class="ph ph-user-circle student-account-icon" aria-hidden="true"></i>
+      <span class="student-label">Student</span>
+      <i class="ph ph-caret-down student-caret" aria-hidden="true"></i>
     </div>
     <div class="dropdown-menu" id="dropdownMenu">
-      <a href="#" onclick="showPasswordForm(event)"><i class="ph ph-key"></i> Change Password</a>
+      <div class="dropdown-user-info">
+        <div class="dropdown-avatar">
+          <span class="dropdown-avatar-initials"><?php 
+            $names = explode(' ', $studentName);
+            echo strtoupper(substr($names[0] ?? 'S', 0, 1) . substr($names[1] ?? 'T', 0, 1));
+          ?></span>
+        </div>
+        <div class="dropdown-user-details">
+          <span class="dropdown-user-name"><?php echo htmlspecialchars($studentName ?: 'Student'); ?></span>
+          <span class="dropdown-user-email"><?php 
+            // Get email from database
+            include 'connect.php';
+            $stmt = $conn->prepare("SELECT email FROM add_students WHERE id = ?");
+            $stmt->bind_param("i", $student_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $email = '';
+            if ($result && $result->num_rows === 1) {
+                $row = $result->fetch_assoc();
+                $email = $row['email'] ?? '';
+            }
+            $stmt->close();
+            $conn->close();
+            echo htmlspecialchars($email ?: 'student@email.com');
+          ?></span>
+        </div>
+      </div>
+      <hr class="dropdown-divider">
       <a href="#" onclick="showProfile(event)"><i class="ph ph-user"></i> Profile</a>
+      <a href="#" onclick="showPasswordForm(event)"><i class="ph ph-key"></i> Change Password</a>
       <a href="#" onclick="showEvaluationHistory(event)"><i class="ph ph-clock-counter-clockwise"></i> View History</a>
-      <a href="#" onclick="logout(event)"><i class="ph ph-sign-out"></i> Logout</a>
+      <hr class="dropdown-divider">
+      <a href="#" onclick="logout(event)" class="logout-link"><i class="ph ph-sign-out"></i> Logout</a>
     </div>
   </div>
 </div>
@@ -159,37 +191,63 @@ $conn->close();
 <!-- Main Page ======================================================================================-->
 
 <div class="content-container">
-  <div class="main-box" id="mainPage">
-    <div class="main-left">
-      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Welcome Image" class="main-img">
-    </div>
-    <div class="main-right">
-      <h1>Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
-      <div class="academic-year" id="studentAcademicPeriod">Academic Year: Loading...</div>
-      <div class="academic-year">Year Level: <?php 
-        $display = '';
-        if (!empty($studentProgramCode)) {
-            $display .= $studentProgramCode . ' ';
-        }
-        if ($studentYearLevel === 'irregular') {
-            $display .= 'irregular';
-        } else {
-            $display .= $studentYearLevel;
-            if (!empty($studentSection)) {
-                $display .= '-' . $studentSection;
-            }
-        }
-        echo htmlspecialchars($display ?: 'N/A'); 
-      ?></div>
-      <p class="subtitle">Your feedback is essential in helping us improve teaching and learning. 
-        Each evaluation you complete strengthens our commitment to academic excellence.</p>
-      <?php if ($studentStatus !== 'active'): ?>
+  <!-- Welcome Card -->
+  <div class="welcome-card" id="mainPage">
+    <div class="welcome-content">
+      <div class="welcome-left">
+        <div class="avatar-section">
+          <div class="large-avatar">
+            <span class="avatar-initials-large"><?php 
+              $names = explode(' ', $studentName);
+              echo strtoupper(substr($names[0] ?? 'S', 0, 1) . substr($names[1] ?? 'T', 0, 1));
+            ?></span>
+          </div>
+          <div class="status-indicator active"></div>
+        </div>
+      </div>
+      
+      <div class="welcome-right">
+        <div class="welcome-header-inline">
+          <h2 class="welcome-title">WELCOME BACK</h2>
+          <h1 class="student-name-title"><?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
+        </div>
+        
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Academic Year:</span>
+            <span class="info-value" id="studentAcademicPeriod">No active period</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Year Level:</span>
+            <span class="info-value"><?php
+              $displayYearLevel = strtolower(trim((string)$studentYearLevel)) === 'irregular'
+                ? 'Irregular'
+                : ($studentYearLevel ?: 'N/A');
+              echo htmlspecialchars($studentProgramCode ?? '') . ' - ' . htmlspecialchars($displayYearLevel);
+              if (!empty($studentSection) && $studentYearLevel !== 'irregular') {
+                echo '-' . htmlspecialchars($studentSection);
+              }
+            ?></span>
+          </div>
+        </div>
+        
+        <p class="welcome-message">
+          Your feedback is essential in helping us improve teaching and learning. Each 
+          evaluation you complete strengthens our commitment to academic excellence.
+        </p>
+        
+        <?php if ($studentStatus !== 'active'): ?>
         <div class="inactive-account-message">
           <i class="ph ph-warning-circle"></i>
           <span>Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.</span>
         </div>
-      <?php endif; ?>
-      <button class="evaluate-btn" onclick="showEvaluateSection()" <?php echo $studentStatus !== 'active' ? 'disabled' : ''; ?>>Evaluate Now</button>
+        <?php endif; ?>
+        
+        <button class="evaluate-now-btn" onclick="showEvaluateSection()" <?php echo $studentStatus !== 'active' ? 'disabled' : ''; ?>>
+          <i class="ph ph-clipboard-text"></i>
+          Evaluate Now
+        </button>
+      </div>
     </div>
   </div>
 
@@ -210,7 +268,24 @@ $conn->close();
   
   <!-- Faculty Cards Section======================================================================================-->
   <div class="faculty-cards" id="facultyCards" style="display:none;">
-    <div id="facultyContainer" class="faculty-container">
+    <div class="faculty-evaluation-layout">
+      <div class="faculty-list-panel">
+        <div class="evaluation-list-header">
+          <h3><i class="ph ph-books"></i> Enrolled Subjects <span id="evaluationPeriodLabel"></span></h3>
+          <span id="evaluationSubjectCount">0 subjects</span>
+        </div>
+        <div id="facultyContainer" class="faculty-container"></div>
+      </div>
+      <aside class="evaluation-summary" aria-label="Evaluation summary">
+        <h3>Evaluation Summary</h3>
+        <div class="summary-progress">
+          <strong id="summaryPercent">0%</strong>
+          <span>Complete</span>
+        </div>
+        <div class="summary-stat"><span><i class="ph ph-circle"></i> Total Subjects</span><strong id="summaryTotal">0</strong></div>
+        <div class="summary-stat"><span><i class="ph ph-check-circle"></i> Evaluated</span><strong id="summaryEvaluated">0</strong></div>
+        <div class="summary-stat"><span><i class="ph ph-clock"></i> Pending</span><strong id="summaryPending">0</strong></div>
+      </aside>
     </div>
   </div>
   <!-- Evaluation Form ======================================================================================-->

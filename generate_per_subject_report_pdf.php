@@ -1,11 +1,5 @@
 <?php
-/**
- * generate_per_subject_report_pdf.php
- *
- * Generates a PDF for the per-subject faculty evaluation report.
- * Accepts POST JSON with the same structure returned by
- * get_faculty_per_subject_report.php.
- */
+
 include_once 'session_config.php';
 session_start();
 include 'connect.php';
@@ -78,7 +72,7 @@ function sectionBar(FPDF $pdf, string $text, array $color): void {
 /* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
 $pdf->SetFillColor($BLUE[0], $BLUE[1], $BLUE[2]);
 $pdf->Rect(10, 10, 190, 32, 'F');
-if (file_exists('logo.png')) $pdf->Image('logo.png', 14, 14, 22);
+if (file_exists(__DIR__ . '/assets/images/logo.png')) $pdf->Image(__DIR__ . '/assets/images/logo.png', 14, 14, 22);
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont('Arial', 'B', 16);
 $pdf->SetXY(40, 16);
@@ -196,7 +190,7 @@ foreach ($departments as $dept) {
         $pdf->Cell(0, 6, ct($subj['rating_label'] ?? 'N/A'), 1, 1, 'C');
 
         // Period
-        $pdf->SetFont('Arial', 'I', 8);
+        $pdf->SetFont('Arial', '', 8);
         $pdf->Cell(0, 5, ct('Evaluation period: ' . ($subj['period'] ?? 'N/A')), 0, 1, 'L');
         $pdf->Ln(1);
 
@@ -238,7 +232,7 @@ foreach ($departments as $dept) {
                 $pdf->Ln(1);
             }
             if (count($comments) > 5) {
-                $pdf->SetFont('Arial', 'I', 7);
+                $pdf->SetFont('Arial', '', 7);
                 $pdf->Cell(0, 4, ct('... and ' . (count($comments) - 5) . ' more comment(s).'), 0, 1, 'L');
             }
         }
@@ -248,7 +242,7 @@ foreach ($departments as $dept) {
 }
 
 /* ── FOOTER ─────────────────────────────────────────────────────────────── */
-$pdf->SetFont('Arial', 'I', 8);
+$pdf->SetFont('Arial', '', 8);
 $pdf->SetTextColor(150, 150, 150);
 $pdf->Cell(0, 5, ct('Generated on: ' . date('F j, Y  h:i A')), 0, 1, 'R');
 

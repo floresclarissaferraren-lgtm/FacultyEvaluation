@@ -79,16 +79,30 @@ $stmt->close();
 
 // Send email
 $subject = "Faculty Evaluation System - Password Reset Code";
-$body = "
-    <h2>Faculty Evaluation System</h2>
-    <p>Hello " . htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') . "</p>
-    <p>You requested to reset your password.</p>
-    <p><b>Your 6-digit verification code:</b></p>
-    <h1 style='letter-spacing: 6px; color: #1e3a8a;'>" . $code . "</h1>
-    <p>This code expires in 10 minutes.</p>
-    <hr>
-    <p>If you did not request a password reset, you can ignore this email.</p>
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$baseUrl = $protocol . '://' . $host . '/FacultyEvaluation';
+
+$title = "Password Reset Code";
+$greeting = "Hello " . htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') . ",";
+$content_html = "
+    <p style='margin: 0 0 16px 0;'>We received a request to reset the password associated with your account on the Faculty Evaluation System.</p>
+    <p style='margin: 0 0 16px 0;'>Please use the 6-digit verification code below to complete your password reset request.</p>
+    <p style='margin: 0 0 16px 0;'>If you did not make this request, you can safely ignore this email; your password will remain unchanged.</p>
 ";
+
+$highlight_box = [
+    'label' => 'Verification Code',
+    'value' => $code,
+    'subtext' => 'This code expires in 10 minutes'
+];
+
+$cta = [
+    'label' => 'Go to Login Page',
+    'url' => $baseUrl . '/EvalMain.php'
+];
+
+$body = getEmailHTML($title, $greeting, $content_html, $highlight_box, $cta);
 
 $sent = sendEmail($email, $recipientName, $subject, $body);
 

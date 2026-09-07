@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
 header("Content-Type: application/json");
 include 'connect.php';
 require_once 'weighted_score_helper.php';
@@ -50,8 +52,14 @@ try {
     LEFT JOIN add_subjects s ON s.id = e.subject_id
     LEFT JOIN add_classes ac ON ac.id = e.class_id
     LEFT JOIN evaluation_periods ep
-        ON ep.id = e.period_id
-        OR (e.period_id IS NULL AND DATE(e.created_at) BETWEEN ep.start_date AND ep.end_date)
+        ON ep.id = COALESCE(
+            e.period_id,
+            (SELECT ep2.id
+             FROM evaluation_periods ep2
+             WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
+             ORDER BY ep2.id DESC
+             LIMIT 1)
+        )
     " . (!empty($where) ? " WHERE " . implode(" AND ", $where) : "") . "
     GROUP BY f.id, f.faculty_id, f.firstname, f.lastname, f.suffix, f.email,
         e.subject_id, e.class_id, s.subject_code, s.subject_desc, ac.year_level, ac.block,

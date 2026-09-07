@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
 :root {
   --primary-50: #f0f9ff;
   --primary-100: #e0f2fe;
@@ -65,7 +67,31 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --dashboard-icon-color: #0B7AC7;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.logo-text,
+.main-title,
+.section-title,
+.admin-title,
+.title-container h1,
+.header-title-section h2,
+.period-section-title,
+.periods-table-title-group,
+.criteria-header-enhanced .section-title,
+.stats-number,
+.stat-number,
+.stat-value,
+.summary-stat strong {
+  font-family: var(--font-display) !important;
 }
 
 * {
@@ -76,17 +102,17 @@
 
 body {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
-  background: #eff0f1;
+  background: #F0F7FF;
   min-height: 100vh;
 }
 
 /* PROGRAMS CARD LAYOUT */
 .programs-container-box {
-  background: #fff;
-  border-radius: 14px;
-  border: 1px solid #e8eef8;
+  background: transparent;
+  border-radius: 0;
+  border: none;
   box-shadow: none;
-  padding: 24px;
+  padding: 0;
 }
 
 .programs-header {
@@ -141,34 +167,51 @@ body {
 
 .programs-cards-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   padding: 0;
 }
 
-/* Color palette for program cards — all blue theme */
-.program-card {
-  --card-accent: #1565c0;
-  --card-accent-light: #e8f0fe;
-  --card-accent-mid: #bbdefb;
+@media (max-width: 1600px) {
+  .programs-cards-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.program-card[data-color="0"] { --card-accent: #1565c0; --card-accent-light: #e8f0fe; --card-accent-mid: #bbdefb; }
-.program-card[data-color="1"] { --card-accent: #1976d2; --card-accent-light: #e3f2fd; --card-accent-mid: #bbdefb; }
-.program-card[data-color="2"] { --card-accent: #0288d1; --card-accent-light: #e1f5fe; --card-accent-mid: #b3e5fc; }
-.program-card[data-color="3"] { --card-accent: #1565c0; --card-accent-light: #e8f0fe; --card-accent-mid: #bbdefb; }
-.program-card[data-color="4"] { --card-accent: #0369a1; --card-accent-light: #e0f2fe; --card-accent-mid: #bae6fd; }
-.program-card[data-color="5"] { --card-accent: #1976d2; --card-accent-light: #e3f2fd; --card-accent-mid: #bbdefb; }
-.program-card[data-color="6"] { --card-accent: #0284c7; --card-accent-light: #e0f9ff; --card-accent-mid: #bae6fd; }
-.program-card[data-color="7"] { --card-accent: #1565c0; --card-accent-light: #e8f0fe; --card-accent-mid: #bbdefb; }
+@media (max-width: 1200px) {
+  .programs-cards-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .programs-cards-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Color palette for program cards — same blue for all */
+.program-card {
+  --card-accent: #0284c7;
+  --card-border-top: #0284c7;
+}
+
+.program-card[data-color="0"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="1"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="2"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="3"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="4"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="5"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="6"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
+.program-card[data-color="7"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
 
 /* Program Card */
 .program-card {
   background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #e2eaf6;
-  box-shadow: none;
-  transition: box-shadow .2s ease, border-color .2s ease;
+  border-radius: 12px;
+  border: 1px solid #C8E3F8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow .2s ease, transform .2s ease;
   overflow: hidden;
   color: #1e293b;
   display: flex;
@@ -176,38 +219,37 @@ body {
 }
 
 .program-card:hover {
-  box-shadow: none;
-  border-color: var(--card-accent-mid);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .program-card-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 20px 20px 18px;
+  gap: 16px;
+  padding: 24px;
   border-bottom: 1px solid #f1f5f9;
 }
 
-/* Icon uses blue accent */
+/* Icon uses accent color */
 .program-icon {
-  width: 46px;
-  height: 46px;
-  background: var(--card-accent-light);
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  background: var(--card-accent);
+  border-radius: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  color: var(--card-accent);
+  color: #ffffff;
   flex-shrink: 0;
   letter-spacing: .5px;
   text-transform: uppercase;
   text-align: center;
   line-height: 1.1;
-  padding: 4px;
+  padding: 6px;
   word-break: break-all;
-  border: 1.5px solid var(--card-accent-mid);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .program-content {
@@ -216,20 +258,20 @@ body {
 }
 
 .program-code {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--card-accent);
-  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px;
   line-height: 1.2;
   text-transform: uppercase;
-  letter-spacing: .5px;
+  letter-spacing: .3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .program-name {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: #64748b;
   line-height: 1.4;
@@ -241,48 +283,88 @@ body {
 
 .program-card-actions {
   display: flex;
-  gap: 8px;
-  padding: 12px 20px 16px;
-  background: #fafbff;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  background: #fafbfc;
   border-top: 1px solid #f1f5f9;
   margin-top: auto;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.program-card-actions .left-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .program-card-actions button {
-  flex: 0 1 88px;
-  max-width: 88px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  font-size: 12px;
+  flex: 0 0 auto;
+  height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 20px !important;
+  font-size: 13px;
   cursor: pointer;
-  transition: background .15s ease, color .15s ease, border-color .15s ease;
+  transition: all .2s ease;
   font-weight: 600;
   background: #ffffff;
-  color: #475569;
-  border: 1px solid #e2eaf6;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.program-card-actions .btn-manage {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  border-radius: 8px !important;
+  padding: 0 16px !important;
+  min-height: 36px !important;
 }
 
 .program-card-actions .btn-manage:hover {
-  background: var(--card-accent-light);
-  color: var(--card-accent);
-  border-color: var(--card-accent-mid);
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+.program-card-actions .btn-edit {
+  background: #ffffff !important;
+  color: #64748b !important;
+  border-color: #cbd5e1 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 0 14px !important;
 }
 
 .program-card-actions .btn-edit:hover {
-  background: #fffbeb;
-  color: #d97706;
-  border-color: #fde68a;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.program-card-actions .left-buttons button {
+  height: 36px !important;
+}
+
+.program-card-actions .btn-delete {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border-color: transparent !important;
+  border-radius: 8px !important;
+  padding: 0 8px !important;
+  width: auto !important;
+  font-size: 16px;
 }
 
 .program-card-actions .btn-delete:hover {
-  background: #fff0f0;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
 }
 
 
@@ -322,15 +404,15 @@ body {
   justify-content: center;
   align-items: center;
   font-size: 20px;
-  color: #64748b;
+  color: #1e3a8a;
   cursor: pointer;
   transition: .2s;
   background: transparent
 }
 
 .hamburger:hover {
-  background: #f1f5f9;
-  color: #1e293b
+  background: #dbeafe;
+  color: #1e3a8a
 }
 
 .nav-left .nav-divider {
@@ -355,7 +437,7 @@ body {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: #1e3a8a;
   transition: .3s;
   font-family: var(--font-sans);
   letter-spacing: -.3px;
@@ -383,6 +465,135 @@ body {
   flex-shrink: 0;
 }
 
+.admin-notification-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+  flex: 0 0 42px;
+}
+
+.admin-notification-btn i {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.admin-notification-btn:hover,
+.admin-notification-btn:focus-visible {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e3a8a;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
+  outline: none;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ef4444;
+  border: 2px solid #f8fafc;
+}
+
+.notification-dot[hidden] {
+  display: none;
+}
+
+.admin-notification-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 1005;
+  width: min(360px, calc(100vw - 28px));
+  overflow: hidden;
+  border: 1px solid #d7dfeb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .16);
+}
+
+.admin-notification-panel[hidden] {
+  display: none;
+}
+
+.admin-notification-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0c4a6e;
+}
+
+.admin-notification-panel-header i {
+  color: #0284c7;
+  font-size: 19px;
+}
+
+.admin-notification-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.admin-notification-item,
+.admin-notification-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  color: #334155;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.admin-notification-item + .admin-notification-item {
+  border-top: 1px solid #eef2f7;
+}
+
+.admin-notification-item strong {
+  display: block;
+  color: #0c4a6e;
+  font-size: .84rem;
+}
+
+.admin-notification-item p {
+  margin: 3px 0 0;
+  color: #64748b;
+}
+
+.admin-notification-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.admin-notification-empty {
+  align-items: center;
+  color: #64748b;
+}
+
+.admin-notification-empty i {
+  color: #10b981;
+  font-size: 18px;
+}
+
 .admin-box {
   display: flex;
   align-items: center;
@@ -404,8 +615,8 @@ body {
 .admin-icon {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  background: #1e3a8a;
+  border-radius: 50%;
+  background: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -485,13 +696,13 @@ body {
   left: 0;
   bottom: 0;
   width: 260px;
-  background: #09335d;
-  color: #2d3f5d;
+  background: #1e3a8a;
+  color: #ffffff;
   z-index: 1001;
   overflow-x: hidden;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, .08);
+  box-shadow: 4px 0 16px rgba(15, 23, 42, .08);
   transition: .35s cubic-bezier(.4, 0, .2, 1);
-  border-right: none;
+  border-right: 1px solid rgba(255, 255, 255, .18);
   display: flex;
   flex-direction: column;
 }
@@ -499,8 +710,8 @@ body {
 .sidebar-top {
   text-align: center;
   padding: 20px;
-  border-bottom: none;
-  background: rgba(0, 0, 0, .15);
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+  background: transparent;
 }
 
 .logo-title-container {
@@ -514,7 +725,10 @@ body {
   height: 42px;
   border-radius: 10px;
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .2)
+  background: rgba(255, 255, 255, .2);
+  padding: 6px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .16)
 }
 
 .title-container {
@@ -525,14 +739,14 @@ body {
   margin: 0;
   font-size: 17px;
   font-weight: 700;
-  color: #e7eaf0;
+  color: #ffffff;
   font-family: var(--font-sans);
   letter-spacing: -.4px
 }
 
 .title-container .subtitle {
   font-size: 11px;
-  color: #e7eaf0;
+  color: rgba(255, 255, 255, .82);
   margin-top: 2px;
   font-weight: 500
 }
@@ -540,7 +754,7 @@ body {
 .title-container span:not(.subtitle),
 .sidebar-top span {
   font-size: 13px;
-  color: #e2e8f0
+  color: rgba(255, 255, 255, .82)
 }
 
 .sidebar-menu {
@@ -552,8 +766,8 @@ body {
 /* Sidebar bottom logout */
 .sidebar-bottom {
   padding: 14px 12px;
-  border-top: none;
-  background: rgba(0, 0, 0, .15);
+  border-top: 1px solid rgba(255, 255, 255, .18);
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -567,7 +781,7 @@ body {
   padding: 10px 14px;
   border-radius: 8px;
   background: transparent;
-  color: #e2e8f0;
+  color: #ffffff;
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
@@ -581,9 +795,9 @@ body {
 }
 
 .sidebar-logout-btn:hover {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: rgba(3, 67, 112, .72);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, .25);
 }
 
 /* Hide logout text when collapsed */
@@ -613,7 +827,7 @@ body {
 .menu-header span {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, .72);
   text-transform: uppercase;
   letter-spacing: 1.2px
 }
@@ -643,30 +857,30 @@ body {
 .sidebar-menu a i {
   font-size: 18px;
   flex-shrink: 0;
-  color: #ffffff;
+  color: rgba(255, 255, 255, .82);
   transition: .2s
 }
 
 .sidebar-menu a:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: rgba(255, 255, 255, .16);
+  color: #ffffff;
   border-color: transparent
 }
 
 .sidebar-menu a:hover i {
-  color: #1e293b
+  color: #ffffff
 }
 
 .sidebar-menu a.active {
-  background: #dbeafe;
-  color: #1e3a8a;
-  border-color: #bfdbfe;
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #60a5fa;
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(59, 130, 246, .1)
 }
 
 .sidebar-menu a.active i {
-  color: #1e3a8a
+  color: #ffffff
 }
 
 
@@ -1322,100 +1536,146 @@ main.full {
    Dashboard
    ==================================================================================================================================== */
 
+.admin-welcome-box {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #0855b1 0%, #4fa5d8 100%);
+  border: 1px solid #4fa5d8;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(7, 50, 106, .08);
+}
+
+.admin-welcome-box::before,
+.admin-welcome-box::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.admin-welcome-box::before {
+  width: 280px;
+  height: 280px;
+  top: -190px;
+  right: 8%;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .06);
+}
+
+.admin-welcome-box::after {
+  width: 210px;
+  height: 210px;
+  right: -70px;
+  bottom: -150px;
+  background: rgba(96, 165, 250, .18);
+}
+
+.admin-welcome-icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .16);
+  color: #ffffff;
+  font-size: 22px;
+}
+
+.admin-welcome-box h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 4px;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.admin-welcome-box p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(255, 255, 255, .82);
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+.admin-period-summary {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.admin-period-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 118px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.admin-period-item > i {
+  color: #dbeafe;
+  font-size: 1.05rem;
+}
+
+.admin-period-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-period-item span {
+  color: rgba(255, 255, 255, .72);
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.admin-period-item strong {
+  color: #ffffff;
+  font-size: .8rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .admin-welcome-box {
+    flex-wrap: wrap;
+  }
+
+  .admin-period-summary {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .admin-period-item {
+    flex: 1;
+  }
+}
+
 /* Period toolbar */
-.dashboard-period-toolbar,
 .dashboard-period-selectors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 12px var(--spacing-sm);
-}
-
-.dashboard-period-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 16px;
-  margin: 0 0 20px;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-}
-
-.dashboard-period-toolbar>div {
-  width: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dashboard-period-toolbar label,
-.dashboard-period-selectors label {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 0;
-  color: #64748b;
-  font-size: .76rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.dashboard-period-toolbar select,
-.dashboard-period-selectors select {
-  width: 100%;
-  height: 44px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 0 14px;
-  color: #1e293b;
-  background: #ffffff;
-  font-weight: 600;
-  font-size: .8rem;
-  outline: none;
-  transition: all .3s cubic-bezier(.4, 0, .2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
-}
-
-.dashboard-period-toolbar select:hover,
-.dashboard-period-selectors select:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
-}
-
-.dashboard-period-toolbar select:focus,
-.dashboard-period-selectors select:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  transform: translateY(-1px);
-}
-
-.dashboard-period-toolbar select {
-  width: 170px;
-}
-
-#dashboard-ay-select {
-  width: 185px;
-}
-
-@media (max-width: 640px) {
-  .dashboard-period-toolbar {
-    justify-content: stretch;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .dashboard-period-toolbar>div {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .dashboard-period-toolbar select,
-  #dashboard-ay-select {
-    width: min(100%, 190px);
-  }
 }
 
 /* Stat cards row */
@@ -1529,6 +1789,15 @@ main.full {
   font-weight: 500;
 }
 
+.dashboard-card.faculty {
+  cursor: pointer;
+}
+
+.dashboard-card.faculty:focus-visible {
+  outline: 3px solid rgba(30, 64, 175, .25);
+  outline-offset: 2px;
+}
+
 /* Icon box */
 .icon-box {
   width: 40px;
@@ -1559,6 +1828,15 @@ main.full {
 
 .dashboard-card.students .icon-box {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+
+.dashboard-card.students {
+  cursor: pointer;
+}
+
+.dashboard-card.students:focus-visible {
+  outline: 3px solid rgba(2, 132, 199, .25);
+  outline-offset: 2px;
 }
 
 .dashboard-card.evaluations .icon-box {
@@ -1647,6 +1925,10 @@ main.full {
   flex-direction: column;
   gap: 16px;
   padding-right: 0;
+}
+
+.dashboard-card.rating-distribution .dashboard-content {
+  justify-content: flex-start;
 }
 
 /* Card section headers */
@@ -1903,30 +2185,6 @@ main.full {
   color: #94a3b8;
   text-align: center;
   margin-top: 6px;
-}
-
-/* #dashboard-details (legacy, kept for reference) */
-#dashboard-details {
-  margin-top: var(--spacing-2xl);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xl);
-  width: 100%;
-}
-
-.graph-box,
-.ratings-box,
-.ranking-box {
-  flex: 1;
-  min-width: 16.25rem;
-  max-height: 20rem;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(10px);
 }
 
 /* Rating distribution chart */
@@ -2190,20 +2448,15 @@ main.full {
   transform: translateY(-3px);
 }
 
-/* Solid bg colour per card - Light Blue Theme */
-.student-stat-card.total-students    { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); }
-.student-stat-card.active-students   { background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%); }
-.student-stat-card.regular-students  { background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); }
-.student-stat-card.irregular-students{ background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); }
+/* Exact school colors for the student cards */
+.student-stat-card.total-students    { background: #07326a; }
+.student-stat-card.active-students   { background: #064089; }
+.student-stat-card.regular-students  { background: #0a61c9; }
+.student-stat-card.irregular-students{ background: #e3f2fd; }
 
 /* polygon.png decorative background — fills entire card */
 .student-stat-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url('polygon.png') center center / cover no-repeat;
-  opacity: .15;
-  pointer-events: none;
+  display: none;
 }
 
 /* Card body */
@@ -2283,6 +2536,13 @@ main.full {
 .student-stat-card .stat-icon i {
   font-size: 1.5rem;
   color: #ffffff;
+}
+
+.student-stat-card.irregular-students h3,
+.student-stat-card.irregular-students .stat-number,
+.student-stat-card.irregular-students span,
+.student-stat-card.irregular-students .stat-icon i {
+  color: #07326a;
 }
 
 /* Stagger animation */
@@ -2517,7 +2777,13 @@ td {
   text-shadow: 0 1px 2px rgba(0, 0, 0, .05);
   position: sticky;
   top: 0;
-  z-index: 10
+  z-index: 10;
+  text-align: center;
+}
+
+.subjects-table td,
+.classes-table td {
+  text-align: center;
 }
 
 tr:hover td {
@@ -2548,6 +2814,17 @@ td:first-child {
   position: relative;
 }
 
+/* Center action cell for subjects and classes tables */
+.subjects-table .action-cell,
+.classes-table .action-cell {
+  text-align: center;
+}
+
+.subjects-table .action-buttons,
+.classes-table .action-buttons {
+  justify-content: center;
+}
+
 .action-buttons {
   display: flex;
   justify-content: flex-end;
@@ -2558,6 +2835,7 @@ td:first-child {
 
 /* Base style for all action buttons */
 .action-cell .manage-btn,
+.action-cell .manage-period-btn,
 .action-cell .edit-btn,
 .action-cell .delete-btn,
 .action-cell .view-btn,
@@ -2565,63 +2843,107 @@ td:first-child {
 .action-cell .settings-btn,
 .action-cell .archive-btn,
 .actions .edit-btn,
-.actions .delete-btn {
-  width: 2.6rem;
-  /* compact box pero hindi apektado ang icon size */
-  height: 2.6rem;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: all .2s cubic-bezier(.4, 0, .2, 1);
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-  margin: 0 1px;
-  /* mas maliit na margin */
+.actions .delete-btn,
+.action-buttons button,
+[class*='table'] .action-cell button,
+[class*='table'] .action-buttons button {
+  /* Universal sizing */
+  width: auto !important;
+  height: auto !important;
+  min-width: 40px !important;
+  min-height: auto !important;
+  /* Padding and border */
+  padding: 8px 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 10px !important;
+  /* Display */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* Spacing */
+  margin: 0 1px !important;
+  gap: 0 !important;
+  /* Colors and styling */
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #1e293b !important;
+  cursor: pointer !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  /* Transitions */
+  transition: all .2s cubic-bezier(.4, 0, .2, 1) !important;
+  box-shadow: none !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 /* Specific background colors */
 .action-cell .view-btn {
-  background: #f3f4f6 !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-.action-cell .edit-btn {
-  background: #f3f4f6 !important;
+.action-cell .edit-btn,
+.actions .edit-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-.action-cell .delete-btn {
-  background: #f3f4f6 !important;
+.action-cell .delete-btn,
+.actions .delete-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .action-cell .manage-btn {
-  background: #f3f4f6 !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.action-cell .manage-period-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.action-cell .manage-period-btn i {
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.action-cell .manage-period-btn:hover {
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .action-cell .view-subjects-btn {
-  background: #f3f4f6 !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .action-cell .settings-btn {
-  background: #f3f4f6 !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .action-cell .archive-btn {
   width: auto;
   min-width: 0;
-  height: 2.25rem;
-  padding: 0 8px;
-  background: #fee2e2 !important;
-  color: #dc2626;
-  border-radius: 6px;
+  height: auto;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: .72rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
 }
 
 
@@ -2643,15 +2965,15 @@ table.evaluation-table .view-btn {
 
 /* Generate Report button styles */
 .generate-report-btn {
-  background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-800) 100%) !important;
-  color: white !important;
-  font-weight: 600 !important;
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
   padding: 10px 20px !important;
-  border-radius: 6px !important;
+  border-radius: 8px !important;
   font-size: 0.9rem !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 4px rgba(30, 64, 175, 0.4) !important;
-  border: none !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+  border: 1px solid #0B90E0 !important;
   position: relative;
   overflow: hidden;
   display: inline-flex;
@@ -2661,28 +2983,38 @@ table.evaluation-table .view-btn {
 }
 
 .generate-report-btn:hover {
-  background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-800) 100%) !important;
-  box-shadow: 0 4px 12px rgba(23, 37, 84, 0.5) !important;
+  background: #087FC5 !important;
+  border-color: #087FC5 !important;
+  box-shadow: none !important;
   transform: translateY(-1px) !important;
 }
-
-/* Icon colors (size unchanged) */
-.action-cell .manage-btn i {
-  color: var(--primary-700);
-}
-
+/* Universal icon styling for all action buttons */
+.action-cell button i,
+.action-buttons button i,
+[class*='table'] .action-cell i,
+[class*='table'] .action-buttons i,
+.action-cell .manage-btn i,
+.action-cell .manage-period-btn i,
 .action-cell .edit-btn i,
-.actions .edit-btn i {
-  color: #3b82f6;
-}
-
 .action-cell .delete-btn i,
-.actions .delete-btn i {
-  color: #6b7280;
-}
-
-.action-cell .archive-btn i {
-  color: #64748b;
+.action-cell .view-btn i,
+.action-cell .view-subjects-btn i,
+.action-cell .settings-btn i,
+.action-cell .archive-btn i,
+.actions .edit-btn i,
+.actions .delete-btn i,
+.faculties-table .action-cell i,
+.students-table .action-cell i,
+.academic-year-table .action-cell i,
+.evaluation-table .action-cell i,
+.subjects-table .action-cell i,
+.classes-table .action-cell i {
+  color: #1e293b !important;
+  font-size: 0.95rem !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .show-archived-faculty-btn,
@@ -2690,9 +3022,9 @@ table.evaluation-table .view-btn {
   width: 150px;
   min-height: 44px;
   padding: var(--spacing-sm) var(--spacing-lg);
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
+  border: 1px solid #f5c400;
+  background: #f5c400;
+  color: #713f12;
   border-radius: 6px;
   font-weight: 600;
   font-size: 14px;
@@ -2862,8 +3194,8 @@ table.evaluation-table .view-btn {
 
 .show-archived-faculty-btn:hover,
 .show-archived-student-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #f5c400;
+  border-color: #f5c400;
 }
 
 .archived-faculty-section,
@@ -2912,10 +3244,11 @@ table.evaluation-table .view-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
+  height: 44px;
+  min-height: 44px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
+  border-radius: 10px;
+  background: #ffffff;
   padding: 0 12px;
   transition: all .25s ease;
   min-width: 220px;
@@ -2946,7 +3279,7 @@ table.evaluation-table .view-btn {
 }
 
 .archived-search-wrapper .search-btn i {
-  font-size: 15px;
+  font-size: 18px;
   color: #94a3b8;
   transition: color .2s ease;
 }
@@ -2959,8 +3292,9 @@ table.evaluation-table .view-btn {
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: .8125rem;
-  font-weight: 500;
+  padding: 12px 6px;
+  font-size: .875rem;
+  font-weight: 600;
   color: #1e293b;
   width: 100%;
   min-width: 0;
@@ -2992,40 +3326,43 @@ table.evaluation-table .view-btn {
 
 .back-to-faculty-btn,
 .back-to-student-btn {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: .875rem;
   cursor: pointer;
   transition: background-color .15s ease, border-color .15s ease, color .15s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  box-sizing: border-box;
 }
 
 .back-to-faculty-btn {
-  border: 1px solid #fecaca;
-  background: #fff0f0;
-  color: #dc2626;
+  border: none !important;
+  background-color: #dc2626 !important;
+  color: #ffffff;
 }
 
 .back-to-faculty-btn:hover {
-  background: #fee2e2;
-  border-color: #f87171;
-  color: #b91c1c;
+  background-color: #b91c1c !important;
+  border: none !important;
+  color: #ffffff !important;
 }
 
 .back-to-student-btn {
-  background: #fff0f0;
-  border-color: #fecaca;
-  color: #dc2626;
+  background-color: #dc2626 !important;
+  border: none !important;
+  color: #ffffff;
 }
 
 .back-to-student-btn:hover {
-  background: #fee2e2;
-  border-color: #f87171;
-  color: #b91c1c;
+  background-color: #b91c1c !important;
+  border: none !important;
+  color: #ffffff !important;
 }
 
 /* Archived Records Table */
@@ -3125,40 +3462,54 @@ table.evaluation-table .view-btn {
 .action-cell .view-subjects-btn i,
 .action-cell .settings-btn i,
 table.evaluation-table .view-btn i {
-  color: #3b82f6 !important;
+  color: #1e293b !important;
+  font-size: 0.95rem;
+  margin: 0;
 }
 
 /* Hover effects */
 .action-cell .manage-btn:hover {
-  background: #e5e7eb !important;
-  box-shadow: var(--shadow-lg);
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .action-cell .edit-btn:hover,
 .actions .edit-btn:hover {
-  background: #e5e7eb !important;
-  box-shadow: var(--shadow-lg);
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .action-cell .delete-btn:hover,
 .actions .delete-btn:hover {
-  background: #e5e7eb !important;
-  box-shadow: var(--shadow-lg);
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .action-cell .view-btn:hover {
-  background: #e5e7eb !important;
-  box-shadow: var(--shadow-lg);
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .action-cell .view-subjects-btn:hover {
-  background: #e5e7eb !important;
-  box-shadow: var(--shadow-lg);
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .action-cell .settings-btn:hover {
-  background: #e5e7eb !important;
-  box-shadow: var(--shadow-lg);
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
+}
+
+.action-cell .archive-btn:hover {
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05);
 }
 
 .table-avatar {
@@ -3174,6 +3525,37 @@ table.evaluation-table .view-btn i {
 .table-avatar.placeholder {
   background: #f3f4f6;
   color: #6b7280;
+}
+
+.faculties-table .table-avatar {
+  border-radius: 50%;
+}
+
+.faculty-placeholder-avatar {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%) !important;
+  border: 2px solid #7dd3fc;
+  color: #075985 !important;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .55), 0 3px 8px rgba(3, 105, 161, .16);
+}
+
+.faculty-placeholder-avatar::before {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  right: -9px;
+  bottom: -12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .52);
+}
+
+.faculty-placeholder-avatar {
+  position: relative;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
 }
 
 .inline-status {
@@ -3638,7 +4020,7 @@ table.evaluation-table .view-btn:hover {
 
 #addFacultyModal .modal-content,
 #addStudentModal .modal-content {
-  max-width: 600px;
+  max-width: 900px;
   width: 90%
 }
 
@@ -3651,7 +4033,7 @@ table.evaluation-table .view-btn:hover {
 
   #addFacultyModal .modal-content,
   #addStudentModal .modal-content {
-    max-width: 600px;
+    max-width: 900px;
     width: 90%;
     margin: 0 auto;
     max-height: 90vh;
@@ -3692,7 +4074,7 @@ table.evaluation-table .view-btn:hover {
 
   #addFacultyModal .modal-content,
   #addStudentModal .modal-content {
-    max-width: 600px;
+    max-width: 900px;
     width: 95%;
     margin: 0 auto;
     max-height: 95vh;
@@ -3800,7 +4182,7 @@ table.evaluation-table .view-btn:hover {
 }
 
 #addQuestionModal .addProgram-header {
-  background: linear-gradient(135deg, #facc15 0%, #f59e0b 55%, #d97706 100%);
+  background: #0B90E0;
   color: #ffffff;
 }
 
@@ -3905,7 +4287,7 @@ table.evaluation-table .view-btn:hover {
   padding: var(--spacing-xl);
   word-wrap: break-word;
   overflow-wrap: break-word;
-  border-radius: 12px;
+  border-radius: 22px;
   background: #fff;
   text-align: center;
   box-shadow: var(--shadow-xl);
@@ -3914,7 +4296,13 @@ table.evaluation-table .view-btn:hover {
   justify-content: center;
   align-items: center;
   gap: var(--spacing-md);
-  border-top: 6px solid var(--error)
+  border-top: 0
+}
+
+.delete-modal-card::before,
+.delete-modal-card:hover::before {
+  display: none;
+  opacity: 0
 }
 
 .delete-modal-card.subjects-delete {
@@ -4773,6 +5161,9 @@ table.evaluation-table .view-btn:hover {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  user-select: none;
 }
 
 .period-status-btn.active {
@@ -4788,6 +5179,14 @@ table.evaluation-table .view-btn:hover {
 .period-status-btn:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
+}
+
+.period-status-btn.active:hover {
+  background: #bbf7d0;
+}
+
+.period-status-btn.inactive:hover {
+  background: #e5e7eb;
 }
 
 /* Manage Periods date inputs: avoid double borders (wrapper already reused elsewhere) */
@@ -5221,6 +5620,140 @@ table.evaluation-table .view-btn:hover {
 /* ====================================================================================================================================
    Criteria
    ==================================================================================================================================== */
+
+/* Enhanced Header Styling */
+.criteria-header-enhanced {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 20px;
+  border: 0;
+  box-shadow: none;
+}
+
+.criteria-header-enhanced .section-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.criteria-header-enhanced .section-title i {
+  font-size: 1.6rem;
+  color: #0369a1;
+}
+
+.criteria-header-enhanced .section-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.criteria-header-enhanced .section-subtitle i {
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+/* Search Container */
+.criteria-search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.criteria-search-container .search-wrapper {
+  position: relative;
+  max-width: 460px;
+  flex: 1 1 460px;
+  min-height: 44px;
+  padding: 0 12px 0 42px;
+}
+
+.criteria-search-container .search-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 38px;
+  height: 100%;
+}
+
+.criteria-search-container .search-btn i {
+  font-size: 1.1rem;
+  color: #94a3b8;
+}
+
+.criteria-search-container input {
+  width: 100%;
+  min-width: 0;
+}
+
+.criteria-search-container input::placeholder {
+  color: #94a3b8;
+}
+
+.criteria-search-container input:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.criteria-search-container .clear-search-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.criteria-header-enhanced {
+  display: block;
+}
+
+.criteria-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.criteria-header-enhanced .header-title-section {
+  flex: 1 1 auto;
+  min-width: 180px;
+}
+
+.criteria-header-enhanced .section-title {
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.criteria-header-enhanced .section-subtitle {
+  font-size: .82rem;
+}
+
+.criteria-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.criteria-header-controls .criteria-search-container {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  max-width: 460px;
+  margin: 0;
+}
+
+.criteria-header-controls .header-actions {
+  flex: 0 0 auto;
+}
+
 .criteria-layout {
   display: flex;
   gap: 24px;
@@ -5240,70 +5773,94 @@ table.evaluation-table .view-btn:hover {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.criteria-category:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transform: none;
 }
 
 .category-header {
-  background: linear-gradient(90deg, var(--primary-900), var(--primary-700));
-  padding: 16px 18px;
+  background: #0B90E0;
+  padding: 18px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .title-block {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: #fff;
+  flex: 1;
 }
 
 .title-block i {
-  font-size: 1.2rem;
-  color: var(--yellow-400);
+  font-size: 1.3rem;
+  color: #fbbf24;
 }
 
 .text-block {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 2px;
 }
 
 .section-number {
-  font-size: .76rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  opacity: .86;
-  letter-spacing: .6px;
-}
-
-.category-name {
-  font-size: 1rem;
-  font-weight: 800;
+  opacity: 0.9;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
+.category-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0.3px;
+}
+
+.criteria-category .category-name {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-weight: 800 !important;
+}
+
+.category-header .action-buttons {
+  display: flex;
+  gap: 1px;
+}
+
 .category-header .action-buttons button {
-  background: rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   padding: 8px 12px;
   cursor: pointer;
-  transition: .15s;
+  transition: all 0.2s;
   font-weight: 700;
   box-shadow: none;
 }
 
 .category-header .action-buttons button:hover {
-  background: rgba(250, 204, 21, .20);
+  background: rgba(251, 191, 36, 0.25);
+  border-color: rgba(251, 191, 36, 0.4);
+  transform: scale(1.05);
 }
 
 .category-header .action-buttons i {
-  color: #fff;
-  font-size: .9rem;
+  color: #fff !important;
+  font-size: 0.95rem;
   margin: 0;
 }
 
@@ -5311,15 +5868,15 @@ table.evaluation-table .view-btn:hover {
 .category-weight-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, .18);
+  background: rgba(251, 191, 36, 0.2);
   color: #fff;
-  font-size: .75rem;
-  font-weight: 700;
-  letter-spacing: .4px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   white-space: nowrap;
-  border: 1px solid rgba(255, 255, 255, .28);
+  border: 1px solid rgba(251, 191, 36, 0.4);
   cursor: default;
 }
 
@@ -5327,40 +5884,47 @@ table.evaluation-table .view-btn:hover {
 .category-weight-tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 10px;
   background: #e0f2fe;
   color: #0369a1;
-  font-size: .78rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
 .category-table-header {
   display: grid;
   grid-template-columns: 1fr 130px;
-  background: var(--neutral-200);
-  padding: 14px 18px;
-  font-size: .95rem;
+  background: #f8fafc;
+  padding: 14px 20px;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--neutral-900);
-  border-bottom: 1px solid var(--border);
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .questions-list {
   display: flex;
   flex-direction: column;
-  background: var(--neutral-50);
+  background: #ffffff;
 }
 
 .question-item {
   display: grid;
   grid-template-columns: 1fr 130px;
   align-items: center;
-  padding: 14px 18px;
+  padding: 16px 20px;
   font-size: 1rem;
   color: #374151;
-  background: #fff;
-  border-bottom: 1px solid #edf2fb;
+  background: #F0F7FF;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.2s;
+}
+
+.question-item:hover {
+  background: #F0F7FF;
 }
 
 .question-item:last-child {
@@ -5368,10 +5932,60 @@ table.evaluation-table .view-btn:hover {
 }
 
 .question-text {
-  font-size: .95rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  color: #374151;
-  line-height: 1.5;
+  color: #1e293b;
+  line-height: 1.6;
+}
+
+.question-item .actions button {
+  background: #ffffff !important;
+  color: #0A64A8 !important;
+  border: 1px solid #dbeafe !important;
+  transition: all 0.2s ease !important;
+}
+
+.question-item .actions button i {
+  color: #0A64A8 !important;
+}
+
+.question-item .actions .edit-btn:hover {
+  background: #dbeafe !important;
+  border-color: #60a5fa !important;
+  color: #1d4ed8 !important;
+}
+
+.question-item .actions .edit-btn:hover i {
+  color: #1d4ed8 !important;
+}
+
+.question-item .actions .delete-btn {
+  color: #ef4444 !important;
+  border-color: #fecaca !important;
+}
+
+.question-item .actions .delete-btn i {
+  color: #ef4444 !important;
+}
+
+.question-item .actions .delete-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+.question-item .actions .delete-btn:hover i {
+  color: #b91c1c !important;
+}
+
+/* Use the standard blue for action icons across management tables. */
+.subjects-table .action-cell i,
+.classes-table .action-cell i,
+.program-card-actions i,
+.faculties-table .action-cell i,
+.students-table .action-cell i,
+.academic-year-table .action-cell i {
+  color: #0A64A8 !important;
 }
 
 .actions {
@@ -5380,48 +5994,278 @@ table.evaluation-table .view-btn:hover {
   justify-content: flex-end;
 }
 
+/* Enhanced Summary Panel */
 .summary-panel {
   flex: 1;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 60%, #fffdf4 100%);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px 20px;
-  font-size: .95rem;
-  color: var(--slate-500);
-  box-shadow: var(--shadow-sm);
-  text-align: center;
-}
-
-.summary-panel h4,
-.summary-panel .legend h5 {
-  margin: 0 0 8px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  color: var(--blue-900);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 20px;
+  max-width: 300px;
 }
 
 .summary-panel h4 {
-  font-size: .95rem;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 8px;
+  margin: 0 0 16px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #0f172a;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.summary-panel h4 i,
-.summary-panel .legend h5 i {
-  margin-right: 8px;
-  color: var(--yellow-500);
+.summary-panel h5 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #64748b;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
+/* Simple Summary Stats */
+.summary-stats-simple {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-row {
+  flex: 1 1 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.summary-row:last-child {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.summary-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.summary-value.summary-weight {
+  display: flex;
+  align-items: center;
+  color: #059669;
+  font-weight: 800;
+}
+
+/* Old styles - backward compatibility */
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.summary-stat-item .stat-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.summary-stat-item .stat-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0c4a6e;
+}
+
+/* Weight Distribution Section - List Style */
+.weight-distribution-section {
+  margin: 20px 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.weight-distribution-section h5 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #64748b;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.weight-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weight-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.weight-category-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.weight-percentage {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Rating Scale Section */
+.rating-scale-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.rating-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.rating-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.rating-badge.rating-5 {
+  background: #10b981;
+}
+
+.rating-badge.rating-4 {
+  background: #3b82f6;
+}
+
+.rating-badge.rating-3 {
+  background: #f59e0b;
+}
+
+.rating-badge.rating-2 {
+  background: #f97316;
+}
+
+.rating-badge.rating-1 {
+  background: #ef4444;
+}
+
+.rating-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+/* Old styles for backward compatibility */
+.weight-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.weight-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weight-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.weight-bar-label .category-short-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.weight-bar-label .weight-percent {
+  font-weight: 800;
+  color: #0c4a6e;
+}
+
+.weight-bar-bg {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.weight-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0369a1, #0ea5e9);
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+/* Rating Scale Legend */
 .summary-panel .legend {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px solid #e2e8f0;
 }
 
 .summary-panel .legend h5 {
-  font-size: .85rem;
-  margin-bottom: 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0c4a6e;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-panel .legend h5 i {
+  margin-right: 8px;
+  color: #0369a1;
 }
 
 .summary-panel .legend ul {
@@ -5435,50 +6279,91 @@ table.evaluation-table .view-btn:hover {
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
-  font-size: .85rem;
-  color: #4b5563;
+  font-size: 0.85rem;
+  color: #475569;
   line-height: 1.4;
 }
 
 .summary-panel .legend li span.badge {
-  display: inline-block;
-  min-width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
   text-align: center;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
   border-radius: 8px;
-  padding: 4px 10px;
-  font-size: .85rem;
-  box-shadow: none;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-.summary-panel .legend li[data-value="5"] span.badge {
+.summary-panel .legend li .rating-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.summary-panel .legend li .rating-desc strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.summary-panel .legend li .rating-desc span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-panel .legend li[data-value="5"] span.rating-5 {
+  background: linear-gradient(135deg, #1e40af, #3b82f6);
+}
+
+.summary-panel .legend li[data-value="4"] span.rating-4 {
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+}
+
+.summary-panel .legend li[data-value="3"] span.rating-3 {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #78350f;
+}
+
+.summary-panel .legend li[data-value="2"] span.rating-2 {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+}
+
+.summary-panel .legend li[data-value="1"] span.rating-1 {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+/* Old badge styles for backward compatibility */
+.summary-panel .legend li span.badge:not([class*="rating-"]) {
+  background: #94a3b8;
+}
+
+.summary-panel .legend li[data-value="5"] span.badge:not([class*="rating-"]) {
   background: #1d4ed8;
 }
 
-.summary-panel .legend li[data-value="4"] span.badge {
+.summary-panel .legend li[data-value="4"] span.badge:not([class*="rating-"]) {
   background: #2563eb;
 }
 
-.summary-panel .legend li[data-value="3"] span.badge {
+.summary-panel .legend li[data-value="3"] span.badge:not([class*="rating-"]) {
   background: #f59e0b;
   color: #172554;
 }
 
-.summary-panel .legend li[data-value="2"] span.badge {
+.summary-panel .legend li[data-value="2"] span.badge:not([class*="rating-"]) {
   background: #fb923c;
 }
 
-.summary-panel .legend li[data-value="1"] span.badge {
+.summary-panel .legend li[data-value="1"] span.badge:not([class*="rating-"]) {
   background: #dc2626;
-}
-
-.summary-panel p {
-  margin: 10px 0;
-  padding: 10px;
-  background: #f8fbff;
-  border-radius: 10px;
-  font-weight: 700;
 }
 
 #addProgramModal .submit-btn,
@@ -5563,14 +6448,14 @@ table.evaluation-table .view-btn:hover {
 #addQuestionModal .category-label .label-text {
   font-size: .85rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: #0B90E0;
   margin: 0;
 }
 
 .category-label .category-name {
   font-size: .9rem;
   font-weight: 700;
-  color: #d97706;
+  color: #0B90E0;
 }
 
 /* ====================================================================================================================================
@@ -5662,6 +6547,66 @@ table.evaluation-table .view-btn:hover {
 .logout-btn:hover {
   background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
   transform: translateY(-2px)
+}
+
+.logout-btn.loading {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  cursor: wait !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
+  background: #991b1b !important;
+  color: #ffffff !important;
+}
+
+.logout-btn.loading:hover {
+  transform: none !important;
+}
+
+.logout-loading-text {
+  display: inline-block;
+  line-height: 1;
+  font-weight: 700;
+  color: #ffffff !important;
+}
+
+.logout-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  height: 14px;
+}
+
+.logout-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: inline-block;
+  animation: logoutDot 0.8s infinite ease-in-out;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.logout-dots span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.logout-dots span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes logoutDot {
+  0%, 80%, 100% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes fadeInScale {
@@ -5811,10 +6756,27 @@ table.evaluation-table .view-btn:hover {
 }
 
 #report-section .table-wrapper {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+#report-section .table-header {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+}
+
+#report-section .table-scroll-container {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, .06);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -5919,6 +6881,7 @@ table.evaluation-table .view-btn:hover {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: nowrap;
+  gap: 8px;
 }
 
 #report-section .generate-report-btn {
@@ -5937,6 +6900,33 @@ table.evaluation-table .view-btn:hover {
 #report-section .table-scroll-container {
   background: #ffffff;
 }
+
+#report-section .report-analytics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+#report-section .report-distribution-card { order: 1; }
+#report-section .report-ranking-card { order: 2; }
+#report-section .report-trend-card { order: 3; }
+#report-section .report-program-card { order: 4; }
+#report-section .report-chart-card { min-width: 0; padding: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
+#report-section .report-chart-heading, #report-section .report-ranking-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+#report-section .report-chart-kicker { display: block; margin-bottom: 5px; color: #64748b; font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+#report-section .report-chart-card h3 { margin: 0; color: #0f172a; font-size: 1rem; }
+#report-section .report-donut-layout { display: flex; align-items: center; gap: 22px; min-height: 220px; }
+#report-section .report-donut-canvas { width: 190px; height: 190px; flex: 0 0 190px; }
+#report-section .report-bar-canvas, #report-section .report-line-canvas { height: 250px; margin-top: 18px; }
+#report-section .report-chart-legend { display: grid; gap: 11px; flex: 1; }
+#report-section .report-legend-item { display: grid; gap: 6px; color: #475569; font-size: .78rem; }
+#report-section .report-legend-label { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 8px; }
+#report-section .report-legend-label strong { color: #0f172a; }
+#report-section .report-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+#report-section .report-legend-track { height: 5px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
+#report-section .report-legend-track span { display: block; height: 100%; border-radius: inherit; }
+#report-section .report-rankings { display: grid; gap: 17px; margin-top: 20px; }
+#report-section .report-ranking-meta { align-items: center; color: #334155; font-size: .82rem; }
+#report-section .report-ranking-name { display: flex; align-items: center; gap: 9px; min-width: 0; }
+#report-section .report-ranking-name b { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; font-size: .72rem; }
+#report-section .report-ranking-track { height: 8px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
+#report-section .report-ranking-track span { display: block; height: 100%; border-radius: inherit; background: #0f766e; }
+#report-section .report-no-data { color: #64748b; font-size: .85rem; }
 
 #report-section .evaluation-table {
   width: 100%;
@@ -6086,6 +7076,9 @@ table.evaluation-table .view-btn:hover {
 }
 
 @media (max-width: 640px) {
+  #report-section .report-analytics { grid-template-columns: 1fr; }
+  #report-section .report-donut-layout { gap: 12px; }
+  #report-section .report-donut-canvas { width: 150px; height: 150px; flex-basis: 150px; }
   #report-section .search-filters-container {
     flex-direction: column;
     align-items: stretch;
@@ -6144,6 +7137,7 @@ table.evaluation-table .view-btn:hover {
 
 .dashboard-row-3 {
   margin-top: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .dashboard-row-3 .dashboard-card.period {
@@ -6154,10 +7148,58 @@ table.evaluation-table .view-btn:hover {
   background: #fff;
 }
 
+.dashboard-card.evaluation-progress .dashboard-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  align-items: center;
+  gap: 14px 16px;
+}
+
+.dashboard-card.evaluation-progress .rating-header {
+  grid-column: 1 / -1;
+}
+
+.evaluation-progress-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0;
+}
+
+.evaluation-progress-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 10px;
+  background: rgba(219, 234, 254, 0.72);
+}
+
+.evaluation-progress-stat strong {
+  color: #1e3a8a;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.evaluation-progress-stat span {
+  color: #64748b;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.evaluation-progress-stat.submissions strong { color: #2563eb; }
+.evaluation-progress-stat.pending strong { color: #d97706; }
+
 .progress-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  grid-column: 1;
+  grid-row: 2;
 }
 
 .progress-item {
@@ -6222,6 +7264,30 @@ table.evaluation-table .view-btn:hover {
   .dashboard-row-2,
   .dashboard-row-3 {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-card.evaluation-progress .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card.evaluation-progress .rating-header,
+  .dashboard-card.evaluation-progress .progress-list,
+  .evaluation-progress-stats {
+    grid-column: 1;
+  }
+
+  .dashboard-card.evaluation-progress .progress-list,
+  .evaluation-progress-stats {
+    grid-row: auto;
+  }
+
+  .dashboard-card.evaluation-progress .progress-list { grid-row: 2; }
+  .dashboard-card.evaluation-progress .evaluation-progress-stats { grid-row: 3; }
+
+  .evaluation-progress-stats {
+    width: 100%;
   }
 }
 
@@ -6327,6 +7393,23 @@ input:disabled {
 .faculty-id {
   font-weight: 700;
   color: var(--blue-900);
+}
+
+.person-id-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border: 1px solid #c7e3f5;
+  border-radius: 8px;
+  background: #F0F7FF;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
 }
 
 .faculty-name {
@@ -6471,6 +7554,72 @@ div#report-section .evaluation-table .badge.na {
 
   .criteria-layout {
     flex-direction: column
+  }
+
+  .criteria-header-enhanced {
+    padding: 0;
+  }
+
+  .criteria-header-enhanced .section-title {
+    font-size: 1.4rem;
+  }
+
+  .criteria-search-container {
+    padding: 0;
+  }
+
+  .criteria-header-enhanced .criteria-search-container {
+    padding: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .criteria-header-enhanced .header-title-section,
+  .criteria-header-enhanced .header-actions {
+    width: 100%;
+  }
+
+  .criteria-header-top {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .criteria-header-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .criteria-header-controls .criteria-search-container,
+  .criteria-header-controls .header-actions {
+    width: 100%;
+    max-width: none;
+  }
+
+  .criteria-header-controls .header-actions .add-program-btn {
+    width: 100%;
+  }
+
+  .summary-panel {
+    position: static;
+  }
+
+  .category-header {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+  }
+
+  .category-weight-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+
+  .question-item {
+    grid-template-columns: 1fr 100px;
+    padding: 12px 16px;
+  }
+
+  .weight-bar-label {
+    font-size: 0.7rem;
   }
 }
 
@@ -7227,6 +8376,21 @@ div#report-section .evaluation-table .badge.na {
   overflow-y: auto
 }
 
+#subjectSelectionModal .modal-header .close-btn {
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 1;
+  transition: color .15s ease;
+}
+
+#subjectSelectionModal .modal-header .close-btn:hover {
+  color: #ffffff;
+  transform: none;
+}
+
 #subjectSelectionModal .subjects-table-wrapper {
   max-height: none !important;
   overflow: visible !important
@@ -7350,6 +8514,389 @@ div#report-section .evaluation-table .badge.na {
   flex-direction: column
 }
 
+#viewStudentSubjectsModal .student-profile-modal-content {
+  max-width: 550px;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: none;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, .25);
+}
+
+#viewStudentSubjectsModal .student-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 22px;
+  background: #0B90E0;
+  color: #ffffff;
+  position: relative;
+}
+
+#viewStudentSubjectsModal .student-profile-avatar {
+  background: #1e3a8a;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+
+#viewStudentSubjectsModal .student-profile-details {
+  min-width: 0;
+}
+
+#viewStudentSubjectsModal .student-profile-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: #c7e7fb;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+#viewStudentSubjectsModal .student-profile-details h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+#viewStudentSubjectsModal .student-profile-details p {
+  margin: 4px 0 0;
+  color: #d8efff;
+  font-size: .72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#viewStudentSubjectsModal .student-profile-header .close-btn {
+  position: absolute;
+  top: 15px;
+  right: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, .16);
+  font-size: 20px;
+  line-height: 1;
+}
+
+#viewStudentSubjectsModal .modal-body {
+  padding: 14px 22px 20px;
+  background: #f8fbff;
+}
+
+#viewStudentSubjectsModal .student-subjects-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid #e7f0f8;
+}
+
+#viewStudentSubjectsModal .student-subjects-heading h4 {
+  margin: 0;
+  color: #164e78;
+  font-size: .86rem;
+}
+
+#viewStudentSubjectsModal .student-subject-count {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #dff1ff;
+  color: #0878bd;
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+#viewStudentSubjectsModal .student-subject-list {
+  overflow: hidden;
+  border: 1px solid #d6e7f5;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+#viewStudentSubjectsModal .student-subject-list > #studentSubjectRows {
+  background: #ffffff;
+}
+
+#viewStudentSubjectsModal .student-subject-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e7f0f8;
+}
+
+#viewStudentSubjectsModal .student-subject-row:last-child {
+  border-bottom: 0;
+}
+
+#viewStudentSubjectsModal .student-subject-code {
+  flex: 0 0 46px;
+  padding: 5px 6px;
+  border: 1px solid #b9ddfa;
+  border-radius: 5px;
+  background: #eff8ff;
+  color: #0878bd;
+  font-size: .66rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+#viewStudentSubjectsModal .student-subject-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  justify-content: center;
+}
+
+#viewStudentSubjectsModal .student-subject-info strong {
+  overflow: hidden;
+  color: #15558a;
+  font-size: .88rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#viewStudentSubjectsModal .student-subject-info span,
+#viewStudentSubjectsModal .student-subject-info small {
+  overflow: hidden;
+  color: #72a9da;
+  font-size: .67rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#viewStudentSubjectsModal .student-subject-info .student-subject-instructor {
+  color: #1e3a8a;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+#viewStudentSubjectsModal .student-subject-info .student-subject-year {
+  color: #4f8fc5;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+#viewFacultySubjectsModal .faculty-profile-modal-content {
+  max-width: 550px;
+  border: none;
+  border-radius: 16px;
+  background: #f8fbff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, .25);
+}
+
+#viewFacultySubjectsModal .faculty-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 22px;
+  background: #0B90E0;
+  color: #ffffff;
+  position: relative;
+}
+
+#viewFacultySubjectsModal .faculty-profile-avatar {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+
+#viewFacultySubjectsModal .faculty-profile-details {
+  min-width: 0;
+}
+
+#viewFacultySubjectsModal .faculty-profile-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: #c7e7fb;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+#viewFacultySubjectsModal .faculty-profile-details h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+#viewFacultySubjectsModal .faculty-profile-details p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  color: #d8efff;
+  font-size: .72rem;
+}
+
+#viewFacultySubjectsModal .faculty-header-id {
+  color: #d8efff;
+}
+
+#viewFacultySubjectsModal .faculty-profile-header .close-btn {
+  position: absolute;
+  top: 15px;
+  right: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, .16);
+  font-size: 20px;
+  line-height: 1;
+}
+
+#viewFacultySubjectsModal .modal-body {
+  padding: 14px 22px 20px;
+  background: #f8fbff;
+}
+
+#viewFacultySubjectsModal .faculty-subject-list {
+  overflow: hidden;
+  border: 1px solid #d6e7f5;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+#viewFacultySubjectsModal .faculty-subjects-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid #e7f0f8;
+}
+
+#viewFacultySubjectsModal .faculty-subjects-heading h4 {
+  margin: 0;
+  color: #164e78;
+  font-size: .86rem;
+}
+
+#viewFacultySubjectsModal .faculty-subject-count {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #dff1ff;
+  color: #0878bd;
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+#viewFacultySubjectsModal .faculty-program-group {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+#viewFacultySubjectsModal .faculty-program-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f5faff;
+  border-bottom: 1px solid #e7f0f8;
+}
+
+#viewFacultySubjectsModal .faculty-program-code {
+  padding: 3px 7px;
+  border: 1px solid #b9ddfa;
+  border-radius: 5px;
+  background: #eff8ff;
+  color: #0878bd;
+  font-size: .64rem;
+  font-weight: 800;
+}
+
+#viewFacultySubjectsModal .faculty-program-name {
+  color: #1e3a8a;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+#viewFacultySubjectsModal .faculty-subject-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e7f0f8;
+}
+
+#viewFacultySubjectsModal .faculty-subject-row:last-child {
+  border-bottom: 0;
+}
+
+#viewFacultySubjectsModal .faculty-subject-code {
+  flex: 0 0 46px;
+  padding: 5px 6px;
+  border: 1px solid #b9ddfa;
+  border-radius: 5px;
+  background: #eff8ff;
+  color: #0878bd;
+  font-size: .66rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+#viewFacultySubjectsModal .faculty-subject-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+#viewFacultySubjectsModal .faculty-subject-info strong {
+  overflow: hidden;
+  color: #15558a;
+  font-size: .88rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#viewFacultySubjectsModal .faculty-subject-info span {
+  color: #72a9da;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
 #viewStudentSubjectsModal .modal-body,
 #viewFacultySubjectsModal .modal-body,
 #viewClassSubjectsModal .modal-body {
@@ -7455,43 +9002,43 @@ div#report-section .evaluation-table .badge.na {
 }
 
 #viewFacultySubjectsModal .faculty-program-group {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 0;
+  border-radius: 0;
   background: #ffffff;
   overflow: hidden;
-  margin: 14px 0;
+  margin: 0;
 }
 
 #viewFacultySubjectsModal .faculty-program-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: #eff6ff;
-  border-bottom: 1px solid #dbeafe;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f5faff;
+  border-bottom: 1px solid #e7f0f8;
 }
 
 #viewFacultySubjectsModal .faculty-program-code {
   flex-shrink: 0;
-  color: #1d4ed8;
-  background: #ffffff;
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-size: .78rem;
+  color: #0878bd;
+  background: #eff8ff;
+  border: 1px solid #b9ddfa;
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: .64rem;
   font-weight: 800;
 }
 
 #viewFacultySubjectsModal .faculty-program-name {
   min-width: 0;
-  color: #334155;
-  font-size: .86rem;
-  font-weight: 700;
-  line-height: 1.35;
+  color: #1e3a8a;
+  font-size: .88rem;
+  font-weight: 600;
 }
 
 #viewFacultySubjectsModal .faculty-program-group .subjects-grid {
-  padding: 14px;
+  gap: 10px;
+  padding: 10px;
 }
 
 #viewStudentSubjectsModal .subjects-grid,
@@ -7512,6 +9059,10 @@ div#report-section .evaluation-table .badge.na {
   position: relative;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+
+#viewFacultySubjectsModal .subject-card {
+  padding: 12px 14px;
 }
 
 #viewStudentSubjectsModal .subject-card::before,
@@ -7675,6 +9226,10 @@ div#report-section .evaluation-table .badge.na {
   transform: none !important;
 }
 
+.faculty-subject-selection-row {
+  cursor: pointer;
+}
+
 .subjects-selection-table input[type="checkbox"] {
   margin: 0;
   transform: none !important;
@@ -7760,6 +9315,93 @@ div#report-section .evaluation-table .badge.na {
 
 .selected-subject-item .remove-subject:hover {
   background: #fee2e2
+}
+
+#addFacultyModal .subjects-list > h4 {
+  margin-bottom: 12px;
+}
+
+#addFacultyModal #open-faculty-subject-selection {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+#addFacultyModal .empty-subject-message {
+  margin: 0;
+  padding: 12px;
+  color: #6b7280;
+  font-size: .9em;
+  text-align: center;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+}
+
+#addFacultyModal .selected-subject-item {
+  gap: 12px;
+}
+
+#addStudentModal .selected-subject-item {
+  gap: 12px;
+}
+
+#addFacultyModal .selected-subject-item > span,
+#addStudentModal .selected-subject-item > span {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+#addFacultyModal .selected-subject-item > span > span,
+#addStudentModal .selected-subject-item > span > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#addFacultyModal .selected-subject-item small,
+#addStudentModal .selected-subject-item small {
+  grid-column: 1 / -1;
+  color: #64748b;
+}
+
+#addFacultyModal .remove-faculty-subject,
+#addStudentModal .remove-subject {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+#addFacultyModal .remove-faculty-subject:hover,
+#addStudentModal .remove-subject:hover {
+  background: #fee2e2;
+}
+
+.faculty-subject-selection-content {
+  width: min(900px, 94vw);
+  max-width: 900px;
+}
+
+.faculty-subject-selection-wrapper {
+  max-height: 52vh;
+}
+
+#faculty-subject-selection-tbody tr[hidden] {
+  display: none;
+}
+
+#faculty-subject-selection-tbody td:first-child,
+#faculty-subject-selection-tbody th:first-child {
+  width: 42px;
+  text-align: center;
 }
 
 .form-row {
@@ -8012,16 +9654,19 @@ main {
   border-bottom: 1px solid #e5eaf4;
 }
 
+.section-header.criteria-header-enhanced {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
 .section-header h2 {
   color: var(--primary-900);
   text-shadow: none;
 }
 
 .dashboard-box,
-.dashboard-card,
-.graph-box,
-.ratings-box,
-.ranking-box {
+.dashboard-card {
   background: #ffffff;
   border: 1px solid #e5eaf4;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
@@ -8228,14 +9873,38 @@ main {
    STUDENTS SECTION LAYOUT FIX
 ========================================= */
 
-/* Student toolbar — separate box above the table */
-#students-section .student-toolbar-box {
+/* Student toolbar and table share one panel */
+#students-section .student-table-box {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, .08), 0 2px 6px rgba(0, 0, 0, .05);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+#students-section .student-toolbar-box {
+  background: #ffffff;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   padding: 14px 18px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+
+#students-section .student-table-box > .table-wrapper {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+}
+
+#students-section .student-table-box .table-scroll-container {
+  border-radius: 0;
+}
+
+#students-section .student-table-box .students-table {
+  border-radius: 0;
 }
 
 #students-section .student-toolbar {
@@ -8354,9 +10023,9 @@ main {
 }
 
 #students-section .student-header-actions .show-archived-student-btn {
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
+  border: 1px solid #f5c400 !important;
+  background: #f5c400 !important;
+  color: #713f12;
   border-radius: 6px;
   font-weight: 600;
   font-size: 14px;
@@ -8365,8 +10034,8 @@ main {
 }
 
 #students-section .student-header-actions .show-archived-student-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #d9ad00 !important;
+  border-color: #d9ad00 !important;
 }
 
 @media(max-width:900px) {
@@ -8457,7 +10126,7 @@ main {
 .action-cell .archive-btn,
 .actions .edit-btn,
 .actions .delete-btn {
-  transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .button-gradient:hover,
@@ -8468,15 +10137,7 @@ main {
 .back-btn:hover,
 .submit-btn:hover,
 .cancel-btn:hover,
-.top-buttons button:hover,
-.action-cell .manage-btn:hover,
-.action-cell .edit-btn:hover,
-.action-cell .delete-btn:hover,
-.action-cell .view-btn:hover,
-.action-cell .view-subjects-btn:hover,
-.action-cell .archive-btn:hover,
-.actions .edit-btn:hover,
-.actions .delete-btn:hover {
+.top-buttons button:hover {
   transform: none;
 }
 
@@ -8510,14 +10171,8 @@ tr:hover td {
 }
 
 /* ============================================
-   Requested UI Overrides
-   ============================================ */
-.ratings-box h4,
-.graph-box h4,
-.ranking-box h4 {
-  background: linear-gradient(90deg, var(--primary-900) 0%, var(--primary-800) 100%) !important;
-}
-
+  Requested UI Overrides
+  ============================================ */
 .button-gradient,
 .add-program-btn,
 .add-faculty-btn,
@@ -8589,7 +10244,7 @@ tr:hover td {
 
 #addFacultyModal .modal-content,
 #addStudentModal .modal-content {
-  width: min(600px, 94vw);
+  width: min(900px, 94vw);
   max-width: 600px;
   margin: 0 auto;
   max-height: 92vh;
@@ -8658,7 +10313,7 @@ tr:hover td {
 
 #addFacultyModal .modal-content,
 #addStudentModal .modal-content {
-  width: min(600px, 95vw);
+  width: min(900px, 95vw);
 }
 
 /* FINAL OVERRIDE - Keep student year level and section side by side on every screen */
@@ -9415,20 +11070,14 @@ input[type=range] {
   min-height: 130px;
 }
 
-/* Solid bg colour per card - Blue Theme */
-.faculty-stat-card.total-faculty      { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); }
-.faculty-stat-card.active-faculty     { background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%); }
-.faculty-stat-card.pending-evaluation { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); }
+/* Exact school colors for the faculty cards */
+.faculty-stat-card.total-faculty      { background: #07326a; }
+.faculty-stat-card.active-faculty     { background: #064089; }
+.faculty-stat-card.pending-evaluation { background: #0a61c9; }
 
 /* polygon.png decorative background — fills entire card */
 .faculty-stat-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url('polygon.png') center center / cover no-repeat;
-  opacity: .15;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .faculty-stat-card:hover {
@@ -10400,16 +12049,20 @@ main {
    FACULTY TABLE — Final Corrections
    ==================================================================================================================================== */
 
-/* Center the faculty name + email */
+/* Keep the faculty name + email left aligned */
 .faculties-table td:nth-child(3) {
-  text-align: center !important;
+  text-align: left !important;
 }
 
 .faculties-table td:nth-child(3)>div {
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   justify-content: center !important;
+}
+
+.faculties-table thead th:nth-child(3) {
+  text-align: left !important;
 }
 
 /* Restore original action button sizing and spacing */
@@ -10419,25 +12072,46 @@ main {
 
 .faculties-table .action-cell .view-btn,
 .faculties-table .action-cell .edit-btn,
-.faculties-table .action-cell .settings-btn {
-  width: 2.6rem !important;
-  height: 2.6rem !important;
-  border-radius: 6px !important;
-  box-shadow: var(--shadow-sm) !important;
+.faculties-table .action-cell .settings-btn {\n  width: auto !important;
+  height: auto !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
   margin: 0 1px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #1e293b !important;
+  padding: 8px 12px !important;
 }
 
 .faculties-table .action-cell .view-btn:hover,
-.faculties-table .action-cell .edit-btn:hover,
 .faculties-table .action-cell .settings-btn:hover {
-  box-shadow: var(--shadow-lg) !important;
+  background: rgba(59, 130, 246, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  transform: scale(1.05) !important;
+  box-shadow: none !important;
+}
+
+.faculties-table .action-cell .edit-btn:hover {
+  background: rgba(249, 115, 22, 0.25) !important;
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  transform: scale(1.05) !important;
+  box-shadow: none !important;
 }
 
 .faculties-table .action-cell .archive-btn {
-  height: 2.25rem !important;
-  padding: 0 8px !important;
-  border-radius: 6px !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
   margin: 0 1px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #1e293b !important;
+}
+
+.faculties-table .action-cell .archive-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  transform: scale(1.05) !important;
 }
 
 /* Archive Confirmation Modal */
@@ -10705,7 +12379,7 @@ main {
 #addClassModal .class-subject-search {
   position: relative;
   flex: 0 0 auto;
-  background: #f8fbff;
+  background: #ffffff;
   margin-bottom: 10px;
   padding-bottom: 0;
 }
@@ -10728,7 +12402,7 @@ main {
 
 #addClassModal .class-subject-search .subject-search-input:hover {
   border-color: #cbd5e1 !important;
-  background: #f8fafc !important;
+  background: #ffffff !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, .08) !important;
 }
 
@@ -11569,6 +13243,26 @@ main,
   .criteria-layout .summary-panel {
     width: 100%;
   }
+
+  .category-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .category-header > div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .question-item {
+    grid-template-columns: 1fr 80px;
+    font-size: 0.9rem;
+  }
+
+  .actions button {
+    padding: 6px 10px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -11597,4 +13291,1752 @@ main,
     animation: none;
     background: #e9eff7;
   }
+}
+
+
+/* ===================== Academic Year Table ===================== */
+.academic-year-controls {
+  margin: 0 0 12px;
+}
+
+.academic-year-results {
+  margin: 0;
+}
+
+.academic-year-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 700px;
+}
+
+.academic-year-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.academic-year-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.academic-year-table tbody tr {
+  background: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.academic-year-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.status-badge.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.academic-year-table .action-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.academic-year-table .manage-btn,
+.academic-year-table .edit-btn,
+.academic-year-table .delete-btn {
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.academic-year-table .manage-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+  min-width: auto !important;
+  justify-content: center !important;
+  padding: 8px 12px !important;
+}
+
+.academic-year-table .manage-btn:hover {
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05) !important;
+  box-shadow: none !important;
+}
+
+.academic-year-table .edit-btn,
+.academic-year-table .delete-btn {
+  width: auto !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+  justify-content: center !important;
+  font-size: 0.9rem !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.academic-year-table .edit-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.academic-year-table .edit-btn:hover {
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05) !important;
+}
+
+.academic-year-table .delete-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.academic-year-table .delete-btn:hover {
+  background: rgba(251, 191, 36, 0.25) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Unified table action buttons - matched to Evaluation Criteria actions */
+.faculties-table .action-cell,
+.students-table .action-cell,
+.evaluation-table .action-cell,
+.academic-year-table .action-cell {
+  text-align: center !important;
+  overflow: visible;
+  position: relative;
+}
+
+.faculties-table .action-buttons,
+.students-table .action-buttons,
+.evaluation-table .action-buttons,
+.academic-year-table .action-buttons {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 1px !important;
+}
+
+.faculties-table .action-cell .view-btn,
+.faculties-table .action-cell .edit-btn,
+.faculties-table .action-cell .settings-btn,
+.faculties-table .action-cell .archive-btn,
+.students-table .action-cell .view-subjects-btn,
+.students-table .action-cell .edit-btn,
+.students-table .action-cell .settings-btn,
+.students-table .action-cell .archive-btn,
+.evaluation-table .action-cell .view-btn,
+.academic-year-table .action-cell .manage-btn,
+.academic-year-table .action-cell .edit-btn,
+.academic-year-table .action-cell .delete-btn {
+  width: auto !important;
+  min-width: 40px !important;
+  height: auto !important;
+  min-height: auto !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  font-size: .9rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  margin: 0 1px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all .2s ease !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #1e293b !important;
+}
+
+.faculties-table .action-cell .view-btn,
+.students-table .action-cell .view-subjects-btn,
+.evaluation-table .action-cell .view-btn,
+.academic-year-table .action-cell .manage-btn,
+.faculties-table .action-cell .edit-btn,
+.students-table .action-cell .edit-btn,
+.academic-year-table .action-cell .edit-btn,
+.academic-year-table .action-cell .delete-btn,
+.faculties-table .action-cell .archive-btn,
+.students-table .action-cell .archive-btn,
+.faculties-table .action-cell .settings-btn,
+.students-table .action-cell .settings-btn {
+  /* Already styled in base rule above */
+}
+
+/* View/Manage buttons - Blue */
+.faculties-table .action-cell .view-btn:hover,
+.students-table .action-cell .view-subjects-btn:hover,
+.evaluation-table .action-cell .view-btn:hover,
+.academic-year-table .action-cell .manage-btn:hover,
+.faculties-table .action-cell .settings-btn:hover,
+.students-table .action-cell .settings-btn:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  transform: scale(1.05) !important;
+  box-shadow: none !important;
+}
+
+/* Edit buttons - Orange */
+.faculties-table .action-cell .edit-btn:hover,
+.students-table .action-cell .edit-btn:hover,
+.academic-year-table .action-cell .edit-btn:hover {
+  background: rgba(249, 115, 22, 0.25) !important;
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  transform: scale(1.05) !important;
+  box-shadow: none !important;
+}
+
+/* Delete/Archive buttons - Red */
+.faculties-table .action-cell .archive-btn:hover,
+.students-table .action-cell .archive-btn:hover,
+.academic-year-table .action-cell .delete-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  transform: scale(1.05) !important;
+  box-shadow: none !important;
+}
+
+.faculties-table .action-cell .view-btn i,
+.faculties-table .action-cell .edit-btn i,
+.faculties-table .action-cell .settings-btn i,
+.faculties-table .action-cell .archive-btn i,
+.students-table .action-cell .view-subjects-btn i,
+.students-table .action-cell .edit-btn i,
+.students-table .action-cell .settings-btn i,
+.students-table .action-cell .archive-btn i,
+.evaluation-table .action-cell .view-btn i,
+.academic-year-table .action-cell .manage-btn i,
+.academic-year-table .action-cell .edit-btn i,
+.academic-year-table .action-cell .delete-btn i {
+  font-size: .9rem !important;
+  margin: 0 !important;
+  color: #1e293b !important;\n}
+
+#dashboard-section .dashboard-card {
+  background: #ffffff;
+  border-color: #dbeafe;
+  border-left-color: #3b82f6;
+}
+
+#dashboard-section .dashboard-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 24px rgba(59, 130, 246, .15);
+}
+
+#dashboard-section .dashboard-card h3,
+#dashboard-section .rating-header h3 {
+  color: #1e40af;
+}
+
+#dashboard-section .dashboard-value {
+  color: #1e3a8a;
+}
+
+#dashboard-section .dashboard-card span,
+#dashboard-section .top-performance-hint,
+#dashboard-section .progress-label-row small {
+  color: #64748b;
+}
+
+#dashboard-section .dashboard-card.faculty,
+#dashboard-section .dashboard-card.evaluations {
+  border-left-color: #3b82f6;
+}
+
+#dashboard-section .dashboard-card.students,
+#dashboard-section .dashboard-card.overall-ratings {
+  border-left-color: #0ea5e9;
+}
+
+#dashboard-section .dashboard-card.faculty .icon-box,
+#dashboard-section .dashboard-card.evaluations .icon-box {
+  background: #e4eafb;
+}
+
+#dashboard-section .dashboard-card.students .icon-box,
+#dashboard-section .dashboard-card.overall-ratings .icon-box {
+  background: #e4eafb;
+}
+
+#dashboard-section .dashboard-card.faculty .icon-box i,
+#dashboard-section .dashboard-card.evaluations .icon-box i,
+#dashboard-section .dashboard-card.students .icon-box i,
+#dashboard-section .dashboard-card.overall-ratings .icon-box i {
+  color: var(--dashboard-icon-color);
+}
+
+#dashboard-section .dashboard-card.rating-distribution,
+#dashboard-section .dashboard-card.top-performance,
+#dashboard-section .dashboard-card.period,
+#dashboard-section .dashboard-card.evaluation-progress {
+  background: #ffffff !important;
+  border-color: #dbeafe !important;
+}
+
+#dashboard-section .dashboard-card.period {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+#dashboard-section .period-box {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+#dashboard-section .system-status {
+  background: #f0f9ff;
+  border-color: #dbeafe;
+  color: #1e40af;
+}
+
+#dashboard-section .btn-manage {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+#dashboard-section .btn-manage:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 8px 18px rgba(59, 130, 246, .28);
+}
+
+#dashboard-section .btn-close {
+  background: #f0f9ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+#dashboard-section .btn-close:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0c4a6e;
+}
+
+#dashboard-section .rating-legend .legend-color.excellent,
+#dashboard-section .top-performance-progress-fill.is-blue {
+  background: #1e3a8a;
+}
+
+#dashboard-section .rating-legend .legend-color.very-good,
+#dashboard-section .top-performance-progress-fill {
+  background: #1d4ed8;
+}
+
+#dashboard-section .rating-legend .legend-color.good,
+#dashboard-section .top-performance-progress-fill.is-green {
+  background: #facc15;
+}
+
+#dashboard-section .rating-legend .legend-color.fair {
+  background: #f59e0b;
+}
+
+#dashboard-section .rating-legend .legend-color.poor {
+  background: #bfdbfe;
+}
+
+#dashboard-section .top-performance-rank,
+#dashboard-section .top-performance-avatar {
+  color: #1d4ed8;
+}
+
+#dashboard-section .top-performance-avatar {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+#dashboard-section .top-performance-percent i {
+  color: #facc15;
+}
+
+#dashboard-section .top-performance-progress-track,
+#dashboard-section .progress-track {
+  background: #dbeafe;
+}
+
+#dashboard-section .progress-fill.submitted {
+  background: linear-gradient(90deg, #1d4ed8 0%, #facc15 100%);
+}
+
+
+/* ====================================================================================================================================
+   ALL TABLES - Unified Design and Style
+   ==================================================================================================================================== */
+
+/* Table Headers - All Tables */
+.students-table thead th,
+.faculties-table thead th,
+.subjects-table thead th,
+.classes-table thead th,
+.periods-table thead th,
+.evaluation-table thead th,
+.academic-year-table thead th,
+.archived-students-table thead th,
+.archived-faculties-table thead th {
+  background: #ffffff;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.academic-year-table thead th,
+.faculties-table thead th,
+.archived-faculties-table thead th {
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  color: #ffffff;
+  border-bottom-color: transparent;
+}
+
+/* First column (ID/Image) - Left aligned */
+.students-table thead th:first-child,
+.faculties-table thead th:first-child,
+.subjects-table thead th:first-child,
+.classes-table thead th:first-child,
+.periods-table thead th:first-child,
+.evaluation-table thead th:first-child,
+.academic-year-table thead th:first-child,
+.archived-students-table thead th:first-child,
+.archived-faculties-table thead th:first-child {
+  text-align: left;
+}
+
+/* Second column (Name/Description) - Left aligned */
+.students-table thead th:nth-child(2),
+.faculties-table thead th:nth-child(2),
+.subjects-table thead th:nth-child(2),
+.classes-table thead th:nth-child(2),
+.periods-table thead th:nth-child(2),
+.evaluation-table thead th:nth-child(2),
+.academic-year-table thead th:nth-child(2),
+.archived-students-table thead th:nth-child(2),
+.archived-faculties-table thead th:nth-child(2) {
+  text-align: left;
+}
+
+/* Table Body - All Tables */
+.students-table tbody td,
+.faculties-table tbody td,
+.subjects-table tbody td,
+.classes-table tbody td,
+.periods-table tbody td,
+.evaluation-table tbody td,
+.academic-year-table tbody td,
+.archived-students-table tbody td,
+.archived-faculties-table tbody td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  text-align: center;
+}
+
+/* First column (ID/Image) - Left aligned */
+.students-table tbody td:first-child,
+.faculties-table tbody td:first-child,
+.subjects-table tbody td:first-child,
+.classes-table tbody td:first-child,
+.periods-table tbody td:first-child,
+.evaluation-table tbody td:first-child,
+.academic-year-table tbody td:first-child,
+.archived-students-table tbody td:first-child,
+.archived-faculties-table tbody td:first-child {
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+}
+
+/* Second column (Name/Description) - Left aligned */
+.students-table tbody td:nth-child(2),
+.faculties-table tbody td:nth-child(2),
+.subjects-table tbody td:nth-child(2),
+.classes-table tbody td:nth-child(2),
+.periods-table tbody td:nth-child(2),
+.evaluation-table tbody td:nth-child(2),
+.academic-year-table tbody td:nth-child(2),
+.archived-students-table tbody td:nth-child(2),
+.archived-faculties-table tbody td:nth-child(2) {
+  text-align: left;
+}
+
+/* Row Hover Effect - All Tables */
+.students-table tbody tr:hover,
+.faculties-table tbody tr:hover,
+.subjects-table tbody tr:hover,
+.classes-table tbody tr:hover,
+.periods-table tbody tr:hover,
+.evaluation-table tbody tr:hover,
+.academic-year-table tbody tr:hover,
+.archived-students-table tbody tr:hover,
+.archived-faculties-table tbody tr:hover {
+  background-color: #fafbfc;
+  cursor: default;
+}
+
+/* Table Container - All Tables */
+.students-table,
+.faculties-table,
+.subjects-table,
+.classes-table,
+.periods-table,
+.evaluation-table,
+.academic-year-table,
+.archived-students-table,
+.archived-faculties-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.archived-students-table,
+.archived-faculties-table {
+  border-radius: 0;
+}
+
+/* Table Wrapper - All Sections */
+#students-section .table-wrapper,
+#faculties-section .table-wrapper,
+#subjects-section .table-wrapper,
+#manage-section .table-wrapper,
+#academic-year-section .table-wrapper {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+#students-section .table-scroll-container,
+#faculties-section .table-scroll-container,
+#subjects-section .table-scroll-container,
+#manage-section .table-scroll-container,
+#academic-year-section .table-scroll-container {
+  background: #ffffff;
+  border-radius: 0 0 12px 12px;
+}
+
+/* ====================================================================================================================================
+   SPECIFIC TABLE CELL CONTENT STYLING
+   ==================================================================================================================================== */
+
+/* Name Column with Email/Details - Students and Faculty Tables */
+.students-table .student-name-cell,
+.faculties-table .faculty-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.students-table .student-name-cell strong,
+.faculties-table .faculty-name-cell strong {
+  font-weight: 500;
+  color: #2563eb;
+  font-size: 0.875rem;
+}
+
+.students-table .student-name-cell small,
+.faculties-table .faculty-name-cell small {
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.faculties-table .faculty-name-text {
+  color: #2563eb;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.faculties-table tbody td:nth-child(3),
+.archived-faculties-table tbody td:nth-child(3) {
+  text-align: left;
+}
+
+/* Year Level & Section / Program Column */
+.students-table .student-program-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.students-table th:nth-child(3),
+.students-table td:nth-child(3) {
+  text-align: left;
+}
+
+.students-table .student-program-cell strong {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.students-table .student-program-cell small {
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+/* Status Badge Styling - All Tables */
+.students-table .inline-status,
+.faculties-table .inline-status,
+.subjects-table .inline-status,
+.classes-table .inline-status,
+.periods-table .inline-status,
+.evaluation-table .inline-status,
+.academic-year-table .inline-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.students-table .inline-status.active,
+.faculties-table .inline-status.active,
+.subjects-table .inline-status.active,
+.classes-table .inline-status.active,
+.periods-table .inline-status.active,
+.evaluation-table .inline-status.active,
+.academic-year-table .inline-status.active {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.students-table .inline-status.inactive,
+.faculties-table .inline-status.inactive,
+.subjects-table .inline-status.inactive,
+.classes-table .inline-status.inactive,
+.periods-table .inline-status.inactive,
+.evaluation-table .inline-status.inactive,
+.academic-year-table .inline-status.inactive {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Type Badge Styling - Students Table */
+.students-table .student-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.students-table .student-type-badge.regular {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.students-table .student-type-badge.irregular {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* Action Icons Styling - All Tables */
+.students-table .action-cell,
+.faculties-table .action-cell,
+.subjects-table .action-cell,
+.classes-table .action-cell,
+.periods-table .action-cell,
+.evaluation-table .action-cell,
+.academic-year-table .action-cell {
+  text-align: center;
+}
+
+.students-table .action-buttons,
+.faculties-table .action-buttons,
+.subjects-table .action-buttons,
+.classes-table .action-buttons,
+.periods-table .action-buttons,
+.evaluation-table .action-buttons,
+.academic-year-table .action-buttons {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.students-table .action-buttons button,
+.faculties-table .action-buttons button,
+.subjects-table .action-buttons button,
+.classes-table .action-buttons button,
+.periods-table .action-buttons button,
+.evaluation-table .action-buttons button,
+.academic-year-table .action-buttons button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.students-table .action-buttons button i,
+.faculties-table .action-buttons button i,
+.subjects-table .action-buttons button i,
+.classes-table .action-buttons button i,
+.periods-table .action-buttons button i,
+.evaluation-table .action-buttons button i,
+.academic-year-table .action-buttons button i {
+  font-size: 18px;
+  color: #94a3b8;
+}
+
+.students-table .action-buttons button:hover,
+.faculties-table .action-buttons button:hover,
+.subjects-table .action-buttons button:hover,
+.classes-table .action-buttons button:hover,
+.periods-table .action-buttons button:hover,
+.evaluation-table .action-buttons button:hover,
+.academic-year-table .action-buttons button:hover {
+  background-color: #f1f5f9;
+}
+
+.students-table .action-buttons button:hover i,
+.faculties-table .action-buttons button:hover i,
+.subjects-table .action-buttons button:hover i,
+.classes-table .action-buttons button:hover i,
+.periods-table .action-buttons button:hover i,
+.evaluation-table .action-buttons button:hover i,
+.academic-year-table .action-buttons button:hover i {
+  color: #475569;
+}
+
+/* View button specific - Blue */
+.students-table .action-buttons .view-subjects-btn i,
+.students-table .action-buttons .view-btn i,
+.faculties-table .action-buttons .view-btn i,
+.subjects-table .action-buttons .view-btn i,
+.classes-table .action-buttons .view-btn i,
+.periods-table .action-buttons .view-btn i,
+.evaluation-table .action-buttons .view-btn i,
+.academic-year-table .action-buttons .view-btn i,
+.academic-year-table .action-buttons .manage-btn i {
+  color: #1e293b !important;
+}
+
+.students-table .action-buttons .view-subjects-btn:hover,
+.students-table .action-buttons .view-btn:hover,
+.faculties-table .action-buttons .view-btn:hover,
+.subjects-table .action-buttons .view-btn:hover,
+.classes-table .action-buttons .view-btn:hover,
+.periods-table .action-buttons .view-btn:hover,
+.evaluation-table .action-buttons .view-btn:hover,
+.academic-year-table .action-buttons .view-btn:hover,
+.academic-year-table .action-buttons .manage-btn:hover,
+.faculties-table .action-buttons .settings-btn:hover,
+.students-table .action-buttons .settings-btn:hover,
+.subjects-table .action-buttons .settings-btn:hover,
+.classes-table .action-buttons .settings-btn:hover,
+.periods-table .action-buttons .settings-btn:hover,
+.evaluation-table .action-buttons .settings-btn:hover,
+.academic-year-table .action-buttons .settings-btn:hover {
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.students-table .action-buttons .edit-btn:hover,
+.faculties-table .action-buttons .edit-btn:hover,
+.subjects-table .action-buttons .edit-btn:hover,
+.classes-table .action-buttons .edit-btn:hover,
+.periods-table .action-buttons .edit-btn:hover,
+.evaluation-table .action-buttons .edit-btn:hover,
+.academic-year-table .action-buttons .edit-btn:hover {
+  background-color: rgba(249, 115, 22, 0.25) !important;
+  border-color: rgba(249, 115, 22, 0.4) !important;
+}
+
+.students-table .action-buttons .archive-btn:hover,
+.students-table .action-buttons .delete-btn:hover,
+.faculties-table .action-buttons .archive-btn:hover,
+.faculties-table .action-buttons .delete-btn:hover,
+.subjects-table .action-buttons .delete-btn:hover,
+.classes-table .action-buttons .delete-btn:hover,
+.periods-table .action-buttons .delete-btn:hover,
+.evaluation-table .action-buttons .delete-btn:hover,
+.academic-year-table .action-buttons .delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Settings button specific - Blue */
+.students-table .action-buttons .settings-btn i,
+.faculties-table .action-buttons .settings-btn i,
+.subjects-table .action-buttons .settings-btn i,
+.classes-table .action-buttons .settings-btn i,
+.periods-table .action-buttons .settings-btn i,
+.evaluation-table .action-buttons .settings-btn i,
+.academic-year-table .action-buttons .settings-btn i {
+  color: #1e293b !important;
+}
+
+.students-table .action-buttons .settings-btn:hover,
+.faculties-table .action-buttons .settings-btn:hover,
+.subjects-table .action-buttons .settings-btn:hover,
+.classes-table .action-buttons .settings-btn:hover,
+.periods-table .action-buttons .settings-btn:hover,
+.evaluation-table .action-buttons .settings-btn:hover,
+.academic-year-table .action-buttons .settings-btn:hover {
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.students-table .action-buttons .settings-btn:hover i,
+.faculties-table .action-buttons .settings-btn:hover i,
+.subjects-table .action-buttons .settings-btn:hover i,
+.classes-table .action-buttons .settings-btn:hover i,
+.periods-table .action-buttons .settings-btn:hover i,
+.evaluation-table .action-buttons .settings-btn:hover i,
+.academic-year-table .action-buttons .settings-btn:hover i {
+  color: #1e293b !important;
+}
+
+:root {
+  --action-button-size: 36px;
+  --action-button-radius: 8px;
+  --action-button-gap: 4px;
+  --action-button-bg: #f8fafc;
+  --action-button-border: #bfdbfe;
+  --action-button-color: #0a64a8;
+  --action-button-hover-bg: #0b7ac7;
+  --action-button-hover-color: #ffffff;
+  --action-button-focus: #93c5fd;
+}
+
+.action-buttons {
+  gap: var(--action-button-gap) !important;
+}
+
+.subjects-table .action-buttons .action-icon-btn,
+.classes-table .action-buttons .action-icon-btn {
+  border: 1px solid #bfdbfe !important;
+}
+
+.action-buttons .action-icon-btn,
+.status-action-menu .action-icon-btn,
+.calendar-nav.action-icon-btn {
+  width: var(--action-button-size) !important;
+  min-width: var(--action-button-size) !important;
+  height: var(--action-button-size) !important;
+  min-height: var(--action-button-size) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  border: 1px solid var(--action-button-border) !important;
+  border-radius: var(--action-button-radius) !important;
+  background: var(--action-button-bg) !important;
+  color: var(--action-button-color) !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease !important;
+}
+
+.action-buttons .action-icon-btn i,
+.status-action-menu .action-icon-btn i,
+.calendar-nav.action-icon-btn i {
+  color: currentColor !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+}
+
+.action-buttons .action-icon-btn:hover,
+.status-action-menu .action-icon-btn:hover,
+.calendar-nav.action-icon-btn:hover,
+.action-buttons .action-icon-btn:focus-visible,
+.status-action-menu .action-icon-btn:focus-visible,
+.calendar-nav.action-icon-btn:focus-visible {
+  background: var(--action-button-hover-bg) !important;
+  border-color: var(--action-button-hover-bg) !important;
+  color: var(--action-button-hover-color) !important;
+  transform: none !important;
+  outline: none;
+}
+
+.action-buttons .action-icon-btn:focus-visible,
+.status-action-menu .action-icon-btn:focus-visible,
+.calendar-nav.action-icon-btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--action-button-focus) !important;
+}
+
+.calendar-nav.action-icon-btn:hover,
+.calendar-nav.action-icon-btn:focus-visible {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #60a5fa !important;
+  color: #1d4ed8 !important;
+  transform: none !important;
+}
+
+.calendar-nav.action-icon-btn:hover i,
+.calendar-nav.action-icon-btn:focus-visible i {
+  color: #1d4ed8 !important;
+}
+
+.status-action-menu .action-icon-btn:hover,
+.status-action-menu .action-icon-btn:focus-visible {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #60a5fa !important;
+  color: #1d4ed8 !important;
+  transform: none !important;
+}
+
+.status-action-menu .action-icon-btn:hover i,
+.status-action-menu .action-icon-btn:focus-visible i {
+  color: #1d4ed8 !important;
+}
+
+.academic-year-table .action-buttons .manage-period-btn:hover,
+.academic-year-table .action-buttons .manage-period-btn:focus-visible {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #60a5fa !important;
+  color: #1d4ed8 !important;
+  transform: none !important;
+}
+
+.academic-year-table .action-buttons .manage-period-btn:hover i,
+.academic-year-table .action-buttons .manage-period-btn:focus-visible i {
+  color: #1d4ed8 !important;
+}
+
+
+/* ====================================================================================================================================
+   MANAGE SECTION - Blue Banner Design
+   ==================================================================================================================================== */
+
+/* Blue Banner with Program Info */
+.manage-program-banner {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 24px 32px;
+  margin-bottom: 20px;
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+
+.program-banner-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.program-badge {
+  background: #eaf5fb;
+  border: 2px solid #b9def2;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0b7ac7;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.program-info h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+}
+
+.program-meta {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Program Stats Row - Smaller and on Right */
+.program-stats-row {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.program-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #dbe4ee;
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.program-stat-item:hover {
+  background: #eff6ff;
+  transform: translateY(-2px);
+}
+
+.program-stat-item i {
+  font-size: 24px;
+  color: #0b7ac7;
+  flex-shrink: 0;
+}
+
+.program-stat-item .stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.program-stat-item .stat-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.program-stat-item .stat-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Tabs and Actions Row */
+.manage-tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 20px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.manage-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.manage-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .2s ease;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.manage-tabs button.active {
+  background: #07326a;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.manage-tabs button:hover:not(.active) {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.manage-tabs button i {
+  font-size: 18px;
+}
+
+.manage-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .manage-program-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .program-stats-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .manage-program-banner {
+    padding: 20px;
+  }
+  
+  .program-banner-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .program-info h2 {
+    font-size: 18px;
+  }
+  
+  .program-stats-row {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .program-stat-item {
+    width: 100%;
+  }
+  
+  .manage-tabs-row {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .manage-tabs {
+    width: 100%;
+  }
+  
+  .manage-tabs button {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .manage-actions {
+    width: 100%;
+  }
+  
+  .manage-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.search-wrapper,
+.archived-search-wrapper,
+.criteria-search-container .search-wrapper,
+.class-subject-search,
+.subject-control-box .search-wrapper,
+#subject-search {
+  background: #ffffff;
+}
+
+.search-wrapper:hover,
+.search-wrapper:focus-within,
+.archived-search-wrapper:hover,
+.archived-search-wrapper:focus-within,
+.criteria-search-container .search-wrapper:hover,
+.criteria-search-container .search-wrapper:focus-within,
+#subject-search:focus {
+  background: #ffffff;
+}
+
+.search-wrapper input,
+.archived-search-wrapper input,
+.criteria-search-container input,
+.class-subject-search .subject-search-input,
+.subject-control-box .search-wrapper input,
+#subject-search,
+.subject-search-input,
+.subject-search-input:hover,
+.subject-search-input:focus {
+  background: #ffffff;
+}
+
+.search-wrapper,
+.archived-search-wrapper,
+.filter-wrapper,
+.program-filter-wrapper,
+.date-input-wrapper,
+.criteria-search-container .search-wrapper,
+.class-subject-search,
+.subject-control-box .search-wrapper,
+#subject-search,
+.subject-search-input,
+.search-wrapper:hover,
+.search-wrapper:focus-within,
+.archived-search-wrapper:hover,
+.archived-search-wrapper:focus-within,
+.filter-wrapper:hover,
+.filter-wrapper:focus-within,
+.program-filter-wrapper:hover,
+.program-filter-wrapper:focus-within,
+.date-input-wrapper:hover,
+.date-input-wrapper:focus-within,
+.subject-search-input:hover,
+.subject-search-input:focus,
+#addClassModal .class-subject-search .subject-search-input,
+#addClassModal .class-subject-search .subject-search-input:hover,
+#addClassModal .class-subject-search .subject-search-input:focus {
+  border-color: #C8E3F8 !important;
+}
+
+#viewFacultySubjectsModal .student-info-header {
+  padding: 18px 24px;
+  margin-bottom: 10px;
+  min-height: 0;
+}
+
+#viewFacultySubjectsModal .student-avatar {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  font-size: 21px;
+}
+
+#viewFacultySubjectsModal .student-details {
+  gap: 2px;
+}
+
+#viewFacultySubjectsModal .subjects-grid {
+  padding-top: 4px;
+}
+
+#viewFacultySubjectsModal .faculty-program-group:first-child {
+  margin-top: 4px;
+}
+
+#viewStudentSubjectsModal .student-info-header {
+  padding: 18px 24px;
+  margin-bottom: 10px;
+  min-height: 0;
+}
+
+#viewStudentSubjectsModal .student-avatar {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  font-size: 21px;
+}
+
+#viewStudentSubjectsModal .student-details {
+  gap: 2px;
+}
+
+#viewStudentSubjectsModal .subjects-grid {
+  gap: 10px;
+  padding-top: 4px;
+}
+
+#viewStudentSubjectsModal .subject-card {
+  padding: 12px 14px;
+}
+
+#faculties-section .faculty-toolbar .search-wrapper,
+#students-section .student-filter-row .search-wrapper {
+  background: #ffffff !important;
+}
+
+#faculties-section .faculty-toolbar .search-wrapper:hover,
+#faculties-section .faculty-toolbar .search-wrapper:focus-within,
+#students-section .student-filter-row .search-wrapper:hover,
+#students-section .student-filter-row .search-wrapper:focus-within {
+  background: #ffffff !important;
+}
+
+table thead th {
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+  border-bottom-color: #0872B2 !important;
+}
+
+.button-gradient,
+.add-program-btn,
+.add-faculty-btn,
+.add-student-btn,
+.add-manage-btn,
+.add-subject-main-btn,
+#add-subject-btn,
+.period-add-btn {
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+  border-color: #0B90E0 !important;
+}
+
+.button-gradient:hover,
+.add-program-btn:hover,
+.add-faculty-btn:hover,
+.add-student-btn:hover,
+.add-manage-btn:hover,
+.add-subject-main-btn:hover,
+#add-subject-btn:hover,
+.period-add-btn:hover {
+  background: #087FC5 !important;
+  border-color: #087FC5 !important;
+}
+
+#addProgramModal .modal-header,
+#addSubjectModal .modal-header,
+#addClassModal .modal-header,
+#addSubjectMainModal .modal-header,
+#addFacultyModal .modal-header,
+#addStudentModal .modal-header,
+#subjectSelectionModal .modal-header,
+#facultySubjectSelectionModal .modal-header,
+#addCategoryModal .modal-header,
+#addQuestionModal .addProgram-header,
+#addAcademicYearModal .modal-header,
+#managePeriodsModal .modal-header {
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+}
+
+#addProgramModal .submit-btn,
+#addSubjectModal .submit-btn,
+#addClassModal .submit-btn,
+#addSubjectMainModal .submit-btn,
+#addFacultyModal .submit-btn,
+#addStudentModal .submit-btn,
+#subjectSelectionModal .submit-btn,
+#facultySubjectSelectionModal .submit-btn,
+#addCategoryModal .submit-btn,
+#addQuestionModal .submit-btn,
+#addAcademicYearModal .submit-btn,
+#managePeriodsModal .period-add-btn {
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+  border-color: #0B90E0 !important;
+}
+
+#subjectSelectionModal .cancel-btn,
+#facultySubjectSelectionModal .cancel-btn {
+  border-color: #0B90E0 !important;
+  color: #0A64A8 !important;
+}
+
+.person-id-badge,
+.students-table .student-name-cell strong,
+.faculties-table .faculty-name-cell strong,
+.faculties-table .faculty-name-text,
+.archived-faculties-table .faculty-name-text,
+.faculty-name {
+  color: #0A64A8 !important;
+}
+
+.category-header .action-buttons .add-btn {
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+  border-color: #0B90E0 !important;
+}
+
+.category-header .action-buttons .add-btn i {
+  color: #ffffff !important;
+}
+
+.students-table .inline-status.active,
+.faculties-table .inline-status.active,
+.subjects-table .inline-status.active,
+.classes-table .inline-status.active,
+.periods-table .inline-status.active,
+.evaluation-table .inline-status.active,
+.academic-year-table .inline-status.active,
+.status-badge.active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.students-table .inline-status.inactive,
+.faculties-table .inline-status.inactive,
+.subjects-table .inline-status.inactive,
+.classes-table .inline-status.inactive,
+.periods-table .inline-status.inactive,
+.evaluation-table .inline-status.inactive,
+.academic-year-table .inline-status.inactive,
+.status-badge.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.badge.excellent,
+#report-section .badge.excellent {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge.very-good,
+#report-section .badge.very-good {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.students-table .student-type-badge.regular {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.students-table .student-type-badge.irregular {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+
+#faculties-section .faculty-toolbar,
+#subjects-section .subject-control-box,
+#academic-year-section .academic-year-controls {
+  margin-bottom: 0;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+}
+
+#faculties-section > .table-wrapper,
+#subjects-section > .table-wrapper,
+#academic-year-section .academic-year-results {
+  margin-top: 0;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+}
+
+#faculties-section > .table-wrapper .table-scroll-container,
+#subjects-section > .table-wrapper .table-scroll-container,
+#academic-year-section .academic-year-results .table-scroll-container,
+#manage-section #subjects .table-scroll-container,
+#manage-section #classes .table-scroll-container,
+#report-section .table-scroll-container {
+  border-radius: 0;
+}
+
+#faculties-section > .table-wrapper .faculties-table,
+#subjects-section > .table-wrapper .subjects-table,
+#academic-year-section .academic-year-results .academic-year-table,
+#manage-section #subjects .subjects-table,
+#manage-section #classes .classes-table,
+#report-section .evaluation-table {
+  border-radius: 0;
+}
+
+#manage-section #subjects,
+#manage-section #classes {
+  border-radius: 12px;
+}
+
+.show-archived-faculty-btn,
+.show-archived-student-btn,
+#students-section .student-header-actions .show-archived-student-btn {
+  background: #FFFA94 !important;
+  border-color: #FFFA94 !important;
+  color: #713f12 !important;
+}
+
+.show-archived-faculty-btn:hover,
+.show-archived-student-btn:hover,
+#students-section .student-header-actions .show-archived-student-btn:hover {
+  background: #FFFA94 !important;
+  border-color: #FFFA94 !important;
+}
+
+/* Keep edit and delete icons consistent across management tables. */
+.subjects-table .action-cell .edit-btn i,
+.subjects-table .action-cell .delete-btn i,
+.classes-table .action-cell .edit-btn i,
+.classes-table .action-cell .delete-btn i,
+.faculties-table .action-cell .edit-btn i,
+.faculties-table .action-cell .delete-btn i,
+.faculties-table .action-cell .archive-btn i,
+.faculties-table .action-cell .view-btn i,
+.faculties-table .action-cell .settings-btn i,
+.students-table .action-cell .edit-btn i,
+.students-table .action-cell .delete-btn i,
+.students-table .action-cell .archive-btn i,
+.students-table .action-cell .view-subjects-btn i,
+.students-table .action-cell .settings-btn i,
+.evaluation-table .action-cell .view-btn i,
+.academic-year-table .action-cell .edit-btn i,
+.academic-year-table .action-cell .delete-btn i,
+.academic-year-table .action-cell .manage-btn i,
+.program-card-actions .btn-edit i,
+.program-card-actions .btn-delete i {
+  color: #0A64A8 !important;
+}
+
+#manage-section #subjects .manage-subject-control-box {
+  margin-bottom: 0;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  box-shadow: none;
+}
+
+#manage-section #subjects .table-scroll-container {
+  border-radius: 0 0 12px 12px;
+}
+
+#report-section .table-wrapper {
+  gap: 0;
+}
+
+#report-section .table-header {
+  margin-bottom: 0;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+}
+
+#report-section .table-scroll-container {
+  border-radius: 0 0 12px 12px;
+}
+
+/* Standard action hover and delete icon colors. */
+.action-cell .view-btn:hover,
+.action-cell .view-subjects-btn:hover,
+.action-cell .edit-btn:hover,
+.action-cell .settings-btn:hover,
+.action-cell .archive-btn:hover,
+.action-cell .manage-period-btn:hover,
+.action-cell .manage-btn:hover,
+.actions .edit-btn:hover,
+.actions .settings-btn:hover,
+.actions .archive-btn:hover,
+.program-card-actions .btn-edit:hover,
+.program-card-actions .btn-manage:hover,
+.show-archived-faculty-btn:hover,
+.show-archived-student-btn:hover,
+#students-section .student-header-actions .show-archived-student-btn:hover {
+  background: #0B7AC7 !important;
+  border-color: #0B7AC7 !important;
+  color: #ffffff !important;
+}
+
+.action-cell .view-btn:hover i,
+.action-cell .view-subjects-btn:hover i,
+.action-cell .edit-btn:hover i,
+.action-cell .settings-btn:hover i,
+.action-cell .archive-btn:hover i,
+.action-cell .manage-period-btn:hover i,
+.action-cell .manage-btn:hover i,
+.actions .edit-btn:hover i,
+.actions .settings-btn:hover i,
+.actions .archive-btn:hover i,
+.program-card-actions .btn-edit:hover i,
+.program-card-actions .btn-manage:hover i,
+.show-archived-faculty-btn:hover i,
+.show-archived-student-btn:hover i {
+  color: #ffffff !important;
+}
+
+.action-cell .delete-btn i,
+.actions .delete-btn i,
+[class*='table'] .action-buttons .delete-btn i,
+.question-item .actions .delete-btn i,
+.program-card-actions .btn-delete i {
+  color: #FF9F94 !important;
+}
+
+.program-card-actions .btn-manage i,
+.program-card-actions .btn-manage:hover i {
+  color: #ffffff !important;
+}
+
+.faculties-table .action-icon-btn,
+.students-table .action-icon-btn,
+.academic-year-table .action-icon-btn {
+  border: 1px solid #bfdbfe !important;
+}
+
+.faculties-table .action-buttons .view-btn,
+.faculties-table .action-buttons .edit-btn,
+.faculties-table .action-buttons .settings-btn,
+.faculties-table .action-buttons .archive-btn,
+.students-table .action-buttons .view-btn,
+.students-table .action-buttons .view-subjects-btn,
+.students-table .action-buttons .edit-btn,
+.students-table .action-buttons .settings-btn,
+.students-table .action-buttons .archive-btn,
+.academic-year-table .action-buttons .manage-period-btn,
+.academic-year-table .action-buttons .manage-btn,
+.academic-year-table .action-buttons .edit-btn,
+.academic-year-table .action-buttons .delete-btn {
+  border: 1px solid #bfdbfe !important;
+}
+
+/* Final table-specific hover colors. */
+.students-table .action-buttons .view-subjects-btn:hover,
+.students-table .action-buttons .view-btn:hover,
+.faculties-table .action-buttons .view-btn:hover,
+.subjects-table .action-buttons .view-btn:hover,
+.classes-table .action-buttons .view-btn:hover,
+.periods-table .action-buttons .view-btn:hover,
+.evaluation-table .action-buttons .view-btn:hover,
+.academic-year-table .action-buttons .view-btn:hover,
+.academic-year-table .action-buttons .manage-btn:hover,
+.students-table .action-buttons .edit-btn:hover,
+.faculties-table .action-buttons .edit-btn:hover,
+.subjects-table .action-buttons .edit-btn:hover,
+.classes-table .action-buttons .edit-btn:hover,
+.periods-table .action-buttons .edit-btn:hover,
+.evaluation-table .action-buttons .edit-btn:hover,
+.academic-year-table .action-buttons .edit-btn:hover,
+.faculties-table .action-buttons .settings-btn:hover,
+.students-table .action-buttons .settings-btn:hover,
+.subjects-table .action-buttons .settings-btn:hover,
+.classes-table .action-buttons .settings-btn:hover,
+.academic-year-table .action-buttons .settings-btn:hover,
+.students-table .action-buttons .archive-btn:hover,
+.faculties-table .action-buttons .archive-btn:hover,
+.faculties-table .action-buttons .delete-btn:hover,
+.students-table .action-buttons .delete-btn:hover,
+.subjects-table .action-buttons .delete-btn:hover,
+.classes-table .action-buttons .delete-btn:hover,
+.periods-table .action-buttons .delete-btn:hover,
+.evaluation-table .action-buttons .delete-btn:hover,
+.academic-year-table .action-buttons .delete-btn:hover,
+.show-archived-faculty-btn:hover,
+.show-archived-student-btn:hover,
+#students-section .student-header-actions .show-archived-student-btn:hover {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #60a5fa !important;
+}
+
+.show-archived-faculty-btn:hover,
+.show-archived-student-btn:hover,
+#students-section .student-header-actions .show-archived-student-btn:hover {
+  background: #f5c400 !important;
+  background-color: #f5c400 !important;
+  border-color: #f5c400 !important;
+  color: #713f12 !important;
+}
+
+.students-table .action-buttons .view-subjects-btn:hover i,
+.students-table .action-buttons .view-btn:hover i,
+.faculties-table .action-buttons .view-btn:hover i,
+.subjects-table .action-buttons .view-btn:hover i,
+.classes-table .action-buttons .view-btn:hover i,
+.periods-table .action-buttons .view-btn:hover i,
+.evaluation-table .action-buttons .view-btn:hover i,
+.academic-year-table .action-buttons .view-btn:hover i,
+.academic-year-table .action-buttons .manage-btn:hover i,
+.students-table .action-buttons .edit-btn:hover i,
+.faculties-table .action-buttons .edit-btn:hover i,
+.subjects-table .action-buttons .edit-btn:hover i,
+.classes-table .action-buttons .edit-btn:hover i,
+.periods-table .action-buttons .edit-btn:hover i,
+.evaluation-table .action-buttons .edit-btn:hover i,
+.academic-year-table .action-buttons .edit-btn:hover i,
+.faculties-table .action-buttons .settings-btn:hover i,
+.students-table .action-buttons .settings-btn:hover i,
+.subjects-table .action-buttons .settings-btn:hover i,
+.classes-table .action-buttons .settings-btn:hover i,
+.academic-year-table .action-buttons .settings-btn:hover i,
+.students-table .action-buttons .archive-btn:hover i,
+.faculties-table .action-buttons .archive-btn:hover i {
+  color: #1d4ed8 !important;
+}
+
+.action-buttons .action-icon-btn:hover {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #60a5fa !important;
+  transform: none !important;
+}
+
+.action-buttons .action-icon-btn:hover i {
+  color: #1d4ed8 !important;
+}
+
+.action-buttons .action-icon-btn.delete-btn {
+  color: #ef4444 !important;
+  border-color: #FFD3C9 !important;
+}
+
+.action-buttons .action-icon-btn.delete-btn:hover,
+.action-buttons .action-icon-btn.delete-btn:focus-visible {
+  background: rgba(239, 68, 68, 0.15) !important;
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.action-buttons .action-icon-btn.delete-btn:hover i,
+.action-buttons .action-icon-btn.delete-btn:focus-visible i {
+  color: #ef4444 !important;
+}
+
+.program-card-actions .btn-edit:hover {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #60a5fa !important;
+  color: #1d4ed8 !important;
+}
+
+.program-card-actions .btn-edit:hover i {
+  color: #1d4ed8 !important;
 }

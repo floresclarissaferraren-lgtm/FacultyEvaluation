@@ -1,9 +1,16 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
 include "connect.php";
 
 header("Content-Type: application/json");
 
 $action = $_REQUEST['action'] ?? "";
+if (in_array($action, ['get', 'get_faculty_by_subject', 'get_faculty_by_subjects', 'get_subjects_by_program_year', 'get_subject_class_options'], true)) {
+    requireMethod('GET');
+} else {
+    requireMethod('POST');
+}
 
 function ensureClassSemesterColumn(mysqli $conn): void {
     $check = $conn->query("SHOW COLUMNS FROM add_classes LIKE 'semester'");

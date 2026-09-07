@@ -1,4 +1,7 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
+requireMethod('POST');
 include 'connect.php';
 
 // Block if a period is active

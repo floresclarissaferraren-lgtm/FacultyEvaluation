@@ -1,4 +1,7 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
+requireMethod('POST');
 header("Content-Type: application/json");
 include 'connect.php';
 require_once 'mailer.php';
@@ -219,21 +222,35 @@ if ($action === "add") {
         $assignResult = assignStudentSubjects($conn, $student_id, $program, $yearlevelValue, $section, $subjects, $student_type !== 'irregular');
 
         /* ================= EMAIL WITH PASSWORD ================= */
-        $body = "
-            <h2>Welcome to Faculty Evaluation System</h2>
-            <p>Hello $firstname $lastname</p>
-            <p>Your account has been created successfully.</p>
-            <p><b>Student Number:</b> $student_number</p>
-            <p><b>Temporary Password:</b> $password</p>
-            <hr>
-            <p>Please use this password to login to the Faculty Evaluation System.</p>
-            <p>You can change your password after logging in.</p>
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $baseUrl = $protocol . '://' . $host . '/FacultyEvaluation';
+
+        $title = "Welcome to Faculty Evaluation System";
+        $greeting = "Hello " . htmlspecialchars($firstname . ' ' . $lastname, ENT_QUOTES, 'UTF-8') . ",";
+        $content_html = "
+            <p style='margin: 0 0 16px 0;'>Your student account has been successfully created. You can now access the Faculty Evaluation System using your credentials below.</p>
+            <p style='margin: 0 0 16px 0;'><strong>Student Number:</strong> " . htmlspecialchars($student_number, ENT_QUOTES, 'UTF-8') . "</p>
+            <p style='margin: 0 0 16px 0;'>For security reasons, we strongly recommend that you change your password immediately after logging in for the first time.</p>
         ";
+
+        $highlight_box = [
+            'label' => 'Temporary Password',
+            'value' => $password,
+            'subtext' => 'Keep this password secure'
+        ];
+
+        $cta = [
+            'label' => 'Log In to System',
+            'url' => $baseUrl . '/EvalMain.php'
+        ];
+
+        $body = getEmailHTML($title, $greeting, $content_html, $highlight_box, $cta);
 
         $sent = sendEmail(
             $email,
             "$firstname $lastname",
-            "Faculty Evaluation System",
+            "Welcome to Faculty Evaluation System",
             $body
         );
 

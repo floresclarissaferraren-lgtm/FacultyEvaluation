@@ -16,6 +16,10 @@ require_once 'evaluation_period_helper.php';
 // Fetch faculty data
 $faculty_id = $_SESSION['id'];
 $evaluation_ongoing = isEvaluationOngoing($conn);
+
+// Debug: Check what ID we're looking for
+error_log("Faculty ID from session: " . $faculty_id);
+
 $stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email, status, photo FROM add_faculties WHERE id = ?");
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
@@ -26,17 +30,39 @@ $faculty_email = ""; // Default fallback
 $faculty_faculty_id = ""; // Default fallback
 $faculty_status = "active";
 $faculty_photo = ""; // Default fallback
+
 if ($result->num_rows === 1) {
     $faculty = $result->fetch_assoc();
-    $name_parts = array_filter([$faculty['firstname'], $faculty['lastname']]);
-    if (!empty($faculty['suffix'])) {
-        $name_parts[] = $faculty['suffix'];
+    
+    // Debug: Log what we got from database
+    error_log("Faculty data from DB: " . print_r($faculty, true));
+    
+    // Build full name from firstname and lastname
+    $name_parts = [];
+    if (!empty($faculty['firstname'])) {
+        $name_parts[] = trim($faculty['firstname']);
     }
-    $faculty_name = implode(' ', $name_parts);
+    if (!empty($faculty['lastname'])) {
+        $name_parts[] = trim($faculty['lastname']);
+    }
+    if (!empty($faculty['suffix'])) {
+        $name_parts[] = trim($faculty['suffix']);
+    }
+    
+    // Combine name parts with space
+    if (!empty($name_parts)) {
+        $faculty_name = implode(' ', $name_parts);
+    }
+    
+    // Debug: Log the final name
+    error_log("Final faculty name: " . $faculty_name);
+    
     $faculty_email = $faculty['email'] ?? '';
     $faculty_faculty_id = $faculty['faculty_id'] ?? '';
     $faculty_status = strtolower($faculty['status'] ?? 'active');
     $faculty_photo = $faculty['photo'] ?? '';
+} else {
+    error_log("No faculty found with ID: " . $faculty_id . " (Found " . $result->num_rows . " rows)");
 }
 $stmt->close();
 
@@ -64,59 +90,198 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 
 <div class="navbar">
   <div class="brand">
-    <img src="schoollogo.png" alt="Logo" class="navbar-logo">
+    <img src="assets/images/schoollogo.png" alt="Logo" class="navbar-logo">
     <span class="logo-text main-title">Faculty Evaluation System</span>
   </div>
 
 
   <div class="user-menu">
     <div class="instructor-box" onclick="toggleDropdown()">
-      <i class="ph ph-gear navbar-settings-icon"></i>
-      <span>Instructor</span>
+      <span class="student-label">Instructor</span>
       <i class="ph ph-caret-down"></i>
     </div>
 
     <div class="dropdown-menu" id="dropdownMenu">
+      <div class="dropdown-user-info">
+        <div class="dropdown-avatar">
+          <span class="dropdown-avatar-initials"><?php 
+            $names = explode(' ', $faculty_name);
+            echo strtoupper(substr($names[0] ?? 'I', 0, 1) . substr($names[1] ?? 'N', 0, 1));
+          ?></span>
+        </div>
+        <div class="dropdown-user-details">
+          <div class="dropdown-user-name"><?php echo htmlspecialchars($faculty_name); ?></div>
+          <div class="dropdown-user-email"><?php echo htmlspecialchars($faculty_email); ?></div>
+        </div>
+      </div>
       <a href="#" onclick="showPasswordForm(event)">
         <i class="ph ph-key"></i> Change Password
       </a>
       <a href="#" onclick="showProfile(event)">
         <i class="ph ph-user"></i> Profile
       </a>
-      <a href="#" onclick="logout(event)">
+      <hr class="dropdown-divider">
+      <a href="#" class="logout-link" onclick="logout(event)">
         <i class="ph ph-sign-out"></i> Logout
       </a>
     </div>
   </div>
 </div>
 
-<div class="main-box" id="mainPage">
-  <div class="main-left">
-    <img src="<?php echo htmlspecialchars($faculty_img_src); ?>" alt="Welcome Image" class="main-img">
-  </div>
-  <div class="main-right">
-    <h1>Welcome, <?php echo htmlspecialchars($faculty_name); ?></h1>
-    <div class="academic-year academic-year-loading" id="instructorAcademicPeriod" aria-busy="true">
-      <i class="ph ph-calendar"></i> Academic Year: Loading...
+<div class="content-container">
+  <!-- Welcome Card -->
+  <div class="welcome-card">
+    <div class="welcome-content">
+      <div class="welcome-left">
+        <div class="avatar-section">
+          <div class="large-avatar faculty-avatar">
+            <i class="ph ph-graduation-cap"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="welcome-right">
+        <div class="welcome-header-inline">
+          <h2 class="welcome-title">WELCOME</h2>
+          <h1 class="faculty-name-title">Prof. <?php echo htmlspecialchars($faculty_name); ?></h1>
+          <!-- Debug info (remove this after fixing) -->
+          <?php if ($faculty_name === 'Instructor'): ?>
+          <div style="background:#ffebee;padding:10px;border-radius:8px;margin-top:10px;font-size:12px;color:#c62828;">
+            <strong>Debug:</strong> Faculty ID from session: <?php echo $faculty_id; ?><br>
+            Please check if this faculty exists in the database with firstname and lastname filled in.
+          </div>
+          <?php endif; ?>
+        </div>
+        
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label"><i class="ph ph-calendar"></i> Academic Year:</span>
+            <span class="info-value academic-year-loading" id="instructorAcademicPeriod" aria-busy="true">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label"><i class="ph ph-books"></i> 1st Semester</span>
+            <span class="info-value semester-value" id="semesterValue">1st Semester</span>
+          </div>
+        </div>
+        
+        <p class="welcome-message">
+          Track your evaluation scores, analyze student feedback, and enhance your 
+          teaching strategies for better academic outcomes.
+        </p>
+        
+        <?php if ($faculty_status !== 'active'): ?>
+        <div class="inactive-account-message">
+          <i class="ph ph-warning-circle"></i>
+          <span>Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.</span>
+        </div>
+        <?php elseif ($evaluation_ongoing): ?>
+        <div class="inactive-account-message">
+          <i class="ph ph-warning-circle"></i>
+          <span>Evaluation results will be available after the current evaluation process closes.</span>
+        </div>
+        <?php endif; ?>
+        
+        <div class="action-buttons">
+          <button class="action-btn primary-btn" onclick="showEvaluationReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
+            <i class="ph ph-chart-bar"></i>
+            Evaluation Report
+          </button>
+          <button class="action-btn secondary-btn" onclick="showPerSubjectReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
+            <i class="ph ph-note"></i>
+            Per-Subject Report
+          </button>
+        </div>
+      </div>
     </div>
-    <p class="subtitle">
-      Track your evaluation scores, analyze feedback, and enhance your 
-      teaching strategies for better student engagement.
-    </p>
-    <?php if ($faculty_status !== 'active'): ?>
-      <div class="inactive-account-message">
-        <i class="ph ph-warning-circle"></i>
-        <span>Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.</span>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-cards-container">
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-header">
+          <span class="stat-label">OVERALL RATING</span>
+          <div class="stat-icon-small yellow">
+            <i class="ph ph-star"></i>
+          </div>
+        </div>
+        <div class="stat-main">
+          <span class="stat-value" id="overallRatingNumber">0.00</span>
+          <span class="stat-unit">/ 5.00</span>
+        </div>
+        <span class="stat-extra" id="overallRatingPercentage">+0.1% vs last sem</span>
       </div>
-    <?php elseif ($evaluation_ongoing): ?>
-      <div class="inactive-account-message">
-        <i class="ph ph-warning-circle"></i>
-        <span>Evaluation results will be available after the current evaluation process closes.</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-header">
+          <span class="stat-label">TOTAL RESPONSES</span>
+          <div class="stat-icon-small blue">
+            <i class="ph ph-users-three"></i>
+          </div>
+        </div>
+        <div class="stat-main">
+          <span class="stat-value" id="totalResponsesValue">0</span>
+          <span class="stat-unit">students</span>
+        </div>
+        <span class="stat-extra">Across 4 subjects</span>
       </div>
-    <?php endif; ?>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-header">
+          <span class="stat-label">SUBJECTS EVALUATED</span>
+          <div class="stat-icon-small purple">
+            <i class="ph ph-book-open"></i>
+          </div>
+        </div>
+        <div class="stat-main">
+          <span class="stat-value" id="subjectsEvaluatedValue">4</span>
+          <span class="stat-unit">of 4</span>
+        </div>
+        <span class="stat-extra">100% coverage</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed Content Area -->
+  <div class="tabbed-section">
+    <div class="tab-header">
+      <button class="tab-btn active" data-tab="overview">Evaluation Overview</button>
+      <button class="tab-btn" data-tab="per-subject">Per-Subject</button>
+      <button class="tab-btn" data-tab="history">History & PDFs</button>
+    </div>
+
+    <div class="tab-content active" id="overview-tab">
+      <div class="content-placeholder">
+        <p>Official PDF results are uploaded by the system after each evaluation cycle closes.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" id="per-subject-tab">
+      <div class="content-placeholder">
+        <p>Per-subject evaluation details will appear here.</p>
+      </div>
+    </div>
+
+    <div class="tab-content" id="history-tab">
+      <div id="uploadedReportsContainer" class="uploaded-reports-container">
+        <!-- Filled dynamically via JS -->
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- Hidden fields -->
+<input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
+<input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars($faculty_id); ?>">
+<input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
+<input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
+<input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars($faculty_status); ?>">
+<input type="hidden" id="evaluationOngoing" value="<?php echo $evaluation_ongoing ? '1' : '0'; ?>">
+</div>
 
 <div id="logoutModal" class="logoutform">
   <div class="logout-content">
@@ -175,69 +340,6 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
         
         <button type="button" class="modern-login-btn" onclick="updatePassword()">Update Password</button>
       </form>
-    </div>
-  </div>
-</div>
-
-<!-- Hidden fields -->
-<input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
-<input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars($faculty_id); ?>">
-<input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
-<input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
-<input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars($faculty_status); ?>">
-<input type="hidden" id="evaluationOngoing" value="<?php echo $evaluation_ongoing ? '1' : '0'; ?>">
-
-<!-- Faculty Info Box -->
-<div class="faculty-box">
-  <div class="faculty-info-header">
-    <div class="faculty-info">
-      <span class="faculty-name"><?php echo htmlspecialchars($faculty_name); ?></span>
-      <span class="faculty-id"><?php echo htmlspecialchars($faculty_faculty_id ?: 'N/A'); ?></span>
-    </div>
-    <div class="report-btn-group">
-      <button class="report-btn" onclick="showEvaluationReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
-        <i class="ph ph-chart-bar"></i> Evaluation Report
-      </button>
-      <button class="report-btn per-subject-btn" onclick="showPerSubjectReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
-        <i class="ph ph-books"></i> Per-Subject Report
-      </button>
-    </div>
-  </div>
-
-  <!-- Program Filter -->
-  <div class="program-filter-row">
-    <label class="program-filter-label" for="programFilterSelect">
-      <i class="ph ph-funnel"></i> Filter by Program
-    </label>
-    <div class="program-filter-select-wrap">
-      <select id="programFilterSelect" class="program-filter-select" onchange="onProgramFilterChange(this.value)">
-        <option value="all">All Programs</option>
-      </select>
-    </div>
-  </div>
-  
-  <div class="faculty-cards">
-    <div class="card">
-      <div class="card-info">
-        <span class="card-title">Overall Rating</span>
-        <div class="rating-container">
-          <span class="rating-number" id="overallRatingNumber">0.00 / 5.00</span>
-          <span class="rating-percentage" id="overallRatingPercentage">0%</span>
-          <span class="rating-status" id="overallRatingStatus">No Data</span>
-        </div>
-        <div class="rating-progress-track">
-          <div class="rating-progress-fill" id="overallRatingProgressFill" style="width:0%"></div>
-        </div>
-      </div>
-      <i class="ph ph-star"></i>
-    </div>
-
-    <div class="card">
-      <i class="ph ph-users-three"></i>
-      <div class="card-info">
-        <span class="card-title">Total Responses</span>
-        <span class="card-value" id="totalResponsesValue">0</span>
-      </div>
     </div>
   </div>
 </div>

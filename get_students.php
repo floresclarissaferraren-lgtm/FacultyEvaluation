@@ -1,4 +1,6 @@
 <?php
+require_once 'security.php';
+requireRole('admin');
 header("Content-Type: application/json");
 require 'connect.php';
 
