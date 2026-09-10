@@ -6,6 +6,7 @@ include_once 'session_config.php';
 session_start();
 header("Content-Type: application/json");
 include "connect.php";
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once 'evaluation_schema.php';
 require_once 'evaluation_period_helper.php';
 date_default_timezone_set("Asia/Manila");
@@ -246,8 +247,13 @@ try {
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE overall_rating = VALUES(overall_rating), feedback = VALUES(feedback)
     ");
+    if (!$upsert) {
+        throw new Exception("Unable to prepare evaluation");
+    }
     $upsert->bind_param("iiiidsi", $student_id, $faculty_id, $subject_id, $class_id, $overall, $feedback, $activePeriodId);
-    $upsert->execute();
+    if (!$upsert->execute()) {
+        throw new Exception("Unable to save evaluation");
+    }
     $upsert->close();
 
     $evalStmt = $conn->prepare("SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? AND period_id = ? LIMIT 1");
@@ -263,16 +269,26 @@ try {
     $evaluation_id = intval($evalRow['id']);
 
     $del = $conn->prepare("DELETE FROM evaluation_answers WHERE evaluation_id = ?");
+    if (!$del) {
+        throw new Exception("Unable to prepare evaluation answers");
+    }
     $del->bind_param("i", $evaluation_id);
-    $del->execute();
+    if (!$del->execute()) {
+        throw new Exception("Unable to replace evaluation answers");
+    }
     $del->close();
 
     $ins = $conn->prepare("INSERT INTO evaluation_answers (evaluation_id, question_id, rating) VALUES (?, ?, ?)");
+    if (!$ins) {
+        throw new Exception("Unable to prepare evaluation answers");
+    }
     foreach ($normalizedAnswers as $row) {
         $qid = $row['question_id'];
         $rt = $row['rating'];
         $ins->bind_param("iii", $evaluation_id, $qid, $rt);
-        $ins->execute();
+        if (!$ins->execute()) {
+            throw new Exception("Unable to save evaluation answers");
+        }
     }
     $ins->close();
 

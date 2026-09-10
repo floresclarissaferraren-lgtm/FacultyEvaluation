@@ -451,7 +451,7 @@ if ($action === "add") {
         exit;
     }
     
-    // Check for duplicate class (same year level and section in same program)
+    // Reuse an existing class for the same section; subjects are checked below.
     $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ?");
     $check_stmt->bind_param("iss", $program_id, $year_level, $block);
     $check_stmt->execute();
@@ -459,12 +459,14 @@ if ($action === "add") {
     $row = $result->fetch_assoc();
     $check_stmt->close();
     
+    $existingClassId = 0;
     if ($row['count'] > 0) {
-        echo json_encode([
-            "status" => "error", 
-            "message" => "The faculty or subject already exist in this section"
-        ]);
-        exit;
+        $existingStmt = $conn->prepare("SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? LIMIT 1");
+        $existingStmt->bind_param("iss", $program_id, $year_level, $block);
+        $existingStmt->execute();
+        $existingRow = $existingStmt->get_result()->fetch_assoc();
+        $existingClassId = intval($existingRow['id'] ?? 0);
+        $existingStmt->close();
     }
     
     // Create tables if not exist
@@ -489,12 +491,25 @@ if ($action === "add") {
     
     try {
         error_log("ADD CLASS - Starting transaction");
-        
-        $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, block) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $program_id, $year_level, $block);
-        $stmt->execute();
-        $class_id = $stmt->insert_id;
-        $stmt->close();
+
+        if ($existingClassId > 0) {
+            $class_id = $existingClassId;
+            $subjectCheck = $conn->prepare("SELECT subject_id FROM class_subjects WHERE class_id = ? AND subject_id = ? LIMIT 1");
+            foreach ($subjects as $subject_id) {
+                $subjectCheck->bind_param("ii", $class_id, $subject_id);
+                $subjectCheck->execute();
+                if ($subjectCheck->get_result()->fetch_assoc()) {
+                    throw new Exception("Subject already exists in this section");
+                }
+            }
+            $subjectCheck->close();
+        } else {
+            $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, block) VALUES (?, ?, ?)");
+            $stmt->bind_param("iss", $program_id, $year_level, $block);
+            $stmt->execute();
+            $class_id = $stmt->insert_id;
+            $stmt->close();
+        }
         
         error_log("ADD CLASS - Created class with ID: $class_id");
         
@@ -574,7 +589,7 @@ if ($action === "edit") {
     if ($row['count'] > 0) {
         echo json_encode([
             "status" => "error", 
-            "message" => "The faculty or subject already exist in this section"
+            "message" => "Class section already exists"
         ]);
         exit;
     }
@@ -632,22 +647,22 @@ if ($action === "add_subject_to_class") {
         exit;
     }
 
-    // Prevent duplicate subject or duplicate faculty assignment in the same section/class
+        // Prevent duplicate subjects only; the same instructor may teach multiple subjects.
     $dup_stmt = $conn->prepare("
         SELECT id
         FROM class_subjects
         WHERE class_id = ?
-          AND (subject_id = ? OR (faculty_id = ? AND ? != 0))
+                    AND subject_id = ?
         LIMIT 1
     ");
-    $dup_stmt->bind_param("iiii", $class_id, $subject_id, $faculty_id, $faculty_id);
+        $dup_stmt->bind_param("ii", $class_id, $subject_id);
     $dup_stmt->execute();
     $dup_res = $dup_stmt->get_result();
     if ($dup_res && $dup_res->num_rows > 0) {
         $dup_stmt->close();
         echo json_encode([
             "status" => "error",
-            "message" => "The faculty or subject already exist in this section"
+            "message" => "Subject already exists in this section"
         ]);
         exit;
     }

@@ -64,23 +64,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
             
             // Fetch subjects assigned to this faculty — check both tables
             $numeric_id = intval($faculty_data['id']);
+            $faculty_key = (string)($faculty_data['faculty_id'] ?? '');
             $subjects   = [];
+
+            $assignmentQueries = [
+                "SELECT cs.subject_id
+                 FROM class_subjects cs
+                 WHERE UPPER(TRIM(CAST(cs.faculty_id AS CHAR))) IN (UPPER(TRIM(?)), UPPER(TRIM(?)))"
+            ];
+            $facultySubjectsTable = $conn->query("SHOW TABLES LIKE 'faculty_subjects'");
+            if ($facultySubjectsTable && $facultySubjectsTable->num_rows > 0) {
+                $assignmentQueries[] = "SELECT fs.subject_id
+                    FROM faculty_subjects fs
+                    WHERE UPPER(TRIM(CAST(fs.faculty_id AS CHAR))) IN (UPPER(TRIM(?)), UPPER(TRIM(?)))";
+            }
+            $assignmentSql = implode(" UNION ", $assignmentQueries);
 
             $subj_sql = "
                 SELECT DISTINCT
                     s.subject_code,
                     s.subject_desc,
                     s.year_level,
-                    s.semester,
                     p.program_code,
                     p.program_name
                 FROM add_subjects s
                 LEFT JOIN add_programs p ON s.program_id = p.id
-                WHERE s.id IN (
-                    SELECT subject_id FROM class_subjects   WHERE faculty_id = ?
-                    UNION
-                    SELECT subject_id FROM faculty_subjects WHERE faculty_id = ?
-                )
+                WHERE s.id IN ($assignmentSql)
                 ORDER BY
                     COALESCE(p.program_code, p.program_name, 'ZZZ') ASC,
                     CASE
@@ -90,12 +99,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
                         WHEN LOWER(s.year_level) LIKE '4%' THEN 4
                         ELSE 99
                     END ASC,
-                    s.semester ASC,
                     s.subject_code ASC
             ";
             $subj_stmt = $conn->prepare($subj_sql);
             if ($subj_stmt) {
-                $subj_stmt->bind_param("ii", $numeric_id, $numeric_id);
+                $numeric_key = (string)$numeric_id;
+                $bindTypes = str_repeat('s', count($assignmentQueries) * 2);
+                $bindValues = [];
+                foreach ($assignmentQueries as $_) {
+                    $bindValues[] = $numeric_key;
+                    $bindValues[] = $faculty_key;
+                }
+                $bindRefs = [];
+                foreach ($bindValues as $key => $value) {
+                    $bindRefs[$key] = &$bindValues[$key];
+                }
+                array_unshift($bindRefs, $bindTypes);
+                call_user_func_array([$subj_stmt, 'bind_param'], $bindRefs);
                 $subj_stmt->execute();
                 $subj_result = $subj_stmt->get_result();
                 while ($srow = $subj_result->fetch_assoc()) {
@@ -103,7 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
                         'code' => $srow['subject_code'],
                         'name' => $srow['subject_desc'],
                         'year_level' => $srow['year_level'],
-                        'semester' => $srow['semester'],
                         'program_code' => $srow['program_code'] ?: 'N/A',
                         'program_name' => $srow['program_name'] ?: 'Unassigned Program',
                     ];

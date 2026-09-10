@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!adminNotificationList) return;
 
     if (closingPeriods.length === 0) {
-      adminNotificationList.innerHTML = '<div class="admin-notification-empty"><i class="ph ph-check-circle"></i><span>No upcoming evaluation deadlines.</span></div>';
+      adminNotificationList.innerHTML = '<div class="admin-notification-empty"><i class="ph ph-check-circle"></i><span>No notification</span></div>';
       return;
     }
 
@@ -764,13 +764,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     submitBtn.dataset.loggingOut = "true";
     submitBtn.disabled = true;
-    submitBtn.classList.add("loading");
-    submitBtn.innerHTML = `
-      <span class="logout-loading-text">Logging out</span>
-      <span class="logout-dots" aria-hidden="true">
-        <span></span><span></span><span></span>
-      </span>
-    `;
+    submitBtn.classList.add("is-loading");
+    submitBtn.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
+    cancelBtn.disabled = true;
 
     setTimeout(() => {
       window.location.replace("logout.php");
@@ -928,7 +924,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // LOAD PROGRAMS
   function loadPrograms() {
-    showSectionSkeleton("programs-section");
     fetch("getProgram.php")
       .then(r => r.json())
       .then(data => {
@@ -1876,6 +1871,20 @@ document.addEventListener("DOMContentLoaded", () => {
           ${sub.subject_code} - ${sub.subject_desc}
         `;
           optionsBox.appendChild(label);
+
+          const subjectCheckbox = label.querySelector("input[type='checkbox']");
+          subjectCheckbox.disabled = true;
+          fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${sub.id}`)
+            .then(response => response.json())
+            .then(faculty => {
+              if (!Array.isArray(faculty) || faculty.length === 0) {
+                label.classList.add("subject-without-faculty");
+                label.title = "No instructor available for this subject";
+              } else {
+                subjectCheckbox.disabled = false;
+              }
+            })
+            .catch(() => { });
         });
 
         if (typeof callback === "function") callback(data);
@@ -2009,11 +2018,7 @@ document.addEventListener("DOMContentLoaded", () => {
       subjectSection.appendChild(header);
 
       if (!data.faculty || data.faculty.length === 0) {
-        const emptyNotice = document.createElement("small");
-        emptyNotice.textContent = "No faculty available for this subject.";
-        emptyNotice.style.display = "block";
-        emptyNotice.style.color = "#d9534f";
-        subjectSection.appendChild(emptyNotice);
+        return;
       } else {
         const select = document.createElement("select");
         select.dataset.subjectId = subjectId;
@@ -2308,8 +2313,8 @@ document.addEventListener("DOMContentLoaded", () => {
           delete addClassModalEl.dataset.existingSubjectIds;
         } else {
           const msg = (res.message || "").toLowerCase();
-          if (msg.includes("already exist in this section") || msg.includes("already exists in this section")) {
-            showNotification("The faculty or subject already exist in this section", "#f44336", 3500);
+          if (msg.includes("subject already exists in this section")) {
+            showNotification("The subject already exists in this section", "#f44336", 3500);
           } else {
             showNotification("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"), "#f44336", 5000);
           }
@@ -2535,8 +2540,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 showClassSubjectsModal(classId, className, ""); // This will refresh the modal
               } else {
                 const assignMsg = (addRes.message || "").toLowerCase();
-                if (assignMsg.includes("already exist in this section") || assignMsg.includes("already exists in this section")) {
-                  showNotification("The faculty or subject already exist in this section", "#f44336", 3500);
+                if (assignMsg.includes("subject already exists in this section")) {
+                  showNotification("The subject already exists in this section", "#f44336", 3500);
                 } else {
                   showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
                 }
@@ -2806,7 +2811,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------- Load Faculty -------------------
   function loadFaculty() {
     console.log("Loading faculty data...");
-    showSectionSkeleton("faculties-section");
     fetch("getFaculty.php?t=" + Date.now(), { cache: "no-store" })
       .then(r => r.json())
       .then(data => {
@@ -3280,7 +3284,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadEvaluations() {
     console.log('Loading evaluations...');
-    showSectionSkeleton("report-section");
     const reportParams = getReportPeriodParams();
     const query = reportParams.toString();
     loadReportAnalytics(reportParams);
@@ -3314,9 +3317,18 @@ document.addEventListener("DOMContentLoaded", () => {
             ].join(' ').toLowerCase();
             row.innerHTML = `
             <td>
-              <strong>${escapeHtml(evaluation.name)}</strong>
+              <div class="report-faculty-cell">
+                <span class="report-faculty-avatar" aria-hidden="true">${escapeHtml(getFacultyInitial(evaluation.name))}</span>
+                <span class="report-faculty-details">
+                  <strong>${escapeHtml(evaluation.name)}</strong>
+                  <small>${escapeHtml(evaluation.faculty_id || 'Faculty')}</small>
+                </span>
+              </div>
             </td>
-            <td>${escapeHtml(evaluation.period_label || 'Unassigned Period')}</td>
+            <td>
+              <span class="report-period-year">${escapeHtml(evaluation.academic_year || 'Unassigned Year')}</span>
+              <small>${escapeHtml(evaluation.semester || 'Unassigned Semester')}</small>
+            </td>
             <td>
               <div class="score-cell">
                 <span class="score-pct">${pctText}</span>
@@ -3376,7 +3388,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderReportAnalytics(data) {
     const labels = ["Excellent", "Very Good", "Good", "Fair", "Poor"];
-    const colors = ["#059669", "#0ea5e9", "#f59e0b", "#f97316", "#ef4444"];
+    const colors = ["#1e3a8a", "#1d4ed8", "#facc15", "#f59e0b", "#bfdbfe"];
     const distribution = data.distribution || {};
     const values = labels.map(label => Number(distribution[label] || 0));
     const total = Number(data.total || 0);
@@ -3405,7 +3417,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.reportTrendChart = new Chart(trendCanvas, { type: "line", data: { labels: trend.map(item => item.label), datasets: [{ label: "Average rating", data: trend.map(item => item.average), borderColor: "#0f766e", backgroundColor: "rgba(15, 118, 110, .12)", fill: true, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
     }
     const rankings = document.getElementById("reportFacultyRankings");
-    if (rankings) rankings.innerHTML = (data.rankings || []).map((item, index) => `<div class="report-ranking-item"><div class="report-ranking-meta"><span class="report-ranking-name"><b>${index + 1}</b>${escapeHtml(item.label)}</span><strong>${Number(item.average).toFixed(2)} / 5</strong></div><div class="report-ranking-track"><span style="width:${Math.min(Number(item.average) / 5 * 100, 100)}%"></span></div></div>`).join("") || '<p class="report-no-data">No rating data available</p>';
+    if (rankings) rankings.innerHTML = (data.rankings || []).map((item, index) => `<div class="report-ranking-item"><div class="report-ranking-meta"><span class="report-ranking-name"><b>${index + 1}</b>${escapeHtml(item.label)}</span><strong>${Number(item.average).toFixed(2)} / 5</strong></div><div class="report-ranking-track"><span class="${index % 2 === 0 ? "is-blue" : "is-green"}" style="width:${Math.min(Number(item.average) / 5 * 100, 100)}%"></span></div></div>`).join("") || '<p class="report-no-data">No rating data available</p>';
   }
 
   function buildEvaluationReportPdfUrl(downloadMode = false) {
@@ -3790,6 +3802,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Populate modal with faculty data
           const nameElement = document.getElementById('reportFacultyName');
           const idElement = document.getElementById('reportFacultyId');
+          const initialsElement = document.getElementById('reportFacultyInitials');
           const ratingElement = document.getElementById('reportOverallRating');
           const overallPercentElement = document.getElementById('reportOverallPercentage');
           const overallProgressFill = document.getElementById('reportOverallProgressFill');
@@ -3802,6 +3815,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const overallPercent = pctScore;
 
           if (nameElement) nameElement.textContent = data.data.name;
+          if (initialsElement) initialsElement.textContent = getFacultyInitials(data.data.name);
           if (idElement) {
             const subjectSuffix = data.data.subject_label
               ? ` | ${data.data.subject_label}${data.data.class_label ? ` (${data.data.class_label})` : ''}`
@@ -4130,6 +4144,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const cleanName = String(name || "").trim();
     const match = cleanName.match(/[A-Za-z0-9]/);
     return match ? match[0].toUpperCase() : "?";
+  }
+
+  function getFacultyInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "FA";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    const suffixes = new Set(["jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"]);
+    const lastName = suffixes.has(parts[parts.length - 1].toLowerCase()) && parts.length > 2
+      ? parts[parts.length - 2]
+      : parts[parts.length - 1];
+    return `${parts[0][0]}${lastName[0]}`.toUpperCase();
   }
 
   function updateTopPerformanceChart() {
@@ -4672,7 +4697,6 @@ document.addEventListener("DOMContentLoaded", () => {
   //  Load Students -------------------
   function loadStudents() {
     console.log("Loading students...");
-    showSectionSkeleton("students-section");
 
     // First load programs, then load students
     loadStudentPrograms().then(() => {
@@ -6121,28 +6145,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       categories.forEach(category => {
         const categoryName = category.querySelector('.category-name')?.textContent.toLowerCase() || '';
-        const questions = category.querySelectorAll('.question-item');
-        let categoryHasMatch = categoryName.includes(searchTerm);
-        let visibleQuestionsCount = 0;
-        
-        questions.forEach(question => {
-          const questionText = question.querySelector('.question-text')?.textContent.toLowerCase() || '';
-          const questionMatches = questionText.includes(searchTerm);
-          
-          if (searchTerm === '' || categoryHasMatch || questionMatches) {
-            question.style.display = '';
-            visibleQuestionsCount++;
-          } else {
-            question.style.display = 'none';
-          }
-        });
-        
-        // Show category if: no search term, category name matches, or has visible questions
-        if (searchTerm === '' || categoryHasMatch || visibleQuestionsCount > 0) {
-          category.style.display = '';
-        } else {
-          category.style.display = 'none';
-        }
+        category.style.display = searchTerm === '' || categoryName.includes(searchTerm) ? '' : 'none';
       });
     };
 
@@ -6217,7 +6220,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const lastName = String(student.lastname || "").trim();
     studentNameElement.textContent = `${firstName} ${lastName} ${student.suffix || ""}`.trim();
     studentInitialsElement.textContent = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "ST";
-    studentMetaElement.textContent = `${student.student_number || "No student number"} · ${getProgramName(student.program)} · ${student.yearlevel || "Year level unavailable"}`;
+    studentMetaElement.textContent = `${student.student_number || "No student number"} · ${getProgramName(student.program)}`;
+    const isIrregularStudent = [student.student_type, student.yearlevel]
+      .some(value => String(value || "").trim().toLowerCase() === "irregular");
 
     subjectsList.innerHTML = "<div class='loading'>Loading subjects...</div>";
     modal.style.display = "flex";
@@ -6233,14 +6238,15 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         let html = "";
         student.subjects.forEach(subject => {
+          const subjectYearLevel = subject.year_level || subject.class_year_level || "";
           html += `
           <div class='student-subject-row'>
             <span class='student-subject-code'>${subject.subject_code}</span>
             <div class='student-subject-info'>
-              <strong>${subject.subject_desc}</strong>
-              <span class='student-subject-year'>${subject.year_level || ''}</span>
+              <strong>${subject.subject_code} - ${subject.subject_desc}</strong>
               <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
             </div>
+            ${isIrregularStudent ? `<span class='student-subject-year'>${subjectYearLevel}</span>` : ""}
           </div>
         `;
         });
@@ -6257,6 +6263,8 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("Found current student:", currentStudent);
 
           if (currentStudent && currentStudent.subjects) {
+            const currentStudentIsIrregular = [currentStudent.student_type, currentStudent.yearlevel]
+              .some(value => String(value || "").trim().toLowerCase() === "irregular");
             console.log("Current student subjects:", currentStudent.subjects);
             if (currentStudent.subjects.length === 0) {
               subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
@@ -6266,14 +6274,15 @@ document.addEventListener("DOMContentLoaded", () => {
               let html = "";
               currentStudent.subjects.forEach(subject => {
                 console.log("Adding subject to display:", subject);
+                const subjectYearLevel = subject.year_level || subject.class_year_level || "";
                 html += `
                 <div class='student-subject-row'>
                   <span class='student-subject-code'>${subject.subject_code}</span>
                   <div class='student-subject-info'>
-                    <strong>${subject.subject_desc}</strong>
-                    <span class='student-subject-year'>${subject.year_level || ''}</span>
-                    <span>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
+                    <strong>${subject.subject_code} - ${subject.subject_desc}</strong>
+                    <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
                   </div>
+                  ${currentStudentIsIrregular ? `<span class='student-subject-year'>${subjectYearLevel}</span>` : ""}
                 </div>
               `;
               });

@@ -42,7 +42,17 @@ function closeLogoutModal(){
 }
 
 function confirmLogout(){
-  window.location.replace("logout.php");}
+  const logoutButton = document.querySelector("#logoutModal .logout-btn");
+  const cancelButton = document.querySelector("#logoutModal .no-btn");
+  if (!logoutButton || logoutButton.classList.contains("is-loading")) return;
+
+  logoutButton.classList.add("is-loading");
+  logoutButton.disabled = true;
+  logoutButton.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
+  if (cancelButton) cancelButton.disabled = true;
+
+  setTimeout(() => window.location.replace("logout.php"), 800);
+}
 
 window.addEventListener("pageshow", event => {
   if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
@@ -296,12 +306,25 @@ function showProfile(e){
   
   // Get faculty information from hidden fields
   const facultyId = document.getElementById("facultyId")?.value;
+  const facultyNumericId = document.getElementById("facultyNumericId")?.value;
   const facultyName = document.getElementById("facultyName")?.value;
   const facultyEmail = document.getElementById("facultyEmail")?.value;
+  const facultyStatus = (document.getElementById("facultyStatus")?.value || "active").toLowerCase();
+  const statusLabel = facultyStatus === "active" ? "Active" : "Inactive";
   
-  // Fetch additional faculty data from database
-  fetchFacultyProfileData(facultyId).then(additionalData => {
-    const subjects = (additionalData?.data?.subjects) || [];
+  // Fetch by both identifiers and merge the results so assignments are never lost.
+  const profileLookups = [...new Set([facultyNumericId, facultyId].filter(Boolean))];
+  Promise.all(profileLookups.map(fetchFacultyProfileData)).then(profileResponses => {
+    const additionalData = profileResponses.find(response => response?.success) || {};
+    const subjects = [
+      ...(Array.isArray(window.facultyAssignedSubjects) ? window.facultyAssignedSubjects : []),
+      ...profileResponses
+      .flatMap(response => response?.data?.subjects || [])
+    ]
+      .filter((subject, index, list) => {
+        const key = `${subject.code || ''}|${subject.name || ''}`;
+        return index === list.findIndex(item => `${item.code || ''}|${item.name || ''}` === key);
+      });
 
     // Build subjects HTML
     const subjectsHtml = buildAssignedSubjectsHtml(subjects);
@@ -309,12 +332,6 @@ function showProfile(e){
     // Create profile modal content with real data matching student profile design
     const profileContent = `
       <div class="sp-modal">
-        <div class="sp-header">
-          <button class="sp-close-btn" onclick="closeProfileModal()" aria-label="Close">
-            <i class="ph ph-x"></i>
-          </button>
-        </div>
-
         <div class="sp-body">
           <div class="sp-name-row">
             <div class="sp-initial">${(facultyName || 'F').charAt(0).toUpperCase()}</div>
@@ -322,6 +339,7 @@ function showProfile(e){
               <div class="sp-name">${facultyName || 'Faculty'}</div>
               <div class="sp-role-badge">Instructor</div>
             </div>
+            <span class="sp-status-badge ${facultyStatus === 'active' ? 'is-active' : 'is-inactive'}"><span class="sp-status-dot" aria-hidden="true"></span>${statusLabel}</span>
           </div>
 
           <div class="sp-divider"></div>

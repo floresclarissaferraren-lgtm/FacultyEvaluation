@@ -108,11 +108,11 @@ include 'totalstudents_dashcount.php';
     <h3>Are you sure you want to logout?</h3>
 
     <div class="logout-buttons">
-      <button type="button" class="btn logout-btn" onclick="confirmLogout()">
+      <button type="button" class="btn logout-btn">
         Yes, Log me out
       </button>
 
-      <button type="button" class="btn cancel-btn" onclick="closeLogoutModal()">
+      <button type="button" class="btn cancel-btn">
         No, Stay Logged In
       </button>
     </div>
@@ -1293,7 +1293,7 @@ include 'totalstudents_dashcount.php';
         <div class="criteria-search-container">
           <div class="search-wrapper">
             <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-            <input type="text" id="criteria-search-input" placeholder="Search questions or categories...">
+            <input type="text" id="criteria-search-input" placeholder="Search categories...">
           </div>
           <button type="button" class="clear-search-btn" id="criteria-search-clear" title="Clear search" aria-label="Clear criteria search">
             <i class="ph ph-arrow-clockwise"></i>
@@ -1823,9 +1823,7 @@ include 'totalstudents_dashcount.php';
     </div>
     <div class="modal-body report-modal-body">
       <div class="faculty-info-header">
-        <div class="faculty-avatar">
-          <i class="ph ph-user"></i>
-        </div>
+        <div id="reportFacultyInitials" class="faculty-avatar" aria-hidden="true">FA</div>
         <div class="faculty-details">
           <h4 id="reportFacultyName">Loading...</h4>
           <p id="reportFacultyId">ID: Loading...</p>

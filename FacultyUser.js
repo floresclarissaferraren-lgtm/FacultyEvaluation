@@ -35,7 +35,18 @@ window.closeLogoutModal = () => {
   document.getElementById("logoutModal").style.display = "none";
 };
 
-window.confirmLogout = () => location.replace("logout.php");
+window.confirmLogout = () => {
+  const logoutButton = document.querySelector("#logoutModal .logout-btn");
+  const cancelButton = document.querySelector("#logoutModal .no-btn");
+  if (!logoutButton || logoutButton.classList.contains("is-loading")) return;
+
+  logoutButton.classList.add("is-loading");
+  logoutButton.disabled = true;
+  logoutButton.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
+  if (cancelButton) cancelButton.disabled = true;
+
+  setTimeout(() => location.replace("logout.php"), 800);
+};
 window.logout = e => { 
   e.preventDefault(); 
   showLogoutModal(); 
@@ -50,13 +61,14 @@ window.addEventListener("pageshow", event => {
 document.addEventListener("click", e => {
   const m = document.getElementById("dropdownMenu"),
         t = document.querySelector(".student-box");
-  if (m.classList.contains("show") && !t.contains(e.target) && !m.contains(e.target)) {
+  if (m && t && m.classList.contains("show") && !t.contains(e.target) && !m.contains(e.target)) {
     closeStudentDropdown();
   }
 });
 
-document.getElementById("logoutModal").addEventListener("click", e => {
-  if (e.target === document.getElementById("logoutModal")) closeLogoutModal();
+const logoutModal = document.getElementById("logoutModal");
+logoutModal?.addEventListener("click", e => {
+  if (e.target === logoutModal) closeLogoutModal();
 });
 
 function showPasswordForm(e){
@@ -140,6 +152,16 @@ function formatStudentType(value) {
   return type ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase() : "Regular";
 }
 
+function formatStudentYearAndSection(yearLevel, section) {
+  const year = String(yearLevel || "").trim();
+  const block = String(section || "").trim();
+  const yearNumber = year.match(/\d+/)?.[0] || year;
+  if (!yearNumber && !block) return "N/A";
+  if (!yearNumber) return block;
+  if (!block) return yearNumber;
+  return `${yearNumber}-${block}`;
+}
+
 function showProfile(e){
   if (e) e.preventDefault();
   closeStudentDropdown();
@@ -155,14 +177,10 @@ function showProfile(e){
   // Fetch additional student data from database
   fetchStudentProfileData(studentId).then(additionalData => {
     // Create profile modal content with real data
+    const formattedStatus = formatStudentStatus(additionalData.status);
+    const studentStatusClass = formattedStatus.toLowerCase() === 'active' ? 'is-active' : 'is-inactive';
     const profileContent = `
       <div class="sp-modal">
-        <div class="sp-header">
-          <button class="sp-close-btn" onclick="closeProfileModal()" aria-label="Close">
-            <i class="ph ph-x"></i>
-          </button>
-        </div>
-
         <div class="sp-body">
           <div class="sp-name-row">
             <div class="sp-initial">${(studentName || 'S').charAt(0).toUpperCase()}</div>
@@ -170,6 +188,7 @@ function showProfile(e){
               <div class="sp-name">${studentName || 'Student'}</div>
               <div class="sp-role-badge">Student</div>
             </div>
+            <span class="sp-status-badge ${studentStatusClass}"><span class="sp-status-dot" aria-hidden="true"></span>${formattedStatus}</span>
           </div>
 
           <div class="sp-divider"></div>
@@ -189,20 +208,8 @@ function showProfile(e){
             </div>
             <div class="sp-info-row">
               <div class="sp-info-content">
-                <span class="sp-info-label">Section</span>
-                <span class="sp-info-value">${studentSection || 'N/A'}</span>
-              </div>
-            </div>
-            <div class="sp-info-row">
-              <div class="sp-info-content">
-                <span class="sp-info-label">Year Level</span>
-                <span class="sp-info-value">${formatStudentYearLevel(studentYearLevel)}</span>
-              </div>
-            </div>
-            <div class="sp-info-row">
-              <div class="sp-info-content">
-                <span class="sp-info-label">Status</span>
-                <span class="sp-info-value">${formatStudentStatus(additionalData.status)}</span>
+                <span class="sp-info-label">Year and Section</span>
+                <span class="sp-info-value">${formatStudentYearAndSection(studentYearLevel, studentSection)}</span>
               </div>
             </div>
             <div class="sp-info-row">
@@ -615,7 +622,10 @@ async function loadStudentFacultyCards() {
   else if (yearLevel) params.set('year_level', yearLevel);
 
   try {
-    const res = await fetch(`getFaculty.php?${params.toString()}`);
+    const res = await fetch(`getFaculty.php?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "same-origin"
+    });
     const facultyList = await res.json();
 
     const assignments = Array.isArray(facultyList) ? facultyList : [];
@@ -638,6 +648,8 @@ async function loadStudentFacultyCards() {
         const subjectCode = subject.subject_code || faculty.subject_code || '';
         const subjectDesc = subject.subject_desc || faculty.subject_desc || '';
         const subjectLabels = [subjectCode, subjectDesc].filter(Boolean).join(' - ');
+        const isIrregularStudent = yearLevel.toLowerCase() === 'irregular';
+        const subjectYearLevel = subject.year_level || subject.class_year_level || '';
         const programCode = subject.program_code || faculty.program_code || '';
         const classLabel = [
           subject.class_year_level || faculty.class_year_level || '',
@@ -652,7 +664,7 @@ async function loadStudentFacultyCards() {
 
         const fullName = nameParts.join(' ');
         const isEvaluated = Number(faculty.evaluation_id || 0) > 0;
-        const facultyInitials = `${(faculty.firstname || 'F').charAt(0)}${(faculty.lastname || '').charAt(0)}`.toUpperCase();
+        const leftLabel = isIrregularStudent && subjectYearLevel ? subjectYearLevel : subjectCode;
 
         const card = document.createElement('div');
         card.className = 'faculty-evaluation-row';
@@ -669,10 +681,10 @@ async function loadStudentFacultyCards() {
         };
          
         card.innerHTML = `
-          <div class="subject-code-badge faculty-initials-badge">${facultyInitials}</div>
+          <div class="subject-code-badge">${leftLabel || 'Subject'}</div>
           <div class="faculty-evaluation-details">
-            <h3 class="faculty-name">${fullName || 'Faculty Member'}</h3>
-            <p class="faculty-evaluation-meta">${subjectDesc || subjectLabels || 'Assigned Subject'}${programCode ? ` <span>·</span> ${programCode}` : ''}</p>
+            <h3 class="faculty-name">${subjectLabels || 'Assigned Subject'}</h3>
+            <p class="faculty-evaluation-meta">${fullName || 'Faculty Member'}${programCode ? ` <span>·</span> ${programCode}` : ''}</p>
           </div>
             <button class="evaluate-faculty-btn ${isEvaluated ? "evaluated" : ""}" ${evaluationOpen && !isEvaluated ? "" : "disabled"}>
               <i class="ph ${isEvaluated ? "ph-check-circle" : "ph-note-pencil"}"></i> ${isEvaluated ? "Evaluated" : "Evaluate Now"}
@@ -1201,7 +1213,19 @@ function _doSubmitEvaluation() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(submission)
   })
-    .then(r => r.json())
+    .then(async response => {
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(`Invalid submission response (${response.status})`);
+      }
+      if (!response.ok) {
+        throw new Error(result.message || `Submission failed (${response.status})`);
+      }
+      return result;
+    })
     .then(async res => {
       if (!res.success) {
         if ((res.message || "").toLowerCase().includes("bad words")) {
@@ -1222,11 +1246,15 @@ function _doSubmitEvaluation() {
       if (fb) fb.value = '';
 
       // Refresh faculty cards to remove evaluated faculty
-      await loadStudentFacultyCards();
+      try {
+        await loadStudentFacultyCards();
+      } catch (refreshError) {
+        console.error("Evaluation saved, but faculty list refresh failed:", refreshError);
+      }
 
-      document.getElementById("evaluateSection").style.display = "block";
-      document.getElementById("facultyCards").style.display = "block";
-      document.getElementById("evaluationContainer").style.display = "none";
+      document.getElementById("evaluateSection")?.style.setProperty("display", "block");
+      document.getElementById("facultyCards")?.style.setProperty("display", "block");
+      document.getElementById("evaluationContainer")?.style.setProperty("display", "none");
       window.selectedFaculty = null;
 
       // Reset to first criteria page

@@ -71,6 +71,45 @@ $default_avatar = "https://cdn-icons-png.flaticon.com/512/3135/3135755.png";
 $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image') === 0)
     ? $faculty_photo
     : $default_avatar;
+$faculty_name_parts = preg_split('/\s+/', trim($faculty_name));
+$faculty_suffix = trim((string)($faculty['suffix'] ?? ''));
+if ($faculty_suffix && count($faculty_name_parts) > 1 && strcasecmp(end($faculty_name_parts), $faculty_suffix) === 0) {
+  array_pop($faculty_name_parts);
+}
+$faculty_initials = strtoupper(substr($faculty_name_parts[0] ?? 'I', 0, 1));
+if (count($faculty_name_parts) > 1) {
+  $faculty_initials .= strtoupper(substr($faculty_name_parts[count($faculty_name_parts) - 1], 0, 1));
+}
+
+$faculty_assigned_subjects = [];
+$subjectSql = <<<'SQL'
+  SELECT DISTINCT s.subject_code, s.subject_desc, s.year_level,
+    p.program_code, p.program_name
+  FROM add_subjects s
+  LEFT JOIN add_programs p ON p.id = s.program_id
+  WHERE s.id IN (
+    SELECT subject_id FROM class_subjects WHERE faculty_id = ?
+    UNION
+    SELECT subject_id FROM faculty_subjects WHERE faculty_id = ?
+  )
+  ORDER BY s.year_level ASC, s.subject_code ASC
+SQL;
+$subjectStmt = $conn->prepare($subjectSql);
+if ($subjectStmt) {
+  $subjectStmt->bind_param("ii", $faculty_id, $faculty_id);
+  $subjectStmt->execute();
+  $subjectResult = $subjectStmt->get_result();
+  while ($subject = $subjectResult->fetch_assoc()) {
+    $faculty_assigned_subjects[] = [
+      'code' => $subject['subject_code'],
+      'name' => $subject['subject_desc'],
+      'year_level' => $subject['year_level'],
+      'program_code' => $subject['program_code'] ?: 'N/A',
+      'program_name' => $subject['program_name'] ?: 'Unassigned Program'
+    ];
+  }
+  $subjectStmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -91,12 +130,16 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 <div class="navbar">
   <div class="brand">
     <img src="assets/images/schoollogo.png" alt="Logo" class="navbar-logo">
-    <span class="logo-text main-title">Faculty Evaluation System</span>
+    <div class="brand-text">
+      <span class="logo-text main-title">Faculty Evaluation System</span>
+      <span class="logo-subtitle">INSTRUCTOR PORTAL</span>
+    </div>
   </div>
 
 
   <div class="user-menu">
     <div class="instructor-box" onclick="toggleDropdown()">
+      <i class="ph ph-user-circle instructor-account-icon" aria-hidden="true"></i>
       <span class="student-label">Instructor</span>
       <i class="ph ph-caret-down"></i>
     </div>
@@ -135,7 +178,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       <div class="welcome-left">
         <div class="avatar-section">
           <div class="large-avatar faculty-avatar">
-            <i class="ph ph-graduation-cap"></i>
+            <span class="faculty-avatar-initials"><?php echo htmlspecialchars($faculty_initials); ?></span>
           </div>
         </div>
       </div>
@@ -143,7 +186,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       <div class="welcome-right">
         <div class="welcome-header-inline">
           <h2 class="welcome-title">WELCOME</h2>
-          <h1 class="faculty-name-title">Prof. <?php echo htmlspecialchars($faculty_name); ?></h1>
+          <h1 class="faculty-name-title"><?php echo htmlspecialchars($faculty_name); ?></h1>
           <!-- Debug info (remove this after fixing) -->
           <?php if ($faculty_name === 'Instructor'): ?>
           <div style="background:#ffebee;padding:10px;border-radius:8px;margin-top:10px;font-size:12px;color:#c62828;">
@@ -251,7 +294,6 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
     <div class="tab-header">
       <button class="tab-btn active" data-tab="overview">Evaluation Overview</button>
       <button class="tab-btn" data-tab="per-subject">Per-Subject</button>
-      <button class="tab-btn" data-tab="history">History & PDFs</button>
     </div>
 
     <div class="tab-content active" id="overview-tab">
@@ -266,11 +308,6 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
       </div>
     </div>
 
-    <div class="tab-content" id="history-tab">
-      <div id="uploadedReportsContainer" class="uploaded-reports-container">
-        <!-- Filled dynamically via JS -->
-      </div>
-    </div>
   </div>
 </div>
 
@@ -281,6 +318,9 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
 <input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
 <input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars($faculty_status); ?>">
 <input type="hidden" id="evaluationOngoing" value="<?php echo $evaluation_ongoing ? '1' : '0'; ?>">
+<script>
+  window.facultyAssignedSubjects = <?php echo json_encode($faculty_assigned_subjects, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+</script>
 </div>
 
 <div id="logoutModal" class="logoutform">
