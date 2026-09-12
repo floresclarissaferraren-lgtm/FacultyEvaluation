@@ -346,28 +346,6 @@ include 'totalstudents_dashcount.php';
       </div>
     </div>
 
-    <div id="topPerformanceModal" class="performance-modal">
-      <div class="performance-modal-content">
-        <div class="performance-modal-header">
-          <h3>All Faculty Performance Rankings</h3>
-          <button class="modal-close-btn" type="button" id="closeTopPerformanceModal" onclick="closeTopPerformanceModal()">×</button>
-        </div>
-        <p id="top-performance-modal-summary" class="performance-modal-summary"></p>
-        <div class="performance-modal-table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Faculty</th>
-                <th>Percentage</th>
-              </tr>
-            </thead>
-            <tbody id="top-performance-modal-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <!-- Third Row -->
@@ -401,6 +379,28 @@ include 'totalstudents_dashcount.php';
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="topPerformanceModal" class="performance-modal">
+  <div class="performance-modal-content">
+    <div class="performance-modal-header">
+      <h3>All Faculty Performance Rankings</h3>
+      <button class="modal-close-btn" type="button" id="closeTopPerformanceModal" onclick="closeTopPerformanceModal()">×</button>
+    </div>
+    <p id="top-performance-modal-summary" class="performance-modal-summary"></p>
+    <div class="performance-modal-table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Faculty</th>
+            <th>Percentage</th>
+          </tr>
+        </thead>
+        <tbody id="top-performance-modal-body"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -862,7 +862,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
-          <tr><th>Image</th><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
+          <tr><th>Image</th><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -917,7 +917,7 @@ include 'totalstudents_dashcount.php';
             </svg>
           </label>
         </div>
-        <input type="file" id="faculty-photo" accept="image/*" hidden>
+        <input type="file" id="faculty-photo" accept=".jpg,.jpeg,image/jpeg,image/png" hidden>
       </div>
       
       <div class="form-row">
@@ -1571,9 +1571,12 @@ include 'totalstudents_dashcount.php';
         <div class="report-chart-heading"><div><h3>Ratings Trend Over Time</h3></div></div>
         <div class="report-line-canvas"><canvas id="reportRatingsTrendChart"></canvas></div>
       </div>
-      <div class="report-chart-card report-ranking-card">
-        <div class="report-chart-heading"><div><h3>Top Faculty Rankings</h3></div></div>
-        <div id="reportFacultyRankings" class="report-rankings"></div>
+      <div id="reportRankingCard" class="report-chart-card report-ranking-card" onclick="openReportFacultyRankings(event)" onkeydown="if (event.key === 'Enter' || event.key === ' ') openReportFacultyRankings(event)" tabindex="0" role="button" aria-label="View all report faculty rankings">
+        <div class="report-chart-heading rating-header"><div><h3>Top Faculty Rankings</h3></div></div>
+        <div id="reportRankingClickTarget" class="top-performance-chart-wrapper" role="button" tabindex="0" aria-label="View all report faculty rankings">
+          <div id="reportFacultyRankings" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all report faculty rankings"></div>
+        </div>
+        <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
       </div>
     </div>
   </div>

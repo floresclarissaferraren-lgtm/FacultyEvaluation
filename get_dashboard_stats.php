@@ -49,6 +49,9 @@ try {
     while ($frow = $faculty_list_result->fetch_assoc()) {
         $fid          = intval($frow['id']);
         $weighted_avg = calcWeightedScore($conn, $fid);
+        if ($weighted_avg <= 0) {
+            continue;
+        }
         $weighted_sum += $weighted_avg;
         $evaluated_faculty++;
         $ratings[] = [

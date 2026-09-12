@@ -29,7 +29,13 @@ try {
         $types .= 's';
     }
 
-    $query = "SELECT e.overall_rating, e.created_at,
+    $query = "SELECT e.overall_rating, e.created_at, e.faculty_id,
+                     COALESCE(e.period_id,
+                         (SELECT ep2.id
+                          FROM evaluation_periods ep2
+                          WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
+                          ORDER BY ep2.id DESC
+                          LIMIT 1)) AS resolved_period_id,
                      f.firstname, f.lastname, f.suffix,
                      p.program_name, ep.ay AS academic_year, ep.semester
               FROM evaluations e
@@ -64,16 +70,27 @@ try {
     $programs = [];
     $trend = [];
     $faculty = [];
+    $facultyPeriodIds = [];
     $total = 0;
 
     while ($row = $result->fetch_assoc()) {
         $score = (float)$row['overall_rating'];
+        $facultyId = intval($row['faculty_id']);
+        $name = trim($row['firstname'] . ' ' . $row['lastname'] . ' ' . $row['suffix']);
+        if (!isset($faculty[$facultyId])) {
+            $faculty[$facultyId] = [
+                'name' => $name,
+                'period_ids' => []
+            ];
+        }
+        $faculty[$facultyId]['period_ids'][intval($row['resolved_period_id'])] = true;
         if ($score <= 0) {
             continue;
         }
         $total++;
         $rating = $score >= 4.5 ? 'Excellent' : ($score >= 3.5 ? 'Very Good' : ($score >= 2.5 ? 'Good' : ($score >= 1.5 ? 'Fair' : 'Poor')));
-        $distribution[$rating]++;
+
+        $facultyPeriodIds[$facultyId][intval($row['resolved_period_id'])] = true;
 
         $program = trim((string)($row['program_name'] ?? '')) ?: 'Unassigned Program';
         if (!isset($programs[$program])) $programs[$program] = ['sum' => 0, 'count' => 0];
@@ -87,10 +104,6 @@ try {
         $trend[$period]['sum'] += $score;
         $trend[$period]['count']++;
 
-        $name = trim($row['firstname'] . ' ' . $row['lastname'] . ' ' . $row['suffix']);
-        if (!isset($faculty[$name])) $faculty[$name] = ['sum' => 0, 'count' => 0];
-        $faculty[$name]['sum'] += $score;
-        $faculty[$name]['count']++;
     }
     $stmt->close();
 
@@ -103,8 +116,39 @@ try {
         return $output;
     };
 
+    $distribution = ['Excellent' => 0, 'Very Good' => 0, 'Good' => 0, 'Fair' => 0, 'Poor' => 0];
+    $distributionFacultyCount = 0;
+    foreach ($facultyPeriodIds as $facultyId => $periodIds) {
+        $periodIds = array_values(array_filter(array_keys($periodIds), static fn($id) => $id > 0));
+        $score = count($periodIds) === 1
+            ? calcWeightedScore($conn, $facultyId, null, null, $periodIds[0])
+            : calcWeightedScore($conn, $facultyId);
+        if ($score <= 0) {
+            continue;
+        }
+
+        $distributionFacultyCount++;
+        $rating = $score >= 4.5 ? 'Excellent' : ($score >= 3.5 ? 'Very Good' : ($score >= 2.5 ? 'Good' : ($score >= 1.5 ? 'Fair' : 'Poor')));
+        $distribution[$rating]++;
+    }
+    $total = $distributionFacultyCount;
+
     $programData = $toAverages($programs);
-    $rankingData = array_slice($toAverages($faculty), 0, 5);
+    $rankingData = [];
+    foreach ($faculty as $facultyId => $facultyData) {
+        $periodIds = array_values(array_filter(array_keys($facultyData['period_ids']), static fn($id) => $id > 0));
+        $score = count($periodIds) === 1
+            ? calcWeightedScore($conn, $facultyId, null, null, $periodIds[0])
+            : calcWeightedScore($conn, $facultyId);
+        if ($score > 0) {
+            $rankingData[] = [
+                'label' => $facultyData['name'],
+                'average' => $score,
+                'responses' => count($periodIds)
+            ];
+        }
+    }
+    usort($rankingData, static fn($a, $b) => $b['average'] <=> $a['average']);
     $trendData = $toAverages($trend);
     usort($trendData, static fn($a, $b) => strcmp($a['label'], $b['label']));
 

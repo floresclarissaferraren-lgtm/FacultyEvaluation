@@ -10,6 +10,18 @@ const viewFacultySubjectsModal = document.getElementById("viewFacultySubjectsMod
 const managePeriodsModal = document.getElementById("managePeriodsModal");
 
 document.addEventListener("DOMContentLoaded", () => {
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+  const resetAdminScrollPosition = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.querySelector("main")?.scrollTo(0, 0);
+  };
+
+  resetAdminScrollPosition();
+  window.addEventListener("pageshow", resetAdminScrollPosition);
+
   let currentActiveLink = null;
   let currentRow = null;
   let deleteTarget = null;
@@ -3318,7 +3330,7 @@ document.addEventListener("DOMContentLoaded", () => {
             row.innerHTML = `
             <td>
               <div class="report-faculty-cell">
-                <span class="report-faculty-avatar" aria-hidden="true">${escapeHtml(getFacultyInitial(evaluation.name))}</span>
+                <span class="report-faculty-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(evaluation.name))}</span>
                 <span class="report-faculty-details">
                   <strong>${escapeHtml(evaluation.name)}</strong>
                   <small>${escapeHtml(evaluation.faculty_id || 'Faculty')}</small>
@@ -3408,7 +3420,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const programCanvas = document.getElementById("reportProgramRatingsChart");
     if (programCanvas) {
       window.reportProgramChart?.destroy();
-      window.reportProgramChart = new Chart(programCanvas, { type: "bar", data: { labels: programs.map(item => item.label), datasets: [{ label: "Average rating", data: programs.map(item => item.average), backgroundColor: "#2563eb", borderRadius: 5, maxBarThickness: 34 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+      window.reportProgramChart = new Chart(programCanvas, { type: "bar", data: { labels: programs.map(item => item.label), datasets: [{ label: "Average rating", data: programs.map(item => item.average), backgroundColor: "#1296DC", borderRadius: 5, maxBarThickness: 34 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
     }
     const trend = data.trend || [];
     const trendCanvas = document.getElementById("reportRatingsTrendChart");
@@ -3417,7 +3429,31 @@ document.addEventListener("DOMContentLoaded", () => {
       window.reportTrendChart = new Chart(trendCanvas, { type: "line", data: { labels: trend.map(item => item.label), datasets: [{ label: "Average rating", data: trend.map(item => item.average), borderColor: "#0f766e", backgroundColor: "rgba(15, 118, 110, .12)", fill: true, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
     }
     const rankings = document.getElementById("reportFacultyRankings");
-    if (rankings) rankings.innerHTML = (data.rankings || []).map((item, index) => `<div class="report-ranking-item"><div class="report-ranking-meta"><span class="report-ranking-name"><b>${index + 1}</b>${escapeHtml(item.label)}</span><strong>${Number(item.average).toFixed(2)} / 5</strong></div><div class="report-ranking-track"><span class="${index % 2 === 0 ? "is-blue" : "is-green"}" style="width:${Math.min(Number(item.average) / 5 * 100, 100)}%"></span></div></div>`).join("") || '<p class="report-no-data">No rating data available</p>';
+    if (rankings) {
+      const reportRatings = (data.rankings || []).map(item => ({
+        name: item.label,
+        rating: Number(item.average) || 0,
+        percentage: Math.max(0, Math.min(100, (Number(item.average) || 0) / 5 * 100)),
+        responses: Number(item.responses) || 0
+      }));
+      window.reportRankingRatings = reportRatings;
+      const handleReportRankingKeydown = event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openReportFacultyRankings(event);
+        }
+      };
+      rankings.title = "Click here to view all report faculty rankings.";
+      rankings.onkeydown = handleReportRankingKeydown;
+      document.getElementById("reportRankingClickTarget")?.setAttribute("title", "Click here to view all report faculty rankings.");
+      document.getElementById("reportRankingCard")?.setAttribute("title", "Click here to view all report faculty rankings.");
+      const chartSource = reportRatings.slice(0, 5);
+      rankings.innerHTML = chartSource.map((item, index) => {
+        const percentage = Number(item.percentage) || 0;
+        const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
+        return `<div class="top-performance-progress-item"><div class="top-performance-rank">${index + 1}.</div><div class="top-performance-avatar faculty-ranking-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(item.name))}</div><div class="top-performance-main"><div class="top-performance-progress-meta"><span class="top-performance-name">${escapeHtml(item.name)}</span><span class="top-performance-percent"><i class="ph ph-star"></i>${percentage.toFixed(1)}%</span></div><div class="top-performance-progress-track" aria-label="${escapeHtml(item.name)} performance ${percentage.toFixed(1)}%"><div class="top-performance-progress-fill ${progressColorClass}" style="width: ${Math.min(percentage, 100)}%;"></div></div></div></div>`;
+      }).join("") || '<div class="top-performance-empty">No faculty ratings available.</div>';
+    }
   }
 
   function buildEvaluationReportPdfUrl(downloadMode = false) {
@@ -3965,6 +4001,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ========================= Dashboard Statistics ======================================================================================================================================================
   window.topPerformanceState = { allRatings: [], sortedRatings: [], modalOpen: false };
+  window.reportRankingRatings = [];
+
+  function openReportFacultyRankings(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const reportRatings = window.reportRankingRatings || [];
+    window.topPerformanceState.allRatings = reportRatings;
+    window.topPerformanceState.sortedRatings = [...reportRatings].sort((a, b) => Number(b.rating) - Number(a.rating));
+    showAllFacultyPerformance();
+  }
+
+  window.openReportFacultyRankings = openReportFacultyRankings;
+
+  document.addEventListener("click", event => {
+    const target = event.target instanceof Element
+      ? event.target.closest("#reportRankingCard, #reportRankingClickTarget, #reportFacultyRankings")
+      : null;
+    if (target) openReportFacultyRankings(event);
+  });
 
   function loadDashboardStats() {
     console.log("Loading dashboard stats...");
@@ -4177,12 +4232,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentProgressList = document.getElementById("topPerformanceChart");
     if (!currentProgressList) return;
 
-    currentProgressList.title = "Click here to view all ranked faculties.";
-    currentProgressList.onclick = showAllFacultyPerformance;
+    currentProgressList.title = "Open the Evaluation Report for all faculty rankings.";
+    currentProgressList.onclick = event => {
+      event.preventDefault();
+      showSection("report-section");
+    };
     currentProgressList.onkeydown = function (e) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        showAllFacultyPerformance();
+        showSection("report-section");
       }
     };
 
@@ -4201,7 +4259,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return `
       <div class="top-performance-progress-item">
         <div class="top-performance-rank">${index + 1}.</div>
-        <div class="top-performance-avatar" aria-hidden="true">${escapeHtml(getFacultyInitial(facultyName))}</div>
+        <div class="top-performance-avatar faculty-ranking-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(facultyName))}</div>
         <div class="top-performance-main">
           <div class="top-performance-progress-meta">
             <span class="top-performance-name">${escapeHtml(facultyName)}</span>
@@ -4284,8 +4342,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function initializeReportRankingClickTarget() {
+    const rankingCard = document.getElementById("reportRankingCard");
+    if (!rankingCard || rankingCard.dataset.clickBound === "true") return;
+    rankingCard.dataset.clickBound = "true";
+    rankingCard.addEventListener("click", openReportFacultyRankings);
+    rankingCard.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        openReportFacultyRankings(event);
+      }
+    });
+  }
+
   loadFaculty();
   loadDashboardStats();
+  initializeReportRankingClickTarget();
   // Only load evaluations if report section is initially visible
   const currentSection = document.querySelector('.section:not([style*="display: none"])');
   if (currentSection && currentSection.id === 'report-section') {

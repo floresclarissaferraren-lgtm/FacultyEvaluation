@@ -14,25 +14,16 @@
   --primary-950: #082f49;
   --accent-50: #fefce8;
   --accent-100: #fef9c3;
-  --accent-200: #fef08a;
   --accent-300: #fde047;
   --accent-400: #facc15;
   --accent-500: #eab308;
   --accent-600: #ca8a04;
-  --accent-700: #a16207;
   --accent-800: #854d0e;
-  --accent-900: #713f12;
-  --accent-950: #422006;
-  --blue-050: var(--primary-50);
-  --blue-600: #2563eb;
   --blue-700: #1d4ed8;
   --blue-900: #1e3a8a;
   --slate-200: #e2e8f0;
   --slate-500: #64748b;
-  --slate-700: #334155;
   --slate-900: #0f172a;
-  --yellow-400: var(--accent-400);
-  --yellow-500: var(--accent-500);
   --red-500: var(--error);
   --neutral-50: #f8fafc;
   --neutral-100: #f1f5f9;
@@ -47,7 +38,6 @@
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
-  --info: #3b82f6;
   --border-color: var(--neutral-200);
   --border: var(--border-color);
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / .05);
@@ -55,20 +45,13 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / .1), 0 8px 10px -6px rgb(0 0 0 / .1);
   --radius-sm: .375rem;
-  --radius-md: .5rem;
   --radius-lg: .75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
   --spacing-xs: .25rem;
   --spacing-sm: .5rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --dashboard-icon-color: #0B7AC7;
 }
 
@@ -91,7 +74,7 @@ h6,
 .stat-number,
 .stat-value,
 .summary-stat strong {
-  font-family: var(--font-display) !important;
+  font-family: var(--font-sans) !important;
 }
 
 * {
@@ -101,7 +84,7 @@ h6,
 }
 
 body {
-  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   background: #F0F7FF;
   min-height: 100vh;
 }
@@ -193,17 +176,7 @@ body {
 /* Color palette for program cards — same blue for all */
 .program-card {
   --card-accent: #0284c7;
-  --card-border-top: #0284c7;
 }
-
-.program-card[data-color="0"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="1"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="2"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="3"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="4"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="5"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="6"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
-.program-card[data-color="7"] { --card-accent: #0284c7; --card-border-top: #0284c7; }
 
 /* Program Card */
 .program-card {
@@ -2145,7 +2118,7 @@ main.full {
 }
 
 .top-performance-rank {
-  color: #4169e1;
+  color: #1296DC;
   font-size: 1.1rem;
   font-weight: 800;
   text-align: center;
@@ -2153,17 +2126,47 @@ main.full {
 }
 
 .top-performance-avatar {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  flex: 0 0 32px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #dbeafe, #eef2fc);
-  border: 2px solid #fff;
-  box-shadow: 0 4px 12px rgba(65, 105, 225, .15);
-  color: #4169e1;
-  font-size: 1.1rem;
+  background: #1296DC;
+  border: 0;
+  box-shadow: none;
+  color: #ffffff;
+  font-size: .7rem;
   font-weight: 800;
+}
+
+.faculty-ranking-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  background: #1296DC !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  font-size: .7rem !important;
+  font-weight: 800 !important;
+}
+
+#dashboard-section .top-performance-avatar,
+#report-section .top-performance-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  background: #1296DC !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  font-size: .7rem !important;
+  font-weight: 800 !important;
 }
 
 .top-performance-main {
@@ -2271,7 +2274,7 @@ main.full {
 }
 
 .top-performance-percent i {
-  color: #f59e0b;
+  color: #1296DC;
   font-size: 1rem;
 }
 
@@ -2285,15 +2288,15 @@ main.full {
 .top-performance-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: #4169e1;
+  background: #1296DC;
 }
 
 .top-performance-progress-fill.is-green {
-  background: #10b981;
+  background: #1296DC;
 }
 
 .top-performance-progress-fill.is-blue {
-  background: #4169e1;
+  background: #1296DC;
 }
 
 .top-performance-empty {
@@ -3534,28 +3537,18 @@ table.evaluation-table .view-btn i {
 .faculty-placeholder-avatar {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%) !important;
-  border: 2px solid #7dd3fc;
-  color: #075985 !important;
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .55), 0 3px 8px rgba(3, 105, 161, .16);
-}
-
-.faculty-placeholder-avatar::before {
-  content: "";
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  right: -9px;
-  bottom: -12px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .52);
+  width: 32px;
+  height: 32px;
+  background: #2098dc !important;
+  border: 0;
+  color: #ffffff !important;
+  box-shadow: none;
 }
 
 .faculty-placeholder-avatar {
   position: relative;
-  font-size: 10px;
+  font-size: .7rem;
   font-weight: 800;
-  letter-spacing: .04em;
 }
 
 .inline-status {
@@ -4186,7 +4179,6 @@ table.evaluation-table .view-btn:hover {
   color: #ffffff;
 }
 
-#addQuestionModal .addProgram-header h3,
 #addQuestionModal .addProgram-header h3 {
   color: #ffffff;
 }
@@ -6949,7 +6941,15 @@ table.evaluation-table .view-btn:hover {
 #report-section .report-trend-card { order: 3; }
 #report-section .report-program-card { order: 4; }
 #report-section .report-chart-card { min-width: 0; padding: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
+#report-section .report-ranking-card { position: relative; z-index: 1; padding: 24px; border: 1px solid #e8eef8; border-radius: 14px; box-shadow: 0 1px 3px rgba(65, 105, 225, .06), 0 4px 16px rgba(65, 105, 225, .07); cursor: pointer; pointer-events: auto; }
 #report-section .report-chart-heading, #report-section .report-ranking-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+#report-section .report-ranking-card .rating-header h3 { margin: 0; color: #64748b; font-size: .78rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+#report-section .report-ranking-card .top-performance-chart-wrapper { min-height: 240px; }
+#report-section .report-ranking-card .top-performance-progress-list { min-height: 240px; }
+#report-section .report-ranking-card .top-performance-hint { margin-top: 6px; }
+#report-section .report-ranking-card .top-performance-progress-fill,
+#report-section .report-ranking-card .top-performance-progress-fill.is-blue,
+#report-section .report-ranking-card .top-performance-progress-fill.is-green { background: #1296DC !important; }
 #report-section .report-chart-kicker { display: block; margin-bottom: 5px; color: #64748b; font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 #report-section .report-chart-card h3 { margin: 0; color: #0f172a; font-size: 1rem; }
 #report-section .report-donut-layout { display: flex; align-items: center; gap: 22px; min-height: 220px; }
@@ -6962,14 +6962,6 @@ table.evaluation-table .view-btn:hover {
 #report-section .report-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
 #report-section .report-legend-track { height: 5px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
 #report-section .report-legend-track span { display: block; height: 100%; border-radius: inherit; }
-#report-section .report-rankings { display: grid; gap: 17px; margin-top: 20px; }
-#report-section .report-ranking-meta { align-items: center; color: #334155; font-size: .82rem; }
-#report-section .report-ranking-name { display: flex; align-items: center; gap: 9px; min-width: 0; }
-#report-section .report-ranking-name b { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; font-size: .72rem; }
-#report-section .report-ranking-track { height: 8px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
-#report-section .report-ranking-track span { display: block; height: 100%; border-radius: inherit; background: #4169e1; }
-#report-section .report-ranking-track span.is-blue { background: #4169e1; }
-#report-section .report-ranking-track span.is-green { background: #10b981; }
 #report-section .report-no-data { color: #64748b; font-size: .85rem; }
 
 #report-section .evaluation-table {
@@ -7037,18 +7029,21 @@ table.evaluation-table .view-btn:hover {
 #report-section .report-faculty-avatar {
   display: grid;
   place-items: center;
+  overflow: hidden;
   width: 32px;
   height: 32px;
   flex: 0 0 32px;
   border-radius: 50%;
   background: #2098dc;
+  border: 0;
+  box-shadow: none;
   color: #ffffff;
   font-size: .7rem;
   font-weight: 800;
 }
 
 #report-section .report-faculty-details { min-width: 0; }
-#report-section .report-faculty-details strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#report-section .evaluation-table .report-faculty-details strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #0A64A8 !important; font-size: 0.875rem !important; font-weight: 600 !important; font-family: var(--font-sans) !important; text-align: left; }
 #report-section .report-period-year { display: block; color: #60a5fa; font-weight: 700; }
 
 #report-section .score-cell {
@@ -7065,8 +7060,10 @@ table.evaluation-table .view-btn:hover {
 #report-section .score-pct {
   grid-area: percentage;
   color: #1d4ed8;
-  font-size: 1rem;
+  font-size: .78rem;
   font-weight: 800;
+  justify-self: start;
+  text-align: left;
 }
 
 #report-section .score-raw {
@@ -7084,7 +7081,7 @@ table.evaluation-table .view-btn:hover {
 }
 
 #report-section .score-mini-fill {
-  background: #60a5fa;
+  background: #1296DC;
 }
 
 #report-section .badge {
@@ -7541,7 +7538,7 @@ div#report-section .evaluation-table .badge {
   color: #047857 !important;
   padding: 6px 12px !important;
   border-radius: 12px !important;
-  font-size: 0.75rem !important;
+  font-size: 0.55rem !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
@@ -11269,7 +11266,7 @@ input[type=range] {
   justify-content: space-between;
   min-height: 68px;
   padding: 21px 24px;
-  background: #1d4ed8;
+  background: #0B90E0 !important;
   color: #ffffff;
   border-bottom: 0;
   position: relative;
@@ -11395,10 +11392,9 @@ input[type=range] {
 
 #facultyReportModal .download-pdf-btn {
   margin-left: auto;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-  color: #fff;
+  background: #0B90E0 !important;
+  color: #ffffff !important;
+  border: 1px solid #0B90E0;
   border-radius: 9px;
   padding: 9px 16px;
   font-size: .84rem;
@@ -11411,7 +11407,8 @@ input[type=range] {
 }
 
 #facultyReportModal .download-pdf-btn:hover {
-  background: #dbeafe;
+  background: #087FC5 !important;
+  border-color: #087FC5;
 }
 
 #facultyReportModal .details-summary-grid {
@@ -13877,19 +13874,22 @@ main,
   color: #0c4a6e;
 }
 
-#dashboard-section .rating-legend .legend-color.excellent,
-#dashboard-section .top-performance-progress-fill.is-blue {
+#dashboard-section .rating-legend .legend-color.excellent {
   background: #1e3a8a;
 }
 
-#dashboard-section .rating-legend .legend-color.very-good,
-#dashboard-section .top-performance-progress-fill {
+#dashboard-section .rating-legend .legend-color.very-good {
   background: #1d4ed8;
 }
 
-#dashboard-section .rating-legend .legend-color.good,
-#dashboard-section .top-performance-progress-fill.is-green {
+#dashboard-section .rating-legend .legend-color.good {
   background: #facc15;
+}
+
+#dashboard-section .top-performance-progress-fill,
+#dashboard-section .top-performance-progress-fill.is-blue,
+#dashboard-section .top-performance-progress-fill.is-green {
+  background: #1296DC;
 }
 
 #dashboard-section .rating-legend .legend-color.fair {
@@ -14128,6 +14128,7 @@ main,
   color: #2563eb;
   font-size: 0.875rem;
   font-weight: 600;
+  font-family: var(--font-sans);
   text-align: left;
 }
 

@@ -303,8 +303,21 @@ if ($subjectStmt) {
     </div>
 
     <div class="tab-content" id="per-subject-tab">
-      <div class="content-placeholder">
-        <p>Per-subject evaluation details will appear here.</p>
+      <div class="subject-table-wrap">
+        <table class="subject-results-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Subject</th>
+              <th>Year Level</th>
+              <th>Responses</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+          <tbody id="facultySubjectResultsBody">
+            <tr><td colspan="5" class="subject-table-empty">Loading subjects...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 

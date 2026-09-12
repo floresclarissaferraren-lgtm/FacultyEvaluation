@@ -1109,6 +1109,39 @@ function startInstructorPeriodRefresh() {
   setInterval(loadInstructorAcademicPeriod, 1000); // Then every 1 second
 }
 
+function renderFacultySubjectRows(departments) {
+  const body = document.getElementById('facultySubjectResultsBody');
+  if (!body) return;
+  const subjects = (Array.isArray(departments) ? departments : []).flatMap(department => department.subjects || []);
+  if (subjects.length === 0) {
+    body.innerHTML = '<tr><td colspan="5" class="subject-table-empty">No subject evaluation data available yet.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = subjects.map(subject => `
+    <tr>
+      <td><span class="subject-code-tag">${escapeHtml(subject.subject_code || 'N/A')}</span></td>
+      <td><strong>${escapeHtml(subject.subject_desc || 'Unnamed Subject')}</strong></td>
+      <td>${escapeHtml(subject.year_level || 'N/A')}</td>
+      <td>${Number(subject.eval_count || 0)} students</td>
+      <td><span class="subject-rating"><i class="ph ph-star"></i>${Number(subject.avg_rating || 0).toFixed(2)}</span></td>
+    </tr>
+  `).join('');
+}
+
+function loadFacultySubjectRows() {
+  const facultyId = document.getElementById('facultyNumericId')?.value;
+  if (!facultyId || isFacultyInactive() || isEvaluationOngoing()) return;
+  fetch('get_faculty_per_subject_report.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ faculty_id: facultyId })
+  })
+    .then(response => response.json())
+    .then(data => renderFacultySubjectRows(data.success ? data.departments : []))
+    .catch(() => renderFacultySubjectRows([]));
+}
+
 function loadUploadedPDFs() {
   const container = document.getElementById("uploadedReportsContainer");
   if (!container) return;
@@ -1166,6 +1199,7 @@ function loadUploadedPDFs() {
 
 document.addEventListener("DOMContentLoaded", function() {
   loadFacultyStats();
+  loadFacultySubjectRows();
   startInstructorPeriodRefresh();
   loadUploadedPDFs();
 });

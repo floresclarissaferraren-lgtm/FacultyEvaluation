@@ -408,11 +408,11 @@ h6,
   display:inline-flex;
   align-items:center;
   gap:10px;
+  transition:none !important;
+  transform:none !important;
 }
 
 .primary-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 20px rgba(44,62,117,.35);
   background:#1e3a8a;
 }
 
@@ -425,7 +425,7 @@ h6,
 .secondary-btn:hover{
   background:var(--navy-blue);
   color:#fff;
-  transform:translateY(-2px);
+  transform:none !important;
 }
 
 .action-btn:disabled{
@@ -622,6 +622,20 @@ h6,
   color:#9ca3af;
   font:500 14px/1.6 "Inter",sans-serif;
 }
+
+.subject-table-wrap{overflow-x:auto}
+.subject-results-table{width:100%;min-width:680px;border-collapse:separate;border-spacing:0;color:#0b5f9c;font:500 14px/1.4 "Inter",sans-serif}
+.subject-results-table th{padding:17px 22px;background:#0B90E0;color:#fff;font-size:13px;font-weight:700;letter-spacing:.04em;text-align:left;text-transform:uppercase}
+.subject-results-table th:first-child{border-radius:10px 0 0 10px}
+.subject-results-table th:last-child{border-radius:0 10px 10px 0}
+.subject-results-table td{padding:17px 22px;border-bottom:1px solid #e6f0f8;white-space:nowrap}
+.subject-results-table tbody tr:nth-child(odd){background:#f8fcff}
+.subject-results-table tbody tr:hover{background:#eef8ff}
+.subject-results-table td strong{color:#0b5f9c;font-size:16px}
+.subject-code-tag{display:inline-block;padding:5px 10px;border-radius:7px;background:#e9f4fc;color:#0b7ac7;font-weight:700}
+.subject-rating{color:#0b5f9c;font-size:16px;font-weight:700}
+.subject-rating i{margin-right:5px;color:#f59e0b}
+.subject-table-empty{padding:36px 20px !important;color:#94a3b8;text-align:center}
 
 .uploaded-reports-container{
   display:flex;
@@ -1463,12 +1477,20 @@ body{
 }
 
 .primary-btn{
-  background:#0B90E0;
+  background:#0B90E0 !important;
+  color:#ffffff !important;
   box-shadow:0 4px 12px rgba(30,58,138,.25);
 }
 
 .primary-btn:hover{
-  background:#087FC5;
+  background:#087FC5 !important;
+  color:#ffffff !important;
+  transform:none !important;
+  box-shadow:none !important;
+}
+
+.primary-btn i {
+  color:#ffffff !important;
 }
 
 .secondary-btn{
@@ -1479,6 +1501,7 @@ body{
 .secondary-btn:hover{
   background:#0B90E0;
   color:#fff;
+  transform:none !important;
 }
 
 .stats-cards-container,
