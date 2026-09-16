@@ -22,4 +22,4 @@ if (session_status() === PHP_SESSION_NONE) {
     // Optional: Set custom session name for better security
     ini_set('session.name', 'FACULTY_EVAL_SID');
 }
-?>
+

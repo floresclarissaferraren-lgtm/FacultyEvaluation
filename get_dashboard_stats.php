@@ -8,8 +8,78 @@ include 'connect.php';
 require_once 'weighted_score_helper.php';
 require_once 'evaluation_schema.php';
 
+function getActiveEvaluationPeriodId(mysqli $conn): int
+{
+    $result = $conn->query("SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
+    $row = $result ? $result->fetch_assoc() : null;
+    return intval($row['active_period_id'] ?? 0);
+}
+
+function getExpectedEvaluationSlots(mysqli $conn): int
+{
+    $sql = "
+        SELECT COUNT(*) AS total
+        FROM (
+            SELECT DISTINCT
+                st.id AS student_id,
+                cs.faculty_id,
+                cs.subject_id,
+                ac.id AS class_id
+            FROM add_students st
+            INNER JOIN add_classes ac
+                ON (
+                    CAST(ac.program_id AS CHAR) = TRIM(st.program)
+                    OR EXISTS (
+                        SELECT 1
+                        FROM add_programs ap
+                        WHERE ap.id = ac.program_id
+                          AND (
+                            TRIM(ap.program_code) = TRIM(st.program)
+                            OR TRIM(ap.program_name) = TRIM(st.program)
+                          )
+                    )
+                )
+               AND (
+                    ac.year_level = st.yearlevel
+                    OR ac.year_level = CONCAT(st.yearlevel, CASE st.yearlevel WHEN '1' THEN 'st Year' WHEN '2' THEN 'nd Year' WHEN '3' THEN 'rd Year' ELSE 'th Year' END)
+               )
+               AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
+            INNER JOIN class_subjects cs
+                ON cs.class_id = ac.id
+               AND cs.faculty_id > 0
+            WHERE LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
+
+            UNION
+
+            SELECT DISTINCT
+                ss.student_id,
+                COALESCE(NULLIF(cs.faculty_id, 0), fs.faculty_id) AS faculty_id,
+                ss.subject_id,
+                COALESCE(ssc.class_id, 0) AS class_id
+            FROM student_subjects ss
+            INNER JOIN add_students st
+                ON st.id = ss.student_id
+               AND LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
+            LEFT JOIN student_subject_classes ssc
+                ON ssc.student_id = ss.student_id
+               AND ssc.subject_id = ss.subject_id
+            LEFT JOIN class_subjects cs
+                ON cs.class_id = ssc.class_id
+               AND cs.subject_id = ss.subject_id
+               AND cs.faculty_id > 0
+            LEFT JOIN faculty_subjects fs
+                ON fs.subject_id = ss.subject_id
+            WHERE COALESCE(NULLIF(cs.faculty_id, 0), fs.faculty_id) IS NOT NULL
+        ) expected
+    ";
+    $result = $conn->query($sql);
+    $row = $result ? $result->fetch_assoc() : null;
+    return intval($row['total'] ?? 0);
+}
+
 try {
     ensureEvaluationsSchema($conn);
+    $active_period_id = getActiveEvaluationPeriodId($conn);
     // Get total faculty count
     $faculty_query = "SELECT COUNT(*) as total FROM add_faculties";
     $faculty_result = $conn->query($faculty_query);
@@ -22,25 +92,46 @@ try {
     
     error_log("Dashboard stats - Total students: " . $total_students);
     
-    // Get total active students (who need to evaluate)
+    // Get total active students.
     $active_students_query = "SELECT COUNT(*) as total FROM add_students WHERE LOWER(TRIM(COALESCE(status,'active'))) = 'active'";
     $active_students_result = $conn->query($active_students_query);
     $total_active_students = $active_students_result->fetch_assoc()['total'];
 
-    // Get total submitted evaluations
-    $evaluation_query = "SELECT COUNT(*) as total FROM evaluations";
-    $evaluation_result = $conn->query($evaluation_query);
-    $total_evaluations_submitted = $evaluation_result->fetch_assoc()['total'];
+    $expected_evaluations = $total_active_students > 0 ? $total_active_students : getExpectedEvaluationSlots($conn);
+
+    // Get submitted evaluations for the active period when one is set.
+    if ($active_period_id > 0) {
+        $evaluation_stmt = $conn->prepare("SELECT COUNT(*) as total FROM evaluations WHERE period_id = ?");
+        $evaluation_stmt->bind_param("i", $active_period_id);
+        $evaluation_stmt->execute();
+        $evaluation_result = $evaluation_stmt->get_result();
+        $total_evaluations_submitted = intval($evaluation_result->fetch_assoc()['total'] ?? 0);
+        $evaluation_stmt->close();
+    } else {
+        $evaluation_query = "SELECT COUNT(*) as total FROM evaluations";
+        $evaluation_result = $conn->query($evaluation_query);
+        $total_evaluations_submitted = intval($evaluation_result->fetch_assoc()['total'] ?? 0);
+    }
     
     // Get faculty ratings using weighted scores (real-time)
     $faculty_list_query = "
         SELECT f.id, f.firstname, f.lastname, f.suffix, COUNT(e.id) as response_count
         FROM add_faculties f
-        LEFT JOIN evaluations e ON f.id = e.faculty_id
+        LEFT JOIN evaluations e
+          ON f.id = e.faculty_id
+         " . ($active_period_id > 0 ? "AND e.period_id = ?" : "") . "
         GROUP BY f.id, f.firstname, f.lastname, f.suffix
         HAVING response_count > 0
     ";
-    $faculty_list_result = $conn->query($faculty_list_query);
+    if ($active_period_id > 0) {
+        $faculty_list_stmt = $conn->prepare($faculty_list_query);
+        $faculty_list_stmt->bind_param("i", $active_period_id);
+        $faculty_list_stmt->execute();
+        $faculty_list_result = $faculty_list_stmt->get_result();
+    } else {
+        $faculty_list_result = $conn->query($faculty_list_query);
+        $faculty_list_stmt = null;
+    }
 
     $ratings            = [];
     $weighted_sum       = 0.0;
@@ -48,7 +139,7 @@ try {
 
     while ($frow = $faculty_list_result->fetch_assoc()) {
         $fid          = intval($frow['id']);
-        $weighted_avg = calcWeightedScore($conn, $fid);
+        $weighted_avg = calcWeightedScore($conn, $fid, null, null, $active_period_id ?: null);
         if ($weighted_avg <= 0) {
             continue;
         }
@@ -60,6 +151,9 @@ try {
             'percentage' => round(($weighted_avg / 5) * 100, 2),
             'responses'  => intval($frow['response_count'])
         ];
+    }
+    if ($faculty_list_stmt) {
+        $faculty_list_stmt->close();
     }
 
     // Sort by weighted rating descending
@@ -113,7 +207,10 @@ try {
             'totalFaculty' => $total_faculty,
             'totalStudents' => $total_students,
             'activeStudents' => $total_active_students,
+            'activePeriodId' => $active_period_id,
+            'expectedEvaluations' => $expected_evaluations,
             'totalEvaluationsSubmitted' => $total_evaluations_submitted,
+            'pendingEvaluations' => max($expected_evaluations - $total_evaluations_submitted, 0),
             'overallRating' => $overall_rating,
             'evaluatedFaculty' => $evaluated_faculty,
             'ratings' => $ratings,
@@ -122,7 +219,7 @@ try {
         ]
     ]);
     
-} catch (Exception $e) {
+} catch (Throwable $e) {
     echo json_encode([
         'success' => false,
         'message' => 'Error fetching dashboard stats: ' . $e->getMessage()

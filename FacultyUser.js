@@ -177,8 +177,20 @@ function showProfile(e){
   // Fetch additional student data from database
   fetchStudentProfileData(studentId).then(additionalData => {
     // Create profile modal content with real data
-    const formattedStatus = formatStudentStatus(additionalData.status);
+    const currentStudentStatus = String(
+      additionalData.status || document.getElementById("studentStatus")?.value || "active"
+    ).trim().toLowerCase();
+    const formattedStatus = formatStudentStatus(currentStudentStatus);
     const studentStatusClass = formattedStatus.toLowerCase() === 'active' ? 'is-active' : 'is-inactive';
+
+    const statusInput = document.getElementById("studentStatus");
+    if (statusInput) statusInput.value = currentStudentStatus;
+    const statusIndicator = document.querySelector(".status-indicator");
+    if (statusIndicator) {
+      statusIndicator.classList.toggle("active", currentStudentStatus === "active");
+      statusIndicator.classList.toggle("inactive", currentStudentStatus !== "active");
+    }
+
     const profileContent = `
       <div class="sp-modal">
         <div class="sp-body">
@@ -256,6 +268,8 @@ async function fetchStudentProfileData(studentId) {
   try {
     const response = await fetch('get_student_profile.php', {
       method: 'POST',
+      cache: 'no-store',
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -593,6 +607,7 @@ setInterval(refreshStudentPeriodAccess, 1000);
 // ================= LOAD CATEGORIES + QUESTIONS =================
 let currentCriteria = 0;
 let criteriaTables = [];
+let evaluationSubmitting = false;
 
 async function loadStudentFacultyCards() {
   const studentId = document.getElementById('studentId')?.value.trim();
@@ -997,8 +1012,9 @@ function updatePaginationButtons() {
   
   if (nextBtn) {
     const isLastPage = currentCriteria === criteriaTables.length - 1;
-    nextBtn.disabled = false;
+    nextBtn.disabled = evaluationSubmitting;
     nextBtn.textContent = isLastPage ? "Submit" : "Next";
+    if (evaluationSubmitting) nextBtn.textContent = "Submitting...";
     nextBtn.onclick = isLastPage ? submitEvaluation : nextCriteria;
   }
   
@@ -1178,6 +1194,8 @@ function closeFinalReviewModal() {
 }
 
 function _doSubmitEvaluation() {
+  if (evaluationSubmitting) return;
+  evaluationSubmitting = true;
   closeFinalReviewModal();
 
   const studentId = document.getElementById('studentId')?.value?.trim() || '';
@@ -1230,11 +1248,9 @@ function _doSubmitEvaluation() {
       if (!res.success) {
         if ((res.message || "").toLowerCase().includes("bad words")) {
           setFeedbackBadwordsState(true);
-          updatePaginationButtons();
           return;
         }
         showGlobalNotification(res.message || "Failed to submit evaluation.", "error");
-        updatePaginationButtons();
         return;
       }
 
@@ -1248,6 +1264,7 @@ function _doSubmitEvaluation() {
       // Refresh faculty cards to remove evaluated faculty
       try {
         await loadStudentFacultyCards();
+        await updateStudentStats();
       } catch (refreshError) {
         console.error("Evaluation saved, but faculty list refresh failed:", refreshError);
       }
@@ -1266,7 +1283,10 @@ function _doSubmitEvaluation() {
     })
     .catch(err => {
       console.error("Submit error:", err);
-      showGlobalNotification("Error submitting evaluation. Please try again.", "error");
+      showGlobalNotification(err.message || "Error submitting evaluation. Please try again.", "error");
+    })
+    .finally(() => {
+      evaluationSubmitting = false;
       updatePaginationButtons();
     });
 }

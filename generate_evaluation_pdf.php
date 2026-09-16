@@ -9,20 +9,27 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty' && isEvaluationO
     exit('Evaluation results are unavailable while the evaluation process is still ongoing.');
 }
 
-// Get JSON data
+// Get JSON data, with GET fallback for direct URL access/testing.
 $data = json_decode(file_get_contents('php://input'), true);
+if (!is_array($data) || empty($data)) {
+    $data = $_GET;
+}
 
-// Validate required fields
+// Validate required fields from either JSON or GET.
 if (
     !isset($data['facultyName']) ||
-    !isset($data['facultyId'])
+    !isset($data['facultyId']) ||
+    trim((string)$data['facultyName']) === '' ||
+    trim((string)$data['facultyId']) === ''
 ) {
     http_response_code(400);
     exit('Missing required data');
 }
 
-// Load FPDF
-require('fpdf.php');
+// Load FPDF once
+if (!class_exists('FPDF', false)) {
+    require_once __DIR__ . '/fpdf.php';
+}
 
 // Fix font path for Windows
 define('FPDF_FONTPATH', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'font' . DIRECTORY_SEPARATOR);
@@ -180,9 +187,8 @@ if ($isAdminRequest) {
     $pdf->SetTextColor(255, 255, 255);
     $pdf->Cell(0, 9, '  Evaluation Details', 0, 1, 'L', true);
 
-    $categoryWidth = 65;
-    $ratingWidth = 35;
-    $feedbackWidth = 90;
+    $categoryWidth = 85;
+    $ratingWidth = 105;
     $tableX = 10;
 
     $pdf->SetX($tableX);
@@ -190,8 +196,7 @@ if ($isAdminRequest) {
     $pdf->SetFillColor(30, 64, 175);
     $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
     $pdf->Cell($categoryWidth, 8, 'Category', 1, 0, 'C', true);
-    $pdf->Cell($ratingWidth, 8, 'Overall Rating', 1, 0, 'C', true);
-    $pdf->Cell($feedbackWidth, 8, 'All Feedback', 1, 1, 'C', true);
+    $pdf->Cell($ratingWidth, 8, 'Overall Rating', 1, 1, 'C', true);
 
     $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
     $pdf->SetFont('Arial', '', 9);
@@ -200,42 +205,28 @@ if ($isAdminRequest) {
         $pdf->SetX($tableX);
         $pdf->Cell($categoryWidth + $ratingWidth + $feedbackWidth, 10, 'No evaluation details available', 1, 1, 'C');
     } else {
-        foreach ($evaluationDetails as $index => $detail) {
+        foreach ($evaluationDetails as $detail) {
             $category = cleanText($detail['category'] ?? 'N/A');
             $rating = cleanText($detail['average_score'] ?? $detail['overall_rating'] ?? '0.00');
-            $feedbackText = $index === 0 ? cleanText($detail['all_feedback'] ?? $allFeedback) : '';
-            $feedbackLines = $feedbackText !== ''
-                ? explode("\n", wordwrap($feedbackText, 52, "\n", true))
-                : [''];
-            $feedbackChunks = array_chunk($feedbackLines, 8);
 
-            foreach ($feedbackChunks as $chunkIndex => $chunkLines) {
-                $chunkText = implode("\n", $chunkLines);
-                $lineCount = max(1, count($chunkLines));
-                $rowHeight = max(10, $lineCount * 5 + 4);
+            $pdf->SetX($tableX);
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->Cell($categoryWidth, 10, $category, 1, 0, 'L');
+            $pdf->Cell($ratingWidth, 10, $rating . ' / 5.00', 1, 1, 'C');
+        }
 
-                if ($pdf->GetY() + $rowHeight > 275) {
-                    $pdf->AddPage();
-                }
+        $feedbackText = cleanText($allFeedback);
+        if ($feedbackText !== '') {
+            $pdf->Ln(6);
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->Cell(0, 8, '  Feedback', 0, 1, 'L', true);
 
-                $x = $tableX;
-                $y = $pdf->GetY();
-
-                $pdf->Rect($x, $y, $categoryWidth, $rowHeight);
-                $pdf->Rect($x + $categoryWidth, $y, $ratingWidth, $rowHeight);
-                $pdf->Rect($x + $categoryWidth + $ratingWidth, $y, $feedbackWidth, $rowHeight);
-
-                $pdf->SetXY($x + 2, $y + 2);
-                $pdf->MultiCell($categoryWidth - 4, 5, $chunkIndex === 0 ? $category : '', 0, 'L');
-
-                $pdf->SetXY($x + $categoryWidth, $y + 2);
-                $pdf->Cell($ratingWidth, 5, $chunkIndex === 0 ? $rating . ' / 5.00' : '', 0, 0, 'C');
-
-                $pdf->SetXY($x + $categoryWidth + $ratingWidth + 2, $y + 2);
-                $pdf->MultiCell($feedbackWidth - 4, 5, $chunkText ?: ($index === 0 && $chunkIndex === 0 ? 'No feedback available' : ''), 0, 'L');
-
-                $pdf->SetY($y + $rowHeight);
-            }
+            $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->SetXY(15, $pdf->GetY() + 3);
+            $pdf->MultiCell(180, 5, $feedbackText, 0, 'L');
         }
     }
 }
@@ -272,13 +263,22 @@ if (!$isAdminRequest) {
 // =====================
 // OUTPUT PDF
 // =====================
-// Set proper headers for blob display
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
+header_remove();
 header('Content-Type: application/pdf');
-header('Content-Disposition: inline; filename="' . 'Faculty_Evaluation_Report_' . str_replace(' ', '_', $facultyName) . '.pdf' . '"');
-header('Cache-Control: private, max-age=0, must-revalidate');
-header('Pragma: public');
+header('Content-Disposition: attachment; filename="Faculty_Evaluation_Report_' . preg_replace('/[^A-Za-z0-9._-]+/', '_', $facultyName) . '.pdf"');
+header('Cache-Control: private, no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
-// Output PDF as string for blob creation
-echo $pdf->Output('S');
+$output = $pdf->Output('S');
+if ($output === false || $output === '') {
+    http_response_code(500);
+    exit('Failed to generate PDF stream.');
+}
+
+echo $output;
 exit;
-?>
+

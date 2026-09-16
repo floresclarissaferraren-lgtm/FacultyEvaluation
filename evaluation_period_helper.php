@@ -678,4 +678,4 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
         return false;
     }
 }
-?>
+

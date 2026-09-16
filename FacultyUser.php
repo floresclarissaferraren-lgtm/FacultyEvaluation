@@ -202,7 +202,7 @@ $conn->close();
               echo strtoupper(substr($names[0] ?? 'S', 0, 1) . substr($names[1] ?? 'T', 0, 1));
             ?></span>
           </div>
-          <div class="status-indicator active"></div>
+          <div class="status-indicator <?php echo $studentStatus === 'active' ? 'active' : 'inactive'; ?>"></div>
         </div>
       </div>
       

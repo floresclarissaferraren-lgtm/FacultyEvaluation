@@ -6983,11 +6983,11 @@ table.evaluation-table .view-btn:hover {
   text-align: left;
 }
 
-#report-section .evaluation-table thead th:first-child { border-radius: 13px 0 0 0; }
+#report-section .evaluation-table thead th:first-child { border-radius: 0; }
 #report-section .evaluation-table thead th:nth-child(3),
 #report-section .evaluation-table thead th:nth-child(4),
 #report-section .evaluation-table thead th:nth-child(5) { text-align: center; }
-#report-section .evaluation-table thead th:last-child { border-radius: 0 13px 0 0; text-align: center; }
+#report-section .evaluation-table thead th:last-child { border-radius: 0; text-align: center; }
 
 #report-section .evaluation-table tbody td {
   padding: 13px 14px;

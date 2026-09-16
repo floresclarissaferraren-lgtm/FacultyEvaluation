@@ -274,4 +274,3 @@ HTML;
 
     return $html;
 }
-?>

@@ -2,6 +2,8 @@
 require_once 'security.php';
 requireRole('admin');
 header("Content-Type: application/json");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
 include 'connect.php';
 require_once 'weighted_score_helper.php';
 require_once 'evaluation_schema.php';
@@ -17,18 +19,18 @@ try {
     $types = '';
 
     if ($academicYear !== '') {
-        $where[] = 'ep.ay = ?';
+        $where[] = 'TRIM(ep.ay) = ?';
         $params[] = $academicYear;
         $types .= 's';
     }
 
     if ($semester !== '') {
-        $where[] = 'ep.semester = ?';
+        $where[] = 'LOWER(TRIM(ep.semester)) = LOWER(?)';
         $params[] = $semester;
         $types .= 's';
     }
 
-    // Get faculty-subject-class-period list with total responses.
+    // Get one computed result per instructor per evaluation period.
     $query = "SELECT 
         f.id,
         f.faculty_id,
@@ -36,12 +38,6 @@ try {
         f.lastname,
         f.suffix,
         f.email,
-        e.subject_id,
-        e.class_id,
-        s.subject_code,
-        s.subject_desc,
-        ac.year_level AS class_year_level,
-        ac.block AS class_section,
         COALESCE(e.period_id, ep.id, 0) AS resolved_period_id,
         ep.ay AS academic_year,
         ep.semester,
@@ -62,9 +58,8 @@ try {
         )
     " . (!empty($where) ? " WHERE " . implode(" AND ", $where) : "") . "
     GROUP BY f.id, f.faculty_id, f.firstname, f.lastname, f.suffix, f.email,
-        e.subject_id, e.class_id, s.subject_code, s.subject_desc, ac.year_level, ac.block,
         resolved_period_id, ep.ay, ep.semester
-    ORDER BY ep.ay DESC, ep.semester ASC, f.lastname ASC, f.firstname ASC, s.subject_code ASC";
+    ORDER BY ep.ay DESC, ep.semester ASC, f.lastname ASC, f.firstname ASC";
 
     $stmt = $conn->prepare($query);
     if (!$stmt) {
@@ -81,27 +76,23 @@ try {
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $fid           = intval($row['id']);
-            $subject_id    = intval($row['subject_id'] ?? 0);
-            $class_id      = intval($row['class_id'] ?? 0);
             $period_id     = intval($row['resolved_period_id'] ?? 0);
             $total         = intval($row['total_responses']);
             // Real-time weighted score from stored answers
-            $average_score = $total > 0 ? calcWeightedScore($conn, $fid, $subject_id, $class_id, $period_id ?: null) : 0.00;
+            $average_score = $total > 0 ? calcWeightedScore($conn, $fid, null, null, $period_id ?: null) : 0.00;
             $rating        = getRatingLabel($average_score);
-            $subjectLabel  = trim(($row['subject_code'] ?? '') . (($row['subject_desc'] ?? '') !== '' ? ' - ' . $row['subject_desc'] : ''));
-            $classLabel    = trim(($row['class_year_level'] ?? '') . (($row['class_section'] ?? '') !== '' ? ' / ' . $row['class_section'] : ''));
             $periodLabel   = trim(($row['academic_year'] ?? '') . (($row['semester'] ?? '') !== '' ? ' - ' . $row['semester'] : ''));
 
             $evaluations[] = [
                 'id'               => $fid,
-                'subject_id'       => $subject_id,
-                'class_id'         => $class_id,
+                'subject_id'       => 0,
+                'class_id'         => 0,
                 'period_id'        => $period_id,
                 'faculty_id'       => $row['faculty_id'],
                 'name'             => trim($row['firstname'] . ' ' . $row['lastname'] . ' ' . $row['suffix']),
                 'email'            => $row['email'],
-                'subject_label'    => $subjectLabel,
-                'class_label'      => $classLabel,
+                'subject_label'    => '',
+                'class_label'      => '',
                 'academic_year'    => $row['academic_year'] ?? '',
                 'semester'         => $row['semester'] ?? '',
                 'period_label'     => $periodLabel !== '' ? $periodLabel : 'Unassigned Period',

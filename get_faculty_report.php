@@ -80,12 +80,11 @@ try {
                         COUNT(e.id) as total_responses,
                         MIN(DATE(e.created_at)) as date_from,
                         MAX(DATE(e.created_at)) as date_to,
-                        ep.ay,
-                        ep.semester
+                        MAX(ep.ay) AS ay,
+                        MAX(ep.semester) AS semester
                     FROM evaluations e
                     LEFT JOIN evaluation_periods ep ON ep.id = e.period_id
-                    WHERE e.faculty_id = ? {$subjectWhere} {$periodWhere}
-                    GROUP BY ep.ay, ep.semester";
+                    WHERE e.faculty_id = ? {$subjectWhere} {$periodWhere}";
     $overall_stmt = $conn->prepare($overall_query);
     if ($subject_id > 0 && $period_id > 0) {
         $overall_stmt->bind_param("iiii", $faculty_id, $subject_id, $classFilter, $period_id);
@@ -164,7 +163,7 @@ try {
     }
     
     $periodText = 'All evaluation periods';
-    if (!empty($overall_data['ay']) && !empty($overall_data['semester'])) {
+    if ($period_id > 0 && !empty($overall_data['ay']) && !empty($overall_data['semester'])) {
         $periodText = $overall_data['ay'] . ' - ' . $overall_data['semester'];
     } elseif (!empty($overall_data['date_from']) && !empty($overall_data['date_to'])) {
         $start = date('F j, Y', strtotime($overall_data['date_from']));

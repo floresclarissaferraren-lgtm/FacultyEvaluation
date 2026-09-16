@@ -93,6 +93,7 @@ try {
                AND ev.faculty_id = f.id
                AND ev.subject_id = cs.subject_id
                AND ev.class_id = ac.id
+               AND ev.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
                 WHERE st.id = ? AND cs.faculty_id > 0
             ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
         ";
@@ -165,7 +166,8 @@ try {
                     ON ev.student_id = ss.student_id
                    AND ev.faculty_id = f.id
                    AND ev.subject_id = ss.subject_id
-                         AND ev.class_id = COALESCE(ssc.class_id, 0)
+                   AND ev.class_id = COALESCE(ssc.class_id, 0)
+                   AND ev.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
                      WHERE ss.student_id = ?
                 ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
             ";

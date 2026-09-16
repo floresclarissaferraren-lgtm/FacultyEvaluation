@@ -1,15 +1,38 @@
 <?php
+ob_start();
+ini_set('display_errors', '0');
 require_once 'security.php';
 requireRole('student');
 requireMethod('POST');
 include_once 'session_config.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 header("Content-Type: application/json");
 include "connect.php";
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once 'evaluation_schema.php';
 require_once 'evaluation_period_helper.php';
 date_default_timezone_set("Asia/Manila");
+
+function submitEvaluationResponse(array $payload, int $status = 200): never
+{
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code($status);
+    header("Content-Type: application/json");
+    echo json_encode($payload);
+    exit;
+}
+
+set_exception_handler(static function (Throwable $e): void {
+    error_log("submit_evaluation.php error: " . $e->getMessage());
+    submitEvaluationResponse([
+        "success" => false,
+        "message" => "Submission failed. Please try again."
+    ], 500);
+});
 
 ensureEvaluationPeriodTables($conn);
 closeExpiredEvaluationPeriod($conn);
@@ -35,13 +58,11 @@ if ($evaluationOpen && $activePeriodId > 0) {
 }
 
 if (!$evaluationOpen || $activePeriodId <= 0) {
-    echo json_encode(["success" => false, "message" => "Evaluation is closed"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "Evaluation is closed"], 409);
 }
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {
-    echo json_encode(["success" => false, "message" => "Unauthorized"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "Unauthorized"], 403);
 }
 
 $payload = json_decode(file_get_contents("php://input"), true);
@@ -54,11 +75,10 @@ $studentStatusRow = $studentStatusStmt->get_result()->fetch_assoc();
 $studentStatusStmt->close();
 
 if (strtolower((string)($studentStatusRow['status'] ?? 'active')) !== 'active') {
-    echo json_encode([
+    submitEvaluationResponse([
         "success" => false,
         "message" => "Your account has been set to inactive by an admin. You cannot evaluate until your account is active again."
-    ]);
-    exit;
+    ], 403);
 }
 
 $faculty_id = intval($payload['faculty_id'] ?? 0);
@@ -68,8 +88,7 @@ $answers = $payload['answers'] ?? [];
 $feedback = trim($payload['feedback'] ?? '');
 
 if ($faculty_id <= 0 || $subject_id <= 0 || !is_array($answers) || empty($answers)) {
-    echo json_encode(["success" => false, "message" => "Invalid evaluation payload"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "Invalid evaluation payload"], 422);
 }
 
 $submittedQuestionIds = [];
@@ -80,8 +99,7 @@ foreach (array_keys($answers) as $answerKey) {
 }
 $submittedQuestionIds = array_values(array_unique(array_filter($submittedQuestionIds, static fn($id) => $id > 0)));
 if (empty($submittedQuestionIds)) {
-    echo json_encode(["success" => false, "message" => "No valid questions submitted"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "No valid questions submitted"], 422);
 }
 
 $questionCheck = $conn->query("SELECT id FROM add_questions");
@@ -92,8 +110,7 @@ if ($questionCheck) {
     }
 }
 if (count(array_diff($submittedQuestionIds, $knownQuestionIds)) > 0) {
-    echo json_encode(["success" => false, "message" => "Invalid evaluation question submitted"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "Invalid evaluation question submitted"], 422);
 }
 
 // Block feedback that contains bad words (server-side enforcement).
@@ -126,8 +143,7 @@ if ($feedback !== '') {
     $normalized = ' ' . preg_replace('/\s+/', ' ', trim(preg_replace('/[^a-z0-9]+/i', ' ', strtolower($feedback)))) . ' ';
     foreach ($badWords as $w) {
         if (strpos($normalized, ' ' . $w . ' ') !== false) {
-            echo json_encode(["success" => false, "message" => "Bad words is not allowed"]);
-            exit;
+            submitEvaluationResponse(["success" => false, "message" => "Bad words is not allowed"], 422);
         }
     }
 }
@@ -166,8 +182,7 @@ foreach ($answers as $key => $value) {
 }
 
 if ($count === 0) {
-    echo json_encode(["success" => false, "message" => "No valid answers found"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "No valid answers found"], 422);
 }
 
 $assignmentValid = false;
@@ -227,8 +242,7 @@ if ($class_id > 0) {
 }
 
 if (!$assignmentValid) {
-    echo json_encode(["success" => false, "message" => "This faculty-subject assignment is not available for your account"]);
-    exit;
+    submitEvaluationResponse(["success" => false, "message" => "This faculty-subject assignment is not available for your account"], 403);
 }
 
 // Use weighted category scoring instead of a flat mean.
@@ -293,18 +307,15 @@ try {
     $ins->close();
 
     $conn->commit();
-    echo json_encode([
+    submitEvaluationResponse([
         "success" => true,
         "message" => "Evaluation submitted successfully",
         "overall_rating" => $overall
     ]);
 } catch (Exception $e) {
     $conn->rollback();
-    echo json_encode([
+    submitEvaluationResponse([
         "success" => false,
         "message" => "Submission failed: " . $e->getMessage()
-    ]);
+    ], 500);
 }
-
-$conn->close();
-?>

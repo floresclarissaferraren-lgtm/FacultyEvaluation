@@ -73,4 +73,4 @@ function requireCsrf(): void
         failUnauthorized('Invalid security token', 419);
     }
 }
-?>
+

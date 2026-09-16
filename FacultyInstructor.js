@@ -1017,28 +1017,34 @@ function downloadEvaluationReport() {
     },
     body: JSON.stringify(pdfContent)
   })
-  .then(response => {
+  .then(async response => {
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      const text = await response.text();
+      throw new Error(text || 'Network response was not ok');
     }
-    return response.blob();
+    if (!contentType.includes('application/pdf')) {
+      const text = await response.text();
+      throw new Error('Server returned a non-PDF response: ' + (text || contentType));
+    }
+    return response.arrayBuffer();
   })
-  .then(blob => {
-    // Create download link
+  .then(buffer => {
+    const blob = new Blob([buffer], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `Faculty_Evaluation_Report_${facultyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
     document.body.appendChild(a);
     a.click();
-    
-    // Clean up immediately
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 1000);
   })
   .catch(error => {
     console.error("Error generating PDF:", error);
-    alert("An error occurred while generating the PDF.");
+    alert("An error occurred while generating the PDF: " + error.message);
   });
 }
 

@@ -44,8 +44,20 @@ function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int
     }
 
     if ($period_id !== null && $period_id > 0) {
-        $sql .= " AND {$alias}.period_id = ?";
-        $types .= 'i';
+        $sql .= " AND (
+            {$alias}.period_id = ?
+            OR (
+                {$alias}.period_id IS NULL
+                AND EXISTS (
+                    SELECT 1
+                    FROM evaluation_periods ep_filter
+                    WHERE ep_filter.id = ?
+                      AND DATE({$alias}.created_at) BETWEEN ep_filter.start_date AND ep_filter.end_date
+                )
+            )
+        )";
+        $types .= 'ii';
+        $params[] = $period_id;
         $params[] = $period_id;
     }
 
@@ -228,12 +240,17 @@ function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null
         $rows[] = $row;
     }
 
-    $totalWeight = array_sum(array_column($rows, 'weight'));
+    $activeRows = array_filter($rows, static fn($row) => intval($row['responses'] ?? 0) > 0);
+    $totalWeight = array_sum(array_column($activeRows, 'weight'));
+    $activeCount = count($activeRows);
     foreach ($rows as &$row) {
         $row['weight']            = floatval($row['weight']);
-        $row['normalised_weight'] = $totalWeight > 0
+        $hasResponses = intval($row['responses'] ?? 0) > 0;
+        $row['normalised_weight'] = !$hasResponses
+            ? 0
+            : ($totalWeight > 0
             ? round(($row['weight'] / $totalWeight) * 100, 2)
-            : (count($rows) > 0 ? round(100 / count($rows), 2) : 0);
+            : ($activeCount > 0 ? round(100 / $activeCount, 2) : 0));
         $row['avg_rating']        = number_format(floatval($row['avg_rating']), 2);
         $row['responses']         = intval($row['responses']);
     }
@@ -352,12 +369,17 @@ function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $progra
         $rows[] = $row;
     }
 
-    $totalWeight = array_sum(array_column($rows, 'weight'));
+    $activeRows = array_filter($rows, static fn($row) => intval($row['responses'] ?? 0) > 0);
+    $totalWeight = array_sum(array_column($activeRows, 'weight'));
+    $activeCount = count($activeRows);
     foreach ($rows as &$row) {
         $row['weight']            = floatval($row['weight']);
-        $row['normalised_weight'] = $totalWeight > 0
+        $hasResponses = intval($row['responses'] ?? 0) > 0;
+        $row['normalised_weight'] = !$hasResponses
+            ? 0
+            : ($totalWeight > 0
             ? round(($row['weight'] / $totalWeight) * 100, 2)
-            : (count($rows) > 0 ? round(100 / count($rows), 2) : 0);
+            : ($activeCount > 0 ? round(100 / $activeCount, 2) : 0));
         $row['avg_rating']        = number_format(floatval($row['avg_rating']), 2);
         $row['responses']         = intval($row['responses']);
     }

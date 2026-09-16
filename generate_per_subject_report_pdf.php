@@ -4,7 +4,9 @@ include_once 'session_config.php';
 session_start();
 include 'connect.php';
 require_once 'evaluation_period_helper.php';
-require('fpdf.php');
+if (!class_exists('FPDF', false)) {
+    require_once __DIR__ . '/fpdf.php';
+}
 define('FPDF_FONTPATH', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'font' . DIRECTORY_SEPARATOR);
 date_default_timezone_set('Asia/Manila');
 
@@ -26,17 +28,21 @@ function ratingLabel(float $score): string {
     return 'Poor';
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$rawInput = file_get_contents('php://input');
+$data = json_decode($rawInput, true);
+if (!is_array($data) || empty($data)) {
+    $data = $_GET;
+}
 
-if (!$data) {
+if (!isset($data['facultyName']) || !isset($data['facultyId']) || trim((string)$data['facultyName']) === '' || trim((string)$data['facultyId']) === '') {
     http_response_code(400);
-    exit('Invalid input');
+    exit('Missing required data');
 }
 
 $facultyName = ct($data['facultyName'] ?? 'N/A');
 $facultyId   = ct($data['facultyId']   ?? 'N/A');
-$departments = $data['departments']    ?? [];
-$overall     = $data['overall']        ?? [];
+$departments = is_array($data['departments'] ?? null) ? $data['departments'] : [];
+$overall     = is_array($data['overall'] ?? null) ? $data['overall'] : [];
 
 // Resolve display faculty_id (FC-XXXX) if numeric was passed
 if (is_numeric($data['facultyId'] ?? '')) {
@@ -247,9 +253,12 @@ $pdf->SetTextColor(150, 150, 150);
 $pdf->Cell(0, 5, ct('Generated on: ' . date('F j, Y  h:i A')), 0, 1, 'R');
 
 /* ── OUTPUT ─────────────────────────────────────────────────────────────── */
+ob_clean();
 $filename = 'Per_Subject_Report_' . str_replace(' ', '_', $facultyName) . '_' . date('Ymd') . '.pdf';
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Cache-Control: private, max-age=0, must-revalidate');
+header('Pragma: public');
 echo $pdf->Output('S');
 exit;
-?>
+

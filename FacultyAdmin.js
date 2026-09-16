@@ -28,6 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let deleteType = "";
   let allFacultySubjects = [];
   let selectedFacultySubjects = [];
+  const REALTIME_REFRESH_MS = 5000;
+  let activeAdminSection = "dashboard-section";
+  let adminRealtimeTimer = null;
+  let dashboardStatsLoading = false;
+  let reportEvaluationsLoading = false;
 
   const sectionSkeletons = {
     "dashboard-section": `
@@ -329,7 +334,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ================= Section Switching May nabago==========================================================================================
+  function refreshRealtimeSection(silent = true) {
+    if (document.hidden) return;
+    if (activeAdminSection === "dashboard-section") {
+      loadDashboardStats?.(silent);
+    } else if (activeAdminSection === "report-section") {
+      loadEvaluations?.(silent);
+    }
+  }
+
+  function startAdminRealtimeRefresh() {
+    if (adminRealtimeTimer) clearInterval(adminRealtimeTimer);
+    if (!["dashboard-section", "report-section"].includes(activeAdminSection)) return;
+    adminRealtimeTimer = setInterval(() => refreshRealtimeSection(true), REALTIME_REFRESH_MS);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshRealtimeSection(true);
+  });
+
   window.showSection = (id, e) => {
+    activeAdminSection = id;
     const currentSection = Array.from(document.querySelectorAll(".section"))
       .find(section => section.style.display !== "none")?.id;
     if (currentSection && currentSection !== id) {
@@ -432,6 +457,7 @@ document.addEventListener("DOMContentLoaded", () => {
           id === "report-section" ? "block" : "none";
       }
     }
+    startAdminRealtimeRefresh();
   };
 
   function clearControlValue(control) {
@@ -3294,12 +3320,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function loadEvaluations() {
+  function loadEvaluations(silent = false) {
+    if (reportEvaluationsLoading) return Promise.resolve();
+    reportEvaluationsLoading = true;
     console.log('Loading evaluations...');
     const reportParams = getReportPeriodParams();
     const query = reportParams.toString();
     loadReportAnalytics(reportParams);
-    fetch(`get_evaluations.php${query ? `?${query}` : ""}`)
+    if (!silent) showSectionSkeleton("report-section");
+    return fetch(`get_evaluations.php${query ? `?${query}` : ""}`, { cache: "no-store", credentials: "same-origin" })
       .then(r => r.json())
       .then(data => {
         console.log('Evaluations data received:', data);
@@ -3382,7 +3411,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const tbody = document.getElementById("evaluationTableBody");
         tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Network error loading data</td></tr>';
       })
-      .finally(() => hideSectionSkeleton("report-section"));
+      .finally(() => {
+        reportEvaluationsLoading = false;
+        if (!silent) hideSectionSkeleton("report-section");
+      });
   }
 
   async function loadReportAnalytics(reportParams) {
@@ -3965,20 +3997,27 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       body: JSON.stringify(pdfContent)
     })
-      .then(response => {
+      .then(async response => {
         console.log('PDF response status:', response.status);
         console.log('PDF response headers:', response.headers);
 
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
         if (!response.ok) {
-          return response.text().then(text => {
-            console.error('PDF generation error:', text);
-            throw new Error(text);
-          });
+          const text = await response.text();
+          console.error('PDF generation error:', text);
+          throw new Error(text || 'Server did not return a PDF file.');
         }
-        return response.blob();
+
+        if (!contentType.includes('application/pdf')) {
+          const text = await response.text();
+          console.error('Invalid PDF content type:', contentType, text.slice(0, 250));
+          throw new Error('Server returned a non-PDF response.');
+        }
+
+        return response.arrayBuffer();
       })
-      .then(blob => {
-        console.log('PDF blob received, size:', blob.size);
+      .then(buffer => {
+        const blob = new Blob([buffer], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
@@ -3987,9 +4026,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(a);
         a.click();
 
-        // Clean up immediately
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 1000);
 
         showNotification('PDF downloaded successfully!', '#4caf50', 3000);
       })
@@ -4021,10 +4061,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (target) openReportFacultyRankings(event);
   });
 
-  function loadDashboardStats() {
+  function loadDashboardStats(silent = false) {
+    if (dashboardStatsLoading) return Promise.resolve();
+    dashboardStatsLoading = true;
     console.log("Loading dashboard stats...");
-    showSectionSkeleton("dashboard-section");
-    fetch("get_dashboard_stats.php?cb=" + Date.now(), { cache: "no-store" })
+    if (!silent) showSectionSkeleton("dashboard-section");
+    return fetch("get_dashboard_stats.php?cb=" + Date.now(), { cache: "no-store" })
       .then(r => {
         console.log("Response status:", r.status);
         if (!r.ok) {
@@ -4052,10 +4094,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const progressTextEl = document.getElementById("evaluationProgressText");
           if (progressFillEl && progressTextEl) {
             const submittedEvaluations = Number(data.data.totalEvaluationsSubmitted) || 0;
-            const totalActiveStudents = Number(data.data.activeStudents) || 0;
-            const pendingEvaluations = Math.max(totalActiveStudents - submittedEvaluations, 0);
-            const completionPercent = totalActiveStudents > 0
-              ? Math.min(100, (submittedEvaluations / totalActiveStudents) * 100)
+            const expectedEvaluations = Number(data.data.expectedEvaluations) || Number(data.data.activeStudents) || 0;
+            const pendingEvaluations = Number.isFinite(Number(data.data.pendingEvaluations))
+              ? Number(data.data.pendingEvaluations)
+              : Math.max(expectedEvaluations - submittedEvaluations, 0);
+            const completionPercent = expectedEvaluations > 0
+              ? Math.min(100, (submittedEvaluations / expectedEvaluations) * 100)
               : 0;
             const completionRateEl = document.getElementById("evaluationCompletionRate");
             const submissionCountEl = document.getElementById("evaluationSubmissionCount");
@@ -4064,16 +4108,16 @@ document.addEventListener("DOMContentLoaded", () => {
             if (submissionCountEl) submissionCountEl.textContent = submittedEvaluations.toLocaleString();
             if (pendingCountEl) pendingCountEl.textContent = pendingEvaluations.toLocaleString();
 
-            if (submittedEvaluations <= 0 || totalActiveStudents <= 0) {
+            if (submittedEvaluations <= 0 || expectedEvaluations <= 0) {
               progressFillEl.style.width = "0%";
               progressTextEl.textContent = "No submissions yet";
             } else {
               const progressPercent = Math.min(
                 100,
-                Math.round((submittedEvaluations / totalActiveStudents) * 100)
+                Math.round((submittedEvaluations / expectedEvaluations) * 100)
               );
               progressFillEl.style.width = `${progressPercent}%`;
-              progressTextEl.textContent = `${submittedEvaluations} submitted`;
+              progressTextEl.textContent = `${submittedEvaluations} of ${expectedEvaluations} submitted`;
             }
           }
 
@@ -4144,7 +4188,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch(err => console.error("Network error:", err))
-      .finally(() => hideSectionSkeleton("dashboard-section"));
+      .finally(() => {
+        dashboardStatsLoading = false;
+        if (!silent) hideSectionSkeleton("dashboard-section");
+      });
   }
 
   function updateDepartmentGraph(departments) {
@@ -4359,9 +4406,11 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeReportRankingClickTarget();
   // Only load evaluations if report section is initially visible
   const currentSection = document.querySelector('.section:not([style*="display: none"])');
+  if (currentSection?.id) activeAdminSection = currentSection.id;
   if (currentSection && currentSection.id === 'report-section') {
     loadEvaluations();
   }
+  startAdminRealtimeRefresh();
   // Ensure dashboard stats are loaded after a short delay
   setTimeout(() => {
     loadDashboardStats();
