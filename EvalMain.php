@@ -425,18 +425,14 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
         </div>
       </div>
       <div class="skeleton-dashboard-content">
-        <!-- Top Toolbar -->
-        <div class="skeleton-toolbar">
-          <div class="skeleton-toolbar-item">
-            <div class="skeleton-toolbar-label"></div>
-            <div class="skeleton-dropdown"></div>
-          </div>
-          <div class="skeleton-toolbar-item">
-            <div class="skeleton-toolbar-label" style="width: 60px;"></div>
-            <div class="skeleton-dropdown" style="width: 140px;"></div>
+        <div class="skeleton-welcome-box">
+          <div class="skeleton-welcome-icon"></div>
+          <div class="skeleton-welcome-copy">
+            <div class="skeleton-title" style="width: 200px; height: 22px; margin-bottom: 10px;"></div>
+            <div class="skeleton-text" style="width: 340px; height: 12px;"></div>
           </div>
         </div>
-        <!-- Card Grid -->
+
         <div class="skeleton-cards-grid">
           <div class="skeleton-dash-card">
             <div class="skeleton-card-left">
@@ -471,7 +467,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
             <div class="skeleton-card-icon-box"></div>
           </div>
         </div>
-        <!-- Row 2 -->
+
         <div class="skeleton-row-2">
           <div class="skeleton-large-card">
             <div class="skeleton-title" style="width: 140px; height: 16px; margin-bottom: 24px;"></div>
@@ -519,6 +515,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
             <div class="skeleton-text" style="width: 80%; height: 10px; margin-top: auto; margin-bottom: 0;"></div>
           </div>
         </div>
+
       </div>
     </div>
   </div>

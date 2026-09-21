@@ -91,20 +91,27 @@ body {
 
 /* PROGRAMS CARD LAYOUT */
 .programs-container-box {
-  background: transparent;
+  background: #f0f7ff;
   border-radius: 0;
   border: none;
   box-shadow: none;
   padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .programs-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 18px;
+  padding: 8px 0 18px;
   border-bottom: 1px solid #f1f5f9;
   margin-bottom: 22px;
+  background: #f0f7ff;
+  position: sticky;
+  top: 0;
+  z-index: 21;
 }
 
 .programs-stats {
@@ -153,6 +160,10 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   padding: 0;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
 }
 
 @media (max-width: 1600px) {
@@ -681,7 +692,9 @@ body {
 }
 
 .sidebar-top {
-  text-align: center;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, .18);
   background: transparent;
@@ -690,7 +703,9 @@ body {
 .logo-title-container {
   display: flex;
   align-items: center;
-  gap: 12px
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
 }
 
 .sidebar-logo {
@@ -857,6 +872,25 @@ body {
 }
 
 
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, .38);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+  z-index: 999;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.sidebar-open {
+  overflow: hidden;
+}
+
 main {
   margin-left: 260px;
   width: calc(100% - 260px);
@@ -870,8 +904,8 @@ main {
 
 body .sidebar.collapsed~.navbar,
 body:has(.sidebar.collapsed) .navbar {
-  left: 85px !important;
-  width: calc(100% - 85px) !important
+  left: 85px;
+  width: calc(100% - 85px)
 }
 
 .sidebar.collapsed~main,
@@ -908,6 +942,7 @@ main.full {
   .sidebar {
     left: -260px;
     width: 260px;
+    z-index: 1002;
   }
 
   .sidebar.active {
@@ -918,6 +953,11 @@ main.full {
     left: 0;
     width: 100%;
     padding: 0 18px;
+  }
+
+  .sidebar-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   main {
@@ -7725,9 +7765,48 @@ div#report-section .evaluation-table .badge.na {
 }
 
 @media(max-width:992px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .sidebar-top {
+    padding: 18px 12px;
+  }
+
+  .logo-title-container {
+    justify-content: center;
+  }
+
+  .title-container {
+    text-align: center;
+  }
+
   .navbar {
+    left: 220px;
+    width: calc(100% - 220px);
     padding: 0 var(--spacing-md);
     height: 68px;
+  }
+
+  main {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+  }
+
+  .sidebar.collapsed {
+    width: 72px;
+  }
+
+  body .sidebar.collapsed~.navbar,
+  body:has(.sidebar.collapsed) .navbar {
+    left: 72px;
+    width: calc(100% - 72px);
+  }
+
+  .sidebar.collapsed~main,
+  main.full {
+    margin-left: 72px;
+    width: calc(100% - 72px);
   }
 
   .dashboard {
@@ -10011,10 +10090,38 @@ main {
 
 #students-section .student-table-box .table-scroll-container {
   border-radius: 0;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  padding: 0 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
 #students-section .student-table-box .students-table {
   border-radius: 0;
+  min-width: 860px;
+  width: calc(100% - 16px);
+  table-layout: fixed;
+  margin: 0 4px;
+}
+
+#students-section .student-table-box .students-table th:last-child,
+#students-section .student-table-box .students-table td:last-child {
+  min-width: 170px;
+  width: 170px;
+  white-space: nowrap;
+}
+
+#students-section .student-table-box .students-table .action-cell {
+  min-width: 170px;
+  text-align: center;
+  padding-right: 4px;
+}
+
+#students-section .student-table-box .students-table .action-buttons {
+  display: inline-flex !important;
+  white-space: nowrap;
+  gap: 4px;
+  margin: 0 auto;
 }
 
 #students-section .student-toolbar {

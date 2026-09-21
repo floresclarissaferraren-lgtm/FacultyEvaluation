@@ -77,6 +77,7 @@ include 'totalstudents_dashcount.php';
 
 </div>
 
+<div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
 
 <!-- ===================== ALERT MODAL ===================== -->
 <div id="alertModal" class="alert-modal-overlay" style="display:none;">

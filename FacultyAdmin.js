@@ -33,6 +33,84 @@ document.addEventListener("DOMContentLoaded", () => {
   let adminRealtimeTimer = null;
   let dashboardStatsLoading = false;
   let reportEvaluationsLoading = false;
+  const sectionScrollState = {};
+
+  function getSectionScrollableElements(section) {
+    if (!section) return [];
+    return Array.from(section.querySelectorAll(".programs-cards-container, .table-scroll-container, .subjects-grid, .table-wrapper, main"))
+      .filter(el => {
+        const overflowY = getComputedStyle(el).overflowY;
+        const overflowX = getComputedStyle(el).overflowX;
+        return el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1 || overflowY === "auto" || overflowY === "scroll" || overflowX === "auto" || overflowX === "scroll";
+      });
+  }
+
+  function saveSectionScrollState(sectionId) {
+    if (!sectionId) return;
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    const state = {
+      windowY: window.scrollY,
+      documentY: document.documentElement.scrollTop,
+      bodyY: document.body.scrollTop,
+      mainY: document.querySelector("main")?.scrollTop || 0,
+      elements: {}
+    };
+
+    getSectionScrollableElements(section).forEach((el, index) => {
+      state.elements[`node-${index}`] = {
+        top: el.scrollTop,
+        left: el.scrollLeft,
+        tag: el.tagName,
+        className: el.className
+      };
+    });
+
+    sectionScrollState[sectionId] = state;
+  }
+
+  function restoreSectionScrollState(sectionId) {
+    const state = sectionScrollState[sectionId];
+    if (!state) return;
+
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    const main = document.querySelector("main");
+    if (main) main.scrollTop = state.mainY || 0;
+    window.scrollTo({ top: state.windowY || 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = state.documentY || 0;
+    document.body.scrollTop = state.bodyY || 0;
+
+    const elements = getSectionScrollableElements(section);
+    elements.forEach((el, index) => {
+      const key = `node-${index}`;
+      const saved = state.elements?.[key];
+      if (!saved) return;
+      el.scrollTop = saved.top || 0;
+      el.scrollLeft = saved.left || 0;
+    });
+  }
+
+  function attachSectionScrollPersistence(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    getSectionScrollableElements(section).forEach(el => {
+      el.addEventListener("scroll", () => saveSectionScrollState(sectionId), { passive: true });
+    });
+
+    const observer = new MutationObserver(() => {
+      if (section.style.display !== "none" && sectionScrollState[sectionId]) {
+        requestAnimationFrame(() => restoreSectionScrollState(sectionId));
+      }
+    });
+
+    observer.observe(section, { childList: true, subtree: true });
+  }
+
+  document.querySelectorAll(".section").forEach(section => attachSectionScrollPersistence(section.id));
 
   const sectionSkeletons = {
     "dashboard-section": `
@@ -300,37 +378,100 @@ document.addEventListener("DOMContentLoaded", () => {
   window.setInterval(loadAdminNotifications, 15 * 60 * 1000);
 
   // ================= Sidebar Toggle ==========================================================================================
-  window.toggleSidebar = () => {
-    const s = document.getElementById("sidebar"), m = document.querySelector("main"), navbar = document.querySelector(".navbar");
-    if (window.innerWidth > 768) {
-      s.classList.toggle("collapsed");
-      m.classList.toggle("full");
+  const sidebarOverlay = document.getElementById("sidebarOverlay");
 
-      // Directly manipulate navbar styles
-      if (s.classList.contains("collapsed")) {
-        navbar.style.left = "85px";
-        navbar.style.width = "calc(100% - 85px)";
-      } else {
-        navbar.style.left = "260px";
-        navbar.style.width = "calc(100% - 260px)";
+  function applySidebarLayout() {
+    const s = document.getElementById("sidebar");
+    const m = document.querySelector("main");
+    const navbar = document.querySelector(".navbar");
+    if (!s || !m || !navbar) return;
+
+    const isMobile = window.innerWidth <= 768;
+    const sidebarWidth = window.innerWidth <= 992 ? 220 : 260;
+    const collapsedWidth = window.innerWidth <= 992 ? 72 : 85;
+
+    if (isMobile) {
+      navbar.style.left = "0";
+      navbar.style.width = "100%";
+      m.style.marginLeft = "0";
+      m.style.width = "100%";
+      s.classList.remove("collapsed");
+      document.body.classList.toggle("sidebar-open", s.classList.contains("active"));
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.toggle("visible", s.classList.contains("active"));
       }
+      return;
     }
-    else { s.classList.remove("collapsed"); s.classList.toggle("active"); m.style.marginLeft = "0"; m.style.width = "100%"; }
+
+    document.body.classList.remove("sidebar-open");
+    if (sidebarOverlay) sidebarOverlay.classList.remove("visible");
+    s.classList.remove("active");
+
+    const collapsed = s.classList.contains("collapsed");
+    const offset = collapsed ? collapsedWidth : sidebarWidth;
+    navbar.style.left = `${offset}px`;
+    navbar.style.width = `calc(100% - ${offset}px)`;
+    m.style.marginLeft = `${offset}px`;
+    m.style.width = `calc(100% - ${offset}px)`;
+  }
+
+  window.toggleSidebar = () => {
+    const s = document.getElementById("sidebar");
+    const navbar = document.querySelector(".navbar");
+    const m = document.querySelector("main");
+    if (!s || !navbar || !m) return;
+
+    if (window.innerWidth <= 768) {
+      s.classList.toggle("active");
+      document.body.classList.toggle("sidebar-open", s.classList.contains("active"));
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.toggle("visible", s.classList.contains("active"));
+      }
+      return;
+    }
+
+    s.classList.toggle("collapsed");
+    const collapsed = s.classList.contains("collapsed");
+    const sidebarWidth = window.innerWidth <= 992 ? 220 : 260;
+    const collapsedWidth = window.innerWidth <= 992 ? 72 : 85;
+    const offset = collapsed ? collapsedWidth : sidebarWidth;
+    navbar.style.left = `${offset}px`;
+    navbar.style.width = `calc(100% - ${offset}px)`;
+    m.style.marginLeft = `${offset}px`;
+    m.style.width = `calc(100% - ${offset}px)`;
   };
 
-  window.addEventListener("resize", () => {
-    const s = document.getElementById("sidebar"), m = document.querySelector("main");
-    if (innerWidth > 768) { s.classList.remove("active", "collapsed"); m.style.marginLeft = ""; m.style.width = ""; }
-    else { s.classList.remove("collapsed"); m.classList.remove("full"); }
-  });
+  window.addEventListener("resize", applySidebarLayout);
 
   document.addEventListener("click", e => {
     const s = document.getElementById("sidebar");
-    if (s.classList.contains("active") && !s.contains(e.target) && !e.target.closest(".hamburger")) {
+    const overlay = document.getElementById("sidebarOverlay");
+    if (window.innerWidth <= 768 && s && s.classList.contains("active") && !s.contains(e.target) && !e.target.closest(".hamburger") && !e.target.closest("#sidebarOverlay")) {
       s.classList.remove("active");
+      document.body.classList.remove("sidebar-open");
+      if (overlay) overlay.classList.remove("visible");
     }
-    if (e.target.closest("#sidebar a")) s.classList.remove("active");
+    if (e.target.closest("#sidebar a")) {
+      if (window.innerWidth <= 768) {
+        s.classList.remove("active");
+        document.body.classList.remove("sidebar-open");
+        if (overlay) overlay.classList.remove("visible");
+      }
+    }
   });
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", () => {
+      const s = document.getElementById("sidebar");
+      if (s) {
+        s.classList.remove("active");
+        document.body.classList.remove("sidebar-open");
+        sidebarOverlay.classList.remove("visible");
+      }
+    });
+  }
+
+  applySidebarLayout();
 
 
   // ================= Section Switching May nabago==========================================================================================
@@ -354,22 +495,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   window.showSection = (id, e) => {
-    activeAdminSection = id;
     const currentSection = Array.from(document.querySelectorAll(".section"))
       .find(section => section.style.display !== "none")?.id;
+
     if (currentSection && currentSection !== id) {
+      saveSectionScrollState(currentSection);
       clearSearchControls();
     }
 
-    // hide all sections
+    activeAdminSection = id;
+
     document.querySelectorAll(".section").forEach(s => {
       s.style.display = "none";
     });
 
-    // show selected section
     const target = document.getElementById(id);
     if (target) {
       target.style.display = "block";
+      requestAnimationFrame(() => restoreSectionScrollState(id));
+      setTimeout(() => restoreSectionScrollState(id), 120);
+      setTimeout(() => restoreSectionScrollState(id), 320);
     }
 
     // sidebar active state
@@ -626,6 +771,9 @@ document.addEventListener("DOMContentLoaded", () => {
             refreshAcademicYearTable?.();
           } else {
             deleteTarget.remove();
+            if (deleteType === "program") {
+              updateProgramCount();
+            }
           }
           closeDeleteModal();
           openDeleteSuccess();
@@ -653,11 +801,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           if (deleteType === "program") {
-            // Update dashboard after program deletion
-            setTimeout(() => {
-              loadDashboardStats();
-              console.log("Dashboard stats updated after program delete");
-            }, 500);
+            // Update the count immediately so the total drops as soon as the delete succeeds
+            loadPrograms();
+            loadDashboardStats();
+            console.log("Program list and dashboard stats updated immediately after program delete");
           }
 
           if (deleteType === "faculty") {
@@ -697,10 +844,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (deleteType === "program") {
-      setTimeout(() => {
-        loadDashboardStats();
-        console.log("Dashboard stats updated on delete success modal");
-      }, 100);
+      loadPrograms();
+      loadDashboardStats();
+      console.log("Program list and dashboard stats updated on delete success modal");
     }
   }
   function closeDeleteSuccess() {
@@ -712,8 +858,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (deleteType === "program") {
+      loadPrograms();
       loadDashboardStats();
-      console.log("Dashboard stats updated on delete success modal close");
+      console.log("Program list and dashboard stats updated on delete success modal close");
     }
     // Reset delete type
     deleteType = "";
@@ -960,6 +1107,15 @@ document.addEventListener("DOMContentLoaded", () => {
     row.querySelector(".delete-btn")?.addEventListener("click", () => openDeleteModal("program", row.cells[1].innerText, row));
   }
 
+  function updateProgramCount() {
+    const totalProgramsElement = document.getElementById("totalPrograms");
+    if (!totalProgramsElement) return;
+
+    const count = document.querySelectorAll(".program-card").length;
+    const label = count === 1 ? "Program Record" : "Program Records";
+    totalProgramsElement.textContent = `${count} ${label}`;
+  }
+
   // LOAD PROGRAMS
   function loadPrograms() {
     fetch("getProgram.php")
@@ -971,7 +1127,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update program count
         const totalProgramsElement = document.getElementById("totalPrograms");
         const count = data ? data.length : 0;
-        totalProgramsElement.textContent = `${count} Program Record`;
+        const label = count === 1 ? "Program Record" : "Program Records";
+        totalProgramsElement.textContent = `${count} ${label}`;
 
         // Check if no data or empty array
         if (!data || data.length === 0) {
