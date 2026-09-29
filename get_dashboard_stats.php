@@ -15,68 +15,6 @@ function getActiveEvaluationPeriodId(mysqli $conn): int
     return intval($row['active_period_id'] ?? 0);
 }
 
-function getExpectedEvaluationSlots(mysqli $conn): int
-{
-    $sql = "
-        SELECT COUNT(*) AS total
-        FROM (
-            SELECT DISTINCT
-                st.id AS student_id,
-                cs.faculty_id,
-                cs.subject_id,
-                ac.id AS class_id
-            FROM add_students st
-            INNER JOIN add_classes ac
-                ON (
-                    CAST(ac.program_id AS CHAR) = TRIM(st.program)
-                    OR EXISTS (
-                        SELECT 1
-                        FROM add_programs ap
-                        WHERE ap.id = ac.program_id
-                          AND (
-                            TRIM(ap.program_code) = TRIM(st.program)
-                            OR TRIM(ap.program_name) = TRIM(st.program)
-                          )
-                    )
-                )
-               AND (
-                    ac.year_level = st.yearlevel
-                    OR ac.year_level = CONCAT(st.yearlevel, CASE st.yearlevel WHEN '1' THEN 'st Year' WHEN '2' THEN 'nd Year' WHEN '3' THEN 'rd Year' ELSE 'th Year' END)
-               )
-               AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
-            INNER JOIN class_subjects cs
-                ON cs.class_id = ac.id
-               AND cs.faculty_id > 0
-            WHERE LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
-
-            UNION
-
-            SELECT DISTINCT
-                ss.student_id,
-                COALESCE(NULLIF(cs.faculty_id, 0), fs.faculty_id) AS faculty_id,
-                ss.subject_id,
-                COALESCE(ssc.class_id, 0) AS class_id
-            FROM student_subjects ss
-            INNER JOIN add_students st
-                ON st.id = ss.student_id
-               AND LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
-            LEFT JOIN student_subject_classes ssc
-                ON ssc.student_id = ss.student_id
-               AND ssc.subject_id = ss.subject_id
-            LEFT JOIN class_subjects cs
-                ON cs.class_id = ssc.class_id
-               AND cs.subject_id = ss.subject_id
-               AND cs.faculty_id > 0
-            LEFT JOIN faculty_subjects fs
-                ON fs.subject_id = ss.subject_id
-            WHERE COALESCE(NULLIF(cs.faculty_id, 0), fs.faculty_id) IS NOT NULL
-        ) expected
-    ";
-    $result = $conn->query($sql);
-    $row = $result ? $result->fetch_assoc() : null;
-    return intval($row['total'] ?? 0);
-}
-
 try {
     ensureEvaluationsSchema($conn);
     $active_period_id = getActiveEvaluationPeriodId($conn);
@@ -97,20 +35,18 @@ try {
     $active_students_result = $conn->query($active_students_query);
     $total_active_students = $active_students_result->fetch_assoc()['total'];
 
-    $expected_evaluations = $total_active_students > 0 ? $total_active_students : getExpectedEvaluationSlots($conn);
+    $expected_evaluations = $active_period_id > 0 ? intval($total_active_students) : 0;
 
-    // Get submitted evaluations for the active period when one is set.
+    // Progress is one completed student per active evaluation period, not one evaluation row.
     if ($active_period_id > 0) {
-        $evaluation_stmt = $conn->prepare("SELECT COUNT(*) as total FROM evaluations WHERE period_id = ?");
+        $evaluation_stmt = $conn->prepare("SELECT COUNT(DISTINCT student_id) as total FROM evaluations WHERE period_id = ?");
         $evaluation_stmt->bind_param("i", $active_period_id);
         $evaluation_stmt->execute();
         $evaluation_result = $evaluation_stmt->get_result();
         $total_evaluations_submitted = intval($evaluation_result->fetch_assoc()['total'] ?? 0);
         $evaluation_stmt->close();
     } else {
-        $evaluation_query = "SELECT COUNT(*) as total FROM evaluations";
-        $evaluation_result = $conn->query($evaluation_query);
-        $total_evaluations_submitted = intval($evaluation_result->fetch_assoc()['total'] ?? 0);
+        $total_evaluations_submitted = 0;
     }
     
     // Get faculty ratings using weighted scores (real-time)

@@ -85,6 +85,39 @@ function todayDate(): string {
     return date("Y-m-d");
 }
 
+function findPeriodMonthConflict(mysqli $conn, string $ay, string $semester, string $startDate, string $endDate, int $excludeId = 0): ?string {
+    $sql = "SELECT start_date, end_date FROM evaluation_periods
+            WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)
+              AND start_date IS NOT NULL AND end_date IS NOT NULL";
+    if ($excludeId > 0) $sql .= " AND id <> ?";
+
+    $stmt = $conn->prepare($sql);
+    if ($excludeId > 0) {
+        $stmt->bind_param("ssi", $ay, $semester, $excludeId);
+    } else {
+        $stmt->bind_param("ss", $ay, $semester);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $newStartMonth = new DateTimeImmutable(substr($startDate, 0, 7) . "-01");
+    $newEndMonth = new DateTimeImmutable(substr($endDate, 0, 7) . "-01");
+    while ($period = $result->fetch_assoc()) {
+        $existingStartMonth = new DateTimeImmutable(substr($period["start_date"], 0, 7) . "-01");
+        $existingEndMonth = new DateTimeImmutable(substr($period["end_date"], 0, 7) . "-01");
+
+        for ($month = $newStartMonth; $month <= $newEndMonth; $month = $month->modify("+1 month")) {
+            if ($month >= $existingStartMonth && $month <= $existingEndMonth) {
+                $stmt->close();
+                return "A period already exists for {$ay} - {$semester} in " . $month->format("F Y") . ". Choose a different month or date range.";
+            }
+        }
+    }
+
+    $stmt->close();
+    return null;
+}
+
 function closeExpiredActivePeriod(mysqli $conn): void {
     closeExpiredEvaluationPeriod($conn);
 }
@@ -245,6 +278,12 @@ if ($action === "create") {
         exit;
     }
 
+    $conflict = findPeriodMonthConflict($conn, $ay, $semester, $start, $end);
+    if ($conflict !== null) {
+        echo json_encode(["success" => false, "message" => $conflict]);
+        exit;
+    }
+
     $stmt = $conn->prepare("INSERT INTO evaluation_periods (ay, semester, start_date, end_date, is_active) VALUES (?, ?, ?, ?, 0)");
     $stmt->bind_param("ssss", $ay, $semester, $start, $end);
     $ok = $stmt->execute();
@@ -267,15 +306,26 @@ if ($action === "update") {
         exit;
     }
 
-    // If dates are not provided or empty, keep them as NULL
+    // If dates are omitted, use the saved range for the conflict check.
     if ($startDate === "" || $endDate === "") {
-        $stmt = $conn->prepare("UPDATE evaluation_periods SET ay = ?, semester = ? WHERE id = ?");
-        $stmt->bind_param("ssi", $ay, $semester, $id);
-        $ok = $stmt->execute();
-        $stmt->close();
+        $existingStmt = $conn->prepare("SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
+        $existingStmt->bind_param("i", $id);
+        $existingStmt->execute();
+        $existingPeriod = $existingStmt->get_result()->fetch_assoc();
+        $existingStmt->close();
 
-        echo json_encode(["success" => $ok]);
-        exit;
+        if (!$existingPeriod || empty($existingPeriod["start_date"]) || empty($existingPeriod["end_date"])) {
+            $stmt = $conn->prepare("UPDATE evaluation_periods SET ay = ?, semester = ? WHERE id = ?");
+            $stmt->bind_param("ssi", $ay, $semester, $id);
+            $ok = $stmt->execute();
+            $stmt->close();
+
+            echo json_encode(["success" => $ok]);
+            exit;
+        }
+
+        $startDate = $existingPeriod["start_date"];
+        $endDate = $existingPeriod["end_date"];
     }
 
     // Validate dates if provided
@@ -291,6 +341,13 @@ if ($action === "update") {
         echo json_encode(["success" => false, "message" => "End date must be after start date"]);
         exit;
     }
+
+    $conflict = findPeriodMonthConflict($conn, $ay, $semester, $start, $end, $id);
+    if ($conflict !== null) {
+        echo json_encode(["success" => false, "message" => $conflict]);
+        exit;
+    }
+
     $stmt = $conn->prepare("UPDATE evaluation_periods SET ay = ?, semester = ?, start_date = ?, end_date = ? WHERE id = ?");
     $stmt->bind_param("ssssi", $ay, $semester, $start, $end, $id);
     $ok = $stmt->execute();

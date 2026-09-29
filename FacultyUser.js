@@ -470,19 +470,15 @@ function togglePassword(id, icon) {
 
 function updateStudentAcademicPeriodDisplay(status) {
   console.log("updateStudentAcademicPeriodDisplay called with:", status);
-  const periodEl = document.getElementById("studentAcademicPeriod");
-  if (!periodEl) return;
+  const academicYearEl = document.getElementById("studentAcademicYear");
+  const semesterEl = document.getElementById("studentAcademicSemester");
+  if (!academicYearEl || !semesterEl) return;
 
   const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
   const semester = (status?.current_semester || status?.active_semester || "").trim();
 
-  if (academicYear && semester) {
-    periodEl.textContent = `Academic Year: ${academicYear} - ${semester}`;
-  } else {
-    periodEl.textContent = status?.active_period_name
-      ? `Academic Period: ${status.active_period_name}`
-      : "Academic Year: No active period";
-  }
+  academicYearEl.textContent = academicYear || "No active period";
+  semesterEl.textContent = semester || "No active period";
 
   // Update Evaluate Now button state in real-time
   const evaluateBtn = document.querySelector(".evaluate-now-btn");
@@ -647,10 +643,14 @@ async function loadStudentFacultyCards() {
     const evaluatedCount = assignments.filter(faculty => Number(faculty.evaluation_id || 0) > 0).length;
     const pendingCount = assignments.length - evaluatedCount;
     updateEvaluationSummary(pendingCount, evaluatedCount);
-    const periodLabel = document.getElementById("studentAcademicPeriod")?.textContent || "";
+    const academicYear = document.getElementById("studentAcademicYear")?.textContent || "";
+    const semester = document.getElementById("studentAcademicSemester")?.textContent || "";
+    const periodLabel = academicYear !== "No active period" && semester !== "No active period"
+      ? `${academicYear} - ${semester}`
+      : "";
     const periodLabelEl = document.getElementById("evaluationPeriodLabel");
     const subjectCountEl = document.getElementById("evaluationSubjectCount");
-    if (periodLabelEl) periodLabelEl.textContent = periodLabel.replace(/^Academic Year:\s*/i, "— ");
+    if (periodLabelEl) periodLabelEl.textContent = periodLabel ? `— ${periodLabel}` : "";
     if (subjectCountEl) subjectCountEl.textContent = `${assignments.length} subject${assignments.length === 1 ? "" : "s"}`;
 
     container.innerHTML = '';
@@ -1322,9 +1322,15 @@ function closeSuccessModal() {
 
 // Add event listener for password form back button
 document.addEventListener("DOMContentLoaded", function() {
-  loadStudentAcademicPeriod();
+  Promise.allSettled([loadStudentAcademicPeriod(), loadStudentStats()]).finally(() => {
+    const dashboard = document.getElementById("mainPage");
+    const navbar = document.getElementById("studentNavbar");
+    dashboard?.classList.remove("student-dashboard-loading");
+    dashboard?.removeAttribute("aria-busy");
+    navbar?.classList.remove("student-navbar-loading");
+    navbar?.removeAttribute("aria-busy");
+  });
   setInterval(loadStudentAcademicPeriod, 15000);
-  loadStudentStats(); // Load stats for the dashboard
 
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {

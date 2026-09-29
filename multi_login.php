@@ -14,7 +14,7 @@ if (empty($username) || empty($password)) {
 }
 
 // Student login by student number
-if (str_starts_with($username, 'GC-')) {
+if (str_starts_with(strtoupper($username), 'GC-')) {
     $stmt = $conn->prepare("SELECT id, password, status FROM add_students WHERE student_number = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -46,7 +46,7 @@ if (str_starts_with($username, 'GC-')) {
         }
         
         if (password_verify($password, $row['password'])) {
-            $log = $conn->prepare("INSERT INTO student_login (username, password) VALUES (?, ?)");
+            $log = $conn->prepare("INSERT INTO student_login (username, password) VALUES (?, ?) ON DUPLICATE KEY UPDATE password = VALUES(password)");
             $log->bind_param("ss", $username, $row['password']);
             $log->execute();
             $log->close();

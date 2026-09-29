@@ -9,6 +9,30 @@ const viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsMod
 const viewFacultySubjectsModal = document.getElementById("viewFacultySubjectsModal");
 const managePeriodsModal = document.getElementById("managePeriodsModal");
 
+function setButtonLoading(button, isLoading, loadingText = "Loading...") {
+  if (!button) return;
+
+  if (isLoading) {
+    if (button.classList.contains("is-loading")) return;
+    button.dataset.loadingOriginalHtml = button.innerHTML;
+    button.dataset.loadingWasDisabled = String(button.disabled);
+    button.disabled = true;
+    button.classList.add("is-loading");
+    button.setAttribute("aria-busy", "true");
+    button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span>${loadingText}`;
+    return;
+  }
+
+  if (button.dataset.loadingOriginalHtml !== undefined) {
+    button.innerHTML = button.dataset.loadingOriginalHtml;
+    button.disabled = button.dataset.loadingWasDisabled === "true";
+    delete button.dataset.loadingOriginalHtml;
+    delete button.dataset.loadingWasDisabled;
+  }
+  button.classList.remove("is-loading");
+  button.removeAttribute("aria-busy");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
@@ -1061,8 +1085,14 @@ document.addEventListener("DOMContentLoaded", () => {
     params.set("program_code", normalizeProgramCode(code));
     params.set("program_name", name);
 
+    setButtonLoading(programSubmitBtn, true);
+    const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
     fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() })
-      .then(r => r.text()).then(t => { try { return JSON.parse(t); } catch { return t; } })
+      .then(r => r.text())
+      .then(async t => {
+        await minimumLoadingTime;
+        try { return JSON.parse(t); } catch { return t; }
+      })
       .then(res => {
         const ok = (typeof res === "object" && res.status === "success") || (typeof res === "string" && res.toLowerCase().includes("success"));
         if (ok) {
@@ -1082,7 +1112,12 @@ document.addEventListener("DOMContentLoaded", () => {
             showNotification(res.message || res || "Error updating Program.", "#f44336", 4000);
           }
         }
-      }).catch(err => { console.error("FETCH ERROR:", err); showNotification("Something went wrong.", "#f44336", 4000); });
+      }).catch(async err => {
+        await minimumLoadingTime;
+        console.error("FETCH ERROR:", err);
+        showNotification("Something went wrong.", "#f44336", 4000);
+      })
+      .finally(() => setButtonLoading(programSubmitBtn, false));
   });
 
   // ATTACH ROW EVENTS
@@ -1269,8 +1304,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     openDeleteModal("program", code, target);
   }
-
-  document.addEventListener("DOMContentLoaded", loadPrograms);
 
   // ========================= CLICK OUTSIDE TO CLOSE MODALS =========================
   function setupModalClickOutside(modal) {
@@ -3318,7 +3351,11 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Faculty saved successfully, reloading faculty list...");
         await loadFaculty();
         closeModal(addFacultyModal);
-        showNotification(result.message, "#10b981");
+        if (result.temporary_password) {
+          showAlertModal(`${result.message}. Username: ${result.username}. Temporary password: ${result.temporary_password}. Share it securely.`);
+        } else {
+          showNotification(result.message, "#10b981");
+        }
       } else {
         showNotification(result.message, "#f44336");
       }
@@ -3410,6 +3447,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // ========================= Report Section =========================
   let reportPeriodFiltersLoaded = false;
+  let reportPeriodFiltersPromise = null;
 
   function getReportPeriodParams() {
     const ay = document.getElementById("report-ay-filter")?.value || "";
@@ -3420,39 +3458,74 @@ document.addEventListener("DOMContentLoaded", () => {
     return params;
   }
 
-  async function loadReportPeriodFilters() {
-    if (reportPeriodFiltersLoaded) return;
-    const aySelect = document.getElementById("report-ay-filter");
-    if (!aySelect) return;
+  function loadReportPeriodFilters() {
+    if (reportPeriodFiltersLoaded) return Promise.resolve();
+    if (reportPeriodFiltersPromise) return reportPeriodFiltersPromise;
 
-    try {
-      const res = await fetch("periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
-      const data = await res.json();
-      const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
-      const years = [...new Set(periods.map(period => period.ay).filter(Boolean))].sort().reverse();
-      const semesterSelect = document.getElementById("report-semester-filter");
-      years.forEach(year => {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year;
-        aySelect.appendChild(option);
-      });
-      if (semesterSelect) {
-        const selectedSemester = semesterSelect.value;
-        const semesters = [...new Set(periods.map(period => String(period.semester || "").trim()).filter(Boolean))];
-        semesterSelect.querySelectorAll("option:not(:first-child)").forEach(option => option.remove());
-        semesters.forEach(semester => {
-          const option = document.createElement("option");
-          option.value = semester;
-          option.textContent = semester;
-          semesterSelect.appendChild(option);
-        });
-        semesterSelect.value = semesters.includes(selectedSemester) ? selectedSemester : "";
-      }
+    const aySelect = document.getElementById("report-ay-filter");
+    const semesterSelect = document.getElementById("report-semester-filter");
+    if (!aySelect) {
       reportPeriodFiltersLoaded = true;
-    } catch (err) {
-      console.error("Failed to load report period filters:", err);
+      return Promise.resolve();
     }
+
+    reportPeriodFiltersPromise = (async () => {
+      let defaultYear = selectedAcademicYear || "";
+      let defaultSemester = selectedClassSemester || "";
+
+      try {
+        const dashboardPeriod = await refreshPeriodCard();
+        if (dashboardPeriod) {
+          defaultYear = dashboardPeriod.current_academic_year || "";
+          defaultSemester = dashboardPeriod.current_semester || "";
+        }
+
+        const res = await fetch("periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+        const data = await res.json();
+        const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+        const years = [...new Set([
+          ...periods.map(period => String(period.ay || "").trim()),
+          defaultYear
+        ].filter(Boolean))].sort().reverse();
+
+        years.forEach(year => {
+          const option = document.createElement("option");
+          option.value = year;
+          option.textContent = year;
+          aySelect.appendChild(option);
+        });
+        aySelect.value = years.includes(defaultYear) ? defaultYear : "";
+
+        if (semesterSelect) {
+          const semesters = [...new Set([
+            ...periods.map(period => String(period.semester || "").trim()),
+            defaultSemester
+          ].filter(Boolean))];
+          semesterSelect.querySelectorAll("option:not(:first-child)").forEach(option => option.remove());
+          semesters.forEach(semester => {
+            const option = document.createElement("option");
+            option.value = semester;
+            option.textContent = semester;
+            semesterSelect.appendChild(option);
+          });
+          semesterSelect.value = semesters.includes(defaultSemester) ? defaultSemester : "";
+        }
+      } catch (err) {
+        console.error("Failed to load report period filters:", err);
+        if (defaultYear && !Array.from(aySelect.options).some(option => option.value === defaultYear)) {
+          aySelect.add(new Option(defaultYear, defaultYear));
+        }
+        aySelect.value = defaultYear;
+        if (semesterSelect && defaultSemester && !Array.from(semesterSelect.options).some(option => option.value === defaultSemester)) {
+          semesterSelect.add(new Option(defaultSemester, defaultSemester));
+        }
+        if (semesterSelect) semesterSelect.value = defaultSemester;
+      } finally {
+        reportPeriodFiltersLoaded = true;
+      }
+    })();
+
+    return reportPeriodFiltersPromise;
   }
 
   function applyReportSearchFilter() {
@@ -3478,6 +3551,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadEvaluations(silent = false) {
+    if (!reportPeriodFiltersLoaded) {
+      return loadReportPeriodFilters().then(() => loadEvaluations(silent));
+    }
     if (reportEvaluationsLoading) return Promise.resolve();
     reportEvaluationsLoading = true;
     console.log('Loading evaluations...');
@@ -4251,7 +4327,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const progressTextEl = document.getElementById("evaluationProgressText");
           if (progressFillEl && progressTextEl) {
             const submittedEvaluations = Number(data.data.totalEvaluationsSubmitted) || 0;
-            const expectedEvaluations = Number(data.data.expectedEvaluations) || Number(data.data.activeStudents) || 0;
+            const expectedEvaluations = Math.max(0, Number(data.data.expectedEvaluations) || 0);
             const pendingEvaluations = Number.isFinite(Number(data.data.pendingEvaluations))
               ? Number(data.data.pendingEvaluations)
               : Math.max(expectedEvaluations - submittedEvaluations, 0);
@@ -4265,7 +4341,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (submissionCountEl) submissionCountEl.textContent = submittedEvaluations.toLocaleString();
             if (pendingCountEl) pendingCountEl.textContent = pendingEvaluations.toLocaleString();
 
-            if (submittedEvaluations <= 0 || expectedEvaluations <= 0) {
+            if (!Number(data.data.activePeriodId)) {
+              progressFillEl.style.width = "0%";
+              progressTextEl.textContent = "No active evaluation period";
+            } else if (expectedEvaluations <= 0) {
+              progressFillEl.style.width = "0%";
+              progressTextEl.textContent = "No active students";
+            } else if (submittedEvaluations <= 0) {
               progressFillEl.style.width = "0%";
               progressTextEl.textContent = "No submissions yet";
             } else {
@@ -4558,7 +4640,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  loadFaculty();
   loadDashboardStats();
   initializeReportRankingClickTarget();
   // Only load evaluations if report section is initially visible
@@ -4568,10 +4649,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadEvaluations();
   }
   startAdminRealtimeRefresh();
-  // Ensure dashboard stats are loaded after a short delay
-  setTimeout(() => {
-    loadDashboardStats();
-  }, 1000);
 
   // ========================= Students  ==========================================================================================
   const studentTbody = document.querySelector("#students-section table tbody"),
@@ -6051,13 +6128,16 @@ document.addEventListener("DOMContentLoaded", () => {
       url = "edit_category.php";
     }
 
+    setButtonLoading(saveCategoryBtn, true);
+  const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
       .then(r => r.json())
-      .then(d => {
+      .then(async d => {
+        await minimumLoadingTime;
         if (d.success) {
           const isEditing = !!editId;
           loadCategories();
@@ -6071,10 +6151,12 @@ document.addEventListener("DOMContentLoaded", () => {
           showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
         }
       })
-      .catch(err => {
+      .catch(async err => {
+        await minimumLoadingTime;
         console.error("Error saving category:", err);
         showNotification("Network error occurred", "#ef4444");
-      });
+      })
+      .finally(() => setButtonLoading(saveCategoryBtn, false));
   };
 
   //  SAVE QUESTION ========================= //
@@ -6105,19 +6187,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
+    setButtonLoading(saveQuestionBtn, true);
+    const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
 
     // Check if this is a new question (not editing)
     if (!addQuestionModal.dataset.editId) {
       // Count existing questions for this category
       fetch(`get_question.php?category_id=${catId}`)
         .then(r => r.json())
-        .then(questions => {
+        .then(async questions => {
+          await minimumLoadingTime;
           if (questions.length >= 5) {
             // Close the add question modal first
             const addQuestionModal = document.getElementById("addQuestionModal");
             if (addQuestionModal) {
               addQuestionModal.style.display = "none";
             }
+            setButtonLoading(saveQuestionBtn, false);
 
             // Show notification after a short delay so user can see it
             setTimeout(() => {
@@ -6127,20 +6213,21 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           // Proceed with adding the question
-          proceedToAddQuestion(catId, q);
+          proceedToAddQuestion(catId, q, minimumLoadingTime);
         })
-        .catch(err => {
+        .catch(async err => {
+          await minimumLoadingTime;
           console.error("Error checking question count:", err);
           // Still proceed if there's an error checking count
-          proceedToAddQuestion(catId, q);
+          proceedToAddQuestion(catId, q, minimumLoadingTime);
         });
     } else {
       // Editing existing question, proceed directly
-      proceedToAddQuestion(catId, q);
+      proceedToAddQuestion(catId, q, minimumLoadingTime);
     }
   };
 
-  function proceedToAddQuestion(catId, q) {
+  function proceedToAddQuestion(catId, q, minimumLoadingTime) {
     const payload = { category_id: catId, question_text: q };
     let url = addQuestionModal.dataset.editId ? "edit_question.php" : "add_question.php";
 
@@ -6152,7 +6239,8 @@ document.addEventListener("DOMContentLoaded", () => {
       body: JSON.stringify(payload)
     })
       .then(r => r.json())
-      .then(d => {
+      .then(async d => {
+        await minimumLoadingTime;
         if (d.success) {
           const isEditing = addQuestionModal.dataset.editId ? true : false;
           loadCategories();
@@ -6164,10 +6252,12 @@ document.addEventListener("DOMContentLoaded", () => {
           showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
         }
       })
-      .catch(err => {
+      .catch(async err => {
+        await minimumLoadingTime;
         console.error("Error saving question:", err);
         showNotification("Network error occurred", "#ef4444");
-      });
+      })
+      .finally(() => setButtonLoading(saveQuestionBtn, false));
   }
 
   //  CATEGORY ACTIONS ========================= //
@@ -6409,8 +6499,6 @@ document.addEventListener("DOMContentLoaded", () => {
       updateWeightHint(editId);
     }
   });
-
-  document.addEventListener("DOMContentLoaded", loadCategories);
 
   // ========================= Criteria Search Functionality =========================
   const criteriaSearchInput = document.getElementById('criteria-search-input');
@@ -6710,12 +6798,16 @@ document.addEventListener("DOMContentLoaded", () => {
         submitBtn.onclick = async e => {
           e.preventDefault();
           submitBtn.disabled = true;
+          submitBtn.classList.add("is-loading");
+          submitBtn.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Loading';
 
           // GC- validation
           const numberVal = val("number");
           if (!numberVal.startsWith("GC-")) {
             errorDiv.textContent = "Student ID must start with GC-";
             submitBtn.disabled = false;
+            submitBtn.classList.remove("is-loading");
+            submitBtn.textContent = "SAVE STUDENT";
             return;
           } else {
             errorDiv.textContent = "";
@@ -6733,6 +6825,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!y) {
               showGlobalNotification("Please select year level for regular student", "warning");
               submitBtn.disabled = false;
+              submitBtn.classList.remove("is-loading");
+              submitBtn.textContent = "SAVE STUDENT";
               return;
             }
           }
@@ -6740,6 +6834,8 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!n || !eMail || !fName || !lName || !p) {
             showGlobalNotification("Please fill all required fields", "warning");
             submitBtn.disabled = false;
+            submitBtn.classList.remove("is-loading");
+            submitBtn.textContent = "SAVE STUDENT";
             return;
           }
 
@@ -6778,12 +6874,18 @@ document.addEventListener("DOMContentLoaded", () => {
               console.log("Dashboard stats updated after student add");
             }, 500); // Increased delay to ensure DB commit
             closeModal(addStudentModal);
-            showNotification(d.message || "Student added successfully. Password sent to email.", "#4caf50");
+            if (d.temporary_password) {
+              showAlertModal(`${d.message}. Student ID: ${n}. Temporary password: ${d.temporary_password}. Share it securely.`);
+            } else {
+              showNotification(d.message || "Student added successfully. Password sent to email.", "#4caf50");
+            }
             addProgramToDropdown(p); // live add program
           } else {
             alert(d.message || "Error adding student.");
           }
           submitBtn.disabled = false;
+          submitBtn.classList.remove("is-loading");
+          submitBtn.textContent = "SAVE STUDENT";
         };
       };
       console.log("Add student button event listener attached successfully!");
@@ -6890,7 +6992,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
       const data = await res.json();
-      if (!data || !data.success) return;
+      if (!data || !data.success) return null;
 
       const activeBox = document.getElementById("activePeriodBox");
       const statusText = document.getElementById("evaluationStatusText");
@@ -6917,8 +7019,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Store active period state globally for criteria lock
       window.hasActivePeriod = !!data.active_period_id;
       updateCriteriaLockUI();
+      return data;
     } catch (_) {
       // ignore
+      return null;
     }
   }
 
@@ -6952,15 +7056,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function openManagePeriodsModal() {
-    // Reload values from localStorage
-    try {
-      selectedAcademicYear = localStorage.getItem("selectedAcademicYear") || "";
-      selectedClassSemester = localStorage.getItem("selectedClassSemester") || "";
-    } catch (err) {
-      console.error("Failed to load from localStorage:", err);
-    }
-    
+  async function openManagePeriodsModal() {
+    await loadDashboardPeriodSetting();
     resetPeriodForm();
     if (!selectedAcademicYear || !selectedClassSemester) {
       showNotification("Set academic year and semester on the dashboard first", "#f44336");
@@ -7116,10 +7213,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await syncDashboardPeriodSetting();
           await refreshAcademicYearTable();
         } else {
-          alert((d && d.message) || "Error adding period.");
+          showAlertModal((d && d.message) || "Error adding period.");
         }
       })
-      .catch(() => alert("Error adding period."));
+      .catch(() => showAlertModal("Error adding period."));
   }
 
   function updatePeriod(periodId) {
@@ -7161,10 +7258,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await syncDashboardPeriodSetting();
           await refreshAcademicYearTable();
         } else {
-          alert((d && d.message) || "Error updating period.");
+          showAlertModal((d && d.message) || "Error updating period.");
         }
       })
-      .catch(() => alert("Error updating period."));
+      .catch(() => showAlertModal("Error updating period."));
   }
 
   // Add period button event
@@ -7621,7 +7718,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // No dates - will be NULL in database
         };
 
-    saveBtn.disabled = true;
+    setButtonLoading(saveBtn, true);
     try {
       const res = await fetch(`periods_api.php?action=${editingId ? 'update' : 'create'}`, {
         method: 'POST',
@@ -7644,7 +7741,7 @@ document.addEventListener('DOMContentLoaded', function () {
       console.error('Failed to save academic year:', err);
       alert('Unable to save academic year.');
     } finally {
-      saveBtn.disabled = false;
+      setButtonLoading(saveBtn, false);
     }
   });
 

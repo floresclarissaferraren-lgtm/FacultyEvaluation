@@ -31,6 +31,16 @@ function requireRole(string ...$roles): void
     }
 }
 
+function requireDashboardRole(string $role): void
+{
+    if (empty($_SESSION['id']) || (string)($_SESSION['role'] ?? '') !== $role) {
+        http_response_code(403);
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 Access Denied</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f6f8;color:#202a35;font:16px/1.5 Arial,sans-serif}.access-denied{text-align:center;padding:40px 24px}h1{margin:0;color:#c62828;font-size:64px;line-height:1}h2{margin:16px 0 8px;font-size:24px}p{margin:0;color:#596573}</style></head><body><main class="access-denied"><h1>403</h1><h2>Access Denied</h2><p>You don\'t have permission to access this page.</p></main></body></html>';
+        exit;
+    }
+}
+
 function requireMethod(string ...$methods): void
 {
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';

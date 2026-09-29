@@ -246,6 +246,8 @@ h6,
   color:#dc2626;
 }
 
+.dropdown-menu a.logout-link:hover i{color:#dc2626}
+
 @keyframes fadeIn{
   from{opacity:0;transform:translateY(-10px)}
   to{opacity:1;transform:translateY(0)}

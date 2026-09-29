@@ -3,12 +3,8 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-include_once 'session_config.php'; // Load session settings BEFORE session_start
-session_start();
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') {
-    header("Location: faculty_login.php");
-    exit();
-}
+require_once 'security.php';
+requireDashboardRole('faculty');
 
 include 'connect.php';
 require_once 'evaluation_period_helper.php';
@@ -202,8 +198,8 @@ if ($subjectStmt) {
             <span class="info-value academic-year-loading" id="instructorAcademicPeriod" aria-busy="true">Loading...</span>
           </div>
           <div class="info-item">
-            <span class="info-label"><i class="ph ph-books"></i> 1st Semester</span>
-            <span class="info-value semester-value" id="semesterValue">1st Semester</span>
+            <span class="info-label"><i class="ph ph-books"></i> Semester:</span>
+            <span class="info-value semester-value" id="semesterValue">Loading...</span>
           </div>
         </div>
         

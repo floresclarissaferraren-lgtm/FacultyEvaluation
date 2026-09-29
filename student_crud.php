@@ -257,6 +257,7 @@ if ($action === "add") {
         echo json_encode([
             "success" => true,
             "message" => $sent ? "Student added + email sent" : "Student added but email failed",
+            "temporary_password" => $sent ? null : $password,
             "subject_inserted" => $assignResult['inserted'] ?? 0,
             "subject_message" => $assignResult['message'] ?? ""
         ]);

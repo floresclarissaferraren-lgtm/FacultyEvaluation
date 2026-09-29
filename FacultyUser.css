@@ -78,6 +78,78 @@ h6,
   position:relative;
 }
 
+.student-dashboard-skeleton{
+  position:absolute;
+  inset:5px 0 0;
+  z-index:1;
+  display:none;
+  align-items:center;
+  gap:38px;
+  padding:38px 42px;
+}
+
+.student-dashboard-loading > .student-dashboard-skeleton{display:flex}
+.student-dashboard-loading > .welcome-content{visibility:hidden}
+.welcome-card.student-dashboard-loading{
+  background:#ffffff;
+  border-color:#e5edf7;
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+.welcome-card.student-dashboard-loading::before{background:#e5edf7}
+
+@keyframes studentDashboardSkeletonShimmer{
+  0%{background-position:-720px 0}
+  100%{background-position:720px 0}
+}
+
+.student-dashboard-skeleton-avatar,
+.student-dashboard-skeleton-line,
+.student-dashboard-skeleton-info span,
+.student-dashboard-skeleton-copy span,
+.student-dashboard-skeleton-button{
+  display:block;
+  background:linear-gradient(90deg,#e6edf7 25%,#f5f8fc 50%,#e6edf7 75%);
+  background-size:720px 100%;
+  animation:studentDashboardSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.student-dashboard-skeleton-avatar{
+  flex:0 0 120px;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+}
+
+.student-dashboard-skeleton-content{flex:1;min-width:0}
+.student-dashboard-skeleton-line.eyebrow{width:110px;height:12px;margin-bottom:10px;border-radius:6px}
+.student-dashboard-skeleton-line.name{width:min(340px,70%);height:32px;margin-bottom:20px;border-radius:7px}
+
+.student-dashboard-skeleton-info-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.student-dashboard-skeleton-info{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:0;
+  padding:14px 16px;
+  border:1px solid #e5edf7;
+  border-radius:12px;
+  background:#ffffff;
+}
+
+.student-dashboard-skeleton-info span:first-child{width:55%;height:10px;border-radius:5px}
+.student-dashboard-skeleton-info span:last-child{width:78%;height:15px;border-radius:6px}
+
+.student-dashboard-skeleton-copy{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}
+.student-dashboard-skeleton-copy span{width:100%;height:10px;border-radius:5px}
+.student-dashboard-skeleton-copy span:last-child{width:68%}
+.student-dashboard-skeleton-button{width:170px;height:46px;border-radius:12px}
+
 .welcome-card::before{
   content:"";
   position:absolute;
@@ -163,7 +235,7 @@ h6,
 
 .info-grid{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:12px;
   padding:0;
   background:transparent;
@@ -233,6 +305,41 @@ h6,
 
 .navbar{height:70px; background:#0B90E0;color:#fff;display:flex;align-items:center;
   justify-content:space-between;padding:0 32px;box-shadow:0 4px 12px rgba(37,99,235,.25);position:fixed;top:0;left:0;right:0;z-index:1000;}
+
+.navbar.student-navbar-loading{background:#f8fafc;box-shadow:0 4px 12px rgba(15,23,42,.06)}
+
+.student-navbar-skeleton{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  display:none;
+  align-items:center;
+  gap:12px;
+  padding:0 32px;
+  background:#f8fafc;
+}
+
+.student-navbar-loading > .student-navbar-skeleton{display:flex}
+.student-navbar-loading > .brand,
+.student-navbar-loading > .user-menu{visibility:hidden}
+
+.student-navbar-skeleton-logo,
+.student-navbar-skeleton-title,
+.student-navbar-skeleton-subtitle,
+.student-navbar-skeleton-user,
+.student-navbar-skeleton-user::before{
+  display:block;
+  background:linear-gradient(90deg,#e6edf7 25%,#f5f8fc 50%,#e6edf7 75%);
+  background-size:720px 100%;
+  animation:studentDashboardSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.student-navbar-skeleton-logo{width:42px;height:42px;border-radius:8px}
+.student-navbar-skeleton-brand{display:flex;flex:1;flex-direction:column;gap:6px}
+.student-navbar-skeleton-title{width:190px;height:13px;border-radius:5px}
+.student-navbar-skeleton-subtitle{width:105px;height:8px;border-radius:4px}
+.student-navbar-skeleton-user{position:relative;width:112px;height:40px;border-radius:10px}
+.student-navbar-skeleton-user::before{position:absolute;top:11px;left:12px;width:18px;height:18px;border-radius:50%;content:""}
     
 .brand{display:flex;align-items:center;gap:14px;transition:.3s ease}
 .brand:hover{transform:scale(1.02)}
@@ -403,6 +510,10 @@ h6,
 
 .dropdown-menu .logout-link:hover{
   background:#fef2f2;
+  color:#dc2626;
+}
+
+.dropdown-menu a.logout-link:hover i{
   color:#dc2626;
 }
 
@@ -1975,7 +2086,23 @@ body.modal-open{overflow:hidden}
 }
 @media(max-width:768px){
   .content-container{padding:84px 16px 16px}
+  .student-navbar-skeleton{padding:0 16px}
+  .student-navbar-skeleton-logo{width:36px;height:36px}
+  .student-navbar-skeleton-title{width:min(160px,42vw)}
+  .student-navbar-skeleton-user{width:84px;height:38px}
+  .student-navbar-skeleton-user::before{top:10px;left:10px}
   .welcome-content{flex-direction:column;align-items:center;gap:24px;padding:32px 24px}
+  .student-dashboard-skeleton{flex-direction:column;gap:24px;padding:32px 24px}
+  .student-dashboard-skeleton-avatar{flex-basis:104px;width:104px;height:104px}
+  .student-dashboard-skeleton-content{width:100%}
+  .student-dashboard-skeleton-line.eyebrow,
+  .student-dashboard-skeleton-line.name,
+  .student-dashboard-skeleton-button{margin-left:auto;margin-right:auto}
+  .student-dashboard-skeleton-info-grid{grid-template-columns:1fr}
+  .student-dashboard-skeleton-info{padding:12px 14px}
+  .student-dashboard-skeleton-info span:first-child{width:35%}
+  .student-dashboard-skeleton-info span:last-child{width:60%}
+  .student-dashboard-skeleton-copy span:last-child{width:85%}
   .welcome-right{width:100%;text-align:center}
   .welcome-header-inline{margin-bottom:4px}
   .info-grid{grid-template-columns:1fr}

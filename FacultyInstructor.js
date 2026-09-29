@@ -1073,7 +1073,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function updateInstructorAcademicPeriodDisplay(status) {
   const periodEl = document.getElementById("instructorAcademicPeriod");
-  if (!periodEl) return;
+  const semesterEl = document.getElementById("semesterValue");
+  if (!periodEl || !semesterEl) return;
 
   periodEl.classList.remove("academic-year-loading");
   periodEl.setAttribute("aria-busy", "false");
@@ -1081,14 +1082,8 @@ function updateInstructorAcademicPeriodDisplay(status) {
   const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
   const semester = (status?.current_semester || status?.active_semester || "").trim();
 
-  if (academicYear && semester) {
-    periodEl.innerHTML = `<i class="ph ph-calendar"></i> Academic Year: ${academicYear} • ${semester}`;
-    return;
-  }
-
-  periodEl.innerHTML = status?.active_period_name
-    ? `<i class="ph ph-calendar"></i> Academic Period: ${status.active_period_name}`
-    : '<i class="ph ph-calendar"></i> Academic Year: No active period';
+  periodEl.textContent = academicYear || "No active period";
+  semesterEl.textContent = semester || "No active period";
 }
 
 async function loadInstructorAcademicPeriod() {

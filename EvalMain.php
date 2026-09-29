@@ -520,33 +520,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     </div>
   </div>
 
-  <!-- Student Dashboard Layout Skeleton -->
-  <div class="student-skeleton">
-    <div class="skeleton-navbar">
-      <div class="skeleton-nav-left">
-        <div class="skeleton-logo"></div>
-        <div class="skeleton-nav-title" style="width: 180px;"></div>
-      </div>
-      <div class="skeleton-user-box">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-user-name" style="width: 50px;"></div>
-      </div>
-    </div>
-
-    <div class="student-skeleton-content">
-      <div class="student-hero-card">
-        <div class="student-hero-image"></div>
-        <div class="student-hero-copy">
-          <div class="skeleton-title" style="width: 360px; height: 34px; margin-bottom: 20px;"></div>
-          <div class="skeleton-badge" style="width: 290px; margin-bottom: 14px;"></div>
-          <div class="skeleton-badge" style="width: 220px; margin-bottom: 18px;"></div>
-          <div class="skeleton-text" style="width: 88%; height: 14px; margin-bottom: 10px;"></div>
-          <div class="skeleton-text" style="width: 72%; height: 14px; margin-bottom: 24px;"></div>
-          <div class="skeleton-btn" style="width: 150px; height: 44px;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script src="EvalMain.js?v=<?php echo time(); ?>"></script>

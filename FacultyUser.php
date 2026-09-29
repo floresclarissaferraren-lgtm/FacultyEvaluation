@@ -3,14 +3,9 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-include_once 'session_config.php'; // Load session settings BEFORE session_start
-session_start();
+require_once 'security.php';
+requireDashboardRole('student');
 include 'connect.php';
-
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {
-    header('Location: EvalMain.php');
-    exit;
-}
 
 $student_id = intval($_SESSION['id']);
 $studentName = '';
@@ -65,7 +60,15 @@ $conn->close();
 
 <!-- Navbar ======================================================================================-->
 
-<div class="navbar">
+<div class="navbar student-navbar-loading" id="studentNavbar" aria-busy="true">
+  <div class="student-navbar-skeleton" aria-hidden="true">
+    <span class="student-navbar-skeleton-logo"></span>
+    <div class="student-navbar-skeleton-brand">
+      <span class="student-navbar-skeleton-title"></span>
+      <span class="student-navbar-skeleton-subtitle"></span>
+    </div>
+    <span class="student-navbar-skeleton-user"></span>
+  </div>
   <div class="brand"> 
     <img src="assets/images/schoollogo.png" alt="Logo" class="navbar-logo">
     <div class="brand-text">
@@ -192,7 +195,23 @@ $conn->close();
 
 <div class="content-container">
   <!-- Welcome Card -->
-  <div class="welcome-card" id="mainPage">
+  <div class="welcome-card student-dashboard-loading" id="mainPage" aria-busy="true">
+    <div class="student-dashboard-skeleton" aria-hidden="true">
+      <div class="student-dashboard-skeleton-avatar"></div>
+      <div class="student-dashboard-skeleton-content">
+        <span class="student-dashboard-skeleton-line eyebrow"></span>
+        <span class="student-dashboard-skeleton-line name"></span>
+        <div class="student-dashboard-skeleton-info-grid">
+          <div class="student-dashboard-skeleton-info"><span></span><span></span></div>
+          <div class="student-dashboard-skeleton-info"><span></span><span></span></div>
+          <div class="student-dashboard-skeleton-info"><span></span><span></span></div>
+        </div>
+        <div class="student-dashboard-skeleton-copy">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="student-dashboard-skeleton-button"></span>
+      </div>
+    </div>
     <div class="welcome-content">
       <div class="welcome-left">
         <div class="avatar-section">
@@ -215,7 +234,11 @@ $conn->close();
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Academic Year:</span>
-            <span class="info-value" id="studentAcademicPeriod">No active period</span>
+            <span class="info-value" id="studentAcademicYear">No active period</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Semester:</span>
+            <span class="info-value" id="studentAcademicSemester">No active period</span>
           </div>
           <div class="info-item">
             <span class="info-label">Year Level:</span>

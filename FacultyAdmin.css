@@ -6619,6 +6619,29 @@ table.evaluation-table .view-btn:hover {
   animation: logout-spin .7s linear infinite;
 }
 
+.submit-btn.is-loading,
+.submit-btn.is-loading:hover {
+  cursor: wait !important;
+  opacity: .9 !important;
+  transform: none !important;
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: button-spinner-spin .7s linear infinite;
+}
+
+@keyframes button-spinner-spin {
+  to { transform: rotate(360deg); }
+}
+
 .cancel-btn:disabled {
   cursor: not-allowed;
   opacity: .6;

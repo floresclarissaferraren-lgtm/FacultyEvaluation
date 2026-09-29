@@ -215,7 +215,7 @@ if ($action === "add") {
         "success" => true,
         "message" => $sent ? "Faculty added successfully and email sent with password" : "Faculty added successfully but email failed to send",
         "username" => $faculty_username,
-        "temporary_password" => $password
+        "temporary_password" => $sent ? null : $password
     ]);
 }
 

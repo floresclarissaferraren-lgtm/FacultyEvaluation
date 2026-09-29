@@ -134,12 +134,29 @@ try {
     $total = $distributionFacultyCount;
 
     $programData = $toAverages($programs);
+    $scoreForFaculty = static function (int $facultyId, array $periodIds) use ($conn, $academicYear, $semester): float {
+        $periodIds = array_values(array_filter(array_keys($periodIds), static fn($id) => $id > 0));
+
+        if ($academicYear === '' && $semester === '') {
+            return calcWeightedScore($conn, $facultyId);
+        }
+
+        if (empty($periodIds)) {
+            return 0.00;
+        }
+
+        $scores = array_map(
+            static fn($periodId) => calcWeightedScore($conn, $facultyId, null, null, (int)$periodId),
+            $periodIds
+        );
+        $scores = array_values(array_filter($scores, static fn($score) => $score > 0));
+
+        return empty($scores) ? 0.00 : round(array_sum($scores) / count($scores), 2);
+    };
+
     $rankingData = [];
     foreach ($faculty as $facultyId => $facultyData) {
-        $periodIds = array_values(array_filter(array_keys($facultyData['period_ids']), static fn($id) => $id > 0));
-        $score = count($periodIds) === 1
-            ? calcWeightedScore($conn, $facultyId, null, null, $periodIds[0])
-            : calcWeightedScore($conn, $facultyId);
+        $score = $scoreForFaculty((int)$facultyId, $facultyData['period_ids']);
         if ($score > 0) {
             $rankingData[] = [
                 'label' => $facultyData['name'],
