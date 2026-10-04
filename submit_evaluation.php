@@ -13,6 +13,7 @@ include "connect.php";
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once 'evaluation_schema.php';
 require_once 'evaluation_period_helper.php';
+require_once 'class_period_helper.php';
 date_default_timezone_set("Asia/Manila");
 
 function submitEvaluationResponse(array $payload, int $status = 200): never
@@ -35,6 +36,7 @@ set_exception_handler(static function (Throwable $e): void {
 });
 
 ensureEvaluationPeriodTables($conn);
+ensureClassPeriodColumn($conn);
 closeExpiredEvaluationPeriod($conn);
 $settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
 $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
@@ -199,10 +201,14 @@ if ($class_id > 0) {
             ON ac.id = cs.class_id
            AND (ac.year_level = st.yearlevel OR ac.year_level = CONCAT(st.yearlevel, CASE st.yearlevel WHEN '1' THEN 'st Year' WHEN '2' THEN 'nd Year' WHEN '3' THEN 'rd Year' ELSE 'th Year' END))
            AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
+        LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
+        LEFT JOIN add_subjects assigned_subject ON assigned_subject.id = cs.subject_id
         LEFT JOIN add_programs p ON p.id = ac.program_id
         WHERE cs.faculty_id = ?
           AND cs.subject_id = ?
           AND cs.class_id = ?
+                    AND ac.period_id = ?
+          AND LOWER(TRIM(assigned_subject.semester)) = LOWER(TRIM(ep.semester))
           AND (
               ssc.id IS NOT NULL
               OR (
@@ -217,24 +223,27 @@ if ($class_id > 0) {
         LIMIT 1
     ");
     if ($assignmentStmt) {
-        $assignmentStmt->bind_param("iiiii", $student_id, $student_id, $faculty_id, $subject_id, $class_id);
+        $assignmentStmt->bind_param("iiiiii", $student_id, $student_id, $faculty_id, $subject_id, $class_id, $activePeriodId);
         $assignmentStmt->execute();
         $assignmentValid = (bool)$assignmentStmt->get_result()->fetch_assoc();
         $assignmentStmt->close();
     }
 } else {
     $assignmentStmt = $conn->prepare("
-        SELECT fs.faculty_id
-        FROM faculty_subjects fs
-        INNER JOIN student_subjects ss
-            ON ss.subject_id = fs.subject_id
-           AND ss.student_id = ?
-        WHERE fs.faculty_id = ?
-          AND fs.subject_id = ?
+                SELECT cs.faculty_id
+                FROM student_subject_classes ssc
+                INNER JOIN add_classes ac ON ac.id = ssc.class_id AND ac.period_id = ?
+                INNER JOIN evaluation_periods ep ON ep.id = ac.period_id
+                INNER JOIN add_subjects s ON s.id = ssc.subject_id
+                INNER JOIN class_subjects cs ON cs.class_id = ac.id AND cs.subject_id = ssc.subject_id
+                WHERE ssc.student_id = ?
+                    AND ssc.subject_id = ?
+                    AND cs.faculty_id = ?
+                    AND LOWER(TRIM(s.semester)) = LOWER(TRIM(ep.semester))
         LIMIT 1
     ");
     if ($assignmentStmt) {
-        $assignmentStmt->bind_param("iii", $student_id, $faculty_id, $subject_id);
+                $assignmentStmt->bind_param("iiii", $activePeriodId, $student_id, $subject_id, $faculty_id);
         $assignmentStmt->execute();
         $assignmentValid = (bool)$assignmentStmt->get_result()->fetch_assoc();
         $assignmentStmt->close();

@@ -241,6 +241,10 @@ $conn->close();
             <span class="info-value" id="studentAcademicSemester">No active period</span>
           </div>
           <div class="info-item">
+            <span class="info-label">Evaluation Status:</span>
+            <span class="info-value" id="studentPeriodStatus">No active period</span>
+          </div>
+          <div class="info-item">
             <span class="info-label">Year Level:</span>
             <span class="info-value"><?php
               $displayYearLevel = strtolower(trim((string)$studentYearLevel)) === 'irregular'

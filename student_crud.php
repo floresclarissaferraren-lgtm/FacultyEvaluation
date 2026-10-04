@@ -6,6 +6,7 @@ header("Content-Type: application/json");
 include 'connect.php';
 require_once 'mailer.php';
 require_once 'ensure_schema_column.php';
+require_once 'class_period_helper.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
@@ -35,15 +36,7 @@ function resolveProgramId(mysqli $conn, string $program): int {
 }
 
 function assignStudentSubjects(mysqli $conn, int $student_id, string $program, string $yearlevel, string $section, array $subjects, bool $is_regular): array {
-    $conn->query("CREATE TABLE IF NOT EXISTS student_subject_classes (
-        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        student_id int(11) NOT NULL,
-        subject_id int(11) NOT NULL,
-        class_id int(11) NOT NULL,
-        UNIQUE KEY unique_student_subject_class (student_id, subject_id),
-        KEY idx_ssc_student (student_id),
-        KEY idx_ssc_class (class_id)
-    )");
+    ensureStudentSubjectClassesSchema($conn);
 
     $program_id = resolveProgramId($conn, $program);
     if ($program_id <= 0) {
@@ -51,8 +44,8 @@ function assignStudentSubjects(mysqli $conn, int $student_id, string $program, s
     }
 
     if (!$is_regular && !empty($subjects)) {
-        $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
-        $ssc = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+        $sub = $conn->prepare("INSERT IGNORE INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+        $ssc = $conn->prepare("INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
 
         $inserted = 0;
         foreach ($subjects as $entry) {
@@ -129,8 +122,8 @@ function assignStudentSubjects(mysqli $conn, int $student_id, string $program, s
     }
 
     if (!empty($subject_assignments)) {
-        $sub = $conn->prepare("INSERT INTO student_subjects (student_id,subject_id) VALUES (?,?)");
-        $ssc = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+        $sub = $conn->prepare("INSERT IGNORE INTO student_subjects (student_id,subject_id) VALUES (?,?)");
+        $ssc = $conn->prepare("INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
         $inserted = 0;
         foreach ($subject_assignments as $assignment) {
             $subject_id = intval($assignment['subject_id']);
@@ -169,6 +162,11 @@ if ($action === "add") {
 
     if (!$student_number || !$email || !$firstname || !$lastname) {
         echo json_encode(["success"=>false,"message"=>"Missing fields"]);
+        exit;
+    }
+
+    if (!preg_match('/^GC-[0-9]{6}$/', $student_number)) {
+        echo json_encode(["success"=>false,"message"=>"Student ID must be GC- followed by exactly 6 digits (example: GC-123456)."]);
         exit;
     }
 

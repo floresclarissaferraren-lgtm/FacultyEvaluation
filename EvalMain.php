@@ -196,14 +196,18 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
       <h2 class="login-title">Login Account</h2>
       <p class="login-description">Login your account</p>
       <form id="loginForm" class="modern-login-form">
-        <div class="modern-input-group has-icon">
+        <div class="modern-input-group login-field-group">
+          <label class="login-field-label" for="username">Username</label>
           <input type="text" id="username" placeholder="Enter your ID" required>
-          <div class="input-icon"><i class="ph ph-envelope"></i></div>
           <small id="usernameError" class="error-message"></small>
         </div>
-        <div class="modern-input-group has-toggle">
+        <div class="modern-input-group login-field-group">
+          <label class="login-field-label" for="password">Password</label>
           <input type="password" id="password" placeholder="Password" required>
-          <div class="password-toggle" id="togglePassword"><i class="ph ph-eye-slash"></i></div>
+          <label class="show-password-control" for="showPassword">
+            <input type="checkbox" id="showPassword">
+            <span>Show password</span>
+          </label>
           <small id="passwordError" class="error-message"></small>
         </div>
         <div class="form-links"><a href="#" id="openForgot" class="forgot-link">Forgot Password?</a></div>

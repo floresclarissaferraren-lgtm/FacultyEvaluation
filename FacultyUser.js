@@ -474,11 +474,16 @@ function updateStudentAcademicPeriodDisplay(status) {
   const semesterEl = document.getElementById("studentAcademicSemester");
   if (!academicYearEl || !semesterEl) return;
 
-  const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
-  const semester = (status?.current_semester || status?.active_semester || "").trim();
+  const hasActivePeriod = Number(status?.active_period_id || 0) > 0;
+  const academicYear = hasActivePeriod ? (status?.active_academic_year || "").trim() : "";
+  const semester = hasActivePeriod ? (status?.active_semester || "").trim() : "";
 
   academicYearEl.textContent = academicYear || "No active period";
   semesterEl.textContent = semester || "No active period";
+  const periodStatusEl = document.getElementById("studentPeriodStatus");
+  if (periodStatusEl) periodStatusEl.textContent = hasActivePeriod
+    ? (status?.evaluation_open ? "Evaluation Open" : "Evaluation Closed")
+    : "No active period";
 
   // Update Evaluate Now button state in real-time
   const evaluateBtn = document.querySelector(".evaluate-now-btn");

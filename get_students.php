@@ -3,6 +3,7 @@ require_once 'security.php';
 requireRole('admin');
 header("Content-Type: application/json");
 require 'connect.php';
+require_once 'class_period_helper.php';
 
 function formattedYearLevel(string $yearlevel): string {
     $val = trim($yearlevel);
@@ -45,47 +46,49 @@ function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void {
         WHERE program_id = ?
           AND (year_level = ? OR year_level = ?)
           AND TRIM(UPPER(block)) = TRIM(UPPER(?))
-        LIMIT 1
+        ORDER BY period_id ASC, id ASC
     ");
     if (!$classStmt) return;
     $classStmt->bind_param("isss", $program_id, $year_raw, $year_fmt, $section);
     $classStmt->execute();
     $classRes = $classStmt->get_result();
-    $class = $classRes ? $classRes->fetch_assoc() : null;
+    $classIds = [];
+    if ($classRes) {
+        while ($class = $classRes->fetch_assoc()) $classIds[] = intval($class['id']);
+    }
     $classStmt->close();
-    if (!$class) return;
+    if (empty($classIds)) return;
 
-    $class_id = intval($class['id']);
+    $deleteSubjects = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
+    $deleteClasses = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ?");
+    if (!$deleteSubjects || !$deleteClasses) return;
+    $deleteSubjects->bind_param("i", $student_id);
+    $deleteSubjects->execute();
+    $deleteClasses->bind_param("i", $student_id);
+    $deleteClasses->execute();
+    $deleteSubjects->close();
+    $deleteClasses->close();
+
     $subStmt = $conn->prepare("SELECT subject_id FROM class_subjects WHERE class_id = ?");
-    if (!$subStmt) return;
-    $subStmt->bind_param("i", $class_id);
-    $subStmt->execute();
-    $subRes = $subStmt->get_result();
-    $subjectIds = [];
-    while ($r = $subRes->fetch_assoc()) {
-        $subjectIds[] = intval($r['subject_id']);
+    $ins = $conn->prepare("INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
+    $insClass = $conn->prepare("INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+    if (!$subStmt || !$ins || !$insClass) return;
+
+    foreach ($classIds as $class_id) {
+        $subStmt->bind_param("i", $class_id);
+        $subStmt->execute();
+        $subRes = $subStmt->get_result();
+        while ($subject = $subRes->fetch_assoc()) {
+            $subject_id = intval($subject['subject_id']);
+            $ins->bind_param("ii", $student_id, $subject_id);
+            $ins->execute();
+            $insClass->bind_param("iii", $student_id, $subject_id, $class_id);
+            $insClass->execute();
+        }
     }
     $subStmt->close();
-
-    $conn->query("DELETE FROM student_subjects WHERE student_id = " . $student_id);
-    $conn->query("DELETE FROM student_subject_classes WHERE student_id = " . $student_id);
-
-    if (!empty($subjectIds)) {
-        $ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
-        $insClass = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
-        if ($ins) {
-            foreach ($subjectIds as $sid) {
-                $ins->bind_param("ii", $student_id, $sid);
-                $ins->execute();
-                if ($insClass) {
-                    $insClass->bind_param("iii", $student_id, $sid, $class_id);
-                    $insClass->execute();
-                }
-            }
-            $ins->close();
-        }
-        if ($insClass) $insClass->close();
-    }
+    $ins->close();
+    $insClass->close();
 }
 
 // Check if connection works
@@ -94,15 +97,7 @@ if ($conn->connect_error) {
     exit;
 }
 
-$conn->query("CREATE TABLE IF NOT EXISTS student_subject_classes (
-    id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    student_id int(11) NOT NULL,
-    subject_id int(11) NOT NULL,
-    class_id int(11) NOT NULL,
-    UNIQUE KEY unique_student_subject_class (student_id, subject_id),
-    KEY idx_ssc_student (student_id),
-    KEY idx_ssc_class (class_id)
-)");
+ensureStudentSubjectClassesSchema($conn);
 
 $result = $conn->query("SELECT * FROM add_students ORDER BY id ASC");
 if (!$result) {

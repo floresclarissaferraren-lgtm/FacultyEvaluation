@@ -118,6 +118,25 @@ function findPeriodMonthConflict(mysqli $conn, string $ay, string $semester, str
     return null;
 }
 
+function academicYearSemesterExists(mysqli $conn, string $ay, string $semester, int $excludeId = 0): bool {
+    $sql = "SELECT id FROM evaluation_periods
+            WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)";
+    if ($excludeId > 0) $sql .= " AND id <> ?";
+    $sql .= " LIMIT 1";
+
+    $stmt = $conn->prepare($sql);
+    if ($excludeId > 0) {
+        $stmt->bind_param("ssi", $ay, $semester, $excludeId);
+    } else {
+        $stmt->bind_param("ss", $ay, $semester);
+    }
+    $stmt->execute();
+    $exists = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+
+    return $exists;
+}
+
 function closeExpiredActivePeriod(mysqli $conn): void {
     closeExpiredEvaluationPeriod($conn);
 }
@@ -246,6 +265,20 @@ if ($action === "create") {
         exit;
     }
 
+    if (!preg_match('/^\d{4}-\d{4}$/', $ay)) {
+        echo json_encode(["success" => false, "message" => "Invalid academic year. Use YYYY-YYYY format."]);
+        exit;
+    }
+    if (!in_array($semester, ["1st Semester", "2nd Semester", "Summer"], true)) {
+        echo json_encode(["success" => false, "message" => "Invalid semester"]);
+        exit;
+    }
+
+    if (academicYearSemesterExists($conn, $ay, $semester)) {
+        echo json_encode(["success" => false, "message" => "This academic year and semester already exists."]);
+        exit;
+    }
+
     // Check if dates are provided
     if ($startDate === "" || $endDate === "") {
         // Insert with NULL dates - admin must set dates before activating
@@ -303,6 +336,20 @@ if ($action === "update") {
 
     if ($id <= 0 || $ay === "" || $semester === "") {
         echo json_encode(["success" => false, "message" => "Missing required fields"]);
+        exit;
+    }
+
+    if (!preg_match('/^\d{4}-\d{4}$/', $ay)) {
+        echo json_encode(["success" => false, "message" => "Invalid academic year. Use YYYY-YYYY format."]);
+        exit;
+    }
+    if (!in_array($semester, ["1st Semester", "2nd Semester", "Summer"], true)) {
+        echo json_encode(["success" => false, "message" => "Invalid semester"]);
+        exit;
+    }
+
+    if (academicYearSemesterExists($conn, $ay, $semester, $id)) {
+        echo json_encode(["success" => false, "message" => "This academic year and semester already exists."]);
         exit;
     }
 

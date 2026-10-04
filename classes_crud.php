@@ -2,6 +2,7 @@
 require_once 'security.php';
 requireRole('admin');
 include "connect.php";
+require_once 'class_period_helper.php';
 
 header("Content-Type: application/json");
 
@@ -17,6 +18,45 @@ function ensureClassSemesterColumn(mysqli $conn): void {
     if ($check && $check->num_rows === 0) {
         $conn->query("ALTER TABLE add_classes ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER year_level");
     }
+}
+
+function getAcademicPeriod(mysqli $conn, int $period_id): ?array {
+    if ($period_id <= 0) return null;
+    $stmt = $conn->prepare("SELECT id, ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1");
+    if (!$stmt) return null;
+    $stmt->bind_param("i", $period_id);
+    $stmt->execute();
+    $period = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $period ?: null;
+}
+
+function validateSubjectsForPeriod(mysqli $conn, array $subjects, int $program_id, string $year_level, string $semester): bool {
+    $yearVariants = classYearVariants($year_level);
+    if (empty($yearVariants)) return false;
+
+    $placeholders = implode(',', array_fill(0, count($yearVariants), '?'));
+    $stmt = $conn->prepare("SELECT id FROM add_subjects
+        WHERE id = ? AND program_id = ? AND semester = ? AND year_level IN ($placeholders) LIMIT 1");
+    if (!$stmt) return false;
+
+    foreach ($subjects as $subject_id) {
+        $subjectId = intval($subject_id);
+        $types = 'iis' . str_repeat('s', count($yearVariants));
+        $params = [$subjectId, $program_id, $semester, ...$yearVariants];
+        $refs = [];
+        foreach ($params as $key => $value) $refs[$key] = &$params[$key];
+        array_unshift($refs, $types);
+        call_user_func_array([$stmt, 'bind_param'], $refs);
+        $stmt->execute();
+        if (!$stmt->get_result()->fetch_assoc()) {
+            $stmt->close();
+            return false;
+        }
+    }
+
+    $stmt->close();
+    return true;
 }
 
 function ensureSubjectSemesterColumn(mysqli $conn): void {
@@ -115,22 +155,12 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
     }
     $subjectStmt->close();
 
-    $conn->query("CREATE TABLE IF NOT EXISTS student_subject_classes (
-        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        student_id int(11) NOT NULL,
-        subject_id int(11) NOT NULL,
-        class_id int(11) NOT NULL,
-        UNIQUE KEY unique_student_subject_class (student_id, subject_id),
-        KEY idx_ssc_student (student_id),
-        KEY idx_ssc_class (class_id)
-    )");
+    ensureStudentSubjectClassesSchema($conn);
 
-    $del = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
-    $delClass = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ?");
+    $delClass = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ? AND class_id = ?");
     $ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
-    $insClass = $conn->prepare("INSERT INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
-    if (!$del || !$delClass || !$ins || !$insClass) {
-        if ($del) $del->close();
+    $insClass = $conn->prepare("INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+    if (!$delClass || !$ins || !$insClass) {
         if ($delClass) $delClass->close();
         if ($ins) $ins->close();
         if ($insClass) $insClass->close();
@@ -138,9 +168,7 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
     }
 
     foreach ($studentIds as $sid) {
-        $del->bind_param("i", $sid);
-        $del->execute();
-        $delClass->bind_param("i", $sid);
+        $delClass->bind_param("ii", $sid, $class_id);
         $delClass->execute();
 
         foreach ($subjectIds as $subjId) {
@@ -149,9 +177,20 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
             $insClass->bind_param("iii", $sid, $subjId, $class_id);
             $insClass->execute();
         }
+
+        $cleanup = $conn->prepare("DELETE ss FROM student_subjects ss
+            WHERE ss.student_id = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM student_subject_classes ssc
+                  WHERE ssc.student_id = ss.student_id AND ssc.subject_id = ss.subject_id
+              )");
+        if ($cleanup) {
+            $cleanup->bind_param("i", $sid);
+            $cleanup->execute();
+            $cleanup->close();
+        }
     }
 
-    $del->close();
     $delClass->close();
     $ins->close();
     $insClass->close();
@@ -311,6 +350,10 @@ if ($action === "get_subject_class_options") {
         exit;
     }
 
+    ensureClassSemesterColumn($conn);
+    ensureClassPeriodColumn($conn);
+    ensureSubjectSemesterColumn($conn);
+
     $stmt = $conn->prepare("
         SELECT
             ac.id AS class_id,
@@ -321,8 +364,11 @@ if ($action === "get_subject_class_options") {
             TRIM(CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, ''))) AS instructor_name
         FROM add_classes ac
         INNER JOIN class_subjects cs ON cs.class_id = ac.id AND cs.subject_id = ?
+                INNER JOIN add_subjects s ON s.id = cs.subject_id
+                LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
         LEFT JOIN add_faculties f ON f.id = cs.faculty_id
-        WHERE ac.program_id = ?
+                WHERE ac.program_id = ?
+                    AND LOWER(TRIM(COALESCE(ep.semester, ac.semester))) = LOWER(TRIM(s.semester))
         ORDER BY ac.year_level ASC, ac.block ASC
     ");
     $stmt->bind_param("ii", $subject_id, $program_id);
@@ -346,16 +392,20 @@ if ($action === "get") {
         
         ensureSubjectSemesterColumn($conn);
 
+        ensureClassPeriodColumn($conn);
         $stmt = $conn->prepare("
-            SELECT cs.subject_id, s.subject_code, s.subject_desc, s.semester, s.year_level,
-                f.id AS faculty_id, f.faculty_id AS faculty_number,
-                CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, '')) AS faculty_name
-            FROM class_subjects cs
-            JOIN add_subjects s ON cs.subject_id = s.id
-            LEFT JOIN add_faculties f ON cs.faculty_id = f.id
-            WHERE cs.class_id = ?
-            ORDER BY s.subject_code ASC
-        ");
+        SELECT cs.subject_id, s.subject_code, s.subject_desc, s.semester, s.year_level,
+        f.id AS faculty_id, f.faculty_id AS faculty_number,
+        CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, '')) AS faculty_name,
+        ac.period_id, ep.ay AS academic_year
+        FROM class_subjects cs
+        JOIN add_subjects s ON cs.subject_id = s.id
+        JOIN add_classes ac ON ac.id = cs.class_id
+        LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
+        LEFT JOIN add_faculties f ON cs.faculty_id = f.id
+        WHERE cs.class_id = ?
+        ORDER BY s.subject_code ASC
+    ");
         $stmt->bind_param("i", $class_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -385,12 +435,14 @@ if ($action === "get") {
         block varchar(10) NOT NULL
     )");
     ensureClassSemesterColumn($conn);
+    ensureClassPeriodColumn($conn);
     
     $stmt = $conn->prepare("
-        SELECT id, year_level, block
-        FROM add_classes
+        SELECT ac.id, ac.year_level, ac.block, ac.semester, ac.period_id, ep.ay AS academic_year, ep.semester AS period_semester
+        FROM add_classes ac
+        LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
         WHERE program_id = ?
-        ORDER BY year_level ASC, block ASC
+        ORDER BY ac.year_level ASC, ep.ay DESC, ac.semester ASC, ac.block ASC
     ");
     
     if ($stmt) {
@@ -419,6 +471,7 @@ if ($action === "add") {
     $section_name = $_POST['section_name'] ?? "";
     $year_level = $_POST['year_level'] ?? "";
     $block = $_POST['block'] ?? "";
+    $period_id = intval($_POST['period_id'] ?? 0);
     
     $subjects = [];
     if (isset($_POST['subjects'])) {
@@ -440,8 +493,29 @@ if ($action === "add") {
     error_log("ADD CLASS - Subjects: " . print_r($subjects, true));
     error_log("ADD CLASS - Faculty assignments: " . print_r($faculty_assignments, true));
     
-    if (!$program_id || !$year_level || !$block || empty($subjects)) {
+    if (!$program_id || !$year_level || !$block || $period_id <= 0 || empty($subjects)) {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
+        exit;
+    }
+
+    $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        program_id int(11) NOT NULL,
+        year_level varchar(20) NOT NULL,
+        semester varchar(20) NOT NULL DEFAULT '1st Semester',
+        period_id int(11) NULL,
+        block varchar(10) NOT NULL
+    )");
+    ensureClassSemesterColumn($conn);
+    ensureClassPeriodColumn($conn);
+    $period = getAcademicPeriod($conn, $period_id);
+    if (!$period) {
+        echo json_encode(["status" => "error", "message" => "Select a valid academic year and semester."]);
+        exit;
+    }
+    $semester = (string)$period['semester'];
+    if (!validateSubjectsForPeriod($conn, $subjects, intval($program_id), $year_level, $semester)) {
+        echo json_encode(["status" => "error", "message" => "Select subjects that match this program, year level, and semester."]);
         exit;
     }
 
@@ -452,8 +526,8 @@ if ($action === "add") {
     }
     
     // Reuse an existing class for the same section; subjects are checked below.
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ?");
-    $check_stmt->bind_param("iss", $program_id, $year_level, $block);
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ?");
+    $check_stmt->bind_param("issi", $program_id, $year_level, $block, $period_id);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
@@ -461,8 +535,8 @@ if ($action === "add") {
     
     $existingClassId = 0;
     if ($row['count'] > 0) {
-        $existingStmt = $conn->prepare("SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? LIMIT 1");
-        $existingStmt->bind_param("iss", $program_id, $year_level, $block);
+        $existingStmt = $conn->prepare("SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? LIMIT 1");
+        $existingStmt->bind_param("issi", $program_id, $year_level, $block, $period_id);
         $existingStmt->execute();
         $existingRow = $existingStmt->get_result()->fetch_assoc();
         $existingClassId = intval($existingRow['id'] ?? 0);
@@ -478,6 +552,7 @@ if ($action === "add") {
         block varchar(10) NOT NULL
     )");
     ensureClassSemesterColumn($conn);
+    ensureClassPeriodColumn($conn);
     
     $conn->query("CREATE TABLE IF NOT EXISTS class_subjects (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -504,8 +579,8 @@ if ($action === "add") {
             }
             $subjectCheck->close();
         } else {
-            $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, block) VALUES (?, ?, ?)");
-            $stmt->bind_param("iss", $program_id, $year_level, $block);
+            $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, semester, period_id, block) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("issis", $program_id, $year_level, $semester, $period_id, $block);
             $stmt->execute();
             $class_id = $stmt->insert_id;
             $stmt->close();
@@ -550,6 +625,7 @@ if ($action === "edit") {
     $section_name = $_POST['section_name'] ?? "";
     $year_level = $_POST['year_level'] ?? "";
     $block = $_POST['block'] ?? "";
+    $period_id = intval($_POST['period_id'] ?? 0);
     
     $subjects = [];
     if (isset($_POST['subjects'])) {
@@ -567,8 +643,21 @@ if ($action === "edit") {
         }
     }
     
-    if (!$id || !$program_id || !$year_level || !$block || empty($subjects)) {
+    if (!$id || !$program_id || !$year_level || !$block || $period_id <= 0 || empty($subjects)) {
         echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
+        exit;
+    }
+
+    ensureClassSemesterColumn($conn);
+    ensureClassPeriodColumn($conn);
+    $period = getAcademicPeriod($conn, $period_id);
+    if (!$period) {
+        echo json_encode(["status" => "error", "message" => "Select a valid academic year and semester."]);
+        exit;
+    }
+    $semester = (string)$period['semester'];
+    if (!validateSubjectsForPeriod($conn, $subjects, intval($program_id), $year_level, $semester)) {
+        echo json_encode(["status" => "error", "message" => "Select subjects that match this program, year level, and semester."]);
         exit;
     }
 
@@ -579,8 +668,8 @@ if ($action === "edit") {
     }
     
     // Check for duplicate class (same year level and section in same program), excluding current class
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND id != ?");
-    $check_stmt->bind_param("issi", $program_id, $year_level, $block, $id);
+    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? AND id != ?");
+    $check_stmt->bind_param("issii", $program_id, $year_level, $block, $period_id, $id);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
@@ -598,8 +687,8 @@ if ($action === "edit") {
     
     try {
         // Update class
-        $stmt = $conn->prepare("UPDATE add_classes SET program_id = ?, year_level = ?, block = ? WHERE id = ?");
-        $stmt->bind_param("issi", $program_id, $year_level, $block, $id);
+        $stmt = $conn->prepare("UPDATE add_classes SET program_id = ?, year_level = ?, semester = ?, period_id = ?, block = ? WHERE id = ?");
+        $stmt->bind_param("issisi", $program_id, $year_level, $semester, $period_id, $block, $id);
         $stmt->execute();
         $stmt->close();
         
@@ -644,6 +733,21 @@ if ($action === "add_subject_to_class") {
             "status" => "error",
             "message" => "You must complete all required selections before adding a class subject."
         ]);
+        exit;
+    }
+
+    ensureClassPeriodColumn($conn);
+    $periodSubjectStmt = $conn->prepare("SELECT ep.semester AS period_semester, s.semester AS subject_semester
+        FROM add_classes ac
+        INNER JOIN evaluation_periods ep ON ep.id = ac.period_id
+        INNER JOIN add_subjects s ON s.id = ?
+        WHERE ac.id = ? LIMIT 1");
+    $periodSubjectStmt->bind_param("ii", $subject_id, $class_id);
+    $periodSubjectStmt->execute();
+    $periodSubject = $periodSubjectStmt->get_result()->fetch_assoc();
+    $periodSubjectStmt->close();
+    if (!$periodSubject || strcasecmp(trim($periodSubject['period_semester']), trim($periodSubject['subject_semester'])) !== 0) {
+        echo json_encode(["status" => "error", "message" => "This subject does not belong to the class academic period."]);
         exit;
     }
 

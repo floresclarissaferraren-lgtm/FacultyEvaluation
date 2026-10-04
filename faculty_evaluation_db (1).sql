@@ -56,6 +56,7 @@ CREATE TABLE `add_classes` (
   `program_id` int(11) NOT NULL,
   `year_level` varchar(20) NOT NULL,
   `semester` varchar(20) NOT NULL DEFAULT '1st Semester',
+  `period_id` int(11) DEFAULT NULL,
   `block` varchar(10) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -657,6 +658,12 @@ ALTER TABLE `classes`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Academic-period lookup for class offerings
+--
+ALTER TABLE `add_classes`
+  ADD KEY `idx_add_classes_period` (`period_id`);
+
+--
 -- Indexes for table `class_subjects`
 --
 ALTER TABLE `class_subjects`
@@ -748,7 +755,7 @@ ALTER TABLE `student_subjects`
 --
 ALTER TABLE `student_subject_classes`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_student_subject_class` (`student_id`,`subject_id`),
+  ADD UNIQUE KEY `unique_student_subject_class` (`student_id`,`subject_id`,`class_id`),
   ADD KEY `idx_ssc_student` (`student_id`),
   ADD KEY `idx_ssc_class` (`class_id`);
 

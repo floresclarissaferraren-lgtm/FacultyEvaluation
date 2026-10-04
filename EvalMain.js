@@ -92,6 +92,7 @@ const navbar = document.querySelector("nav"); // added navbar reference
 // ===================== FUNCTIONS =====================
 function openModal(modal) {
   if (modal) {
+    if (modal === modals.login) clearLoginFormFields();
     modal.classList.add("show");
     document.body.classList.add("modal-open");
     if (navbar) navbar.classList.add("hidden"); // hide navbar when modal opens
@@ -109,9 +110,14 @@ function closeModal(modal) {
 function clearLoginFormFields() {
   const usernameInput = document.getElementById('username');
   const passwordInput = document.getElementById('password');
+  const showPasswordInput = document.getElementById('showPassword');
 
   if (usernameInput) usernameInput.value = '';
-  if (passwordInput) passwordInput.value = '';
+  if (passwordInput) {
+    passwordInput.value = '';
+    passwordInput.type = 'password';
+  }
+  if (showPasswordInput) showPasswordInput.checked = false;
 
   const usernameError = document.getElementById('usernameError');
   const passwordError = document.getElementById('passwordError');
@@ -130,6 +136,7 @@ document.addEventListener('DOMContentLoaded', clearLoginFormFields);
 // ===================== Switch between login and forgot modals =====================
 function switchModal(closeModalEl, openModalEl) {
   if (closeModalEl && openModalEl) {
+    if (openModalEl === modals.login) clearLoginFormFields();
     closeModalEl.classList.remove("show");
     openModalEl.classList.add("show");
   }
@@ -607,27 +614,14 @@ if (resetPasswordBtn) {
   });
 }
 
-// ===================== Password toggle =====================
-function setupPasswordToggle(inputId, toggleId) {
-  const input = document.getElementById(inputId);
-  const toggle = document.getElementById(toggleId);
-
-  if (input && toggle) {
-    toggle.addEventListener('click', () => {
-      const icon = toggle.querySelector('i');
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('ph-eye-slash');
-        icon.classList.add('ph-eye');
-      } else {
-        input.type = 'password';
-        icon.classList.remove('ph-eye');
-        icon.classList.add('ph-eye-slash');
-      }
-    });
-  }
+// ===================== Password visibility =====================
+const showPasswordInput = document.getElementById('showPassword');
+const loginPasswordInput = document.getElementById('password');
+if (showPasswordInput && loginPasswordInput) {
+  showPasswordInput.addEventListener('change', () => {
+    loginPasswordInput.type = showPasswordInput.checked ? 'text' : 'password';
+  });
 }
-setupPasswordToggle('password','togglePassword');
 
 function toggleResetPass(inputId, toggleEl) {
   const input = document.getElementById(inputId);

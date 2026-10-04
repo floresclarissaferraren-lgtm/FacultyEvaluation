@@ -544,6 +544,16 @@ body.modal-open{overflow:hidden}
   letter-spacing:-0.5px;
 }
 
+#loginModal .LoginForm-header {
+  margin-bottom: 17px;
+}
+
+#loginModal .login-title {
+  margin: -5px 0 8px;
+  font-size: 28px;
+  letter-spacing: 0;
+}
+
 .login-description{
   font-size:14px;
   color:#64748b;
@@ -583,6 +593,36 @@ body.modal-open{overflow:hidden}
 
 #loginForm .modern-input-group{
   margin-bottom:6px;
+}
+
+#loginForm .login-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#loginForm .login-field-label {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#loginForm .show-password-control {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  color: #475569;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#loginForm .show-password-control input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #2563eb;
+  cursor: pointer;
 }
 
 #loginForm .error-message:empty{

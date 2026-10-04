@@ -49,6 +49,11 @@ if ($action === "add") {
         exit;
     }
 
+    if (!preg_match('/^FC-[0-9]{6}$/', $faculty_id)) {
+        echo json_encode(["success"=>false,"message"=>"Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456)."]);
+        exit;
+    }
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo json_encode(["success"=>false,"message"=>"Invalid email"]);
         exit;
@@ -231,13 +236,18 @@ elseif ($action === "edit") {
         exit;
     }
 
-    $faculty_id = $data['faculty_id'];
+    $faculty_id = trim((string)($data['faculty_id'] ?? ''));
     $email = $data['email'];
     $firstname = $data['firstname'];
     $lastname = $data['lastname'];
     $suffix = $data['suffix'];
     $photo = $data['photo'];
     $subjects = $data['subjects'] ?? [];
+
+    if (!preg_match('/^FC-[0-9]{6}$/', $faculty_id)) {
+        echo json_encode(["success"=>false,"message"=>"Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456)."]);
+        exit;
+    }
 
     $stmt = $conn->prepare("
         UPDATE add_faculties

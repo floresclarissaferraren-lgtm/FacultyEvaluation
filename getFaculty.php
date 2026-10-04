@@ -4,11 +4,13 @@ include 'connect.php';
 require_once 'evaluation_schema.php';
 require_once 'ensure_schema_column.php';
 require_once 'evaluation_period_helper.php';
+require_once 'class_period_helper.php';
 
 try {
     ensureColumnExists($conn, 'add_faculties', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"');
 
     ensureEvaluationsSchema($conn);
+    ensureClassPeriodColumn($conn);
 
     $student_id = intval($_GET['student_id'] ?? 0);
     $year_level = trim($_GET['year_level'] ?? '');
@@ -84,8 +86,11 @@ try {
                 ON ac.program_id = ?
                 AND (ac.year_level = ? OR ac.year_level = ?)
                 AND TRIM(UPPER(ac.block)) = TRIM(UPPER(?))
+                AND ac.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
             INNER JOIN class_subjects cs ON cs.class_id = ac.id
+            INNER JOIN evaluation_periods ep ON ep.id = ac.period_id
             INNER JOIN add_subjects s ON s.id = cs.subject_id
+                AND LOWER(TRIM(s.semester)) = LOWER(TRIM(ep.semester))
             LEFT JOIN add_programs p ON s.program_id = p.id
             INNER JOIN add_faculties f ON f.id = cs.faculty_id
             LEFT JOIN evaluations ev
@@ -113,6 +118,7 @@ try {
                 WHERE ac.program_id = ?
                   AND (ac.year_level = ? OR ac.year_level = ?)
                   AND TRIM(UPPER(ac.block)) = TRIM(UPPER(?))
+                  AND ac.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
                   AND cs.faculty_id > 0
                 LIMIT 1
             ");
@@ -162,13 +168,16 @@ try {
                 INNER JOIN add_subjects s ON ss.subject_id = s.id
                 LEFT JOIN add_programs p ON s.program_id = p.id
                 LEFT JOIN add_classes ac ON ac.id = COALESCE(ssc.class_id, 0)
+                LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
                 LEFT JOIN evaluations ev
                     ON ev.student_id = ss.student_id
                    AND ev.faculty_id = f.id
                    AND ev.subject_id = ss.subject_id
                    AND ev.class_id = COALESCE(ssc.class_id, 0)
                    AND ev.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
-                     WHERE ss.student_id = ?
+                                         WHERE ss.student_id = ?
+                                             AND ac.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
+                                             AND LOWER(TRIM(s.semester)) = LOWER(TRIM(ep.semester))
                 ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
             ";
 

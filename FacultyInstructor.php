@@ -8,6 +8,8 @@ requireDashboardRole('faculty');
 
 include 'connect.php';
 require_once 'evaluation_period_helper.php';
+require_once 'class_period_helper.php';
+ensureClassPeriodColumn($conn);
 
 // Fetch faculty data
 $faculty_id = $_SESSION['id'];
@@ -81,18 +83,17 @@ $faculty_assigned_subjects = [];
 $subjectSql = <<<'SQL'
   SELECT DISTINCT s.subject_code, s.subject_desc, s.year_level,
     p.program_code, p.program_name
-  FROM add_subjects s
+  FROM class_subjects cs
+  INNER JOIN add_classes ac ON ac.id = cs.class_id
+  INNER JOIN add_subjects s ON s.id = cs.subject_id
   LEFT JOIN add_programs p ON p.id = s.program_id
-  WHERE s.id IN (
-    SELECT subject_id FROM class_subjects WHERE faculty_id = ?
-    UNION
-    SELECT subject_id FROM faculty_subjects WHERE faculty_id = ?
-  )
+  WHERE cs.faculty_id = ?
+    AND ac.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
   ORDER BY s.year_level ASC, s.subject_code ASC
 SQL;
 $subjectStmt = $conn->prepare($subjectSql);
 if ($subjectStmt) {
-  $subjectStmt->bind_param("ii", $faculty_id, $faculty_id);
+  $subjectStmt->bind_param("i", $faculty_id);
   $subjectStmt->execute();
   $subjectResult = $subjectStmt->get_result();
   while ($subject = $subjectResult->fetch_assoc()) {
@@ -200,6 +201,10 @@ if ($subjectStmt) {
           <div class="info-item">
             <span class="info-label"><i class="ph ph-books"></i> Semester:</span>
             <span class="info-value semester-value" id="semesterValue">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label"><i class="ph ph-check-circle"></i> Evaluation:</span>
+            <span class="info-value" id="instructorPeriodStatus">Loading...</span>
           </div>
         </div>
         

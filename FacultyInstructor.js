@@ -1079,11 +1079,16 @@ function updateInstructorAcademicPeriodDisplay(status) {
   periodEl.classList.remove("academic-year-loading");
   periodEl.setAttribute("aria-busy", "false");
 
-  const academicYear = (status?.current_academic_year || status?.active_academic_year || "").trim();
-  const semester = (status?.current_semester || status?.active_semester || "").trim();
+  const hasActivePeriod = Number(status?.active_period_id || 0) > 0;
+  const academicYear = hasActivePeriod ? (status?.active_academic_year || "").trim() : "";
+  const semester = hasActivePeriod ? (status?.active_semester || "").trim() : "";
+  const statusEl = document.getElementById("instructorPeriodStatus");
 
   periodEl.textContent = academicYear || "No active period";
   semesterEl.textContent = semester || "No active period";
+  if (statusEl) statusEl.textContent = hasActivePeriod
+    ? (status?.evaluation_open ? "Evaluation Open" : "Evaluation Closed")
+    : "No active period";
 }
 
 async function loadInstructorAcademicPeriod() {

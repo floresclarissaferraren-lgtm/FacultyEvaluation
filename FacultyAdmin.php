@@ -142,7 +142,7 @@ include 'totalstudents_dashcount.php';
         <span>Main</span>
       </div>
       <div class="menu-items">
-        <a href="#" data-section="dashboard-section"
+        <a href="#" data-section="dashboard-section" data-tooltip="Dashboard" aria-label="Dashboard"
            onclick="showSection('dashboard-section', event)">
           <i class="ph ph-squares-four"></i>
           <span>Dashboard</span>
@@ -156,27 +156,27 @@ include 'totalstudents_dashcount.php';
         <span>Management</span>
       </div>
       <div class="menu-items">
-        <a href="#" data-section="programs-section"
+        <a href="#" data-section="programs-section" data-tooltip="Program" aria-label="Program"
            onclick="showSection('programs-section', event)">
           <i class="ph ph-stack"></i>
           <span>Program</span>
         </a>
-        <a href="#" data-section="faculties-section"
+        <a href="#" data-section="faculties-section" data-tooltip="Faculty" aria-label="Faculty"
            onclick="showSection('faculties-section', event)">
           <i class="ph ph-users-three"></i>
           <span>Faculty</span>
         </a>
-        <a href="#" data-section="students-section"
+        <a href="#" data-section="students-section" data-tooltip="Students" aria-label="Students"
            onclick="showSection('students-section', event)">
           <i class="ph ph-student"></i>
           <span>Students</span>
         </a>
-        <a href="#" data-section="criteria-section"
+        <a href="#" data-section="criteria-section" data-tooltip="Evaluation Criteria" aria-label="Evaluation Criteria"
            onclick="showSection('criteria-section', event)">
           <i class="ph ph-clipboard-text"></i>
           <span>Evaluation Criteria</span>
         </a>
-        <a href="#" data-section="academic-year-section"
+        <a href="#" data-section="academic-year-section" data-tooltip="Academic Year" aria-label="Academic Year"
            onclick="showSection('academic-year-section', event)">
           <i class="ph ph-calendar-blank"></i>
           <span>Academic Year</span>
@@ -190,7 +190,7 @@ include 'totalstudents_dashcount.php';
         <span>Analytics</span>
       </div>
       <div class="menu-items">
-        <a href="#" data-section="report-section"
+        <a href="#" data-section="report-section" data-tooltip="Reports" aria-label="Reports"
            onclick="showSection('report-section', event)">
           <i class="ph ph-chart-bar"></i>
           <span>Reports</span>
@@ -202,7 +202,7 @@ include 'totalstudents_dashcount.php';
 
   <!-- Sidebar Bottom / Logout -->
   <div class="sidebar-bottom">
-    <a href="#" class="sidebar-logout-btn" id="logoutLink">
+    <a href="#" class="sidebar-logout-btn" id="logoutLink" data-tooltip="Logout" aria-label="Logout">
       <i class="ph ph-sign-out"></i>
       <span>Logout</span>
     </a>
@@ -221,18 +221,18 @@ include 'totalstudents_dashcount.php';
       <h1>Admin Overview</h1>
       <p>Here's an overview of the Faculty Evaluation System.</p>
     </div>
-    <div class="admin-period-summary" aria-label="Current academic period">
+    <div class="admin-period-summary" aria-label="Selected academic period">
       <div class="admin-period-item">
         <i class="ph ph-calendar-blank" aria-hidden="true"></i>
         <div>
-          <span>Academic Year</span>
+          <span>Selected Academic Year</span>
           <strong id="dashboardAcademicYear">Not set</strong>
         </div>
       </div>
       <div class="admin-period-item">
         <i class="ph ph-book-open" aria-hidden="true"></i>
         <div>
-          <span>Semester</span>
+          <span>Selected Semester</span>
           <strong id="dashboardSemester">Not set</strong>
         </div>
       </div>
@@ -506,7 +506,6 @@ include 'totalstudents_dashcount.php';
   <!-- Blue Banner with Program Info and Stats -->
   <div class="manage-program-banner">
     <div class="program-banner-header">
-      <div class="program-badge" id="manageProgramBadge">BSED</div>
       <div class="program-info">
         <h2 id="manageTitle">Bachelor of Science in Education in Math Major</h2>
         <p class="program-meta"><span id="manageProgramType">Academic Program</span> · <span id="manageProgramStatus">Active</span></p>
@@ -588,7 +587,7 @@ include 'totalstudents_dashcount.php';
     <div id="classes" class="table-wrapper" style="display:none;">
       <div class="table-scroll-container">
         <table class="classes-table"><thead><tr>
-          <th>Section Name</th><th>Year Level</th><th>Status</th><th>Action</th>
+          <th>Section Name</th><th>Year Level</th><th>Academic Term</th><th>Status</th><th>Action</th>
         </tr></thead>
           <tbody></tbody>
         </table>
@@ -643,6 +642,20 @@ include 'totalstudents_dashcount.php';
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
+      <div class="form-row">
+        <div>
+          <label for="class-academic-year">Academic Year</label>
+          <select id="class-academic-year">
+            <option value="">Select Academic Year</option>
+          </select>
+        </div>
+        <div>
+          <label for="class-semester">Semester</label>
+          <select id="class-semester" disabled>
+            <option value="">Select academic year first</option>
+          </select>
+        </div>
+      </div>
       <div class="form-row">
         <div>
           <label for="class-year">Year Level</label>
@@ -787,48 +800,6 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Faculties Section ===================== -->
 <div id="faculties-section" class="section" style="display:none;">
-  
-  <!-- Faculty Statistics Cards -->
-  <div class="faculty-stats-container">
-    <div class="faculty-stat-card total-faculty">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>All Registered Faculty</h3>
-          <p class="stat-number"><?php echo $facultyStats['total_faculty']; ?></p>
-          <span>Total Faculty Members</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-chalkboard-teacher"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="faculty-stat-card active-faculty">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>With Assigned Subjects</h3>
-          <p class="stat-number"><?php echo $facultyStats['active_faculty']; ?></p>
-          <span>Active Faculty</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-user-check"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="faculty-stat-card pending-evaluation">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>Awaiting Evaluation</h3>
-          <p class="stat-number"><?php echo $facultyStats['pending_evaluation']; ?></p>
-          <span>Pending Faculty</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-clock-clockwise"></i>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div class="faculty-toolbar">
     <div class="search-filters-container">
@@ -856,6 +827,10 @@ include 'totalstudents_dashcount.php';
   </div>
 
   <div class="table-wrapper">
+    <div class="faculty-count-summary" aria-live="polite">
+      <span class="faculty-count-dot" aria-hidden="true"></span>
+      <span id="facultyMemberCount"><?php echo (int)$facultyStats['total_faculty']; ?> faculty member<?php echo (int)$facultyStats['total_faculty'] === 1 ? '' : 's'; ?></span>
+    </div>
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
@@ -918,7 +893,7 @@ include 'totalstudents_dashcount.php';
       </div>
       
       <div class="form-row">
-        <label>ID <input id="faculty-number" placeholder="eg. FC-"></label>
+        <label>ID <input id="faculty-number" placeholder="FC-123456" minlength="9" maxlength="9" pattern="FC-[0-9]{6}" required></label>
         <label>Email <input type="email" id="faculty-email" placeholder="eg. faculty@email.com"></label>
       </div>
       <div class="form-row">
@@ -968,6 +943,15 @@ include 'totalstudents_dashcount.php';
           </select>
         </div>
         <div>
+          <label for="faculty-subject-semester-filter">Semester</label>
+          <select id="faculty-subject-semester-filter">
+            <option value="all">All Semesters</option>
+            <option value="1st semester">1st Semester</option>
+            <option value="2nd semester">2nd Semester</option>
+            <option value="summer">Summer</option>
+          </select>
+        </div>
+        <div>
           <label for="faculty-subject-program-filter">Program</label>
           <select id="faculty-subject-program-filter">
             <option value="all">All Programs</option>
@@ -981,6 +965,7 @@ include 'totalstudents_dashcount.php';
               <th></th>
               <th>Subject Code</th>
               <th>Subject Name</th>
+              <th>Semester</th>
               <th>Year</th>
               <th>Program</th>
             </tr>
@@ -1001,62 +986,6 @@ include 'totalstudents_dashcount.php';
 
 <!-- ===================== Students Section ===================== -->
 <div id="students-section" class="section" style="display:none;">
-  
-  <!-- Student Statistics Cards -->
-  <div class="student-stats-container">
-    <div class="student-stat-card total-students">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>Total Students</h3>
-          <p class="stat-number"><?php echo $studentStats['total_students']; ?></p>
-          <span>All Registered Students</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-users"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="student-stat-card active-students">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>Active Students</h3>
-          <p class="stat-number"><?php echo $studentStats['active_students']; ?></p>
-          <span>With Enrolled Subjects</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-user-check"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="student-stat-card regular-students">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>Regular Students</h3>
-          <p class="stat-number"><?php echo $studentStats['regular_students']; ?></p>
-          <span>Regular Status</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-graduation-cap"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="student-stat-card irregular-students">
-      <div class="stat-content">
-        <div class="stat-info">
-          <h3>Irregular Students</h3>
-          <p class="stat-number"><?php echo $studentStats['irregular_students']; ?></p>
-          <span>Irregular Status</span>
-        </div>
-        <div class="stat-icon">
-          <i class="ph ph-warning"></i>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="student-table-box">
     <div class="student-toolbar-box">
     <div class="student-toolbar">
@@ -1094,10 +1023,15 @@ include 'totalstudents_dashcount.php';
     </div>
 
     <div class="table-wrapper">
+    <div class="student-count-summary" aria-live="polite">
+      <span class="student-count-item"><span class="student-count-dot total" aria-hidden="true"></span>Total Students: <strong id="totalStudentsCount"><?php echo (int)$studentStats['total_students']; ?></strong></span>
+      <span class="student-count-item"><span class="student-count-dot regular" aria-hidden="true"></span>Regular: <strong id="regularStudentsCount"><?php echo (int)$studentStats['regular_students']; ?></strong></span>
+      <span class="student-count-item"><span class="student-count-dot irregular" aria-hidden="true"></span>Irregular: <strong id="irregularStudentsCount"><?php echo (int)$studentStats['irregular_students']; ?></strong></span>
+    </div>
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Type</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year-Section</th><th>Status</th><th>Type</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1125,7 +1059,7 @@ include 'totalstudents_dashcount.php';
     <div class="table-scroll-container">
       <table class="students-table archived-students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year Level & Section</th><th>Status</th><th>Type</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year-Section</th><th>Status</th><th>Type</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1145,15 +1079,11 @@ include 'totalstudents_dashcount.php';
       <div class="form-row">
         <div>
           <label for="student-number">Student ID</label>
-          <input type="text" id="student-number" placeholder="eg. GC-">
-          <!-- Inline error message for GC- validation -->
-          <div id="student-number-error" style="color:red; font-size:0.9em; margin-top:2px; min-height:16px;"></div>
+          <input type="text" id="student-number" placeholder="GC-123456" minlength="9" maxlength="9" pattern="GC-[0-9]{6}" required>
         </div>
         <div>
           <label for="student-email">Email</label>
           <input type="email" id="student-email" placeholder="eg. student@email.com">
-          <!-- Placeholder div to maintain consistent height -->
-          <div style="min-height:16px;"></div>
         </div>
       </div>
 
@@ -1242,6 +1172,15 @@ include 'totalstudents_dashcount.php';
           <label for="subject-search">Search</label>
           <input type="text" id="subject-search" placeholder="Search subjects...">
         </div>
+        <div>
+          <label for="subject-semester-filter">Semester</label>
+          <select id="subject-semester-filter">
+            <option value="all">All Semesters</option>
+            <option value="1st semester">1st Semester</option>
+            <option value="2nd semester">2nd Semester</option>
+            <option value="summer">Summer</option>
+          </select>
+        </div>
       </div>
       
       <div class="subjects-table-wrapper">
@@ -1251,6 +1190,7 @@ include 'totalstudents_dashcount.php';
               <th></th>
               <th>Subject Code</th>
               <th>Description</th>
+              <th>Semester</th>
               <th>Year Level / Section</th>
             </tr>
           </thead>
@@ -1496,6 +1436,10 @@ include 'totalstudents_dashcount.php';
         <option value="2nd Semester">2nd Semester</option>
         <option value="Summer">Summer</option>
       </select>
+      <div id="academic-year-duplicate-message" class="academic-year-validation-message" role="alert" hidden>
+        <i class="ph ph-warning-circle" aria-hidden="true"></i>
+        <span>This academic year and semester already exists.</span>
+      </div>
       
       <button id="save-academic-year-btn" class="submit-btn">SAVE</button>
     </div>
@@ -1667,15 +1611,14 @@ include 'totalstudents_dashcount.php';
         <div class="period-section-header">
           <div>
             <h4 class="period-section-title">Create New Period</h4>
-            <p class="period-section-subtitle">Define the academic year, semester, and date range</p>
+            <p class="period-section-subtitle">Set the date range for the selected academic year and semester</p>
           </div>
         </div>
 
         <div class="period-form-grid">
           <div class="period-input-group">
             <label for="period-ay">Academic Year</label>
-            <input type="text" id="period-ay" placeholder="Set from dashboard" readonly>
-            <div class="period-tooltip" id="ay-tooltip" style="display:none;">2025-2026</div>
+            <input type="text" id="period-ay" placeholder="YYYY-YYYY" readonly>
           </div>
 
           <div class="period-input-group">
