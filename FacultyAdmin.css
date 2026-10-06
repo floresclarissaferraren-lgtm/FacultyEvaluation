@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --primary-50: #f0f9ff;
@@ -51,7 +51,7 @@
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', Arial, Helvetica, sans-serif;
   --dashboard-icon-color: #0B7AC7;
   --rating-excellent: #2563eb;
   --rating-very-good: #16a34a;
@@ -92,6 +92,11 @@ body {
   font-family: var(--font-sans);
   background: #F0F7FF;
   min-height: 100vh;
+}
+
+body,
+body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
+  font-family: var(--font-sans) !important;
 }
 
 /* PROGRAMS CARD LAYOUT */
@@ -3110,7 +3115,7 @@ table.evaluation-table .view-btn {
 
 /* Generate Report button styles */
 .generate-report-btn {
-  background: #0B90E0 !important;
+  background: #1877F2 !important;
   color: #ffffff !important;
   font-weight: 700 !important;
   padding: 10px 20px !important;
@@ -3118,7 +3123,7 @@ table.evaluation-table .view-btn {
   font-size: 0.9rem !important;
   transition: all 0.2s ease !important;
   box-shadow: none !important;
-  border: 1px solid #0B90E0 !important;
+  border: 1px solid #1877F2 !important;
   position: relative;
   overflow: hidden;
   display: inline-flex;
@@ -3128,10 +3133,17 @@ table.evaluation-table .view-btn {
 }
 
 .generate-report-btn:hover {
-  background: #087FC5 !important;
-  border-color: #087FC5 !important;
+  background: #166FE5 !important;
+  border-color: #166FE5 !important;
   box-shadow: none !important;
   transform: translateY(-1px) !important;
+}
+
+.generate-report-btn.is-loading,
+.generate-report-btn.is-loading:hover {
+  cursor: wait !important;
+  opacity: 0.9 !important;
+  transform: none !important;
 }
 /* Universal icon styling for all action buttons */
 .action-cell button i,
@@ -5342,10 +5354,10 @@ table.evaluation-table .view-btn:hover {
 }
 
 .period-status-btn {
-  min-width: 82px;
+  min-width: 58px;
   border: none;
   border-radius: 999px;
-  padding: 7px 12px;
+  padding: 6px 10px;
   cursor: pointer;
   font-size: 0.72rem;
   font-weight: 800;
@@ -5386,6 +5398,213 @@ table.evaluation-table .view-btn:hover {
   opacity: 0.8;
   transform: none;
   box-shadow: none;
+}
+
+.period-status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.period-state-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 6px;
+  font-size: .58rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.period-state-badge.open {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.period-state-badge.scheduled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.period-state-badge.ready {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.period-state-badge.expired {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.period-state-badge.setup {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.admin-empty-state,
+.no-subjects,
+.top-performance-empty,
+.subject-class-empty,
+.report-empty-state:not(.error-state),
+.empty-report-cell,
+.category-list-empty,
+.feedback-loading,
+.admin-notification-empty,
+.empty-subject-message {
+  color: #6b7280 !important;
+  text-align: center !important;
+}
+
+.admin-empty-state {
+  padding: 20px !important;
+}
+
+.subject-class-empty {
+  justify-content: center;
+}
+
+.period-status-btn:disabled,
+.period-status-btn:disabled:hover {
+  cursor: not-allowed;
+  opacity: .55;
+  transform: none;
+  box-shadow: none;
+}
+
+.period-confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .55);
+  backdrop-filter: blur(3px);
+}
+
+.period-confirmation-overlay[hidden] {
+  display: none;
+}
+
+.period-confirmation-box {
+  width: min(100%, 440px);
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
+  text-align: center;
+  animation: period-confirmation-enter .18s ease-out;
+}
+
+.period-confirmation-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #1877f2;
+  font-size: 24px;
+}
+
+.period-confirmation-box h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.12rem;
+  font-weight: 750;
+}
+
+.period-confirmation-period {
+  margin: 10px 0 2px;
+  color: #1e293b;
+  font-size: .96rem;
+  font-weight: 700;
+}
+
+.period-confirmation-dates {
+  margin: 0;
+  color: #64748b;
+  font-size: .82rem;
+}
+
+.period-confirmation-message {
+  margin: 16px 0 22px;
+  color: #475569;
+  font-size: .88rem;
+  line-height: 1.6;
+}
+
+.period-confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.period-confirmation-actions button {
+  min-width: 110px;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+
+.period-confirmation-cancel {
+  border-color: #cbd5e1 !important;
+  background: #ffffff;
+  color: #334155;
+}
+
+.period-confirmation-cancel:hover {
+  background: #f1f5f9;
+}
+
+.period-confirmation-accept {
+  background: #1877f2;
+  color: #ffffff;
+}
+
+.period-confirmation-accept:hover {
+  background: #166fe5;
+}
+
+.period-confirmation-accept.is-close {
+  background: #dc2626;
+}
+
+.period-confirmation-accept.is-close:hover {
+  background: #b91c1c;
+}
+
+.period-confirmation-actions button:focus-visible {
+  outline: 3px solid rgba(24, 119, 242, .3);
+  outline-offset: 2px;
+}
+
+@keyframes period-confirmation-enter {
+  from { opacity: 0; transform: translateY(5px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .period-confirmation-box {
+    padding: 24px 20px;
+  }
+
+  .period-confirmation-actions button {
+    min-width: 0;
+    flex: 1;
+  }
 }
 
 /* Manage Periods date inputs: avoid double borders (wrapper already reused elsewhere) */
@@ -7185,7 +7404,8 @@ table.evaluation-table .view-btn:hover {
 #report-section .report-chart-card h3 { margin: 0; color: #0f172a; font-size: 1rem; }
 #report-section .report-donut-layout { display: flex; align-items: center; gap: 22px; min-height: 180px; }
 #report-section .report-donut-canvas { width: 150px !important; height: 150px !important; flex: 0 0 150px; max-width: 150px; max-height: 150px; }
-#report-section .report-bar-canvas, #report-section .report-line-canvas { height: 250px; margin-top: 18px; }
+#report-section .report-bar-canvas { height: 280px; margin-top: 18px; }
+#report-section .report-line-canvas { height: 250px; margin-top: 18px; }
 #report-section .report-chart-legend { display: grid; gap: 11px; flex: 1; }
 #report-section .report-legend-item { display: grid; gap: 6px; color: #475569; font-size: .78rem; }
 #report-section .report-legend-label { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 8px; }
@@ -10213,6 +10433,16 @@ main {
 
 .program-filter-wrapper {
   position: relative;
+}
+
+#academic-year-section .academic-year-select-wrapper {
+  flex: 0 0 220px;
+  min-width: 220px;
+}
+
+#academic-year-section .semester-select-wrapper {
+  flex: 0 0 220px;
+  min-width: 220px;
 }
 
 /* ACTIVE LINE */
@@ -13913,6 +14143,54 @@ main,
   }
 }
 
+#criteria-section .category-header .action-buttons button {
+  border: 1px solid #60a5fa !important;
+  border-radius: 6px !important;
+}
+
+#criteria-section .category-header .action-buttons .add-btn:hover,
+#criteria-section .category-header .action-buttons .add-btn:focus-visible {
+  background: #166FE5 !important;
+  border-color: #60a5fa !important;
+}
+
+#criteria-section .category-header .action-buttons .edit-btn:hover,
+#criteria-section .category-header .action-buttons .edit-btn:focus-visible {
+  background: #2563eb !important;
+  border-color: #60a5fa !important;
+}
+
+#criteria-section .category-header .action-buttons .delete-btn:hover,
+#criteria-section .category-header .action-buttons .delete-btn:focus-visible {
+  background: #dc2626 !important;
+  border-color: #60a5fa !important;
+}
+
+#criteria-section .category-header .action-buttons button:hover,
+#criteria-section .category-header .action-buttons button:focus-visible {
+  transform: none !important;
+}
+
+#criteria-section .category-header .action-buttons button:hover i,
+#criteria-section .category-header .action-buttons button:focus-visible i {
+  color: #ffffff !important;
+  transform: none !important;
+}
+
+#criteria-section .category-header .action-buttons button,
+#criteria-section .category-header .action-buttons button:hover,
+#criteria-section .category-header .action-buttons button:focus-visible {
+  border: 1px solid #1d4ed8 !important;
+}
+
+#criteria-section .category-header .action-buttons button {
+  background: #2563eb !important;
+}
+
+#criteria-section .category-header .action-buttons button i {
+  color: #ffffff !important;
+}
+
 
 /* ===================== Academic Year Table ===================== */
 .academic-year-controls {
@@ -15286,9 +15564,9 @@ table thead th {
 .add-subject-main-btn,
 #add-subject-btn,
 .period-add-btn {
-  background: #0B90E0 !important;
+  background: #1877F2 !important;
   color: #ffffff !important;
-  border-color: #0B90E0 !important;
+  border-color: #1877F2 !important;
 }
 
 .button-gradient:hover,
@@ -15298,9 +15576,23 @@ table thead th {
 .add-manage-btn:hover,
 .add-subject-main-btn:hover,
 #add-subject-btn:hover,
-.period-add-btn:hover {
-  background: #087FC5 !important;
-  border-color: #087FC5 !important;
+.period-add-btn:hover,
+#addProgramModal .submit-btn:hover,
+#addSubjectModal .submit-btn:hover,
+#addClassModal .submit-btn:hover,
+#addSubjectMainModal .submit-btn:hover,
+#addFacultyModal .submit-btn:hover,
+#addStudentModal .submit-btn:hover,
+#subjectSelectionModal .submit-btn:hover,
+#facultySubjectSelectionModal .submit-btn:hover,
+#addCategoryModal .submit-btn:hover,
+#addQuestionModal .submit-btn:hover,
+#addAcademicYearModal .submit-btn:hover,
+#managePeriodsModal .period-add-btn:hover,
+#criteria-section .category-header .action-buttons .add-btn:hover,
+#criteria-section .category-header .action-buttons .add-btn:focus-visible {
+  background: #166FE5 !important;
+  border-color: #166FE5 !important;
 }
 
 #addProgramModal .modal-header,
@@ -15331,9 +15623,9 @@ table thead th {
 #addQuestionModal .submit-btn,
 #addAcademicYearModal .submit-btn,
 #managePeriodsModal .period-add-btn {
-  background: #0B90E0 !important;
+  background: #1877F2 !important;
   color: #ffffff !important;
-  border-color: #0B90E0 !important;
+  border-color: #1877F2 !important;
 }
 
 #subjectSelectionModal .cancel-btn,
@@ -15352,9 +15644,9 @@ table thead th {
 }
 
 .category-header .action-buttons .add-btn {
-  background: #0B90E0 !important;
+  background: #1877F2 !important;
   color: #ffffff !important;
-  border-color: #0B90E0 !important;
+  border-color: #1877F2 !important;
 }
 
 .category-header .action-buttons .add-btn i {
@@ -15806,4 +16098,210 @@ table thead th {
 .dashboard-row-2 .dashboard-card,
 .dashboard-row-3 .dashboard-card {
   border-radius: 6px !important;
+}
+
+/* Admin action controls: keep the buttons plain and emphasize hover on the icon. */
+#faculties-section .action-buttons,
+#students-section .action-buttons,
+#report-section .action-buttons,
+#academic-year-section .action-buttons,
+#manage-section #subjects .action-buttons,
+#manage-section #classes .action-buttons,
+#criteria-section .action-buttons,
+#criteria-section .question-item .actions {
+  gap: 2px !important;
+}
+
+#faculties-section .action-buttons button,
+#students-section .action-buttons button,
+#report-section .action-buttons button,
+#academic-year-section .action-buttons button,
+#manage-section #subjects .action-buttons button,
+#manage-section #classes .action-buttons button,
+#criteria-section .action-buttons button,
+#criteria-section .question-item .actions button {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#faculties-section .action-buttons button:hover,
+#students-section .action-buttons button:hover,
+#report-section .action-buttons button:hover,
+#academic-year-section .action-buttons button:hover,
+#manage-section #subjects .action-buttons button:hover,
+#manage-section #classes .action-buttons button:hover,
+#criteria-section .action-buttons button:hover,
+#criteria-section .question-item .actions button:hover,
+#faculties-section .action-buttons button:focus-visible,
+#students-section .action-buttons button:focus-visible,
+#report-section .action-buttons button:focus-visible,
+#academic-year-section .action-buttons button:focus-visible,
+#manage-section #subjects .action-buttons button:focus-visible,
+#manage-section #classes .action-buttons button:focus-visible,
+#criteria-section .action-buttons button:focus-visible,
+#criteria-section .question-item .actions button:focus-visible {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  outline: none !important;
+}
+
+#faculties-section .action-buttons button i,
+#students-section .action-buttons button i,
+#report-section .action-buttons button i,
+#academic-year-section .action-buttons button i,
+#manage-section #subjects .action-buttons button i,
+#manage-section #classes .action-buttons button i,
+#criteria-section .action-buttons button i,
+#criteria-section .question-item .actions button i {
+  display: inline-block !important;
+  transform-origin: center;
+  transition: color .18s ease, transform .18s ease !important;
+}
+
+#faculties-section .action-buttons button:hover i,
+#students-section .action-buttons button:hover i,
+#report-section .action-buttons button:hover i,
+#academic-year-section .action-buttons button:hover i,
+#manage-section #subjects .action-buttons button:hover i,
+#manage-section #classes .action-buttons button:hover i,
+#criteria-section .action-buttons button:hover i,
+#criteria-section .question-item .actions button:hover i,
+#faculties-section .action-buttons button:focus-visible i,
+#students-section .action-buttons button:focus-visible i,
+#report-section .action-buttons button:focus-visible i,
+#academic-year-section .action-buttons button:focus-visible i,
+#manage-section #subjects .action-buttons button:focus-visible i,
+#manage-section #classes .action-buttons button:focus-visible i,
+#criteria-section .action-buttons button:focus-visible i,
+#criteria-section .question-item .actions button:focus-visible i {
+  transform: translateY(-2px) scale(1.12) !important;
+}
+
+#faculties-section .action-buttons button:hover i,
+#students-section .action-buttons button:hover i,
+#report-section .action-buttons button:hover i,
+#academic-year-section .action-buttons button:hover i,
+#manage-section #subjects .action-buttons button:hover i,
+#manage-section #classes .action-buttons button:hover i,
+#criteria-section .action-buttons button:hover i,
+#criteria-section .question-item .actions button:hover i,
+#faculties-section .action-buttons button:focus-visible i,
+#students-section .action-buttons button:focus-visible i,
+#report-section .action-buttons button:focus-visible i,
+#academic-year-section .action-buttons button:focus-visible i,
+#manage-section #subjects .action-buttons button:focus-visible i,
+#manage-section #classes .action-buttons button:focus-visible i,
+#criteria-section .action-buttons button:focus-visible i,
+#criteria-section .question-item .actions button:focus-visible i {
+  color: #1d4ed8 !important;
+}
+
+#faculties-section .action-buttons .edit-btn:hover i,
+#students-section .action-buttons .edit-btn:hover i,
+#manage-section #subjects .action-buttons .edit-btn:hover i,
+#manage-section #classes .action-buttons .edit-btn:hover i,
+#academic-year-section .action-buttons .edit-btn:hover i,
+#criteria-section .action-buttons .edit-btn:hover i,
+#criteria-section .question-item .actions .edit-btn:hover i {
+  color: #2563eb !important;
+}
+
+#faculties-section .action-buttons .delete-btn:hover i,
+#students-section .action-buttons .delete-btn:hover i,
+#academic-year-section .action-buttons .delete-btn:hover i,
+#manage-section #subjects .action-buttons .delete-btn:hover i,
+#manage-section #classes .action-buttons .delete-btn:hover i,
+#criteria-section .action-buttons .delete-btn:hover i,
+#criteria-section .question-item .actions .delete-btn:hover i,
+#faculties-section .action-buttons .delete-btn:focus-visible i,
+#students-section .action-buttons .delete-btn:focus-visible i,
+#academic-year-section .action-buttons .delete-btn:focus-visible i,
+#manage-section #subjects .action-buttons .delete-btn:focus-visible i,
+#manage-section #classes .action-buttons .delete-btn:focus-visible i,
+#criteria-section .action-buttons .delete-btn:focus-visible i,
+#criteria-section .question-item .actions .delete-btn:focus-visible i {
+  color: #dc2626 !important;
+}
+
+#faculties-section .action-buttons .archive-btn:hover i,
+#students-section .action-buttons .archive-btn:hover i,
+#faculties-section .action-buttons .archive-btn:focus-visible i,
+#students-section .action-buttons .archive-btn:focus-visible i {
+  color: #d97706 !important;
+}
+
+#faculties-section .action-buttons .view-btn:hover i,
+#students-section .action-buttons .view-btn:hover i,
+#students-section .action-buttons .view-subjects-btn:hover i,
+#report-section .action-buttons .view-btn:hover i,
+#academic-year-section .action-buttons .manage-period-btn:hover i,
+#academic-year-section .action-buttons .manage-btn:hover i,
+#faculties-section .action-buttons .view-btn:focus-visible i,
+#students-section .action-buttons .view-btn:focus-visible i,
+#students-section .action-buttons .view-subjects-btn:focus-visible i,
+#report-section .action-buttons .view-btn:focus-visible i,
+#academic-year-section .action-buttons .manage-period-btn:focus-visible i,
+#academic-year-section .action-buttons .manage-btn:focus-visible i {
+  color: #2563eb !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #faculties-section .action-buttons button i,
+  #students-section .action-buttons button i,
+  #report-section .action-buttons button i,
+  #academic-year-section .action-buttons button i,
+  #manage-section #subjects .action-buttons button i,
+  #manage-section #classes .action-buttons button i,
+  #criteria-section .action-buttons button i,
+  #criteria-section .question-item .actions button i {
+    transition: none !important;
+  }
+
+  #faculties-section .action-buttons button:hover i,
+  #students-section .action-buttons button:hover i,
+  #report-section .action-buttons button:hover i,
+  #academic-year-section .action-buttons button:hover i,
+  #manage-section #subjects .action-buttons button:hover i,
+  #manage-section #classes .action-buttons button:hover i,
+  #criteria-section .action-buttons button:hover i,
+  #criteria-section .question-item .actions button:hover i,
+  #faculties-section .action-buttons button:focus-visible i,
+  #students-section .action-buttons button:focus-visible i,
+  #report-section .action-buttons button:focus-visible i,
+  #academic-year-section .action-buttons button:focus-visible i,
+  #manage-section #subjects .action-buttons button:focus-visible i,
+  #manage-section #classes .action-buttons button:focus-visible i,
+  #criteria-section .action-buttons button:focus-visible i,
+  #criteria-section .question-item .actions button:focus-visible i {
+    transform: none !important;
+  }
+}
+
+#subjects-section > .table-wrapper .table-scroll-container,
+#manage-section #subjects .table-scroll-container {
+  position: relative;
+  overflow-y: auto;
+}
+
+#subjects-section > .table-wrapper .table-scroll-container {
+  max-height: calc(52px + 6 * 44px);
+}
+
+#subjects-section .subjects-table thead th,
+#manage-section #subjects .subjects-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }

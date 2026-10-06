@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
   --navy-blue:#2c3e75;
@@ -11,8 +11,8 @@
   --border:#e5e7eb;
   --shadow:0 4px 12px rgba(0,0,0,.06);
   --shadow-lg:0 8px 24px rgba(0,0,0,.1);
-  --font-body:"Inter","Segoe UI",sans-serif;
-  --font-display:"Plus Jakarta Sans","Segoe UI",sans-serif;
+  --font-body:'Inter',Arial,Helvetica,sans-serif;
+  --font-display:var(--font-body);
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -25,6 +25,11 @@ body{
   min-height:100vh;
   overflow-y:auto;
   overflow-x:hidden;
+}
+
+body,
+body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
+  font-family: var(--font-body) !important;
 }
 
 h1,

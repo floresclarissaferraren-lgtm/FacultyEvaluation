@@ -1152,7 +1152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     params.set("program_code", normalizeProgramCode(code));
     params.set("program_name", name);
 
-    setButtonLoading(programSubmitBtn, true);
+    setButtonLoading(programSubmitBtn, true, "Saving Program...");
     const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
     fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() })
       .then(r => r.text())
@@ -1234,7 +1234,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check if no data or empty array
         if (!data || data.length === 0) {
-          container.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">No programs found</div>';
+          container.innerHTML = '<div class="admin-empty-state">No programs found</div>';
           return;
         }
 
@@ -1441,6 +1441,64 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedAcademicYear = "";
   let editingPeriodId = null;
   let classPeriods = [];
+  let cachedEvaluationPeriods = [];
+  let periodConfirmationResolver = null;
+
+  function confirmPeriodAction({ opening, periodName, duration }) {
+    const modal = document.getElementById("periodConfirmationModal");
+    const title = document.getElementById("periodConfirmationTitle");
+    const period = document.getElementById("periodConfirmationPeriod");
+    const dates = document.getElementById("periodConfirmationDates");
+    const message = document.getElementById("periodConfirmationMessage");
+    const cancelButton = document.getElementById("periodConfirmationCancel");
+    const acceptButton = document.getElementById("periodConfirmationAccept");
+
+    if (!modal || !title || !period || !dates || !message || !cancelButton || !acceptButton) {
+      console.error("Evaluation period confirmation dialog is unavailable.");
+      return Promise.resolve(false);
+    }
+
+    if (periodConfirmationResolver) periodConfirmationResolver(false);
+
+    title.textContent = opening ? "Open evaluation period?" : "Close evaluation period?";
+    period.textContent = periodName;
+    dates.textContent = duration || "Schedule dates are not set";
+    message.textContent = opening
+      ? "Opening this period will close any other active period and send an opening notification to students. Students can evaluate only within the scheduled dates."
+      : "Students will no longer be able to submit evaluations for this period.";
+    acceptButton.textContent = opening ? "Open Period" : "Close Period";
+    acceptButton.classList.toggle("is-close", !opening);
+    modal.hidden = false;
+
+    return new Promise(resolve => {
+      const trigger = document.activeElement;
+      const finish = confirmed => {
+        modal.hidden = true;
+        cancelButton.removeEventListener("click", cancel);
+        acceptButton.removeEventListener("click", accept);
+        modal.removeEventListener("click", dismissOnBackdrop);
+        document.removeEventListener("keydown", dismissOnEscape);
+        periodConfirmationResolver = null;
+        if (trigger instanceof HTMLElement) trigger.focus();
+        resolve(confirmed);
+      };
+      const cancel = () => finish(false);
+      const accept = () => finish(true);
+      const dismissOnBackdrop = event => {
+        if (event.target === modal) finish(false);
+      };
+      const dismissOnEscape = event => {
+        if (event.key === "Escape" && !modal.hidden) finish(false);
+      };
+
+      periodConfirmationResolver = finish;
+      cancelButton.addEventListener("click", cancel);
+      acceptButton.addEventListener("click", accept);
+      modal.addEventListener("click", dismissOnBackdrop);
+      document.addEventListener("keydown", dismissOnEscape);
+      cancelButton.focus();
+    });
+  }
 
   function initAddSubjectMainBtn() {
     const addBtn = document.querySelector(".add-subject-main-btn");
@@ -1516,6 +1574,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? `action=edit&id=${encodeURIComponent(editingMainSubjectId)}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`
       : `action=add&program_id=${encodeURIComponent(program)}&subject_code=${encodeURIComponent(code)}&subject_desc=${encodeURIComponent(desc)}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}`;
 
+    setButtonLoading(saveMainSubjectBtn, true, "Saving Subject...");
     fetch("subject_crud.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -1535,7 +1594,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => {
         console.error("Error:", err);
         alert("Something went wrong");
-      });
+      })
+      .finally(() => setButtonLoading(saveMainSubjectBtn, false));
   });
 
   // LOAD ALL SUBJECTS
@@ -1569,7 +1629,7 @@ document.addEventListener("DOMContentLoaded", () => {
     subjectsMainTbody.innerHTML = "";
 
     if (!data || data.length === 0) {
-      subjectsMainTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No subjects found</td></tr>';
+      subjectsMainTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No subjects found</td></tr>';
       return;
     }
 
@@ -1986,7 +2046,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const total = subjectsFilteredData.length;
 
     if (total === 0) {
-      subjectsTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No Subject found for this program</td></tr>';
+      subjectsTableBody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No Subject found for this program</td></tr>';
       renderManageSubjectsPagination(0);
       return;
     }
@@ -2158,6 +2218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Sending to:", url);
     console.log("Body:", body);
 
+    setButtonLoading(saveSubjectBtn, true, "Saving Subject...");
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -2182,7 +2243,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => {
         console.error("Error:", err);
         alert("Something went wrong: " + err.message);
-      });
+      })
+      .finally(() => setButtonLoading(saveSubjectBtn, false));
   });
 
   // ========================= LOAD SUBJECTS BY YEAR =========================
@@ -2217,7 +2279,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!data || data.length === 0) {
           const semesterText = ` in ${semesterOverride}`;
           box.innerHTML = classSubjectSearchHtml();
-          getClassSubjectOptionsBox().innerHTML = `<small>No subjects found for year ${yearLevel}${semesterText}</small>`;
+          getClassSubjectOptionsBox().innerHTML = `<small class="admin-empty-state">No subjects found for year ${yearLevel}${semesterText}</small>`;
           bindClassSubjectSearch();
           if (typeof callback === "function") callback([]);
           return;
@@ -2482,7 +2544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!data || data.length === 0) {
-          classesTableBody.innerHTML = "<tr><td colspan='5'>No classes found for this program</td></tr>";
+          classesTableBody.innerHTML = "<tr><td colspan='5' class='admin-empty-state'>No classes found for this program</td></tr>";
           return;
         }
 
@@ -2702,6 +2764,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Faculty assignments:", assignments);
     console.log("Full body being sent:", body);
 
+    setButtonLoading(saveClassBtn, true, "Saving Class...");
     fetch("classes_crud.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -2735,7 +2798,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => {
         console.error("Error saving class:", err);
         alert("Something went wrong while " + (isEditing ? "updating" : "adding") + " class.");
-      });
+      })
+      .finally(() => setButtonLoading(saveClassBtn, false));
   });
 
   // ========================= SHOW CLASS SUBJECTS MODAL =========================
@@ -2915,7 +2979,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.querySelector("#saveSubjectAssignmentBtn").addEventListener("click", saveSubjectAssignment);
   }
 
-  function saveSubjectAssignment() {
+  async function saveSubjectAssignment() {
     const modal = document.getElementById("editSubjectInClassModal");
     const classId = modal.dataset.classId;
     const subjectId = modal.dataset.subjectId;
@@ -2926,51 +2990,46 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // First remove the existing assignment, then add new one
-    fetch(`classes_crud.php?action=delete_subject`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `class_id=${classId}&subject_id=${subjectId}`
-    })
-      .then(r => r.json())
-      .then(deleteRes => {
-        if (deleteRes.status === "success") {
-          // Add the subject back with new faculty assignment
-          fetch(`classes_crud.php?action=add_subject_to_class`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `class_id=${classId}&subject_id=${subjectId}&faculty_id=${facultyId}`
-          })
-            .then(r => r.json())
-            .then(addRes => {
-              if (addRes.status === "success") {
-                modal.style.display = "none";
-                showNotification("Faculty assignment updated successfully!", "#4caf50");
-                // Refresh class subjects - get current class info from modal
-                const classModal = document.getElementById("viewClassSubjectsModal");
-                const className = classModal.querySelector("#viewClassName").textContent;
-                showClassSubjectsModal(classId, className, ""); // This will refresh the modal
-              } else {
-                const assignMsg = (addRes.message || "").toLowerCase();
-                if (assignMsg.includes("subject already exists in this section")) {
-                  showNotification("The subject already exists in this section", "#f44336", 3500);
-                } else {
-                  showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
-                }
-              }
-            })
-            .catch(err => {
-              console.error("Error adding subject:", err);
-              showNotification("Error updating assignment", "#f44336");
-            });
-        } else {
-          showNotification("Error updating assignment: " + (deleteRes.message || "Unknown error"), "#f44336");
-        }
-      })
-      .catch(err => {
-        console.error("Error deleting subject:", err);
-        showNotification("Error updating assignment", "#f44336");
+    const saveButton = modal.querySelector("#saveSubjectAssignmentBtn");
+    setButtonLoading(saveButton, true, "Saving Assignment...");
+    try {
+      const deleteResponse = await fetch("classes_crud.php?action=delete_subject", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `class_id=${classId}&subject_id=${subjectId}`
       });
+      const deleteRes = await deleteResponse.json();
+      if (deleteRes.status !== "success") {
+        showNotification("Error updating assignment: " + (deleteRes.message || "Unknown error"), "#f44336");
+        return;
+      }
+
+      const addResponse = await fetch("classes_crud.php?action=add_subject_to_class", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `class_id=${classId}&subject_id=${subjectId}&faculty_id=${facultyId}`
+      });
+      const addRes = await addResponse.json();
+      if (addRes.status === "success") {
+        modal.style.display = "none";
+        showNotification("Faculty assignment updated successfully!", "#4caf50");
+        const classModal = document.getElementById("viewClassSubjectsModal");
+        const className = classModal.querySelector("#viewClassName").textContent;
+        showClassSubjectsModal(classId, className, "");
+      } else {
+        const assignMsg = (addRes.message || "").toLowerCase();
+        if (assignMsg.includes("subject already exists in this section")) {
+          showNotification("The subject already exists in this section", "#f44336", 3500);
+        } else {
+          showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
+        }
+      }
+    } catch (err) {
+      console.error("Error updating assignment:", err);
+      showNotification("Error updating assignment", "#f44336");
+    } finally {
+      setButtonLoading(saveButton, false);
+    }
   }
 
   // ========================= Forms ==========================================================================================
@@ -3229,9 +3288,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check if no data or empty array
         if (!data || data.length === 0) {
-          facultyTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No faculty found</td></tr>';
+          facultyTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
           if (archivedFacultyTbody) {
-            archivedFacultyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No archived faculty found</td></tr>';
+            archivedFacultyTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
           }
           updateFacultyMemberCount();
           return;
@@ -3414,10 +3473,10 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .then(() => {
         if (facultyTbody && facultyTbody.rows.length === 0) {
-          facultyTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No faculty found</td></tr>';
+          facultyTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
         }
         if (archivedFacultyTbody && archivedFacultyTbody.rows.length === 0) {
-          archivedFacultyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No archived faculty found</td></tr>';
+          archivedFacultyTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
         }
         filterFaculty();
       })
@@ -3896,7 +3955,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const programCanvas = document.getElementById("reportProgramRatingsChart");
     if (programCanvas) {
       window.reportProgramChart?.destroy();
-      window.reportProgramChart = new Chart(programCanvas, { type: "bar", data: { labels: programs.map(item => item.label), datasets: [{ label: "Average rating", data: programs.map(item => item.average), backgroundColor: "#1296DC", borderRadius: 5, maxBarThickness: 34 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+      const topPrograms = programs.slice(0, 8);
+      window.reportProgramChart = new Chart(programCanvas, {
+        type: "bar",
+        data: {
+          labels: topPrograms.map(item => item.label),
+          datasets: [{
+            label: "Average rating",
+            data: topPrograms.map(item => item.average),
+            backgroundColor: "#1296DC",
+            borderRadius: 5,
+            maxBarThickness: 34
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: 0, max: 5, ticks: { stepSize: 1 } },
+            x: { grid: { display: false }, ticks: { autoSkip: false } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
     }
     const trend = data.trend || [];
     const trendCanvas = document.getElementById("reportRatingsTrendChart");
@@ -3944,6 +4025,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function generateEvaluationReport() {
+    const reportBtn = document.querySelector(".generate-report-btn");
+    if (reportBtn?.classList.contains("is-loading")) return;
+    setButtonLoading(reportBtn, true, "Generating...");
+
     const url = buildEvaluationReportPdfUrl(true);
     fetch(url, { cache: "no-store" })
       .then(async (res) => {
@@ -3973,7 +4058,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((err) => {
         console.error("Generate report error:", err);
         showNotification("Failed to generate PDF report: " + err.message, "#f44336", 5000);
-      });
+      })
+      .finally(() => setButtonLoading(reportBtn, false));
   }
 
   function viewEvaluationReportPDF() {
@@ -4079,7 +4165,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderGroupedFacultySubjects(subjects) {
     if (!Array.isArray(subjects) || subjects.length === 0) {
-      return '<p style="text-align: center; color: #6b7280; padding: 40px;">No subjects assigned yet</p>';
+      return '<p class="admin-empty-state">No subjects assigned yet</p>';
     }
 
     const grouped = subjects.reduce((groups, subject) => {
@@ -4536,12 +4622,12 @@ document.addEventListener("DOMContentLoaded", () => {
           if (totalStudentsEl) totalStudentsEl.textContent = data.data.totalStudents;
           if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.activeStudents;
 
-          // Update evaluation progress bar: stay at 0 until there are submissions
+          // Count only students who have completed all assigned evaluations.
           const progressFillEl = document.getElementById("evaluationProgressFill");
           const progressTextEl = document.getElementById("evaluationProgressText");
           if (progressFillEl && progressTextEl) {
-            const submittedEvaluations = Number(data.data.totalEvaluationsSubmitted) || 0;
-            const expectedEvaluations = Math.max(0, Number(data.data.expectedEvaluations) || 0);
+            const submittedEvaluations = Number(data.data.completedStudents ?? data.data.totalEvaluationsSubmitted) || 0;
+            const expectedEvaluations = Math.max(0, Number(data.data.expectedStudents ?? data.data.expectedEvaluations) || 0);
             const pendingEvaluations = Number.isFinite(Number(data.data.pendingEvaluations))
               ? Number(data.data.pendingEvaluations)
               : Math.max(expectedEvaluations - submittedEvaluations, 0);
@@ -4560,17 +4646,17 @@ document.addEventListener("DOMContentLoaded", () => {
               progressTextEl.textContent = "No active evaluation period";
             } else if (expectedEvaluations <= 0) {
               progressFillEl.style.width = "0%";
-              progressTextEl.textContent = "No active students";
+              progressTextEl.textContent = "No students with assignments";
             } else if (submittedEvaluations <= 0) {
               progressFillEl.style.width = "0%";
-              progressTextEl.textContent = "No submissions yet";
+              progressTextEl.textContent = "No completed students yet";
             } else {
               const progressPercent = Math.min(
                 100,
                 Math.round((submittedEvaluations / expectedEvaluations) * 100)
               );
               progressFillEl.style.width = `${progressPercent}%`;
-              progressTextEl.textContent = `${submittedEvaluations} of ${expectedEvaluations} submitted`;
+              progressTextEl.textContent = `${submittedEvaluations} of ${expectedEvaluations} students finished`;
             }
           }
 
@@ -4792,7 +4878,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (sorted.length === 0) {
       const emptyRow = document.createElement("tr");
-      emptyRow.innerHTML = `<td colspan="3" style="text-align:center;padding:18px;color:#64748b;">No faculty ratings available.</td>`;
+      emptyRow.innerHTML = '<td colspan="3" class="admin-empty-state">No faculty ratings available.</td>';
       tableBody.appendChild(emptyRow);
       summaryText.textContent = "No ranked faculty data available.";
       return;
@@ -5120,7 +5206,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tbody) return;
 
     if (!subjects || subjects.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No subjects available</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No subjects available</td></tr>';
       return;
     }
 
@@ -5323,9 +5409,9 @@ document.addEventListener("DOMContentLoaded", () => {
           // Check if data is empty or not an array
           if (!data || !Array.isArray(data) || data.length === 0) {
             console.log("No students found");
-            studentTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No students found</td></tr>';
+            studentTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No students found</td></tr>';
             if (archivedStudentTbody) {
-              archivedStudentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No archived students found</td></tr>';
+              archivedStudentTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No archived students found</td></tr>';
             }
             updateStudentCountSummary();
             return;
@@ -5624,10 +5710,10 @@ document.addEventListener("DOMContentLoaded", () => {
             studentTbody.appendChild(row);
           });
           if (studentTbody.rows.length === 0) {
-            studentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No students found</td></tr>';
+            studentTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No students found</td></tr>';
           }
           if (archivedStudentTbody && archivedStudentTbody.rows.length === 0) {
-            archivedStudentTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No archived students found</td></tr>';
+            archivedStudentTbody.innerHTML = '<tr><td colspan="4" class="admin-empty-state">No archived students found</td></tr>';
           }
           // Search functionality
           const searchInput = document.getElementById("student-search");
@@ -5766,7 +5852,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = "";
 
     if (filteredSubjects.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No subjects found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No subjects found</td></tr>';
       return;
     }
 
@@ -6147,7 +6233,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (selectedSubjects.length === 0) {
-      container.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">No subjects selected</p>';
+      container.innerHTML = '<p class="admin-empty-state">No subjects selected</p>';
       console.log("No subjects selected, showing default message");
     } else {
       console.log(`Displaying ${selectedSubjects.length} subjects`);
@@ -6388,7 +6474,7 @@ document.addEventListener("DOMContentLoaded", () => {
       url = "edit_category.php";
     }
 
-    setButtonLoading(saveCategoryBtn, true);
+    setButtonLoading(saveCategoryBtn, true, "Saving Category...");
   const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
     fetch(url, {
       method: "POST",
@@ -6447,7 +6533,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
-    setButtonLoading(saveQuestionBtn, true);
+    setButtonLoading(saveQuestionBtn, true, "Saving Question...");
     const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
 
     // Check if this is a new question (not editing)
@@ -7068,17 +7154,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let submitBtn = resetSubmitBtn("SAVE STUDENT");
         submitBtn.onclick = async e => {
           e.preventDefault();
-          submitBtn.disabled = true;
-          submitBtn.classList.add("is-loading");
-          submitBtn.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Loading';
+          setButtonLoading(submitBtn, true, "Saving Student...");
 
           const numberVal = val("number").trim();
           if (!/^GC-[0-9]{6}$/.test(numberVal)) {
             studentNumberInput.setAttribute("aria-invalid", "true");
             showGlobalNotification("Student ID must be GC- followed by exactly 6 digits (example: GC-123456).", "warning");
-            submitBtn.disabled = false;
-            submitBtn.classList.remove("is-loading");
-            submitBtn.textContent = "SAVE STUDENT";
+            setButtonLoading(submitBtn, false);
             return;
           } else {
             studentNumberInput.removeAttribute("aria-invalid");
@@ -7095,18 +7177,14 @@ document.addEventListener("DOMContentLoaded", () => {
             y = val("yearlevel");
             if (!y) {
               showGlobalNotification("Please select year level for regular student", "warning");
-              submitBtn.disabled = false;
-              submitBtn.classList.remove("is-loading");
-              submitBtn.textContent = "SAVE STUDENT";
+              setButtonLoading(submitBtn, false);
               return;
             }
           }
 
           if (!n || !eMail || !fName || !lName || !p) {
             showGlobalNotification("Please fill all required fields", "warning");
-            submitBtn.disabled = false;
-            submitBtn.classList.remove("is-loading");
-            submitBtn.textContent = "SAVE STUDENT";
+            setButtonLoading(submitBtn, false);
             return;
           }
 
@@ -7120,47 +7198,48 @@ document.addEventListener("DOMContentLoaded", () => {
             }))
             : [];
 
-          const res = await fetch("student_crud.php", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "add",
-              student_number: n,
-              email: eMail,
-              firstname: fName,
-              lastname: lName,
-              suffix: val("suffix"),
-              yearlevel: y,
-              program: p,
-              section: section,
-              subjects: subjectIds,
-              student_type: studentType
-            })
-          });
-          const d = await res.json();
-          if (d.success) {
-            loadStudents();
-            // Force dashboard stats update regardless of current section
-            setTimeout(() => {
-              loadDashboardStats();
-              console.log("Dashboard stats updated after student add");
-            }, 500); // Increased delay to ensure DB commit
-            closeModal(addStudentModal);
-            if (d.temporary_password) {
-              showAlertModal(`${d.message}. Student ID: ${n}. Temporary password: ${d.temporary_password}. Share it securely.`);
-            } else {
-              showNotification(d.message || "Student added successfully. Password sent to email.", "#4caf50");
-            }
-            addProgramToDropdown(p); // live add program
-          } else {
-            if ((d.message || "").startsWith("Student ID must be GC-")) {
+          try {
+            const res = await fetch("student_crud.php", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "add",
+                student_number: n,
+                email: eMail,
+                firstname: fName,
+                lastname: lName,
+                suffix: val("suffix"),
+                yearlevel: y,
+                program: p,
+                section: section,
+                subjects: subjectIds,
+                student_type: studentType
+              })
+            });
+            const d = await res.json();
+            if (d.success) {
+              loadStudents();
+              setTimeout(() => {
+                loadDashboardStats();
+                console.log("Dashboard stats updated after student add");
+              }, 500);
+              closeModal(addStudentModal);
+              if (d.temporary_password) {
+                showAlertModal(`${d.message}. Student ID: ${n}. Temporary password: ${d.temporary_password}. Share it securely.`);
+              } else {
+                showNotification(d.message || "Student added successfully. Password sent to email.", "#4caf50");
+              }
+              addProgramToDropdown(p);
+            } else if ((d.message || "").startsWith("Student ID must be GC-")) {
               showGlobalNotification(d.message, "warning");
             } else {
               alert(d.message || "Error adding student.");
             }
+          } catch (err) {
+            console.error("Error saving student:", err);
+            showGlobalNotification("Unable to save student. Please try again.", "error");
+          } finally {
+            setButtonLoading(submitBtn, false);
           }
-          submitBtn.disabled = false;
-          submitBtn.classList.remove("is-loading");
-          submitBtn.textContent = "SAVE STUDENT";
         };
       };
       console.log("Add student button event listener attached successfully!");
@@ -7275,7 +7354,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const semesterEl = document.getElementById("dashboardSemester");
       const btnClose = document.querySelector(".btn-close");
       const hasActivePeriod = Number(data.active_period_id || 0) > 0;
-
       updateDashboardPeriodBox(data.active_period_name || "");
       if (academicYearEl) {
         academicYearEl.textContent = hasActivePeriod
@@ -7288,7 +7366,15 @@ document.addEventListener("DOMContentLoaded", () => {
           : data.current_semester || "Not set";
       }
       if (statusText) {
-        statusText.textContent = data.evaluation_open ? "Evaluation is Open" : "Evaluation is Closed";
+        const statusLabels = {
+          open: "Open",
+          scheduled: "Scheduled",
+          ready: "Ready to open",
+          setup: "Dates needed",
+          expired: "Expired",
+          closed: "Closed"
+        };
+        statusText.textContent = statusLabels[data.active_period_status] || "Closed";
       }
       if (btnClose) {
         btnClose.style.display = (data.evaluation_open || hasActivePeriod) ? "inline-block" : "none";
@@ -7312,16 +7398,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btnClose) {
       btnClose.addEventListener("click", async () => {
+        const activePeriod = cachedEvaluationPeriods.find(period => period.is_active);
+        const periodName = activePeriod
+          ? `${activePeriod.semester} ${activePeriod.ay}`
+          : "the active evaluation period";
+        const duration = activePeriod?.start_date && activePeriod?.end_date
+          ? `${activePeriod.start_date} to ${activePeriod.end_date}`
+          : "";
+        if (!await confirmPeriodAction({ opening: false, periodName, duration })) {
+          return;
+        }
+
+        setButtonLoading(btnClose, true, "Closing...");
         try {
-          // Closing the period should also remove active period
-          await fetch("periods_api.php?action=deactivate", {
+          const response = await fetch("periods_api.php?action=deactivate", {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({})
           });
+          const result = await response.json().catch(() => null);
+          if (!response.ok || !result?.success) {
+            throw new Error(result?.message || "Unable to close the evaluation period.");
+          }
+          showNotification("Evaluation period closed.", "#10b981", 4000);
+        } catch (error) {
+          console.error("Failed to close evaluation period:", error);
+          showNotification(error.message || "Unable to close the evaluation period.", "#ef4444", 5000);
         } finally {
+          setButtonLoading(btnClose, false);
           await refreshPeriodCard();
+          await loadPeriods();
           await refreshAcademicYearTable();
         }
       });
@@ -7365,28 +7472,72 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
       const data = await res.json();
       const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+      cachedEvaluationPeriods = periods;
+      renderPeriodsTable();
+    } catch (err) {
+      console.error("Failed to load periods:", err);
+      tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align:center; padding: 18px; color:#ef4444;">Failed to load periods</td>
+      </tr>
+    `;
+    }
+  }
 
-      if (periods.length === 0) {
-        tbody.innerHTML = `
+  function renderPeriodsTable() {
+    const tbody = document.getElementById("periods-tbody");
+    if (!tbody) return;
+
+    const selectedSemester = document.getElementById("period-sem")?.value.trim().toLowerCase() || "";
+    const periods = selectedSemester
+      ? cachedEvaluationPeriods.filter(period => String(period.semester || "").trim().toLowerCase() === selectedSemester)
+      : cachedEvaluationPeriods;
+
+    if (periods.length === 0) {
+      tbody.innerHTML = `
         <tr>
-          <td colspan="4" style="text-align:center; padding: 18px; color:#6b7280;">No periods yet</td>
+          <td colspan="4" class="admin-empty-state">
+            ${selectedSemester ? "No periods for the selected semester" : "No periods yet"}
+          </td>
         </tr>
       `;
-        return;
-      }
+      return;
+    }
 
-      tbody.innerHTML = "";
-      periods.forEach(p => {
-        const tr = document.createElement("tr");
-        const periodName = escapeHtml(p.semester || formatPeriodName(p.semester, p.ay));
-        const ay = escapeHtml(p.ay);
-        const duration = formatRange(p.start_date, p.end_date);
+    tbody.innerHTML = "";
+    periods.forEach(p => {
+      const tr = document.createElement("tr");
+      const periodName = escapeHtml(p.semester || formatPeriodName(p.semester, p.ay));
+      const ay = escapeHtml(p.ay);
+      const duration = formatRange(p.start_date, p.end_date);
 
-        const statusHtml = p.is_active
-          ? `<button type="button" class="period-status-btn active" data-action="deactivate" data-id="${p.id}">Active</button>`
-          : `<button type="button" class="period-status-btn inactive" data-action="set-active" data-id="${p.id}">Inactive</button>`;
+      const states = {
+        setup: { label: "Dates needed", className: "setup" },
+        expired: { label: "Expired", className: "expired" },
+        scheduled: { label: "Scheduled", className: "scheduled" },
+        open: { label: "Open", className: "open" },
+        ready: { label: "Ready to open", className: "ready" }
+      };
+      const state = states[p.status] || states.setup;
+      const action = p.is_active ? "deactivate" : "set-active";
+      const actionLabel = p.is_active ? "Close" : "Open";
+      const actionDisabled = !p.is_active && ["setup", "expired"].includes(p.status);
+      const actionTitle = actionDisabled
+        ? !p.start_date || !p.end_date
+          ? "Set start and end dates before opening this period"
+          : "Expired periods cannot be opened"
+        : `${actionLabel} evaluation period`;
+      const statusHtml = `
+        <div class="period-status-cell">
+          <button type="button" class="period-status-btn ${p.is_active ? "active" : "inactive"}"
+            data-action="${action}" data-id="${p.id}" title="${actionTitle}"
+            aria-label="${actionLabel} evaluation for ${periodName}, ${ay}" ${actionDisabled ? "disabled" : ""}>
+            ${actionLabel}
+          </button>
+          <span class="period-state-badge ${state.className}">${state.label}</span>
+        </div>`;
 
-        tr.innerHTML = `
+      tr.innerHTML = `
         <td>
           <div class="period-name-cell">
             <span class="period-semester">${periodName}</span>
@@ -7404,17 +7555,11 @@ document.addEventListener("DOMContentLoaded", () => {
         </td>
       `;
 
-        tbody.appendChild(tr);
-      });
-    } catch (err) {
-      console.error("Failed to load periods:", err);
-      tbody.innerHTML = `
-      <tr>
-        <td colspan="4" style="text-align:center; padding: 18px; color:#ef4444;">Failed to load periods</td>
-      </tr>
-    `;
-    }
+      tbody.appendChild(tr);
+    });
   }
+
+  document.getElementById("period-sem")?.addEventListener("change", renderPeriodsTable);
 
   function formatDate(dateString) {
     const date = new Date(dateString);
@@ -7434,6 +7579,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function editPeriod(period) {
     document.getElementById("period-ay").value = period.ay;
     document.getElementById("period-sem").value = period.semester;
+    renderPeriodsTable();
     document.getElementById("period-start").value = period.start_date || "";
     document.getElementById("period-end").value = period.end_date || "";
     editingPeriodId = Number(period.id);
@@ -7561,16 +7707,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const action = statusBtn.dataset.action;
       const id = parseInt(statusBtn.dataset.id, 10);
 
-      if (!action || !id) return;
+      if (!action || !id || statusBtn.disabled) return;
 
       if (action === "set-active") {
-        const originalLabel = statusBtn.textContent;
-        statusBtn.disabled = true;
-        statusBtn.classList.add("is-loading");
-        statusBtn.setAttribute("aria-busy", "true");
-        statusBtn.setAttribute("aria-label", "Activating period");
-        statusBtn.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>Loading...';
+        const period = cachedEvaluationPeriods.find(item => Number(item.id) === id);
+        if (!period) {
+          showNotification("Unable to find the selected period. Refresh and try again.", "#ef4444", 4000);
+          return;
+        }
+        const name = `${period.semester} ${period.ay}`;
+        const duration = period.start_date && period.end_date
+          ? `${period.start_date} to ${period.end_date}`
+          : "";
+        if (!await confirmPeriodAction({ opening: true, periodName: name, duration })) {
+          return;
+        }
 
+        setButtonLoading(statusBtn, true, "Opening...");
         try {
           const res = await fetch("periods_api.php?action=set_active", {
             method: "POST",
@@ -7596,34 +7749,46 @@ document.addEventListener("DOMContentLoaded", () => {
           await refreshPeriodCard();
           await syncDashboardPeriodSetting();
           await refreshAcademicYearTable();
-        } catch (_) {
+        } catch (error) {
+          console.error("Failed to activate evaluation period:", error);
           showNotification("Unable to activate period.", "#f59e0b", 4000);
         } finally {
-          if (statusBtn.isConnected) {
-            statusBtn.disabled = false;
-            statusBtn.classList.remove("is-loading");
-            statusBtn.removeAttribute("aria-busy");
-            statusBtn.setAttribute("aria-label", originalLabel);
-            statusBtn.textContent = originalLabel;
-          }
+          setButtonLoading(statusBtn, false);
         }
       } else if (action === "deactivate") {
-        const res = await fetch("periods_api.php?action=deactivate", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
-        });
-        const result = await res.json().catch(() => null);
-        if (!result || !result.success) {
-          showNotification((result && result.message) || "Unable to deactivate period.", "#f59e0b", 4000);
-        } else {
-          showNotification("Period deactivated successfully.", "#10b981", 4000);
+        const period = cachedEvaluationPeriods.find(item => Number(item.id) === id);
+        const name = period ? `${period.semester} ${period.ay}` : "this evaluation period";
+        const duration = period?.start_date && period?.end_date
+          ? `${period.start_date} to ${period.end_date}`
+          : "";
+        if (!await confirmPeriodAction({ opening: false, periodName: name, duration })) {
+          return;
         }
-        await loadPeriods();
-        await refreshPeriodCard();
-        await syncDashboardPeriodSetting();
-        await refreshAcademicYearTable();
+
+        setButtonLoading(statusBtn, true, "Closing...");
+        try {
+          const res = await fetch("periods_api.php?action=deactivate", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          const result = await res.json().catch(() => null);
+          if (!res.ok || !result?.success) {
+            showNotification((result && result.message) || "Unable to close evaluation period.", "#f59e0b", 4000);
+          } else {
+            showNotification("Evaluation period closed.", "#10b981", 4000);
+          }
+        } catch (error) {
+          console.error("Failed to close evaluation period:", error);
+          showNotification("Unable to close evaluation period.", "#f59e0b", 4000);
+        } finally {
+          setButtonLoading(statusBtn, false);
+          await loadPeriods();
+          await refreshPeriodCard();
+          await syncDashboardPeriodSetting();
+          await refreshAcademicYearTable();
+        }
       }
     });
 
@@ -7801,6 +7966,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initCalendarClickHandlers();
   initPeriodCardControls();
   refreshPeriodCard();
+  loadPeriods();
   setInterval(() => {
     refreshPeriodCard();
     if (managePeriodsModal?.style.display === "flex") {
@@ -7916,12 +8082,11 @@ document.addEventListener('DOMContentLoaded', function () {
   academicYearInput?.addEventListener('input', hideAcademicYearDuplicateMessage);
   semesterSelect?.addEventListener('change', hideAcademicYearDuplicateMessage);
 
-  function showAcademicYearEmpty(message = 'No academic years added yet. Click "Add New" to get started.') {
+  function showAcademicYearEmpty(message = 'No academic years have been added yet.') {
     if (!tableBody) return;
     tableBody.innerHTML = `
       <tr>
-        <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
-          <i class="ph ph-calendar-blank" style="font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5;"></i>
+        <td colspan="4" class="admin-empty-state">
           ${message}
         </td>
       </tr>
@@ -8003,7 +8168,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // No dates - will be NULL in database
         };
 
-    setButtonLoading(saveBtn, true);
+    setButtonLoading(saveBtn, true, "Saving Academic Year...");
     try {
       const res = await fetch(`periods_api.php?action=${editingId ? 'update' : 'create'}`, {
         method: 'POST',
@@ -8098,22 +8263,33 @@ document.addEventListener('DOMContentLoaded', function () {
   // Function to update academic year filter dropdown
   function updateAcademicYearFilter() {
     const filterSelect = document.getElementById('academic-year-filter');
-    const academicYears = new Set();
     if (!filterSelect) return;
 
+    const academicYears = new Set();
     academicPeriods.forEach(period => {
-      if (period.ay) academicYears.add(period.ay);
+      const ay = String(period?.ay ?? '').trim();
+      if (ay) academicYears.add(ay);
     });
 
-    const previousValue = filterSelect.value;
-    filterSelect.innerHTML = '<option value="">All Academic Years</option>';
-    Array.from(academicYears).sort().forEach(ay => {
+    const previousValue = String(filterSelect.value || '').trim();
+    filterSelect.innerHTML = '<option value="">Academic Year</option>';
+
+    const sortedYears = Array.from(academicYears).sort((a, b) => {
+      const getStartYear = (value) => {
+        const match = String(value || '').match(/(\d{4})/);
+        return match ? Number(match[1]) : 0;
+      };
+      return getStartYear(b) - getStartYear(a);
+    });
+
+    sortedYears.forEach(ay => {
       const option = document.createElement('option');
       option.value = ay;
       option.textContent = ay;
       filterSelect.appendChild(option);
     });
-    filterSelect.value = Array.from(academicYears).includes(previousValue) ? previousValue : '';
+
+    filterSelect.value = sortedYears.includes(previousValue) ? previousValue : '';
   }
 
   // Filter functionality

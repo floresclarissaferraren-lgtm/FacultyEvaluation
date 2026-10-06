@@ -37,7 +37,7 @@ try {
                           ORDER BY ep2.id DESC
                           LIMIT 1)) AS resolved_period_id,
                      f.firstname, f.lastname, f.suffix,
-                     p.program_name, ep.ay AS academic_year, ep.semester
+                     p.program_code, p.program_name, ep.ay AS academic_year, ep.semester
               FROM evaluations e
               INNER JOIN add_faculties f ON f.id = e.faculty_id
               LEFT JOIN add_subjects s ON s.id = e.subject_id
@@ -92,7 +92,7 @@ try {
 
         $facultyPeriodIds[$facultyId][intval($row['resolved_period_id'])] = true;
 
-        $program = trim((string)($row['program_name'] ?? '')) ?: 'Unassigned Program';
+        $program = trim((string)($row['program_code'] ?? '')) ?: 'Unassigned Program';
         if (!isset($programs[$program])) $programs[$program] = ['sum' => 0, 'count' => 0];
         $programs[$program]['sum'] += $score;
         $programs[$program]['count']++;

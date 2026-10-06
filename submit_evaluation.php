@@ -43,6 +43,7 @@ $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
 $evaluationOpen = $settings ? intval($settings["evaluation_open"]) === 1 : false;
 $activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
 $today = date("Y-m-d");
+$evaluationUnavailableMessage = "Evaluation is closed";
 
 if ($evaluationOpen && $activePeriodId > 0) {
     $periodStmt = $conn->prepare("SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
@@ -50,17 +51,19 @@ if ($evaluationOpen && $activePeriodId > 0) {
     $periodStmt->execute();
     $period = $periodStmt->get_result()->fetch_assoc();
     $periodStmt->close();
-    if (!$period
+    if ($period && !empty($period["start_date"]) && $period["start_date"] > $today) {
+        $evaluationOpen = false;
+        $evaluationUnavailableMessage = "Evaluation has not started. It will be available starting " . $period["start_date"] . ".";
+    } elseif (!$period
         || empty($period["start_date"])
         || empty($period["end_date"])
-        || $period["start_date"] > $today
         || $period["end_date"] < $today) {
         $evaluationOpen = false;
     }
 }
 
 if (!$evaluationOpen || $activePeriodId <= 0) {
-    submitEvaluationResponse(["success" => false, "message" => "Evaluation is closed"], 409);
+    submitEvaluationResponse(["success" => false, "message" => $evaluationUnavailableMessage], 409);
 }
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {

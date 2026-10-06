@@ -241,10 +241,6 @@ $conn->close();
             <span class="info-value" id="studentAcademicSemester">No active period</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Evaluation Status:</span>
-            <span class="info-value" id="studentPeriodStatus">No active period</span>
-          </div>
-          <div class="info-item">
             <span class="info-label">Year Level:</span>
             <span class="info-value"><?php
               $displayYearLevel = strtolower(trim((string)$studentYearLevel)) === 'irregular'
@@ -257,6 +253,8 @@ $conn->close();
             ?></span>
           </div>
         </div>
+
+        <p id="evaluation-period-access-message" class="evaluation-period-access-message" role="status" aria-live="polite" hidden></p>
         
         <p class="welcome-message">
           Your feedback is essential in helping us improve teaching and learning. Each 
@@ -325,7 +323,6 @@ $conn->close();
 <script src="FacultyUser.js?v=<?=time()?>"></script>
 </body>
 </html>
-
 
 
 

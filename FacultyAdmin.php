@@ -236,6 +236,13 @@ include 'totalstudents_dashcount.php';
           <strong id="dashboardSemester">Not set</strong>
         </div>
       </div>
+      <div class="admin-period-item">
+        <i class="ph ph-check-circle" aria-hidden="true"></i>
+        <div>
+          <span>Evaluation Status</span>
+          <strong id="evaluationStatusText">Closed</strong>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -359,18 +366,18 @@ include 'totalstudents_dashcount.php';
           </div>
           <div class="evaluation-progress-stat submissions">
             <strong id="evaluationSubmissionCount">0</strong>
-            <span>Submissions</span>
+            <span>Completed Students</span>
           </div>
           <div class="evaluation-progress-stat pending">
             <strong id="evaluationPendingCount">0</strong>
-            <span>Pending</span>
+            <span>Pending Students</span>
           </div>
         </div>
         <div class="progress-list">
           <div class="progress-item">
             <div class="progress-label-row">
-              <span>Submitted Evaluations</span>
-              <small id="evaluationProgressText">No submissions yet</small>
+              <span>Students Who Finished</span>
+              <small id="evaluationProgressText">No completed students yet</small>
             </div>
             <div class="progress-track"><div id="evaluationProgressFill" class="progress-fill submitted" style="width:0%;"></div></div>
           </div>
@@ -1365,13 +1372,13 @@ include 'totalstudents_dashcount.php';
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="academic-year-search" placeholder="Search academic year...">
         </div>
-        <div class="program-filter-wrapper">
+        <div class="program-filter-wrapper academic-year-select-wrapper">
           <i class="ph ph-calendar-blank"></i>
           <select id="academic-year-filter" class="program-dropdown">
-            <option value="">All Academic Years</option>
+            <option value="">Academic Year</option>
           </select>
         </div>
-        <div class="program-filter-wrapper">
+        <div class="program-filter-wrapper semester-select-wrapper">
           <i class="ph ph-calendar"></i>
           <select id="semester-filter" class="program-dropdown">
             <option value="">All Semesters</option>
@@ -1407,9 +1414,8 @@ include 'totalstudents_dashcount.php';
         </thead>
         <tbody id="academicYearTableBody">
           <tr>
-            <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
-              <i class="ph ph-calendar-blank" style="font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5;"></i>
-              No academic years added yet. Click "Add New" to get started.
+            <td colspan="4" class="admin-empty-state">
+              No academic years have been added yet.
             </td>
           </tr>
         </tbody>
@@ -1458,7 +1464,7 @@ include 'totalstudents_dashcount.php';
         <div class="program-filter-wrapper">
           <i class="ph ph-calendar-blank"></i>
           <select id="report-ay-filter" class="program-dropdown">
-            <option value="">All Academic Years</option>
+            <option value="">Academic Year</option>
           </select>
         </div>
         <div class="program-filter-wrapper">
@@ -1739,7 +1745,7 @@ include 'totalstudents_dashcount.php';
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     display: none;
     z-index: 9999;
-    font-family: sans-serif;
+    font-family: Inter, Arial, Helvetica, sans-serif;
     font-size: 14px;
 "></div>
 
@@ -1846,6 +1852,23 @@ include 'totalstudents_dashcount.php';
           <div class="feedback-loading">Loading feedback...</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Evaluation Period Confirmation Modal -->
+<div id="periodConfirmationModal" class="period-confirmation-overlay" role="dialog" aria-modal="true" aria-labelledby="periodConfirmationTitle" aria-describedby="periodConfirmationMessage" hidden>
+  <div class="period-confirmation-box">
+    <div class="period-confirmation-icon" aria-hidden="true">
+      <i class="ph ph-calendar-check"></i>
+    </div>
+    <h3 id="periodConfirmationTitle">Confirm evaluation period</h3>
+    <p id="periodConfirmationPeriod" class="period-confirmation-period"></p>
+    <p id="periodConfirmationDates" class="period-confirmation-dates"></p>
+    <p id="periodConfirmationMessage" class="period-confirmation-message"></p>
+    <div class="period-confirmation-actions">
+      <button type="button" id="periodConfirmationCancel" class="period-confirmation-cancel">Cancel</button>
+      <button type="button" id="periodConfirmationAccept" class="period-confirmation-accept">Confirm</button>
     </div>
   </div>
 </div>

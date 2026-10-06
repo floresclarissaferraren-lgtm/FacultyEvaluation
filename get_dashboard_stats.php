@@ -35,18 +35,75 @@ try {
     $active_students_result = $conn->query($active_students_query);
     $total_active_students = $active_students_result->fetch_assoc()['total'];
 
-    $expected_evaluations = $active_period_id > 0 ? intval($total_active_students) : 0;
+    $expected_evaluations = 0;
+    $total_evaluations_submitted = 0;
 
-    // Progress is one completed student per active evaluation period, not one evaluation row.
+    // A student is complete only after submitting every assigned evaluation.
     if ($active_period_id > 0) {
-        $evaluation_stmt = $conn->prepare("SELECT COUNT(DISTINCT student_id) as total FROM evaluations WHERE period_id = ?");
+        $evaluation_stmt = $conn->prepare("
+            SELECT
+                COUNT(*) AS expected_students,
+                COALESCE(SUM(student_progress.pending_assignments = 0), 0) AS completed_students
+            FROM (
+                SELECT
+                    st.id,
+                    COUNT(DISTINCT CASE
+                        WHEN ev.id IS NULL THEN CONCAT(cs.faculty_id, ':', cs.subject_id, ':', ac.id)
+                    END) AS pending_assignments
+                FROM add_students st
+                INNER JOIN evaluation_periods ep ON ep.id = ?
+                INNER JOIN add_classes ac
+                    ON ac.period_id = ep.id
+                   AND (
+                       CAST(ac.program_id AS CHAR) = TRIM(st.program)
+                       OR EXISTS (
+                           SELECT 1
+                           FROM add_programs p
+                           WHERE p.id = ac.program_id
+                             AND (
+                                 TRIM(p.program_code) = TRIM(st.program)
+                                 OR TRIM(p.program_name) = TRIM(st.program)
+                             )
+                       )
+                   )
+                   AND (
+                       ac.year_level = st.yearlevel
+                       OR ac.year_level = CONCAT(
+                           st.yearlevel,
+                           CASE st.yearlevel
+                               WHEN '1' THEN 'st Year'
+                               WHEN '2' THEN 'nd Year'
+                               WHEN '3' THEN 'rd Year'
+                               ELSE 'th Year'
+                           END
+                       )
+                   )
+                   AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
+                INNER JOIN class_subjects cs ON cs.class_id = ac.id AND cs.faculty_id > 0
+                INNER JOIN add_faculties f ON f.id = cs.faculty_id
+                INNER JOIN add_subjects s
+                    ON s.id = cs.subject_id
+                   AND LOWER(TRIM(s.semester)) = LOWER(TRIM(ep.semester))
+                LEFT JOIN evaluations ev
+                    ON ev.student_id = st.id
+                   AND ev.faculty_id = cs.faculty_id
+                   AND ev.subject_id = cs.subject_id
+                   AND ev.class_id = ac.id
+                   AND ev.period_id = ep.id
+                WHERE LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
+                GROUP BY st.id
+            ) AS student_progress
+        ");
+        if (!$evaluation_stmt) {
+            throw new Exception('Unable to prepare evaluation progress query.');
+        }
         $evaluation_stmt->bind_param("i", $active_period_id);
         $evaluation_stmt->execute();
         $evaluation_result = $evaluation_stmt->get_result();
-        $total_evaluations_submitted = intval($evaluation_result->fetch_assoc()['total'] ?? 0);
+        $progress = $evaluation_result->fetch_assoc() ?: [];
+        $expected_evaluations = intval($progress['expected_students'] ?? 0);
+        $total_evaluations_submitted = intval($progress['completed_students'] ?? 0);
         $evaluation_stmt->close();
-    } else {
-        $total_evaluations_submitted = 0;
     }
     
     // Get faculty ratings using weighted scores (real-time)
@@ -145,6 +202,8 @@ try {
             'activeStudents' => $total_active_students,
             'activePeriodId' => $active_period_id,
             'expectedEvaluations' => $expected_evaluations,
+            'expectedStudents' => $expected_evaluations,
+            'completedStudents' => $total_evaluations_submitted,
             'totalEvaluationsSubmitted' => $total_evaluations_submitted,
             'pendingEvaluations' => max($expected_evaluations - $total_evaluations_submitted, 0),
             'overallRating' => $overall_rating,

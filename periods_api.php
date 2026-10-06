@@ -161,6 +161,9 @@ if ($action === "status") {
     $activeName = null;
     $activeAcademicYear = null;
     $activeSemester = null;
+    $activeStartDate = null;
+    $activeEndDate = null;
+    $activePeriodStatus = "closed";
     $currentAcademicYear = $settings ? (string)(($settings["display_ay"] ?? "") ?: ($settings["selected_ay"] ?? "")) : "";
     $currentSemester = $settings ? (string)(($settings["display_semester"] ?? "") ?: ($settings["selected_semester"] ?? "")) : "";
     $activeInDuration = false;
@@ -174,6 +177,8 @@ if ($action === "status") {
             $sem = (string)($row["semester"] ?? "");
             $activeAcademicYear = (string)($row["ay"] ?? "");
             $activeSemester = $sem;
+            $activeStartDate = $row["start_date"] ?? null;
+            $activeEndDate = $row["end_date"] ?? null;
             $currentAcademicYear = $activeAcademicYear;
             $currentSemester = $activeSemester;
             $prefix = $sem;
@@ -185,6 +190,15 @@ if ($action === "status") {
                 && !empty($row["end_date"])
                 && $row["start_date"] <= $today
                 && $row["end_date"] >= $today;
+            if (empty($row["start_date"]) || empty($row["end_date"])) {
+                $activePeriodStatus = "setup";
+            } elseif ($row["end_date"] < $today) {
+                $activePeriodStatus = "expired";
+            } elseif ($row["start_date"] > $today) {
+                $activePeriodStatus = "scheduled";
+            } else {
+                $activePeriodStatus = $evaluationOpen ? "open" : "ready";
+            }
         }
     }
     $evaluationOpen = $evaluationOpen && $activePeriodId > 0 && $activeInDuration;
@@ -196,6 +210,9 @@ if ($action === "status") {
         "active_period_name" => $activeName,
         "active_academic_year" => $activeAcademicYear,
         "active_semester" => $activeSemester,
+        "active_start_date" => $activeStartDate ?? null,
+        "active_end_date" => $activeEndDate ?? null,
+        "active_period_status" => $activePeriodStatus,
         "current_academic_year" => $currentAcademicYear !== "" ? $currentAcademicYear : null,
         "current_semester" => $currentSemester !== "" ? $currentSemester : null
     ]);
@@ -209,14 +226,30 @@ if ($action === "list") {
     $res = $conn->query("SELECT id, ay, semester, start_date, end_date, is_active FROM evaluation_periods ORDER BY created_at DESC, id DESC");
     $periods = [];
     if ($res) {
+        $today = todayDate();
         while ($row = $res->fetch_assoc()) {
+            $startDate = $row["start_date"] ?? null;
+            $endDate = $row["end_date"] ?? null;
+            if (empty($startDate) || empty($endDate)) {
+                $status = "setup";
+            } elseif ($endDate < $today) {
+                $status = "expired";
+            } elseif ($startDate > $today) {
+                $status = "scheduled";
+            } elseif (intval($row["is_active"]) === 1) {
+                $status = "open";
+            } else {
+                $status = "ready";
+            }
+
             $periods[] = [
                 "id" => intval($row["id"]),
                 "ay" => $row["ay"],
                 "semester" => $row["semester"],
-                "start_date" => $row["start_date"] ?? null,
-                "end_date" => $row["end_date"] ?? null,
-                "is_active" => intval($row["is_active"]) === 1
+                "start_date" => $startDate,
+                "end_date" => $endDate,
+                "is_active" => intval($row["is_active"]) === 1,
+                "status" => $status
             ];
         }
     }

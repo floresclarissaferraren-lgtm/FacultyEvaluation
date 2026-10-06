@@ -480,11 +480,27 @@ function updateStudentAcademicPeriodDisplay(status) {
 
   academicYearEl.textContent = academicYear || "No active period";
   semesterEl.textContent = semester || "No active period";
-  const periodStatusEl = document.getElementById("studentPeriodStatus");
-  if (periodStatusEl) periodStatusEl.textContent = hasActivePeriod
-    ? (status?.evaluation_open ? "Evaluation Open" : "Evaluation Closed")
-    : "No active period";
-
+  const accessMessage = document.getElementById("evaluation-period-access-message");
+  if (accessMessage) {
+    const evaluationOpen = !!(status && status.success && status.evaluation_open);
+    const startDate = status?.active_start_date;
+    if (status?.active_period_status === "scheduled" && startDate) {
+      const formattedStartDate = new Date(`${startDate}T00:00:00+08:00`).toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "Asia/Manila"
+      });
+      accessMessage.textContent = `Evaluations open on ${formattedStartDate}. You can start evaluating on that date.`;
+      accessMessage.hidden = false;
+    } else if (evaluationOpen) {
+      accessMessage.hidden = true;
+      accessMessage.textContent = "";
+    } else {
+      accessMessage.hidden = true;
+      accessMessage.textContent = "";
+    }
+  }
   // Update Evaluate Now button state in real-time
   const evaluateBtn = document.querySelector(".evaluate-now-btn");
   if (evaluateBtn) {
@@ -539,7 +555,10 @@ async function showEvaluateSection() {
     const status = await statusRes.json();
     updateStudentAcademicPeriodDisplay(status);
     if (!status || !status.success || !status.evaluation_open) {
-      showGlobalNotification("Evaluation is closed", "warning");
+      const message = status?.active_period_status === "scheduled" && status.active_start_date
+        ? `Evaluation starts on ${status.active_start_date}.`
+        : "Evaluation is closed";
+      showGlobalNotification(message, "warning");
       return;
     }
   } catch (_) {
@@ -738,14 +757,16 @@ function renderFacultyEmptyState(title, message, icon = "ph-chalkboard-teacher")
 
 function updateEvaluationSummary(pendingCount, evaluatedCount) {
   const total = pendingCount + evaluatedCount;
-  const percent = total > 0 ? Math.round((evaluatedCount / total) * 100) : 100;
+  const percent = total > 0 ? Math.round((evaluatedCount / total) * 100) : 0;
   const percentEl = document.getElementById("summaryPercent");
   const totalEl = document.getElementById("summaryTotal");
   const evaluatedEl = document.getElementById("summaryEvaluated");
   const pendingEl = document.getElementById("summaryPending");
   const progressEl = document.querySelector(".summary-progress");
+  const progressLabel = progressEl?.querySelector("span");
 
-  if (percentEl) percentEl.textContent = `${percent}%`;
+  if (percentEl) percentEl.textContent = total > 0 ? `${percent}%` : "—";
+  if (progressLabel) progressLabel.textContent = total > 0 ? "Complete" : "No subjects";
   if (progressEl) progressEl.style.setProperty("--progress", percent);
   if (totalEl) totalEl.textContent = total;
   if (evaluatedEl) evaluatedEl.textContent = evaluatedCount;
