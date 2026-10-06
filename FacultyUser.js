@@ -470,16 +470,36 @@ function togglePassword(id, icon) {
 
 function updateStudentAcademicPeriodDisplay(status) {
   console.log("updateStudentAcademicPeriodDisplay called with:", status);
-  const academicYearEl = document.getElementById("studentAcademicYear");
-  const semesterEl = document.getElementById("studentAcademicSemester");
-  if (!academicYearEl || !semesterEl) return;
+  const evaluationStatusEl = document.getElementById("evaluation-period-status");
+  if (evaluationStatusEl) {
+    evaluationStatusEl.classList.remove("is-checking", "is-open", "is-closed", "is-unavailable");
+    if (!status || !status.success) {
+      evaluationStatusEl.classList.add("is-unavailable");
+      evaluationStatusEl.innerHTML = '<i class="ph ph-warning-circle" aria-hidden="true"></i> Status unavailable';
+    } else if (status.evaluation_open) {
+      evaluationStatusEl.classList.add("is-open");
+      evaluationStatusEl.innerHTML = '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation Open';
+    } else {
+      evaluationStatusEl.classList.add("is-closed");
+      evaluationStatusEl.innerHTML = '<i class="ph ph-lock" aria-hidden="true"></i> Evaluation Closed';
+    }
+  }
 
-  const hasActivePeriod = Number(status?.active_period_id || 0) > 0;
-  const academicYear = hasActivePeriod ? (status?.active_academic_year || "").trim() : "";
-  const semester = hasActivePeriod ? (status?.active_semester || "").trim() : "";
+  const academicPeriodEl = document.getElementById("studentAcademicPeriod");
+  const academicYear = String(status?.active_academic_year || status?.current_academic_year || "").trim();
+  const semester = String(status?.active_semester || status?.current_semester || "").trim();
+  const shortSemester = semester.replace(/\s+semester$/i, "").trim();
+  if (academicPeriodEl) {
+    const hasAcademicPeriod = !!(academicYear && shortSemester);
+    academicPeriodEl.hidden = !hasAcademicPeriod;
+    academicPeriodEl.dataset.academicYear = hasAcademicPeriod ? academicYear : "";
+    academicPeriodEl.dataset.semester = hasAcademicPeriod ? shortSemester : "";
+    const periodLabel = academicPeriodEl.querySelector(".welcome-period-label");
+    if (periodLabel) {
+      periodLabel.textContent = hasAcademicPeriod ? `${shortSemester} | ${academicYear}` : "";
+    }
+  }
 
-  academicYearEl.textContent = academicYear || "No active period";
-  semesterEl.textContent = semester || "No active period";
   const accessMessage = document.getElementById("evaluation-period-access-message");
   if (accessMessage) {
     const evaluationOpen = !!(status && status.success && status.evaluation_open);
@@ -667,9 +687,10 @@ async function loadStudentFacultyCards() {
     const evaluatedCount = assignments.filter(faculty => Number(faculty.evaluation_id || 0) > 0).length;
     const pendingCount = assignments.length - evaluatedCount;
     updateEvaluationSummary(pendingCount, evaluatedCount);
-    const academicYear = document.getElementById("studentAcademicYear")?.textContent || "";
-    const semester = document.getElementById("studentAcademicSemester")?.textContent || "";
-    const periodLabel = academicYear !== "No active period" && semester !== "No active period"
+    const academicPeriodEl = document.getElementById("studentAcademicPeriod");
+    const academicYear = academicPeriodEl?.dataset.academicYear || "";
+    const semester = academicPeriodEl?.dataset.semester || "";
+    const periodLabel = academicYear && semester
       ? `${academicYear} - ${semester}`
       : "";
     const periodLabelEl = document.getElementById("evaluationPeriodLabel");

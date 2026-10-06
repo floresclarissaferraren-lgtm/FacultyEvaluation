@@ -199,19 +199,20 @@ $conn->close();
     <div class="student-dashboard-skeleton" aria-hidden="true">
       <div class="student-dashboard-skeleton-avatar"></div>
       <div class="student-dashboard-skeleton-content">
-        <span class="student-dashboard-skeleton-line eyebrow"></span>
-        <span class="student-dashboard-skeleton-line name"></span>
-        <div class="student-dashboard-skeleton-info-grid">
-          <div class="student-dashboard-skeleton-info"><span></span><span></span></div>
-          <div class="student-dashboard-skeleton-info"><span></span><span></span></div>
-          <div class="student-dashboard-skeleton-info"><span></span><span></span></div>
+        <div class="student-dashboard-skeleton-header">
+          <span class="student-dashboard-skeleton-line name"></span>
+          <span class="student-dashboard-skeleton-period"></span>
         </div>
         <div class="student-dashboard-skeleton-copy">
-          <span></span><span></span><span></span>
+          <span></span><span></span>
         </div>
         <span class="student-dashboard-skeleton-button"></span>
       </div>
     </div>
+    <span id="evaluation-period-status" class="evaluation-period-status is-checking" role="status" aria-live="polite">
+      <i class="ph ph-circle-notch" aria-hidden="true"></i>
+      Checking evaluation status
+    </span>
     <div class="welcome-content">
       <div class="welcome-left">
         <div class="avatar-section">
@@ -227,31 +228,13 @@ $conn->close();
       
       <div class="welcome-right">
         <div class="welcome-header-inline">
-          <h2 class="welcome-title">WELCOME BACK</h2>
-          <h1 class="student-name-title"><?php echo htmlspecialchars($studentName ?: 'Student'); ?></h1>
-        </div>
-        
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">Academic Year:</span>
-            <span class="info-value" id="studentAcademicYear">No active period</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Semester:</span>
-            <span class="info-value" id="studentAcademicSemester">No active period</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Year Level:</span>
-            <span class="info-value"><?php
-              $displayYearLevel = strtolower(trim((string)$studentYearLevel)) === 'irregular'
-                ? 'Irregular'
-                : ($studentYearLevel ?: 'N/A');
-              echo htmlspecialchars($studentProgramCode ?? '') . ' - ' . htmlspecialchars($displayYearLevel);
-              if (!empty($studentSection) && $studentYearLevel !== 'irregular') {
-                echo '-' . htmlspecialchars($studentSection);
-              }
-            ?></span>
-          </div>
+          <h1 class="student-name-title">Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?>!</h1>
+          <span id="studentAcademicPeriod" class="welcome-period-subtitle" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M3 5.75A1.75 1.75 0 0 1 4.75 4h5.086c.464 0 .91.184 1.238.512l1.414 1.414c.14.14.33.219.528.219h6.234A1.75 1.75 0 0 1 21 7.895v10.355A1.75 1.75 0 0 1 19.25 20H4.75A1.75 1.75 0 0 1 3 18.25z"/>
+            </svg>
+            <span class="welcome-period-label"></span>
+          </span>
         </div>
 
         <p id="evaluation-period-access-message" class="evaluation-period-access-message" role="status" aria-live="polite" hidden></p>
@@ -323,8 +306,3 @@ $conn->close();
 <script src="FacultyUser.js?v=<?=time()?>"></script>
 </body>
 </html>
-
-
-
-
-
