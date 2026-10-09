@@ -219,6 +219,57 @@ if ($action === "status") {
     exit;
 }
 
+if ($action === "faculty_periods") {
+    if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "faculty" || !isset($_SESSION["id"])) {
+        echo json_encode(["success" => false, "message" => "Unauthorized"]);
+        exit;
+    }
+
+    $facultyId = intval($_SESSION["id"]);
+    $stmt = $conn->prepare("
+        SELECT p.id, p.ay, p.semester, p.start_date, p.end_date,
+               COUNT(DISTINCT e.id) AS response_count
+        FROM evaluation_periods p
+        INNER JOIN evaluations e
+            ON e.faculty_id = ?
+           AND (
+                e.period_id = p.id
+                OR (
+                    e.period_id IS NULL
+                    AND p.start_date IS NOT NULL
+                    AND p.end_date IS NOT NULL
+                    AND DATE(e.created_at) BETWEEN p.start_date AND p.end_date
+                )
+           )
+        WHERE p.is_active = 0
+        GROUP BY p.id, p.ay, p.semester, p.start_date, p.end_date
+        HAVING COUNT(DISTINCT e.id) > 0
+        ORDER BY p.end_date DESC, p.id DESC
+    ");
+    $stmt->bind_param("i", $facultyId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $periods = [];
+    while ($row = $result->fetch_assoc()) {
+        $periods[] = [
+            "id" => intval($row["id"]),
+            "academic_year" => $row["ay"],
+            "semester" => $row["semester"],
+            "start_date" => $row["start_date"],
+            "end_date" => $row["end_date"],
+            "response_count" => intval($row["response_count"])
+        ];
+    }
+    $stmt->close();
+
+    echo json_encode([
+        "success" => true,
+        "periods" => $periods,
+        "default_period_id" => $periods[0]["id"] ?? null
+    ]);
+    exit;
+}
+
 // Admin-only actions beyond this point.
 requireAdmin();
 

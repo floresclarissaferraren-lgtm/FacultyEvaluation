@@ -47,12 +47,15 @@ $totalResponses = cleanText($data['totalResponses'] ?? '0');
 $feedback      = cleanText($data['feedback'] ?? 'No feedback available');
 $evaluationDetails = is_array($data['evaluationDetails'] ?? null) ? $data['evaluationDetails'] : [];
 $allFeedback = cleanText($data['allFeedback'] ?? ($data['feedback'] ?? 'No feedback available'));
+$evaluationPeriod = cleanText($data['evaluationPeriod'] ?? '');
+$academicYear = cleanText($data['academicYear'] ?? '');
+$semester = cleanText($data['semester'] ?? '');
+$programFilter = cleanText($data['programFilter'] ?? '');
 $subjectLabel = cleanText($data['subjectLabel'] ?? '');
-$classLabel = cleanText($data['classLabel'] ?? '');
-$subjectContext = trim($subjectLabel . ($classLabel !== '' ? " ({$classLabel})" : ''));
+$subjectContext = $subjectLabel;
 
-// Check if this is admin request (empty feedback indicates admin)
-$isAdminRequest = (empty($data['feedback']) || $data['feedback'] === '');
+$isFacultyReport = ($data['reportType'] ?? '') === 'faculty';
+$isAdminRequest = !$isFacultyReport && (empty($data['feedback']) || $data['feedback'] === '');
 
 // Get faculty_id from add_faculties table
 $facultyIdDisplay = $facultyId; // Default to original ID
@@ -134,131 +137,109 @@ $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
 // =====================
 $boxX = 15; // Left margin
 $boxWidth = 180; // Full width minus margins
-$boxHeight = $subjectContext !== '' ? 55 : 45;
+$detailRows = [
+    ['Name:', $facultyName],
+    ['Faculty ID:', $facultyIdDisplay],
+];
+if ($academicYear !== '') {
+    $detailRows[] = ['Academic Year:', $academicYear];
+}
+if ($semester !== '') {
+    $detailRows[] = ['Semester:', $semester];
+}
+if ($evaluationPeriod !== '') {
+    $detailRows[] = ['Evaluation Period:', $evaluationPeriod];
+}
+if ($subjectContext !== '') {
+    $detailRows[] = ['Subject:', $subjectContext];
+}
+if ($programFilter !== '') {
+    $detailRows[] = ['Program:', $programFilter];
+}
+$detailRows[] = ['Overall Rating:', $overallRating . ' / 5.00'];
+$detailRows[] = ['Total Responses:', $totalResponses];
+$boxHeight = 10 + (count($detailRows) * 10);
 $boxY = 60;
 
 $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
 $pdf->SetFillColor(248, 248, 248); // Light background
 $pdf->Rect($boxX, $boxY, $boxWidth, $boxHeight, 'DF');
 
-// Position content inside box
 $pdf->SetXY($boxX + 10, $boxY + 5);
-
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(60, 10, 'Name:', 0, 0);
-$pdf->SetFont('Arial', '', 12);
-$pdf->Cell(0, 10, $facultyName, 0, 1);
-
-$pdf->SetX($boxX + 10);
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(60, 10, 'Faculty ID:', 0, 0);
-$pdf->SetFont('Arial', '', 12);
-$pdf->Cell(0, 10, $facultyIdDisplay, 0, 1);
-
-$pdf->SetX($boxX + 10);
-$pdf->SetFont('Arial', 'B', 12);
-if ($subjectContext !== '') {
-    $pdf->Cell(60, 10, 'Subject / Class:', 0, 0);
-    $pdf->SetFont('Arial', '', 12);
-    $pdf->Cell(0, 10, $subjectContext, 0, 1);
+foreach ($detailRows as [$label, $value]) {
     $pdf->SetX($boxX + 10);
-    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->Cell(45, 10, cleanText($label), 0, 0);
+    $pdf->SetFont('Arial', '', 10);
+    $pdf->Cell(125, 10, $value, 0, 1);
 }
 
-$pdf->SetX($boxX + 10);
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(60, 10, 'Overall Ratings:', 0, 0);
-$pdf->SetFont('Arial', '', 12);
-$pdf->Cell(0, 10, $overallRating . ' / 5.00', 0, 1);
-
-$pdf->SetX($boxX + 10);
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(60, 10, 'Total Student Responses:', 0, 0);
-$pdf->SetFont('Arial', '', 12);
-$pdf->Cell(0, 10, $totalResponses, 0, 1);
-
 // =====================
-// EVALUATION DETAILS TABLE (admin request)
+// CATEGORY DETAILS
 // =====================
-if ($isAdminRequest) {
+if (!empty($evaluationDetails)) {
     $pdf->Ln(12);
     $pdf->SetFont('Arial', 'B', 12);
     $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
     $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(0, 9, '  Evaluation Details', 0, 1, 'L', true);
+    $pdf->Cell(0, 9, '  Category Breakdown', 0, 1, 'L', true);
 
-    $categoryWidth = 85;
-    $ratingWidth = 105;
-    $tableX = 10;
+    $categoryWidth = 75;
+    $ratingWidth = 35;
+    $responsesWidth = 32;
+    $weightWidth = 38;
+    $tableX = 15;
 
     $pdf->SetX($tableX);
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->SetFillColor(30, 64, 175);
     $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
     $pdf->Cell($categoryWidth, 8, 'Category', 1, 0, 'C', true);
-    $pdf->Cell($ratingWidth, 8, 'Overall Rating', 1, 1, 'C', true);
+    $pdf->Cell($ratingWidth, 8, 'Average', 1, 0, 'C', true);
+    $pdf->Cell($responsesWidth, 8, 'Responses', 1, 0, 'C', true);
+    $pdf->Cell($weightWidth, 8, 'Weight', 1, 1, 'C', true);
 
     $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
     $pdf->SetFont('Arial', '', 9);
 
-    if (empty($evaluationDetails)) {
+    foreach ($evaluationDetails as $detail) {
+        $category = cleanText($detail['category'] ?? 'N/A');
+        $rating = cleanText($detail['average_score'] ?? $detail['overall_rating'] ?? '0.00');
+        $responses = cleanText((string)($detail['responses'] ?? '0'));
+        $weight = number_format((float)($detail['normalised_weight'] ?? 0), 2) . '%';
+
         $pdf->SetX($tableX);
-        $pdf->Cell($categoryWidth + $ratingWidth + $feedbackWidth, 10, 'No evaluation details available', 1, 1, 'C');
-    } else {
-        foreach ($evaluationDetails as $detail) {
-            $category = cleanText($detail['category'] ?? 'N/A');
-            $rating = cleanText($detail['average_score'] ?? $detail['overall_rating'] ?? '0.00');
-
-            $pdf->SetX($tableX);
-            $pdf->SetFont('Arial', '', 9);
-            $pdf->Cell($categoryWidth, 10, $category, 1, 0, 'L');
-            $pdf->Cell($ratingWidth, 10, $rating . ' / 5.00', 1, 1, 'C');
-        }
-
-        $feedbackText = cleanText($allFeedback);
-        if ($feedbackText !== '') {
-            $pdf->Ln(6);
-            $pdf->SetFont('Arial', 'B', 10);
-            $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
-            $pdf->SetTextColor(255, 255, 255);
-            $pdf->Cell(0, 8, '  Feedback', 0, 1, 'L', true);
-
-            $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-            $pdf->SetFont('Arial', '', 9);
-            $pdf->SetXY(15, $pdf->GetY() + 3);
-            $pdf->MultiCell(180, 5, $feedbackText, 0, 'L');
-        }
+        $pdf->Cell($categoryWidth, 9, $category, 1, 0, 'L');
+        $pdf->Cell($ratingWidth, 9, $rating . ' / 5.00', 1, 0, 'C');
+        $pdf->Cell($responsesWidth, 9, $responses, 1, 0, 'C');
+        $pdf->Cell($weightWidth, 9, cleanText($weight), 1, 1, 'C');
     }
+} elseif ($isAdminRequest) {
+    $pdf->Ln(12);
+    $pdf->SetFont('Arial', '', 10);
+    $pdf->Cell(0, 10, 'No evaluation details available', 0, 1, 'C');
 }
 
-// =====================
-// FEEDBACK SECTION (only for instructor requests)
-// =====================
-if (!$isAdminRequest) {
-    $pdf->Ln(10);
-
-    // Feedback header with background
-    $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
-    $pdf->SetTextColor(255, 255, 255);
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell(0, 10, '  Feedback Comments', 0, 1, 'L', true);
-
-    // Reset for feedback content
-    $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-    $pdf->SetFont('Arial', '', 11);
-
-    // Feedback box with border
-    $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
-    $pdf->SetFillColor(255, 255, 255);
-    $pdf->Rect(10, $pdf->GetY(), 190, 40, 'DF');
-
-    $pdf->MultiCell(
-        0,
-        6,
-        $feedback,
-        0
-    );
+if ($isAdminRequest) {
+    $feedbackText = cleanText($allFeedback);
+} else {
+    $feedbackText = cleanText($feedback);
 }
+if ($feedbackText === '') {
+    $feedbackText = 'No feedback available';
+}
+
+$pdf->Ln(10);
+
+$pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(0, 10, '  Feedback Comments', 0, 1, 'L', true);
+
+$pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+$pdf->SetFont('Arial', '', 11);
+$pdf->SetXY(15, $pdf->GetY() + 3);
+$pdf->MultiCell(180, 6, $feedbackText, 0, 'L');
 
 // =====================
 // OUTPUT PDF
@@ -281,4 +262,3 @@ if ($output === false || $output === '') {
 
 echo $output;
 exit;
-

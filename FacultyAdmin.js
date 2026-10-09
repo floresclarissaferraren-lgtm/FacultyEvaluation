@@ -4416,7 +4416,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (initialsElement) initialsElement.textContent = getFacultyInitials(data.data.name);
           if (idElement) {
             const subjectSuffix = data.data.subject_label
-              ? ` | ${data.data.subject_label}${data.data.class_label ? ` (${data.data.class_label})` : ''}`
+              ? ` | ${data.data.subject_label}`
               : '';
             idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}${subjectSuffix}`;
           }
@@ -4508,7 +4508,6 @@ document.addEventListener("DOMContentLoaded", () => {
       facultyName: currentFacultyData.name,
       facultyId: currentFacultyData.id, // Use database ID, not faculty_id
       subjectLabel: currentFacultyData.subject_label || '',
-      classLabel: currentFacultyData.class_label || '',
       evaluationPeriod: currentFacultyData.evaluation_period || '',
       overallRating: currentFacultyData.overall_rating,
       totalResponses: currentFacultyData.total_responses,

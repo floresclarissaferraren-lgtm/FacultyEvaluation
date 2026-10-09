@@ -1562,7 +1562,6 @@ function displayEvaluationHistory(history) {
     : history.map(item => {
       const facultyName = escapeHistoryHtml(item.faculty_name);
       const subjectName = escapeHistoryHtml(item.subject_label || item.subject_name || "");
-      const className = escapeHistoryHtml(item.class_label || "");
       const initial = facultyName.trim().charAt(0).toUpperCase() || "F";
       const label = escapeHistoryHtml(normalizeRatingLabel(item.rating_label));
       const ratingClass = label.toLowerCase().replace(/\s+/g, "-");
@@ -1577,7 +1576,7 @@ function displayEvaluationHistory(history) {
               <div class="history-avatar">${initial}</div>
               <div class="history-faculty-info">
                 <div class="faculty-name">${facultyName}</div>
-                ${subjectName ? `<div class="history-date">${subjectName}${className ? ` (${className})` : ""}</div>` : ""}
+                ${subjectName ? `<div class="history-date">${subjectName}</div>` : ""}
                 <div class="history-date">${date}</div>
               </div>
             </div>

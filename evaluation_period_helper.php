@@ -252,6 +252,13 @@ function handleExpiredPeriodClosing(mysqli $conn, int $periodId, string $ay, str
  * Returns structured evaluation statistics for a single faculty member, filtered to a specific period.
  */
 function helperGetFacultyPerSubjectReportData(mysqli $conn, int $faculty_id, int $period_id, string $facultyName, string $facultyStrId): ?array {
+    $periodStmt = $conn->prepare("SELECT ay, semester, start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
+    $periodStmt->bind_param("i", $period_id);
+    $periodStmt->execute();
+    $periodInfo = $periodStmt->get_result()->fetch_assoc();
+    $periodStmt->close();
+    if (!$periodInfo) return null;
+
     $ratingLabelFn = function(float $score): string {
         if ($score <= 0)   return 'No Responses';
         if ($score >= 4.5) return 'Outstanding';
@@ -276,21 +283,17 @@ function helperGetFacultyPerSubjectReportData(mysqli $conn, int $faculty_id, int
             s.id                                                 AS subject_id,
             s.subject_code,
             s.subject_desc,
-            s.year_level                                         AS subject_year,
             s.semester,
             p.id                                                 AS program_id,
             p.program_code,
             p.program_name,
             e.class_id,
-            ac.year_level                                        AS class_year,
-            ac.block                                             AS class_block,
             COUNT(DISTINCT e.id)                                 AS eval_count,
             MIN(DATE(e.created_at))                              AS date_from,
             MAX(DATE(e.created_at))                              AS date_to
         FROM evaluations e
         INNER JOIN add_subjects s  ON s.id  = e.subject_id
         INNER JOIN add_programs p  ON p.id  = s.program_id
-        LEFT  JOIN add_classes  ac ON ac.id = e.class_id
         WHERE e.faculty_id = ?
           AND e.period_id = ?
           AND e.subject_id > 0
@@ -298,14 +301,11 @@ function helperGetFacultyPerSubjectReportData(mysqli $conn, int $faculty_id, int
             s.id,
             s.subject_code,
             s.subject_desc,
-            s.year_level,
             s.semester,
             p.id,
             p.program_code,
             p.program_name,
-            e.class_id,
-            ac.year_level,
-            ac.block
+            e.class_id
         ORDER BY p.program_name ASC, s.subject_code ASC
     ";
 
@@ -365,22 +365,11 @@ function helperGetFacultyPerSubjectReportData(mysqli $conn, int $faculty_id, int
             $periodText = $start === $end ? $start : "$start – $end";
         }
 
-        $classLabel = '';
-        if (!empty($row['class_year'])) {
-            $classLabel = $row['class_year'];
-            if (!empty($row['class_block'])) {
-                $classLabel .= ' / ' . $row['class_block'];
-            }
-        }
-
         $departments[$prog_id]['subjects'][] = [
             'subject_id'      => $subj_id,
             'subject_code'    => $row['subject_code'],
             'subject_desc'    => $row['subject_desc'],
-            'year_level'      => $row['subject_year'],
             'semester'        => $row['semester'],
-            'class_id'        => $class_id,
-            'class_label'     => $classLabel,
             'eval_count'      => $eval_cnt,
             'avg_rating'      => number_format($avg, 2),
             'percentage'      => number_format(($avg / 5) * 100, 2),
@@ -440,6 +429,7 @@ function helperGetFacultyPerSubjectReportData(mysqli $conn, int $faculty_id, int
     return [
         'facultyName' => $facultyName,
         'facultyId'   => $facultyStrId,
+        'period'      => $periodInfo,
         'departments'  => $departments,
         'overall'      => [
             'avg_rating'      => number_format($overallScore, 2),
@@ -461,6 +451,7 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
     try {
         $facultyName = iconv('UTF-8', 'windows-1252//TRANSLIT', $data['facultyName'] ?? 'N/A');
         $facultyId   = iconv('UTF-8', 'windows-1252//TRANSLIT', $data['facultyId'] ?? 'N/A');
+        $period      = $data['period'] ?? [];
         $departments = $data['departments']    ?? [];
         $overall     = $data['overall']        ?? [];
 
@@ -518,14 +509,27 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
         // Faculty Info Box
         $pdf->SetFillColor($LIGHT[0], $LIGHT[1], $LIGHT[2]);
         $pdf->SetDrawColor($GRAY[0], $GRAY[1], $GRAY[2]);
-        $pdf->Rect(10, $pdf->GetY(), 190, 26, 'DF');
+        $infoY = $pdf->GetY();
+        $pdf->Rect(10, $infoY, 190, 43, 'DF');
         $pdf->SetXY(14, $pdf->GetY() + 4);
         $pdf->SetFont('Arial', 'B', 11); $pdf->Cell(40, 7, 'Faculty Name:', 0, 0);
         $pdf->SetFont('Arial', '',  11); $pdf->Cell(0,  7, $facultyName, 0, 1);
         $pdf->SetX(14);
         $pdf->SetFont('Arial', 'B', 11); $pdf->Cell(40, 7, 'Faculty ID:', 0, 0);
         $pdf->SetFont('Arial', '',  11); $pdf->Cell(0,  7, $facultyId, 0, 1);
-        $pdf->Ln(6);
+        $pdf->SetX(14);
+        $pdf->SetFont('Arial', 'B', 11); $pdf->Cell(40, 7, 'Academic Year:', 0, 0);
+        $pdf->SetFont('Arial', '',  11); $pdf->Cell(0,  7, $ct($period['ay'] ?? 'Not specified'), 0, 1);
+        $pdf->SetX(14);
+        $pdf->SetFont('Arial', 'B', 11); $pdf->Cell(40, 7, 'Semester:', 0, 0);
+        $pdf->SetFont('Arial', '',  11); $pdf->Cell(0,  7, $ct($period['semester'] ?? 'Not specified'), 0, 1);
+        $pdf->SetX(14);
+        $pdf->SetFont('Arial', 'B', 11); $pdf->Cell(40, 7, 'Evaluation Dates:', 0, 0);
+        $dates = !empty($period['start_date']) && !empty($period['end_date'])
+            ? date('F j, Y', strtotime($period['start_date'])) . ' - ' . date('F j, Y', strtotime($period['end_date']))
+            : 'Not specified';
+        $pdf->SetFont('Arial', '',  11); $pdf->Cell(0,  7, $ct($dates), 0, 1);
+        $pdf->SetY($infoY + 48);
 
         // Overall rating
         $drawSectionBar($pdf, 'OVERALL FACULTY RATING  (All Subjects Combined)', $BLUE);
@@ -592,8 +596,7 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
 
                 $code  = $ct($subj['subject_code'] ?? '');
                 $desc  = $ct($subj['subject_desc'] ?? '');
-                $cls   = $ct($subj['class_label']  ?? '');
-                $title = $code . ($desc !== '' ? " – $desc" : '') . ($cls !== '' ? "  [$cls]" : '');
+                $title = $code . ($desc !== '' ? " – $desc" : '');
 
                 $pdf->SetFillColor(220, 235, 255);
                 $pdf->SetTextColor(20, 40, 100);
@@ -678,4 +681,3 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
         return false;
     }
 }
-

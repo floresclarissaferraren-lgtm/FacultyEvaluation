@@ -268,9 +268,9 @@ function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null
  * @param string $program_name  Full program name from add_programs.program_name
  * @return float
  */
-function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null): float
+function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): float
 {
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
     $sql = "
         SELECT
             c.id          AS cat_id,
@@ -282,18 +282,22 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
                                      {$context['sql']}
-        LEFT JOIN add_students s     ON s.id = e.student_id
-        LEFT JOIN add_programs p     ON (TRIM(p.program_code) = TRIM(s.program)
-                                     OR CAST(p.id AS CHAR) = TRIM(s.program))
-                                     AND p.program_name = ?
-        WHERE e.id IS NULL OR p.program_name = ?
+                                     AND EXISTS (
+                                         SELECT 1
+                                         FROM add_students s
+                                         INNER JOIN add_programs p
+                                             ON TRIM(p.program_code) = TRIM(s.program)
+                                             OR CAST(p.id AS CHAR) = TRIM(s.program)
+                                         WHERE s.id = e.student_id
+                                           AND p.program_name = ?
+                                     )
         GROUP BY c.id, c.weight
         ORDER BY c.section_number ASC
     ";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return 0.00;
-    bindDynamicParams($stmt, 'i' . $context['types'] . 'ss', array_merge([$faculty_id], $context['params'], [$program_name, $program_name]));
+    bindDynamicParams($stmt, 'i' . $context['types'] . 's', array_merge([$faculty_id], $context['params'], [$program_name]));
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
@@ -334,32 +338,38 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
  * @param string $program_name  Full program name from add_programs.program_name
  * @return array
  */
-function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null): array
+function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): array
 {
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id);
+    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
     $sql = "
         SELECT
             c.id                                                                    AS cat_id,
             c.category_name,
             COALESCE(c.weight, 0)                                                  AS weight,
-            COUNT(DISTINCT CASE WHEN e.id IS NOT NULL AND p.program_name = ? THEN e.id END)       AS responses,
-            COALESCE(AVG(CASE WHEN e.id IS NOT NULL AND p.program_name = ? THEN ea.rating END), 0) AS avg_rating
+            COUNT(DISTINCT CASE WHEN e.id IS NOT NULL THEN e.id END)               AS responses,
+            COALESCE(AVG(CASE WHEN e.id IS NOT NULL THEN ea.rating END), 0)        AS avg_rating
         FROM add_categories c
         LEFT JOIN add_questions q    ON q.category_id = c.id
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
                                      {$context['sql']}
-        LEFT JOIN add_students s     ON s.id = e.student_id
-        LEFT JOIN add_programs p     ON TRIM(p.program_code) = TRIM(s.program)
-                                     OR CAST(p.id AS CHAR)   = TRIM(s.program)
+                                     AND EXISTS (
+                                         SELECT 1
+                                         FROM add_students s
+                                         INNER JOIN add_programs p
+                                             ON TRIM(p.program_code) = TRIM(s.program)
+                                             OR CAST(p.id AS CHAR) = TRIM(s.program)
+                                         WHERE s.id = e.student_id
+                                           AND p.program_name = ?
+                                     )
         GROUP BY c.id, c.category_name, c.weight
         ORDER BY c.section_number ASC
     ";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) return [];
-    bindDynamicParams($stmt, 'ssi' . $context['types'], array_merge([$program_name, $program_name, $faculty_id], $context['params']));
+    bindDynamicParams($stmt, 'i' . $context['types'] . 's', array_merge([$faculty_id], $context['params'], [$program_name]));
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();

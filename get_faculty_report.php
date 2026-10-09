@@ -175,23 +175,20 @@ try {
     $overallStatusClass = getRatingClass($overallScore);
 
     $subjectLabel = '';
-    $classLabel = '';
     if ($subject_id > 0) {
         $subjectStmt = $conn->prepare("
-            SELECT s.subject_code, s.subject_desc, ac.year_level, ac.block
+            SELECT s.subject_code, s.subject_desc
             FROM add_subjects s
-            LEFT JOIN add_classes ac ON ac.id = ?
             WHERE s.id = ?
             LIMIT 1
         ");
         if ($subjectStmt) {
-            $subjectStmt->bind_param("ii", $classFilter, $subject_id);
+            $subjectStmt->bind_param("i", $subject_id);
             $subjectStmt->execute();
             $subjectRow = $subjectStmt->get_result()->fetch_assoc();
             $subjectStmt->close();
             if ($subjectRow) {
                 $subjectLabel = trim(($subjectRow['subject_code'] ?? '') . (($subjectRow['subject_desc'] ?? '') !== '' ? ' - ' . $subjectRow['subject_desc'] : ''));
-                $classLabel = trim(($subjectRow['year_level'] ?? '') . (($subjectRow['block'] ?? '') !== '' ? ' / ' . $subjectRow['block'] : ''));
             }
         }
     }
@@ -204,7 +201,6 @@ try {
         'subject_id'          => $subject_id,
         'class_id'            => $classFilter ?? 0,
         'subject_label'       => $subjectLabel,
-        'class_label'         => $classLabel,
         'overall_rating'      => $overallScore > 0 ? number_format($overallScore, 2) : '0.00',
         'percentage_score'    => $overallScore > 0 ? number_format(($overallScore / 5) * 100, 2) : '0.00',
         'total_responses'     => $totalResponses,

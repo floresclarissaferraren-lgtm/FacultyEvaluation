@@ -53,20 +53,73 @@ ensureEvaluationsSchema($conn);
 
 // Get optional program filter
 $program_filter = isset($_GET['program']) ? trim($_GET['program']) : '';
+$hasProgramFilter = $program_filter !== '' && $program_filter !== 'all';
+$period_id = isset($_GET['period_id']) ? intval($_GET['period_id']) : 0;
+if ($period_id <= 0) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Evaluation period is required."]);
+    $conn->close();
+    exit;
+}
+
+$periodStmt = $conn->prepare("
+    SELECT id, ay, semester, start_date, end_date
+    FROM evaluation_periods
+    WHERE id = ? AND is_active = 0
+      AND EXISTS (
+          SELECT 1
+          FROM evaluations e
+          WHERE e.faculty_id = ?
+            AND (
+                e.period_id = evaluation_periods.id
+                OR (
+                    e.period_id IS NULL
+                    AND evaluation_periods.start_date IS NOT NULL
+                    AND evaluation_periods.end_date IS NOT NULL
+                    AND DATE(e.created_at) BETWEEN evaluation_periods.start_date AND evaluation_periods.end_date
+                )
+            )
+      )
+    LIMIT 1
+");
+$periodStmt->bind_param("ii", $period_id, $faculty_id);
+$periodStmt->execute();
+$period = $periodStmt->get_result()->fetch_assoc();
+$periodStmt->close();
+if (!$period) {
+    http_response_code(404);
+    echo json_encode(["success" => false, "message" => "Evaluation period not found."]);
+    $conn->close();
+    exit;
+}
+
+$periodWhere = " AND (e.period_id = ? OR (
+    e.period_id IS NULL
+    AND DATE(e.created_at) BETWEEN ? AND ?
+))";
+$periodStart = $period['start_date'];
+$periodEnd = $period['end_date'];
 
 // Build WHERE clause
-if ($program_filter !== '' && $program_filter !== 'all') {
-    // Count total responses filtered by program name (via add_programs join)
+if ($hasProgramFilter) {
+    // Use EXISTS so a matching program lookup cannot multiply response counts.
     $stmt = $conn->prepare("
-        SELECT COUNT(*) AS total_responses
+        SELECT COUNT(*) AS total_responses,
+               COUNT(DISTINCT NULLIF(e.subject_id, 0)) AS subject_count
         FROM evaluations e
-        INNER JOIN add_students s ON s.id = e.student_id
-        LEFT JOIN add_programs p ON TRIM(p.program_code) = TRIM(s.program)
-                                 OR CAST(p.id AS CHAR) = TRIM(s.program)
         WHERE e.faculty_id = ?
-          AND p.program_name = ?
+          {$periodWhere}
+          AND EXISTS (
+              SELECT 1
+              FROM add_students s
+              INNER JOIN add_programs p
+                  ON TRIM(p.program_code) = TRIM(s.program)
+                  OR CAST(p.id AS CHAR) = TRIM(s.program)
+              WHERE s.id = e.student_id
+                AND p.program_name = ?
+          )
     ");
-    $stmt->bind_param("is", $faculty_id, $program_filter);
+    $stmt->bind_param("iisss", $faculty_id, $period_id, $periodStart, $periodEnd, $program_filter);
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result ? $result->fetch_assoc() : null;
@@ -74,18 +127,23 @@ if ($program_filter !== '' && $program_filter !== 'all') {
 
     $total = $row ? intval($row['total_responses']) : 0;
 
-    $overall = $total > 0 ? calcWeightedScoreByProgram($conn, $faculty_id, $program_filter) : 0.00;
+    $overall = $total > 0 ? calcWeightedScoreByProgram($conn, $faculty_id, $program_filter, null, null, $period_id) : 0.00;
 } else {
     // No filter — use global stats
-    $stmt = $conn->prepare("SELECT COUNT(*) AS total_responses FROM evaluations WHERE faculty_id = ?");
-    $stmt->bind_param("i", $faculty_id);
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS total_responses,
+               COUNT(DISTINCT NULLIF(e.subject_id, 0)) AS subject_count
+        FROM evaluations e
+        WHERE e.faculty_id = ? {$periodWhere}
+    ");
+    $stmt->bind_param("iiss", $faculty_id, $period_id, $periodStart, $periodEnd);
     $stmt->execute();
     $result = $stmt->get_result();
     $row    = $result ? $result->fetch_assoc() : null;
     $stmt->close();
 
     $total   = $row ? intval($row['total_responses']) : 0;
-    $overall = $total > 0 ? calcWeightedScore($conn, $faculty_id) : 0.00;
+    $overall = $total > 0 ? calcWeightedScore($conn, $faculty_id, null, null, $period_id) : 0.00;
 }
 
 function ratingLabel(float $score, int $total): string {
@@ -100,6 +158,9 @@ function ratingLabel(float $score, int $total): string {
 $rating_label   = ratingLabel($overall, $total);
 $display_rating = $total === 0 ? "0.00" : number_format($overall, 2);
 $percentage     = $total === 0 ? "0.00" : number_format(($overall / 5) * 100, 2);
+$category_totals = $hasProgramFilter
+    ? getCategoryStatsByProgram($conn, $faculty_id, $program_filter, null, null, $period_id)
+    : getCategoryStats($conn, $faculty_id, null, null, $period_id);
 
 // Also fetch list of programs (with full names) that have evaluations for this faculty
 $prog_stmt = $conn->prepare("
@@ -110,11 +171,12 @@ $prog_stmt = $conn->prepare("
     LEFT JOIN add_programs p ON TRIM(p.program_code) = TRIM(s.program)
                              OR CAST(p.id AS CHAR) = TRIM(s.program)
     WHERE e.faculty_id = ?
+      {$periodWhere}
       AND s.program IS NOT NULL
       AND s.program != ''
     ORDER BY program_name ASC
 ");
-$prog_stmt->bind_param("i", $faculty_id);
+$prog_stmt->bind_param("iiss", $faculty_id, $period_id, $periodStart, $periodEnd);
 $prog_stmt->execute();
 $prog_result = $prog_stmt->get_result();
 $programs_with_data = [];
@@ -136,8 +198,17 @@ echo json_encode([
     "percentage_score"   => $percentage,
     "rating_label"       => $rating_label,
     "total_responses"    => $total,
+    "subject_count"      => intval($row['subject_count'] ?? 0),
+    "category_totals"    => $category_totals,
     "programs_with_data" => $programs_with_data,
-    "program_filter"     => $program_filter
+    "program_filter"     => $program_filter,
+    "period"             => [
+        "id" => intval($period['id']),
+        "academic_year" => $period['ay'],
+        "semester" => $period['semester'],
+        "start_date" => $period['start_date'],
+        "end_date" => $period['end_date']
+    ]
 ]);
 
 $conn->close();

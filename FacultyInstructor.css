@@ -1444,6 +1444,30 @@ body{
   background:#0B90E0;
 }
 
+.faculty-report-period-select{
+  min-width:0;
+  width:100%;
+  padding:0;
+  border:0;
+  outline-color:#0B90E0;
+  background:transparent;
+  color:#1e3a8a;
+  font:600 15px/1.35 var(--font-body);
+  cursor:pointer;
+}
+
+.faculty-report-period-select:disabled{
+  appearance:none;
+  opacity:1;
+  cursor:default;
+}
+
+.info-period-meta{
+  overflow-wrap:anywhere;
+  color:#526783;
+  font:500 12px/1.45 var(--font-body);
+}
+
 .welcome-content{
   gap:38px;
   padding:38px 42px;
@@ -1467,6 +1491,10 @@ body{
   background:#eff7ff;
   border:1px solid #cfe4fb;
   border-radius:12px;
+}
+
+.faculty-report-period-item{
+  grid-column:1 / -1;
 }
 
 .info-value{
@@ -1530,6 +1558,106 @@ body{
   border-radius:16px;
 }
 
+.faculty-overview{
+  padding:24px;
+}
+
+.faculty-overview-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.faculty-overview-heading h3{
+  margin:0 0 5px;
+  color:#1e3a8a;
+  font-size:18px;
+}
+
+.faculty-overview-heading p{
+  margin:0;
+  color:#64748b;
+  font-size:13px;
+}
+
+.overview-period-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:#eff7ff;
+  color:#1e3a8a;
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.faculty-overview-categories{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.overview-category{
+  min-width:0;
+  padding:16px;
+  border:1px solid #dbeafe;
+  border-radius:12px;
+  background:#fbfdff;
+}
+
+.overview-category-heading,
+.overview-category-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.overview-category-heading strong{
+  overflow-wrap:anywhere;
+  color:#334155;
+  font-size:14px;
+}
+
+.overview-category-heading span{
+  color:#1e3a8a;
+  font-size:14px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.overview-category-track{
+  height:7px;
+  margin:12px 0 9px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e2e8f0;
+}
+
+.overview-category-track span{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#0B90E0,#2563eb);
+}
+
+.overview-category-meta{
+  color:#64748b;
+  font-size:11px;
+}
+
+.overview-empty{
+  grid-column:1/-1;
+  margin:0;
+  padding:28px 16px;
+  color:#64748b;
+  text-align:center;
+}
+
 .tab-header{
   background:#f8fbff;
   border-bottom-color:#cfe1f8;
@@ -1560,10 +1688,14 @@ body{
   .welcome-content{flex-direction:column;align-items:center;text-align:center}
   .welcome-right{width:100%}
   .info-grid{grid-template-columns:1fr}
+  .faculty-report-period-item{grid-column:auto}
   .action-buttons{flex-direction:column}
   .action-btn{width:100%;justify-content:center}
   .tab-header{overflow-x:auto}
   .tab-btn{min-width:150px;padding:14px 12px}
+  .faculty-overview{padding:18px}
+  .faculty-overview-heading{align-items:flex-start;flex-direction:column}
+  .faculty-overview-categories{grid-template-columns:1fr}
 }
 
 .global-notification .notification-icon{
@@ -1595,6 +1727,684 @@ body{
 @keyframes pulse{
   0%,100%{opacity:1}
   50%{opacity:0.5}
+}
+
+/* Faculty report modals */
+.evaluation-report-modal,
+.per-subject-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  overflow-y:auto;
+  background:rgba(15,23,42,.62);
+  backdrop-filter:blur(3px);
+}
+
+.report-content,
+.per-subject-modal-content{
+  width:min(100%, 980px);
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  border:1px solid #dbeafe;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 24px 70px rgba(15,23,42,.28);
+  color:#1f2937;
+}
+
+.report-header,
+.psm-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:20px 26px;
+  border-bottom:1px solid #dbeafe;
+  background:#f8fbff;
+}
+
+.header-left,
+.psm-header-left{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  min-width:0;
+}
+
+.college-logo,
+.psm-logo{
+  width:54px;
+  height:54px;
+  object-fit:contain;
+  flex:0 0 auto;
+}
+
+.college-info h2,
+.psm-header h2{
+  margin:0;
+  color:#12336b;
+  font-size:1.25rem;
+}
+
+.report-subtitle,
+.psm-subtitle{
+  margin:5px 0 0;
+  color:#64748b;
+  font-size:.9rem;
+}
+
+.close-report-btn,
+.psm-close-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:40px;
+  min-height:40px;
+  padding:8px 12px;
+  border:0;
+  border-radius:10px;
+  background:#eaf2ff;
+  color:#1e3a8a;
+  cursor:pointer;
+  font:600 .9rem var(--font-body);
+}
+
+.report-body,
+.psm-body{
+  padding:24px 26px;
+}
+
+.report-context{
+  margin:0 0 20px;
+  color:#475569;
+  line-height:1.6;
+}
+
+.report-summary-grid,
+.psm-summary-cards{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  margin-bottom:24px;
+}
+
+.report-card,
+.psm-card{
+  min-width:0;
+  padding:16px;
+  border:1px solid #dbeafe;
+  border-radius:14px;
+  background:#f8fbff;
+}
+
+.report-card-label,
+.psm-card-label{
+  display:block;
+  color:#64748b;
+  font-size:.76rem;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.report-card-value,
+.psm-card-value{
+  display:block;
+  margin:9px 0 5px;
+  color:#12336b;
+  font-size:1.35rem;
+}
+
+.report-card-note,
+.psm-card-note{
+  color:#64748b;
+  font-size:.82rem;
+}
+
+.report-card-percent,
+.psm-card-pct{
+  display:block;
+  color:#0b90e0;
+  font-weight:700;
+}
+
+.report-card-progress,
+.psm-prog-track{
+  height:8px;
+  margin:10px 0;
+  overflow:hidden;
+  border-radius:999px;
+  background:#dbeafe;
+}
+
+.report-card-progress-fill,
+.psm-prog-fill{
+  height:100%;
+  border-radius:inherit;
+  background:#0b90e0;
+}
+
+.category-breakdown,
+.feedback-section,
+.psm-overall-section{
+  margin-top:22px;
+}
+
+.category-breakdown h3,
+.feedback-heading h3,
+.psm-section-title{
+  margin:0 0 6px;
+  color:#12336b;
+}
+
+.category-breakdown-header p,
+.feedback-summary,
+.psm-section-sub{
+  color:#64748b;
+  font-size:.88rem;
+}
+
+.category-table-wrap{
+  margin-top:12px;
+  overflow-x:auto;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+}
+
+.category-table{
+  width:100%;
+  border-collapse:collapse;
+  text-align:left;
+}
+
+.category-table th,
+.category-table td{
+  padding:12px;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.category-table th{
+  background:#f1f6ff;
+  color:#334155;
+  font-size:.82rem;
+}
+
+.category-percent-track{
+  width:90px;
+  height:6px;
+  margin-top:5px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e2e8f0;
+}
+
+.category-percent-fill{
+  height:100%;
+  background:#0b90e0;
+}
+
+.category-weight-tag,
+.report-badge{
+  display:inline-flex;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#eaf2ff;
+  color:#1e3a8a;
+  font-size:.78rem;
+  font-weight:700;
+}
+
+.report-badge.na{
+  background:#f1f5f9;
+  color:#64748b;
+}
+
+.feedback-list{
+  display:grid;
+  gap:10px;
+  max-height:280px;
+  margin-top:12px;
+  overflow-y:auto;
+}
+
+.feedback-item{
+  padding:12px 14px;
+  border-left:3px solid #0b90e0;
+  border-radius:8px;
+  background:#f8fbff;
+  color:#334155;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+
+.feedback-item p{
+  margin:0;
+}
+
+.report-footer,
+.psm-header-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:22px;
+}
+
+.download-pdf-btn,
+.psm-download-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:11px 16px;
+  border:0;
+  border-radius:10px;
+  background:#087fc4;
+  color:#fff;
+  cursor:pointer;
+  font:600 .92rem var(--font-body);
+}
+
+.report-loading,
+.report-error{
+  padding:48px 24px;
+  text-align:center;
+}
+
+.report-loading i,
+.report-error i{
+  color:#0b90e0;
+  font-size:2rem;
+}
+
+.report-loading i{
+  animation:logout-spin .8s linear infinite;
+}
+
+.report-error i{
+  color:#dc2626;
+}
+
+.report-error h2{
+  color:#12336b;
+}
+
+.report-error p{
+  color:#475569;
+}
+
+.psm-dept{
+  margin-top:18px;
+  padding:18px;
+  border:1px solid #dbeafe;
+  border-radius:16px;
+  background:linear-gradient(180deg,#f8fbff 0%,#fff 100%);
+}
+
+.psm-dept-header{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:14px;
+  color:#12336b;
+  font-weight:700;
+}
+
+.psm-dept-header > i{
+  color:#0b90e0;
+  font-size:1.2rem;
+}
+
+.psm-dept-name{
+  flex:1;
+}
+
+.psm-dept-name em{
+  color:#64748b;
+  font-size:.88rem;
+  font-style:normal;
+}
+
+.psm-dept-count,
+.psm-count-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:25px;
+  padding:3px 9px;
+  border-radius:999px;
+  background:#eaf2ff;
+  color:#1e40af;
+  font-size:.76rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.psm-subject-card{
+  margin:12px 0;
+  padding:18px;
+  border:1px solid #dbe4f0;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 5px 16px rgba(30,64,175,.045);
+}
+
+.psm-subject-card:last-child{
+  margin-bottom:0;
+}
+
+.psm-subject-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid #e8eef7;
+}
+
+.psm-subject-title-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 10px;
+  min-width:0;
+}
+
+.psm-subject-code{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:4px 9px;
+  border-radius:7px;
+  background:#eaf2ff;
+  color:#1d4ed8;
+  font-size:.82rem;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+
+.psm-subject-desc{
+  color:#1e293b;
+  font-size:1rem;
+  font-weight:650;
+  line-height:1.45;
+}
+
+.psm-class-badge,
+.psm-period-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:#64748b;
+  font-size:.8rem;
+  line-height:1.4;
+}
+
+.psm-class-badge{
+  padding:4px 8px;
+  border:1px solid #e2e8f0;
+  border-radius:999px;
+  background:#f8fafc;
+  white-space:nowrap;
+}
+
+.psm-period-tag{
+  flex:0 0 auto;
+  padding-top:5px;
+}
+
+.psm-subject-meta{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+
+.psm-meta-item{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
+  min-width:0;
+  padding:11px 12px;
+  border:1px solid #e8eef7;
+  border-radius:10px;
+  background:#f8fbff;
+}
+
+.psm-meta-label{
+  color:#64748b;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+}
+
+.psm-meta-value{
+  color:#12336b;
+  font-size:1rem;
+  font-weight:750;
+}
+
+.psm-meta-value span{
+  color:#64748b;
+  font-size:.78rem;
+  font-weight:500;
+}
+
+.psm-subject-progress{
+  margin:12px 2px 16px;
+}
+
+.psm-subject-progress .psm-prog-track{
+  margin:0;
+  height:7px;
+}
+
+.psm-prog-fill.very-good{
+  background:#0b90e0;
+}
+
+.psm-prog-fill.good{
+  background:#16a34a;
+}
+
+.psm-prog-fill.fair{
+  background:#f59e0b;
+}
+
+.psm-prog-fill.poor{
+  background:#ef4444;
+}
+
+.psm-subsection-title{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:0;
+  color:#334155;
+  font-size:.9rem;
+  font-weight:700;
+}
+
+.psm-subsection-title i{
+  color:#0b90e0;
+}
+
+.psm-subject-categories{
+  margin-top:14px;
+}
+
+.psm-subject-categories .category-table-wrap{
+  margin-top:9px;
+}
+
+.psm-subject-categories .category-table th,
+.psm-subject-categories .category-table td{
+  padding:9px 11px;
+}
+
+.psm-comments{
+  margin-top:16px;
+  padding-top:15px;
+  border-top:1px solid #e8eef7;
+}
+
+.psm-comments-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 10px;
+  color:#334155;
+  font-size:.9rem;
+}
+
+.psm-comments-title > i{
+  color:#0b90e0;
+}
+
+.psm-comments-list{
+  display:grid;
+  gap:8px;
+}
+
+.psm-comment-item{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid #e8eef7;
+  border-radius:9px;
+  background:#f8fbff;
+}
+
+.psm-comment-num{
+  display:inline-flex;
+  flex:0 0 22px;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#eaf2ff;
+  color:#1d4ed8;
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.psm-comment-item p{
+  margin:1px 0 0;
+  color:#334155;
+  font-size:.88rem;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+
+.psm-more-comments{
+  margin:2px 0 0 32px;
+  color:#64748b;
+  font-size:.8rem;
+}
+
+.psm-no-comments,
+.psm-no-subjects{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-top:14px;
+  padding:12px 14px;
+  border:1px dashed #cbd5e1;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#64748b;
+  font-size:.85rem;
+}
+
+.psm-no-comments p,
+.psm-no-subjects p{
+  margin:0;
+}
+
+.psm-empty{
+  padding:32px 20px;
+  border:1px dashed #cbd5e1;
+  border-radius:14px;
+  color:#64748b;
+  text-align:center;
+}
+
+.psm-empty > i{
+  color:#94a3b8;
+  font-size:2rem;
+}
+
+.psm-status-badge.outstanding{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.psm-status-badge.very-good{
+  background:#dcfce7;
+  color:#15803d;
+}
+
+.psm-status-badge.good{
+  background:#ecfccb;
+  color:#3f6212;
+}
+
+.psm-status-badge.fair{
+  background:#fef3c7;
+  color:#b45309;
+}
+
+.psm-status-badge.poor{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+@media(max-width:760px){
+  .evaluation-report-modal,
+  .per-subject-modal{padding:10px}
+
+  .report-content,
+  .per-subject-modal-content{max-height:calc(100vh - 20px)}
+
+  .report-summary-grid,
+  .psm-summary-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .report-header,
+  .psm-header,
+  .report-body,
+  .psm-body{padding:16px}
+
+  .psm-subject-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .psm-subject-header{flex-direction:column;gap:8px}
+
+  .psm-period-tag{padding-top:0}
+}
+
+@media(max-width:480px){
+  .report-summary-grid,
+  .psm-summary-cards{grid-template-columns:1fr}
+
+  .college-logo,
+  .psm-logo{width:42px;height:42px}
+
+  .college-info h2,
+  .psm-header h2{font-size:1rem}
+
+  .psm-dept{padding:12px}
+
+  .psm-subject-card{padding:13px}
+
+  .psm-subject-meta{gap:7px}
+
+  .psm-meta-item{padding:9px}
 }
 
 /* Responsive ==================================================================================== */

@@ -1,4 +1,6 @@
 // DROPDOWN
+let selectedFacultyReportPeriod = null;
+
 function toggleDropdown() {
   const menu = document.getElementById("dropdownMenu");
   menu.style.display = (menu.style.display === "block") ? "none" : "block";
@@ -139,6 +141,14 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
+function formatAcademicDate(dateValue) {
+  if (!dateValue) return "Not specified";
+  const date = new Date(`${dateValue}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? String(dateValue)
+    : new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(date);
+}
+
 function getOverallStatusLabel(score) {
   const value = Number(score);
   if (isNaN(value)) return 'No Status';
@@ -184,17 +194,58 @@ function setFacultyResultCardsUnavailable(message = "Unavailable") {
   const ratingPctEl    = document.getElementById("overallRatingPercentage");
   const ratingStatusEl = document.getElementById("overallRatingStatus");
   const responsesEl    = document.getElementById("totalResponsesValue");
+  const subjectsEl     = document.getElementById("subjectsEvaluatedValue");
   const progressFill   = document.getElementById("overallRatingProgressFill");
 
   if (ratingNumberEl) ratingNumberEl.textContent = "0.00 / 5.00";
   if (ratingPctEl)    ratingPctEl.textContent = "0%";
   if (ratingStatusEl) ratingStatusEl.textContent = message;
   if (responsesEl)    responsesEl.textContent = "0";
+  if (subjectsEl)     subjectsEl.textContent = "0";
   if (progressFill)   progressFill.style.width = "0%";
 }
 
+function renderFacultyOverview(categoryTotals, period) {
+  const container = document.getElementById("facultyOverviewCategories");
+  const periodLabel = document.getElementById("facultyOverviewPeriodLabel");
+  if (!container) return;
+
+  if (periodLabel) {
+    periodLabel.textContent = period
+      ? `${period.academic_year || "Academic year not specified"} · ${period.semester || "Semester not specified"}`
+      : "No selected evaluation period";
+  }
+
+  const categories = Array.isArray(categoryTotals)
+    ? categoryTotals.filter(category => Number(category.responses || 0) > 0)
+    : [];
+  if (categories.length === 0) {
+    container.innerHTML = '<p class="overview-empty">No category results are available for this evaluation period.</p>';
+    return;
+  }
+
+  container.innerHTML = categories.map(category => {
+    const average = Number(category.avg_rating || 0);
+    const percentage = Math.max(0, Math.min(100, average * 20));
+    return `
+      <article class="overview-category">
+        <div class="overview-category-heading">
+          <strong>${escapeHtml(category.category_name || "Evaluation category")}</strong>
+          <span>${average.toFixed(2)} / 5.00</span>
+        </div>
+        <div class="overview-category-track" role="img" aria-label="${escapeHtml(category.category_name || "Category")} rating ${average.toFixed(2)} out of 5">
+          <span style="width:${percentage}%"></span>
+        </div>
+        <div class="overview-category-meta">
+          <span>${Number(category.responses || 0).toLocaleString()} responses</span>
+          <span>${Number(category.normalised_weight || 0).toFixed(1)}% weight</span>
+        </div>
+      </article>`;
+  }).join("");
+}
+
 function setFacultyStatsLoading(isLoading) {
-  const cards = document.querySelector(".faculty-cards");
+  const cards = document.querySelector(".stats-cards-container");
   if (!cards) return;
 
   cards.classList.toggle("stats-loading", Boolean(isLoading));
@@ -205,17 +256,19 @@ function updateFacultyResultAccess(evaluationOpen) {
   const hidden = document.getElementById("evaluationOngoing");
   if (hidden) hidden.value = evaluationOpen ? "1" : "0";
 
-  const locked = isFacultyInactive() || evaluationOpen;
-  document.querySelectorAll(".report-btn-group .report-btn").forEach(btn => {
+  const locked = isFacultyInactive() || evaluationOpen || !selectedFacultyReportPeriod;
+  document.querySelectorAll("#evaluationReportButton, #perSubjectReportButton").forEach(btn => {
     btn.disabled = locked;
     btn.title = evaluationOpen
       ? "Evaluation results are available after the current evaluation process closes."
-      : "";
+      : (!selectedFacultyReportPeriod ? "No closed evaluation period results are available." : "");
   });
 
-  if (evaluationOpen) {
-    setFacultyResultCardsUnavailable("Unavailable");
+  if (evaluationOpen || !selectedFacultyReportPeriod) {
+    setFacultyResultCardsUnavailable(evaluationOpen ? "Unavailable" : "No Data");
+    renderFacultyOverview([], null);
   }
+  if (evaluationOpen) renderFacultySubjectRows([]);
 }
 
 function formatFeedbackForHtml(feedback) {
@@ -263,15 +316,15 @@ function renderCategoryTotals(categoryTotals) {
           ${categoryTotals.map(item => {
             const avg         = Number(item.avg_rating) || 0;
             const responseCount = Number(item.response_count || item.responses || 0);
-            const hasResponses = responseCount > 0 || avg > 0;
+            const hasResponses = responseCount > 0;
             
             const percent     = hasResponses ? getRatingPercentageValue(avg) : 0;
             const percentText = hasResponses ? formatRatingPercentage(avg) : '0%';
             const statusLabel = hasResponses ? getOverallStatusLabel(avg) : 'N/A';
             const statusClass = hasResponses ? getStatusBadgeClass(avg).replace(/^status-/, '') : 'na';
-            const normW       = parseFloat(item.normalised_weight || item.weight || 0);
+            const normW       = Number(item.normalised_weight ?? item.weight ?? 0);
             const weightText  = hasWeights
-              ? `${normW.toFixed(1)}%`
+              ? `${(Number.isFinite(normW) ? normW : 0).toFixed(1)}%`
               : '—';
             return `
             <tr>
@@ -746,15 +799,27 @@ function loadFacultyStats(program = 'all') {
     return;
   }
 
-  const url = `get_faculty_stats_by_program.php${program && program !== 'all' ? '?program=' + encodeURIComponent(program) : ''}`;
+  const periodId = selectedFacultyReportPeriod;
+  if (!periodId) {
+    setFacultyResultCardsUnavailable("No Data");
+    return;
+  }
+  const params = new URLSearchParams({ period_id: String(periodId) });
+  if (program && program !== 'all') params.set('program', program);
+  const url = `get_faculty_stats_by_program.php?${params.toString()}`;
 
   setFacultyStatsLoading(true);
 
   fetch(url)
-    .then(r => r.json())
+    .then(async response => {
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load evaluation-period results.");
+      }
+      return data;
+    })
     .then(data => {
       setFacultyStatsLoading(false);
-      if (!data.success) return;
       if (data.evaluation_ongoing) {
         updateFacultyResultAccess(true);
         return;
@@ -764,6 +829,7 @@ function loadFacultyStats(program = 'all') {
       const ratingPctEl    = document.getElementById("overallRatingPercentage");
       const ratingStatusEl = document.getElementById("overallRatingStatus");
       const responsesEl    = document.getElementById("totalResponsesValue");
+      const subjectsEl     = document.getElementById("subjectsEvaluatedValue");
       const progressFill   = document.getElementById("overallRatingProgressFill");
 
       const totalResponses = parseInt(data.total_responses || 0);
@@ -774,16 +840,20 @@ function loadFacultyStats(program = 'all') {
       if (ratingPctEl)    ratingPctEl.textContent     = `${pct.toFixed(1)}%`;
       if (ratingStatusEl) ratingStatusEl.textContent  = hasResponses ? (data.rating_label || "No Rating Yet") : "N/A";
       if (responsesEl)    responsesEl.textContent      = `${totalResponses}`;
+      if (subjectsEl)     subjectsEl.textContent       = `${Number(data.subject_count || 0)}`;
       if (progressFill)   progressFill.style.width     = `${Math.min(pct, 100)}%`;
+      renderFacultyOverview(data.category_totals, data.period);
 
       // Populate program dropdown (only on first load when program = 'all')
-      if (program === 'all' && Array.isArray(data.programs_with_data) && data.programs_with_data.length > 0) {
+      if (program === 'all' && Array.isArray(data.programs_with_data)) {
         populateProgramDropdown(data.programs_with_data);
       }
     })
     .catch(err => {
       setFacultyStatsLoading(false);
       console.error("Failed to load faculty stats:", err);
+      setFacultyResultCardsUnavailable("Unable to load");
+      renderFacultyOverview([], null);
     });
 }
 
@@ -815,6 +885,106 @@ function onProgramFilterChange(program) {
   loadFacultyStats(program);
 }
 
+function renderFacultyReportPeriod(period) {
+  const academicYearEl = document.getElementById("instructorAcademicPeriod");
+  const semesterEl = document.getElementById("semesterValue");
+  const datesEl = document.getElementById("instructorPeriodStatus");
+  const select = document.getElementById("facultyReportPeriodSelect");
+
+  if (!period) {
+    if (academicYearEl) academicYearEl.textContent = "No closed results";
+    if (semesterEl) semesterEl.textContent = "No closed results";
+    if (datesEl) datesEl.textContent = "No closed evaluation period results are available.";
+    if (select) select.disabled = true;
+    return;
+  }
+
+  if (academicYearEl) academicYearEl.textContent = period.academic_year || "Not specified";
+  if (academicYearEl) {
+    academicYearEl.classList.remove("academic-year-loading");
+    academicYearEl.setAttribute("aria-busy", "false");
+  }
+  if (semesterEl) semesterEl.textContent = period.semester || "Not specified";
+  if (datesEl) {
+    const dates = period.start_date && period.end_date
+      ? `${formatAcademicDate(period.start_date)} – ${formatAcademicDate(period.end_date)}`
+      : "Dates not specified";
+    datesEl.textContent = `Closed · ${dates} · ${Number(period.response_count || 0).toLocaleString()} responses`;
+  }
+}
+
+async function loadFacultyReportPeriods() {
+  const select = document.getElementById("facultyReportPeriodSelect");
+  try {
+    const response = await fetch("periods_api.php?action=faculty_periods", {
+      cache: "no-store",
+      credentials: "same-origin"
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Failed to load evaluation periods.");
+    }
+
+    const periods = Array.isArray(data.periods) ? data.periods : [];
+    window.facultyReportPeriods = periods;
+    if (!select) return;
+    select.replaceChildren();
+
+    if (periods.length === 0) {
+      select.add(new Option("No closed periods with results", ""));
+      selectedFacultyReportPeriod = null;
+      renderFacultyReportPeriod(null);
+      renderFacultySubjectRows([]);
+      updateFacultyResultAccess(isEvaluationOngoing());
+      return;
+    }
+
+    periods.forEach(period => {
+      const label = `${period.academic_year} · ${period.semester}`;
+      select.add(new Option(label, String(period.id)));
+    });
+
+    const defaultId = String(data.default_period_id || periods[0].id);
+    select.value = defaultId;
+    selectedFacultyReportPeriod = Number(select.value) || null;
+    select.disabled = periods.length < 2;
+    if (periods.length > 1) select.disabled = false;
+
+    const selectedPeriod = periods.find(period => Number(period.id) === selectedFacultyReportPeriod);
+    renderFacultyReportPeriod(selectedPeriod || null);
+    updateFacultyResultAccess(isEvaluationOngoing());
+    loadFacultyStats(document.getElementById("programFilterSelect")?.value || "all");
+    loadFacultySubjectRows();
+  } catch (error) {
+    console.error("Failed to load faculty evaluation periods:", error);
+    if (select) {
+      select.replaceChildren(new Option("Evaluation periods unavailable", ""));
+      select.disabled = true;
+    }
+    selectedFacultyReportPeriod = null;
+    renderFacultyReportPeriod(null);
+    renderFacultySubjectRows([]);
+    updateFacultyResultAccess(isEvaluationOngoing());
+  }
+}
+
+function onFacultyReportPeriodChange(periodId) {
+  selectedFacultyReportPeriod = Number(periodId) || null;
+  const period = window.facultyReportPeriods?.find(item => Number(item.id) === selectedFacultyReportPeriod);
+  if (!selectedFacultyReportPeriod || !period) {
+    renderFacultyReportPeriod(null);
+    updateFacultyResultAccess(isEvaluationOngoing());
+    return;
+  }
+
+  renderFacultyReportPeriod(period);
+  updateFacultyResultAccess(isEvaluationOngoing());
+  const programSelect = document.getElementById("programFilterSelect");
+  if (programSelect) programSelect.value = "all";
+  loadFacultyStats("all");
+  loadFacultySubjectRows();
+}
+
 function showEvaluationReport() {
   if (isFacultyInactive()) {
     alert("Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.");
@@ -822,6 +992,10 @@ function showEvaluationReport() {
   }
   if (isEvaluationOngoing()) {
     alert("Evaluation results are unavailable while the evaluation process is still ongoing.");
+    return;
+  }
+  if (!selectedFacultyReportPeriod) {
+    alert("There are no closed evaluation period results available yet.");
     return;
   }
 
@@ -844,6 +1018,23 @@ function showEvaluationReport() {
     reportModal.className = "evaluation-report-modal";
     document.body.appendChild(reportModal);
   }
+  reportModal.innerHTML = `
+    <div class="report-content report-loading" role="status" aria-live="polite">
+      <i class="ph ph-circle-notch" aria-hidden="true"></i>
+      <p>Loading your evaluation report...</p>
+    </div>
+  `;
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+  reportModal.style.display = "flex";
+  document.body.classList.add("modal-open");
+  document.querySelector(".navbar")?.classList.add("modal-compensate");
+  if (!reportModal.dataset.listenerAttached) {
+    reportModal.addEventListener('click', function(event) {
+      if (event.target === reportModal) closeEvaluationReport();
+    });
+    reportModal.dataset.listenerAttached = 'true';
+  }
 
   // Fetch faculty evaluation data
   fetch("get_faculty_evaluation_report.php", {
@@ -853,29 +1044,37 @@ function showEvaluationReport() {
     },
     body: JSON.stringify({
       faculty_id: facultyId,
-      program_filter: selectedProgram !== 'all' ? selectedProgram : ''
+      program_filter: selectedProgram !== 'all' ? selectedProgram : '',
+      period_id: selectedFacultyReportPeriod
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    if (!data.success && data.evaluation_ongoing) {
-      updateFacultyResultAccess(true);
-      alert(data.message || "Evaluation results are unavailable while the evaluation process is still ongoing.");
-      return;
+  .then(async response => {
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Invalid evaluation report response:", responseText.slice(0, 500), parseError);
+      throw new Error("The report server returned an invalid response. Please try again or contact the administrator.");
     }
-    // Always show the modal with back button
-    const evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
-    const totalResponses = data.success ? (data.total_responses || 0) : 0;
+    if (!response.ok || !data || !data.success) {
+      throw new Error(data?.message || "Failed to load the evaluation report.");
+    }
+    return data;
+  })
+  .then(data => {
+    const evaluationPeriod = data.evaluation_period || 'Evaluation period unavailable';
+    const totalResponses = Number(data.total_responses || 0);
     const hasResponses = totalResponses > 0;
     
-    const overallRating   = hasResponses && data.success ? (data.overall_rating || '0.00') : '0.00';
-    const overallPercent  = hasResponses && data.success && data.percentage_score
-      ? parseFloat(data.percentage_score)
-      : 0;
+    const overallRating = hasResponses ? (data.overall_rating || '0.00') : '0.00';
+    const parsedPercent = Number(data.percentage_score || 0);
+    const overallPercent = Number.isFinite(parsedPercent) ? Math.max(0, Math.min(100, parsedPercent)) : 0;
     const overallPercentText = hasResponses ? `${overallPercent.toFixed(1)}%` : '0%';
-    const statusLabel    = hasResponses ? getOverallStatusLabel(overallRating) : 'N/A';
-    const statusClass    = hasResponses ? getStatusBadgeClass(overallRating) : 'status-na';
-    const feedbackHtml = renderFeedbackList(data.success ? (data.feedback_comments || data.feedback) : []);
+    const statusLabel = hasResponses ? getOverallStatusLabel(overallRating) : 'N/A';
+    const statusClass = hasResponses ? getStatusBadgeClass(overallRating) : 'status-na';
+    const feedbackHtml = renderFeedbackList(data.feedback_comments || data.feedback);
+    const categoryTotals = Array.isArray(data.category_totals) ? data.category_totals : [];
 
     const reportContent = `
       <div class="report-content">
@@ -894,7 +1093,9 @@ function showEvaluationReport() {
 
         <div class="report-body">
           <div class="report-context">
-            <p>This report aggregates student responses from <strong>${evaluationPeriod}</strong>${selectedProgramLabel ? ` for students under <strong>${escapeHtml(selectedProgramLabel)}</strong>` : ''} and highlights your current teaching performance and feedback trends.</p>
+            <p><strong>Academic Year:</strong> ${escapeHtml(data.period?.academic_year || 'Not specified')} &nbsp; <strong>Semester:</strong> ${escapeHtml(data.period?.semester || 'Not specified')}</p>
+            <p><strong>Evaluation Period:</strong> ${escapeHtml(evaluationPeriod)}${selectedProgramLabel ? ` &nbsp; <strong>Program:</strong> ${escapeHtml(selectedProgramLabel)}` : ''}</p>
+            <p>This report includes responses from the selected closed evaluation period only.</p>
           </div>
 
           <div class="report-summary-grid">
@@ -931,7 +1132,7 @@ function showEvaluationReport() {
                 <p>Percentage and average score for each evaluation category.</p>
               </div>
             </div>
-            ${renderCategoryTotals(data.success ? (data.category_totals || []) : [])}
+            ${renderCategoryTotals(categoryTotals)}
           </div>
 
           <div class="feedback-section">
@@ -977,15 +1178,25 @@ function showEvaluationReport() {
     reportModal.dataset.facultyName = facultyName || 'N/A';
     reportModal.dataset.facultyId = facultyId || 'N/A';
     reportModal.dataset.programFilter = selectedProgramLabel || '';
-    reportModal.dataset.totalResponses = data.success ? (data.total_responses || 0) : 0;
-    reportModal.dataset.overallRating = data.success ? (data.overall_rating || '0.00') : '0.00';
-    reportModal.dataset.feedback = data.success ? (data.feedback || 'No feedback available') : 'No feedback available';
-    reportModal.dataset.feedbackComments = JSON.stringify(data.success ? (data.feedback_comments || []) : []);
-    reportModal.dataset.evaluationPeriod = data.success ? (data.evaluation_period || 'All evaluation periods') : 'All evaluation periods';
+    reportModal.dataset.totalResponses = totalResponses;
+    reportModal.dataset.overallRating = overallRating;
+    reportModal.dataset.feedback = data.feedback || 'No feedback available';
+    reportModal.dataset.feedbackComments = JSON.stringify(data.feedback_comments || []);
+    reportModal.dataset.evaluationPeriod = evaluationPeriod;
+    reportModal.dataset.academicYear = data.period?.academic_year || '';
+    reportModal.dataset.semester = data.period?.semester || '';
+    reportModal.dataset.categoryTotals = JSON.stringify(categoryTotals);
   })
   .catch(error => {
     console.error("Error fetching evaluation report:", error);
-    alert("An error occurred while loading the evaluation report.");
+    reportModal.innerHTML = `
+      <div class="report-content report-error" role="alert">
+        <i class="ph ph-warning-circle" aria-hidden="true"></i>
+        <h2>Report unavailable</h2>
+        <p>${escapeHtml(error.message || "An error occurred while loading the evaluation report.")}</p>
+        <button type="button" class="close-report-btn" onclick="closeEvaluationReport()">Close</button>
+      </div>
+    `;
   });
 }
 
@@ -999,14 +1210,27 @@ function downloadEvaluationReport() {
   const totalResponses = modal.dataset.totalResponses || 0;
   const overallRating = modal.dataset.overallRating || '0.00';
   const feedback = modal.dataset.feedback || 'No feedback available';
+  const evaluationDetails = JSON.parse(modal.dataset.categoryTotals || '[]').map(category => ({
+    category: category.category_name || 'Uncategorized',
+    average_score: category.avg_rating || '0.00',
+    responses: Number(category.responses || 0),
+    normalised_weight: Number(category.normalised_weight || 0)
+  }));
   
   // Create PDF content
   const pdfContent = {
+    reportType: 'faculty',
     facultyName: facultyName,
     facultyId: facultyId,
     totalResponses: totalResponses,
     overallRating: overallRating,
-    feedback: feedback
+    feedback: feedback,
+    allFeedback: feedback,
+    evaluationPeriod: modal.dataset.evaluationPeriod || 'All evaluation periods',
+    academicYear: modal.dataset.academicYear || '',
+    semester: modal.dataset.semester || '',
+    programFilter: modal.dataset.programFilter || '',
+    evaluationDetails: evaluationDetails
   };
   
   // Send to PDF generation endpoint
@@ -1072,23 +1296,7 @@ document.addEventListener("DOMContentLoaded", function() {
 // ================= REAL-TIME ACADEMIC PERIOD UPDATE =================
 
 function updateInstructorAcademicPeriodDisplay(status) {
-  const periodEl = document.getElementById("instructorAcademicPeriod");
-  const semesterEl = document.getElementById("semesterValue");
-  if (!periodEl || !semesterEl) return;
-
-  periodEl.classList.remove("academic-year-loading");
-  periodEl.setAttribute("aria-busy", "false");
-
-  const hasActivePeriod = Number(status?.active_period_id || 0) > 0;
-  const academicYear = hasActivePeriod ? (status?.active_academic_year || "").trim() : "";
-  const semester = hasActivePeriod ? (status?.active_semester || "").trim() : "";
-  const statusEl = document.getElementById("instructorPeriodStatus");
-
-  periodEl.textContent = academicYear || "No active period";
-  semesterEl.textContent = semester || "No active period";
-  if (statusEl) statusEl.textContent = hasActivePeriod
-    ? (status?.evaluation_open ? "Evaluation Open" : "Evaluation Closed")
-    : "No active period";
+  updateFacultyResultAccess(!!status?.evaluation_open);
 }
 
 async function loadInstructorAcademicPeriod() {
@@ -1096,16 +1304,14 @@ async function loadInstructorAcademicPeriod() {
     const statusRes = await fetch("periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
     const status = await statusRes.json();
     if (status && status.success) {
-      updateInstructorAcademicPeriodDisplay(status);
       const wasOngoing = isEvaluationOngoing();
-      updateFacultyResultAccess(!!status.evaluation_open);
+      updateInstructorAcademicPeriodDisplay(status);
       if (wasOngoing && !status.evaluation_open && !isFacultyInactive()) {
-        loadFacultyStats(document.getElementById("programFilterSelect")?.value || "all");
+        loadFacultyReportPeriods();
       }
     }
   } catch (err) {
-console.error("Failed to load academic period:", err);
-    updateInstructorAcademicPeriodDisplay(null);
+    console.error("Failed to load academic period:", err);
   }
 }
 
@@ -1115,12 +1321,16 @@ function startInstructorPeriodRefresh() {
   setInterval(loadInstructorAcademicPeriod, 1000); // Then every 1 second
 }
 
-function renderFacultySubjectRows(departments) {
+function renderFacultySubjectRows(departments, errorMessage = "") {
   const body = document.getElementById('facultySubjectResultsBody');
   if (!body) return;
+  if (errorMessage) {
+    body.innerHTML = `<tr><td colspan="4" class="subject-table-empty">${escapeHtml(errorMessage)}</td></tr>`;
+    return;
+  }
   const subjects = (Array.isArray(departments) ? departments : []).flatMap(department => department.subjects || []);
   if (subjects.length === 0) {
-    body.innerHTML = '<tr><td colspan="5" class="subject-table-empty">No subject evaluation data available yet.</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" class="subject-table-empty">No subject evaluation data available yet.</td></tr>';
     return;
   }
 
@@ -1128,8 +1338,7 @@ function renderFacultySubjectRows(departments) {
     <tr>
       <td><span class="subject-code-tag">${escapeHtml(subject.subject_code || 'N/A')}</span></td>
       <td><strong>${escapeHtml(subject.subject_desc || 'Unnamed Subject')}</strong></td>
-      <td>${escapeHtml(subject.year_level || 'N/A')}</td>
-      <td>${Number(subject.eval_count || 0)} students</td>
+      <td>${Number(subject.eval_count || 0)} responses</td>
       <td><span class="subject-rating"><i class="ph ph-star"></i>${Number(subject.avg_rating || 0).toFixed(2)}</span></td>
     </tr>
   `).join('');
@@ -1137,15 +1346,35 @@ function renderFacultySubjectRows(departments) {
 
 function loadFacultySubjectRows() {
   const facultyId = document.getElementById('facultyNumericId')?.value;
-  if (!facultyId || isFacultyInactive() || isEvaluationOngoing()) return;
+  if (!facultyId) return;
+  if (isFacultyInactive() || isEvaluationOngoing() || !selectedFacultyReportPeriod) {
+    renderFacultySubjectRows([]);
+    return;
+  }
   fetch('get_faculty_per_subject_report.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ faculty_id: facultyId })
+    body: JSON.stringify({ faculty_id: facultyId, period_id: selectedFacultyReportPeriod })
   })
-    .then(response => response.json())
-    .then(data => renderFacultySubjectRows(data.success ? data.departments : []))
-    .catch(() => renderFacultySubjectRows([]));
+    .then(async response => {
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Invalid per-subject dashboard response:", text.slice(0, 500), error);
+        throw new Error("The per-subject service returned an invalid response.");
+      }
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load subject results.");
+      }
+      return data;
+    })
+    .then(data => renderFacultySubjectRows(data.departments))
+    .catch(error => {
+      console.error("Failed to load faculty subject results:", error);
+      renderFacultySubjectRows([], error.message || "Failed to load subject results.");
+    });
 }
 
 function loadUploadedPDFs() {
@@ -1204,14 +1433,19 @@ function loadUploadedPDFs() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  loadFacultyStats();
-  loadFacultySubjectRows();
+  document.getElementById("evaluationReportButton")?.addEventListener("click", showEvaluationReport);
+  document.getElementById("perSubjectReportButton")?.addEventListener("click", showPerSubjectReport);
+  document.getElementById("facultyReportPeriodSelect")?.addEventListener("change", event => {
+    onFacultyReportPeriodChange(event.currentTarget.value);
+  });
+  loadFacultyReportPeriods();
   startInstructorPeriodRefresh();
   loadUploadedPDFs();
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
    PER-SUBJECT REPORT
+*/
 
 /**
  * Open the per-subject evaluation report modal for the logged-in faculty.
@@ -1223,6 +1457,10 @@ function showPerSubjectReport() {
   }
   if (isEvaluationOngoing()) {
     alert('Evaluation results are unavailable while the evaluation process is still ongoing.');
+    return;
+  }
+  if (!selectedFacultyReportPeriod) {
+    alert('There are no closed evaluation period results available yet.');
     return;
   }
 
@@ -1239,23 +1477,36 @@ function showPerSubjectReport() {
   fetch('get_faculty_per_subject_report.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ faculty_id: facultyId }),
+    body:    JSON.stringify({ faculty_id: facultyId, period_id: selectedFacultyReportPeriod }),
   })
-    .then(r => r.json())
-    .then(data => {
-      if (!data.success) {
-        modalContent.innerHTML = `<div class="psm-error"><i class="ph ph-warning-circle"></i><p>${escapeHtml(data.message || 'Failed to load report.')}</p><button class="psm-close-btn" onclick="closePerSubjectReport()">Close</button></div>`;
-        return;
+    .then(async response => {
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Invalid per-subject report response:", text.slice(0, 500), error);
+        throw new Error("The report service returned an invalid response.");
       }
-
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load the per-subject report.");
+      }
+      return data;
+    })
+    .then(data => {
       // Store raw data for PDF download
-      modal.dataset.reportData = JSON.stringify({ facultyName, facultyId, departments: data.departments, overall: data.overall });
+      modal.dataset.reportData = JSON.stringify({
+        facultyName,
+        facultyId,
+        period: data.period,
+        departments: data.departments
+      });
 
-      modalContent.innerHTML = buildPerSubjectReportHtml(facultyName, facultyId, data.departments, data.overall);
+      modalContent.innerHTML = buildPerSubjectReportHtml(facultyName, data.departments, data.period);
     })
     .catch(err => {
       console.error('Per-subject report error:', err);
-      modalContent.innerHTML = `<div class="psm-error"><i class="ph ph-warning-circle"></i><p>An error occurred while loading the report.</p><button class="psm-close-btn" onclick="closePerSubjectReport()">Close</button></div>`;
+      modalContent.innerHTML = `<div class="psm-error" role="alert"><i class="ph ph-warning-circle"></i><p>${escapeHtml(err.message || 'An error occurred while loading the report.')}</p><button class="psm-close-btn" onclick="closePerSubjectReport()">Close</button></div>`;
     });
 }
 
@@ -1277,32 +1528,9 @@ function buildPerSubjectReportSkeletonHtml() {
       </div>
 
       <div class="psm-body">
-        <div class="psm-overall-section">
-          <div class="psm-skeleton-section-title">
-            <span class="psm-skeleton-icon"></span>
-            <span class="psm-skeleton-line psm-section-line"></span>
-          </div>
-          <span class="psm-skeleton-line psm-section-subline"></span>
-
-          <div class="psm-summary-cards">
-            ${Array.from({ length: 4 }).map(() => `
-              <div class="psm-card psm-card-skeleton">
-                <span class="psm-skeleton-line psm-card-label-skeleton"></span>
-                <span class="psm-skeleton-line psm-card-value-skeleton"></span>
-                <span class="psm-skeleton-line psm-card-note-skeleton"></span>
-              </div>
-            `).join('')}
-          </div>
-
-          <div class="category-table-wrap psm-table-skeleton">
-            <div class="psm-table-row psm-table-head"></div>
-            <div class="psm-table-row"></div>
-            <div class="psm-table-row"></div>
-            <div class="psm-table-row"></div>
-          </div>
-        </div>
-
         <div class="psm-subjects-section">
+          <h3 class="psm-section-title"><i class="ph ph-books"></i> Per-Subject Reports</h3>
+          <p class="psm-section-sub">Separated by program / department</p>
           <section class="psm-dept psm-dept-skeleton">
             <div class="psm-dept-header">
               <span class="psm-skeleton-icon"></span>
@@ -1358,20 +1586,19 @@ function closePerSubjectReport() {
 /**
  * Build the inner HTML for the per-subject report modal.
  */
-function buildPerSubjectReportHtml(facultyName, facultyId, departments, overall) {
-  const pct          = parseFloat(overall.percentage || 0);
-  const statusClass  = getStatusBadgeClass(parseFloat(overall.avg_rating || 0));
-
+function buildPerSubjectReportHtml(facultyName, departments, period) {
   let deptHtml = '';
   if (!departments || departments.length === 0) {
     deptHtml = '<div class="psm-empty"><i class="ph ph-clipboard-text"></i><p>No subject-level evaluation data found.</p></div>';
   } else {
     departments.forEach(dept => {
+      const subjectCount = Array.isArray(dept.subjects) ? dept.subjects.length : 0;
       deptHtml += `
         <section class="psm-dept">
           <div class="psm-dept-header">
             <i class="ph ph-graduation-cap"></i>
-            <span>${escapeHtml(dept.program_name)}${dept.program_code ? ' <em>(' + escapeHtml(dept.program_code) + ')</em>' : ''}</span>
+            <span class="psm-dept-name">${escapeHtml(dept.program_name)}${dept.program_code ? ' <em>(' + escapeHtml(dept.program_code) + ')</em>' : ''}</span>
+            <span class="psm-dept-count">${subjectCount} ${subjectCount === 1 ? 'subject' : 'subjects'}</span>
           </div>
           ${buildSubjectsHtml(dept.subjects || [])}
         </section>`;
@@ -1385,6 +1612,8 @@ function buildPerSubjectReportHtml(facultyName, facultyId, departments, overall)
         <div>
           <h2 id="perSubjectModalTitle">Per-Subject Evaluation Report</h2>
           <p class="psm-subtitle">${escapeHtml(facultyName)}</p>
+          <p class="psm-subtitle">Academic Year: ${escapeHtml(period?.academic_year || 'Not specified')} · Semester: ${escapeHtml(period?.semester || 'Not specified')}</p>
+          <p class="psm-subtitle">Evaluation Period: ${escapeHtml(formatAcademicDate(period?.start_date))} – ${escapeHtml(formatAcademicDate(period?.end_date))}</p>
         </div>
       </div>
       <div class="psm-header-actions">
@@ -1398,37 +1627,6 @@ function buildPerSubjectReportHtml(facultyName, facultyId, departments, overall)
     </div>
 
     <div class="psm-body">
-
-      <!-- Overall summary -->
-      <div class="psm-overall-section">
-        <h3 class="psm-section-title"><i class="ph ph-star"></i> Overall Faculty Rating</h3>
-        <p class="psm-section-sub">Combined across all subjects taught</p>
-        <div class="psm-summary-cards">
-          <div class="psm-card">
-            <span class="psm-card-label">Weighted Average</span>
-            <strong class="psm-card-value">${escapeHtml(overall.avg_rating)} / 5.00</strong>
-            <span class="psm-card-pct">${pct.toFixed(1)}%</span>
-            <div class="psm-prog-track"><div class="psm-prog-fill" style="width:${Math.min(pct, 100)}%"></div></div>
-          </div>
-          <div class="psm-card ${statusClass}">
-            <span class="psm-card-label">Performance Status</span>
-            <strong class="psm-card-value">${escapeHtml(overall.rating_label)}</strong>
-            <span class="psm-card-note">Overall indicator</span>
-          </div>
-          <div class="psm-card">
-            <span class="psm-card-label">Total Evaluations</span>
-            <strong class="psm-card-value">${escapeHtml(String(overall.eval_count))}</strong>
-            <span class="psm-card-note">Across all subjects</span>
-          </div>
-          <div class="psm-card">
-            <span class="psm-card-label">Evaluation Period</span>
-            <strong class="psm-card-value psm-period-val">${escapeHtml(overall.period)}</strong>
-          </div>
-        </div>
-        ${renderCategoryTotals(overall.category_totals || [])}
-      </div>
-
-      <!-- Per-department / per-subject breakdown -->
       <div class="psm-subjects-section">
         <h3 class="psm-section-title"><i class="ph ph-books"></i> Per-Subject Reports</h3>
         <p class="psm-section-sub">Separated by program / department</p>
@@ -1442,21 +1640,26 @@ function buildSubjectsHtml(subjects) {
   if (!subjects.length) return '<p class="psm-no-subjects">No evaluation data for any subject in this program.</p>';
 
   return subjects.map(s => {
-    const avg     = parseFloat(s.avg_rating || 0);
-    const pct     = parseFloat(s.percentage || 0);
+    const avgValue = Number(s.avg_rating || 0);
+    const pctValue = Number(s.percentage || 0);
+    const avg     = Number.isFinite(avgValue) ? avgValue : 0;
+    const pct     = Number.isFinite(pctValue) ? Math.max(0, Math.min(100, pctValue)) : 0;
     const badge   = getStatusBadgeClass(avg).replace(/^status-/, '');
-    const hasData = s.eval_count > 0;
+    const evalCount = Number(s.eval_count || 0);
+    const hasData = evalCount > 0;
+    const comments = Array.isArray(s.comments) ? s.comments.filter(comment => String(comment || '').trim()) : [];
+    const categories = Array.isArray(s.category_totals) ? s.category_totals : [];
 
-    const commentsHtml = (s.comments && s.comments.length > 0)
+    const commentsHtml = comments.length > 0
       ? `<div class="psm-comments">
-           <h5 class="psm-comments-title"><i class="ph ph-chat-circle-dots"></i> Student Comments <span class="psm-count-badge">${s.comments.length}</span></h5>
+           <h4 class="psm-comments-title"><i class="ph ph-chat-circle-dots"></i> Student Comments <span class="psm-count-badge">${comments.length}</span></h4>
            <div class="psm-comments-list">
-             ${s.comments.slice(0, 6).map((c, i) => `
+             ${comments.slice(0, 6).map((c, i) => `
                <div class="psm-comment-item">
-                 <span class="psm-comment-num">${i + 1}</span>
+                 <span class="psm-comment-num" aria-hidden="true">${i + 1}</span>
                  <p>${escapeHtml(c)}</p>
                </div>`).join('')}
-             ${s.comments.length > 6 ? `<p class="psm-more-comments">… and ${s.comments.length - 6} more comment(s)</p>` : ''}
+             ${comments.length > 6 ? `<p class="psm-more-comments">Showing 6 of ${comments.length} comments</p>` : ''}
            </div>
          </div>`
       : '<div class="psm-no-comments"><i class="ph ph-chat-slash"></i><p>No comments submitted for this subject.</p></div>';
@@ -1465,37 +1668,39 @@ function buildSubjectsHtml(subjects) {
       <div class="psm-subject-card">
         <div class="psm-subject-header">
           <div class="psm-subject-title-row">
-            <span class="psm-subject-code">${escapeHtml(s.subject_code)}</span>
-            <span class="psm-subject-desc">${escapeHtml(s.subject_desc)}</span>
-            ${s.class_label ? `<span class="psm-class-badge"><i class="ph ph-users"></i> ${escapeHtml(s.class_label)}</span>` : ''}
+            <span class="psm-subject-code">${escapeHtml(s.subject_code || 'Subject')}</span>
+            <span class="psm-subject-desc">${escapeHtml(s.subject_desc || 'Course evaluation')}</span>
           </div>
-          <span class="psm-period-tag"><i class="ph ph-calendar"></i> ${escapeHtml(s.period)}</span>
+          <span class="psm-period-tag"><i class="ph ph-calendar"></i> <span>${escapeHtml(s.period || 'Period unavailable')}</span></span>
         </div>
 
         <div class="psm-subject-meta">
           <div class="psm-meta-item">
             <span class="psm-meta-label">Avg Rating</span>
-            <strong class="psm-meta-value">${escapeHtml(s.avg_rating)} / 5.00</strong>
+            <strong class="psm-meta-value">${avg.toFixed(2)} <span>/ 5.00</span></strong>
           </div>
           <div class="psm-meta-item">
-            <span class="psm-meta-label">Score</span>
+            <span class="psm-meta-label">Performance Score</span>
             <strong class="psm-meta-value">${pct.toFixed(1)}%</strong>
           </div>
           <div class="psm-meta-item">
             <span class="psm-meta-label">Evaluations</span>
-            <strong class="psm-meta-value">${s.eval_count}</strong>
+            <strong class="psm-meta-value">${evalCount}</strong>
           </div>
           <div class="psm-meta-item">
             <span class="psm-meta-label">Status</span>
-            <span class="report-badge ${badge} psm-status-badge">${escapeHtml(s.rating_label)}</span>
+            <span class="report-badge ${hasData ? badge : 'na'} psm-status-badge">${escapeHtml(hasData ? (s.rating_label || 'No Rating') : 'No Responses')}</span>
           </div>
         </div>
 
-        <div class="psm-subject-progress">
-          <div class="psm-prog-track"><div class="psm-prog-fill ${badge}" style="width:${Math.min(pct, 100)}%"></div></div>
+        <div class="psm-subject-progress" role="img" aria-label="Performance score ${pct.toFixed(1)} percent">
+          <div class="psm-prog-track"><div class="psm-prog-fill ${badge}" style="width:${hasData ? pct : 0}%"></div></div>
         </div>
 
-        ${renderCategoryTotals(s.category_totals || [])}
+        <div class="psm-subject-categories">
+          <h4 class="psm-subsection-title"><i class="ph ph-chart-bar"></i> Category Breakdown</h4>
+          ${renderCategoryTotals(categories)}
+        </div>
 
         ${commentsHtml}
       </div>`;

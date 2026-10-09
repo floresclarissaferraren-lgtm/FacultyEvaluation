@@ -18,7 +18,6 @@ try {
     $query = "SELECT 
         e.id as evaluation_id,
         e.subject_id,
-        e.class_id,
         e.overall_rating,
         e.feedback,
         e.created_at,
@@ -28,13 +27,10 @@ try {
         f.lastname,
         f.suffix,
         sub.subject_code,
-        sub.subject_desc,
-        ac.year_level AS class_year_level,
-        ac.block AS class_section
+        sub.subject_desc
     FROM evaluations e
     INNER JOIN add_faculties f ON e.faculty_id = f.id
     LEFT JOIN add_subjects sub ON sub.id = e.subject_id
-    LEFT JOIN add_classes ac ON ac.id = e.class_id
     WHERE e.student_id = ?
     ORDER BY e.created_at DESC";
     
@@ -54,9 +50,7 @@ try {
             'faculty_id' => $row['faculty_id'],
             'faculty_name' => $faculty_name,
             'subject_id' => intval($row['subject_id'] ?? 0),
-            'class_id' => intval($row['class_id'] ?? 0),
             'subject_label' => trim(($row['subject_code'] ?? '') . (($row['subject_desc'] ?? '') !== '' ? ' - ' . $row['subject_desc'] : '')),
-            'class_label' => trim(($row['class_year_level'] ?? '') . (($row['class_section'] ?? '') !== '' ? ' / ' . $row['class_section'] : '')),
             'overall_rating' => $row['overall_rating'],
             'rating_label' => $rating_label,
             'feedback' => $row['feedback'],

@@ -195,16 +195,19 @@ if ($subjectStmt) {
         
         <div class="info-grid">
           <div class="info-item">
-            <span class="info-label"><i class="ph ph-calendar"></i> Academic Year:</span>
+            <span class="info-label"><i class="ph ph-calendar"></i> Report Academic Year:</span>
             <span class="info-value academic-year-loading" id="instructorAcademicPeriod" aria-busy="true">Loading...</span>
           </div>
           <div class="info-item">
-            <span class="info-label"><i class="ph ph-books"></i> Semester:</span>
+            <span class="info-label"><i class="ph ph-books"></i> Report Semester:</span>
             <span class="info-value semester-value" id="semesterValue">Loading...</span>
           </div>
-          <div class="info-item">
-            <span class="info-label"><i class="ph ph-check-circle"></i> Evaluation:</span>
-            <span class="info-value" id="instructorPeriodStatus">Loading...</span>
+          <div class="info-item faculty-report-period-item">
+            <label class="info-label" for="facultyReportPeriodSelect"><i class="ph ph-check-circle"></i> Evaluation Period:</label>
+            <select class="info-value faculty-report-period-select" id="facultyReportPeriodSelect" disabled aria-describedby="instructorPeriodStatus">
+              <option value="">Loading evaluation periods...</option>
+            </select>
+            <span class="info-period-meta" id="instructorPeriodStatus">Loading evaluation period details...</span>
           </div>
         </div>
         
@@ -226,11 +229,11 @@ if ($subjectStmt) {
         <?php endif; ?>
         
         <div class="action-buttons">
-          <button class="action-btn primary-btn" onclick="showEvaluationReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
+          <button type="button" id="evaluationReportButton" class="action-btn primary-btn" disabled>
             <i class="ph ph-chart-bar"></i>
             Evaluation Report
           </button>
-          <button class="action-btn secondary-btn" onclick="showPerSubjectReport()" <?php echo ($faculty_status !== 'active' || $evaluation_ongoing) ? 'disabled' : ''; ?>>
+          <button type="button" id="perSubjectReportButton" class="action-btn secondary-btn" disabled>
             <i class="ph ph-note"></i>
             Per-Subject Report
           </button>
@@ -253,7 +256,7 @@ if ($subjectStmt) {
           <span class="stat-value" id="overallRatingNumber">0.00</span>
           <span class="stat-unit">/ 5.00</span>
         </div>
-        <span class="stat-extra" id="overallRatingPercentage">+0.1% vs last sem</span>
+        <span class="stat-extra" id="overallRatingPercentage">For selected evaluation period</span>
       </div>
     </div>
 
@@ -267,9 +270,9 @@ if ($subjectStmt) {
         </div>
         <div class="stat-main">
           <span class="stat-value" id="totalResponsesValue">0</span>
-          <span class="stat-unit">students</span>
+          <span class="stat-unit">responses</span>
         </div>
-        <span class="stat-extra">Across 4 subjects</span>
+        <span class="stat-extra" id="responsePeriodNote">For selected evaluation period</span>
       </div>
     </div>
 
@@ -282,10 +285,10 @@ if ($subjectStmt) {
           </div>
         </div>
         <div class="stat-main">
-          <span class="stat-value" id="subjectsEvaluatedValue">4</span>
-          <span class="stat-unit">of 4</span>
+          <span class="stat-value" id="subjectsEvaluatedValue">0</span>
+          <span class="stat-unit">subjects</span>
         </div>
-        <span class="stat-extra">100% coverage</span>
+        <span class="stat-extra" id="subjectPeriodNote">With responses in selected period</span>
       </div>
     </div>
   </div>
@@ -298,8 +301,17 @@ if ($subjectStmt) {
     </div>
 
     <div class="tab-content active" id="overview-tab">
-      <div class="content-placeholder">
-        <p>Official PDF results are uploaded by the system after each evaluation cycle closes.</p>
+      <div class="faculty-overview">
+        <div class="faculty-overview-heading">
+          <div>
+            <h3>Evaluation Overview</h3>
+            <p id="facultyOverviewPeriodLabel">Loading selected evaluation period...</p>
+          </div>
+          <span class="overview-period-badge"><i class="ph ph-calendar-check"></i> Closed-period results</span>
+        </div>
+        <div id="facultyOverviewCategories" class="faculty-overview-categories" aria-live="polite">
+          <p class="overview-empty">Loading category results...</p>
+        </div>
       </div>
     </div>
 
@@ -310,13 +322,12 @@ if ($subjectStmt) {
             <tr>
               <th>Code</th>
               <th>Subject</th>
-              <th>Year Level</th>
               <th>Responses</th>
               <th>Rating</th>
             </tr>
           </thead>
           <tbody id="facultySubjectResultsBody">
-            <tr><td colspan="5" class="subject-table-empty">Loading subjects...</td></tr>
+            <tr><td colspan="4" class="subject-table-empty">Loading subjects...</td></tr>
           </tbody>
         </table>
       </div>
