@@ -5,18 +5,22 @@
  * API endpoint to fetch evaluation PDF reports for the logged-in faculty.
  */
 
-require_once __DIR__ . '/../shared/security.php';
-requireRole('faculty');
-header('Content-Type: application/json');
+require_once __DIR__ . "/../shared/security.php";
+requireRole("faculty");
+header("Content-Type: application/json");
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty' || !isset($_SESSION['id'])) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
-    exit;
+if (
+    !isset($_SESSION["role"]) ||
+    $_SESSION["role"] !== "faculty" ||
+    !isset($_SESSION["id"])
+) {
+    echo json_encode(["success" => false, "message" => "Unauthorized access."]);
+    exit();
 }
 
-include __DIR__ . '/../shared/connect.php';
+include __DIR__ . "/../shared/connect.php";
 
-$faculty_id = intval($_SESSION['id']);
+$faculty_id = intval($_SESSION["id"]);
 
 $stmt = $conn->prepare("
     SELECT id, academic_year, semester, file_name, uploaded_at 
@@ -25,8 +29,8 @@ $stmt = $conn->prepare("
     ORDER BY uploaded_at DESC
 ");
 if (!$stmt) {
-    echo json_encode(['success' => false, 'message' => 'Database error.']);
-    exit;
+    echo json_encode(["success" => false, "message" => "Database error."]);
+    exit();
 }
 
 $stmt->bind_param("i", $faculty_id);
@@ -37,8 +41,8 @@ $stmt->close();
 $conn->close();
 
 echo json_encode([
-    'success' => true,
-    'reports' => $reports
+    "success" => true,
+    "reports" => $reports,
 ]);
-exit;
+exit();
 ?>

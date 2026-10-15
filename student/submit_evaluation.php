@@ -1,19 +1,19 @@
 <?php
 ob_start();
-ini_set('display_errors', '0');
-require_once __DIR__ . '/../shared/security.php';
-requireRole('student');
-requireMethod('POST');
-include_once __DIR__ . '/../shared/session_config.php';
+ini_set("display_errors", "0");
+require_once __DIR__ . "/../shared/security.php";
+requireRole("student");
+requireMethod("POST");
+include_once __DIR__ . "/../shared/session_config.php";
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 header("Content-Type: application/json");
-include __DIR__ . '/../shared/connect.php';
+include __DIR__ . "/../shared/connect.php";
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-require_once __DIR__ . '/../shared/evaluation_schema.php';
-require_once __DIR__ . '/../shared/evaluation_period_helper.php';
-require_once __DIR__ . '/../shared/class_period_helper.php';
+require_once __DIR__ . "/../shared/evaluation_schema.php";
+require_once __DIR__ . "/../shared/evaluation_period_helper.php";
+require_once __DIR__ . "/../shared/class_period_helper.php";
 date_default_timezone_set("Asia/Manila");
 
 function submitEvaluationResponse(array $payload, int $status = 200): never
@@ -24,102 +24,159 @@ function submitEvaluationResponse(array $payload, int $status = 200): never
     http_response_code($status);
     header("Content-Type: application/json");
     echo json_encode($payload);
-    exit;
+    exit();
 }
 
 set_exception_handler(static function (Throwable $e): void {
     error_log("submit_evaluation.php error: " . $e->getMessage());
-    submitEvaluationResponse([
-        "success" => false,
-        "message" => "Submission failed. Please try again."
-    ], 500);
+    submitEvaluationResponse(
+        [
+            "success" => false,
+            "message" => "Submission failed. Please try again.",
+        ],
+        500,
+    );
 });
 
 ensureEvaluationPeriodTables($conn);
 ensureClassPeriodColumn($conn);
 closeExpiredEvaluationPeriod($conn);
-$settingsRes = $conn->query("SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1");
+$settingsRes = $conn->query(
+    "SELECT evaluation_open, active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1",
+);
 $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
-$evaluationOpen = $settings ? intval($settings["evaluation_open"]) === 1 : false;
+$evaluationOpen = $settings
+    ? intval($settings["evaluation_open"]) === 1
+    : false;
 $activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
 $today = date("Y-m-d");
 $evaluationUnavailableMessage = "Evaluation is closed";
 
 if ($evaluationOpen && $activePeriodId > 0) {
-    $periodStmt = $conn->prepare("SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1");
+    $periodStmt = $conn->prepare(
+        "SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1",
+    );
     $periodStmt->bind_param("i", $activePeriodId);
     $periodStmt->execute();
     $period = $periodStmt->get_result()->fetch_assoc();
     $periodStmt->close();
-    if ($period && !empty($period["start_date"]) && $period["start_date"] > $today) {
+    if (
+        $period &&
+        !empty($period["start_date"]) &&
+        $period["start_date"] > $today
+    ) {
         $evaluationOpen = false;
-        $evaluationUnavailableMessage = "Evaluation has not started. It will be available starting " . $period["start_date"] . ".";
-    } elseif (!$period
-        || empty($period["start_date"])
-        || empty($period["end_date"])
-        || $period["end_date"] < $today) {
+        $evaluationUnavailableMessage =
+            "Evaluation has not started. It will be available starting " .
+            $period["start_date"] .
+            ".";
+    } elseif (
+        !$period ||
+        empty($period["start_date"]) ||
+        empty($period["end_date"]) ||
+        $period["end_date"] < $today
+    ) {
         $evaluationOpen = false;
     }
 }
 
 if (!$evaluationOpen || $activePeriodId <= 0) {
-    submitEvaluationResponse(["success" => false, "message" => $evaluationUnavailableMessage], 409);
+    submitEvaluationResponse(
+        ["success" => false, "message" => $evaluationUnavailableMessage],
+        409,
+    );
 }
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['id'])) {
-    submitEvaluationResponse(["success" => false, "message" => "Unauthorized"], 403);
+if (
+    !isset($_SESSION["role"]) ||
+    $_SESSION["role"] !== "student" ||
+    !isset($_SESSION["id"])
+) {
+    submitEvaluationResponse(
+        ["success" => false, "message" => "Unauthorized"],
+        403,
+    );
 }
 
 $payload = json_decode(file_get_contents("php://input"), true);
-$student_id = intval($_SESSION['id']);
+$student_id = intval($_SESSION["id"]);
 
-$studentStatusStmt = $conn->prepare("SELECT status FROM add_students WHERE id = ? LIMIT 1");
+$studentStatusStmt = $conn->prepare(
+    "SELECT status FROM add_students WHERE id = ? LIMIT 1",
+);
 $studentStatusStmt->bind_param("i", $student_id);
 $studentStatusStmt->execute();
 $studentStatusRow = $studentStatusStmt->get_result()->fetch_assoc();
 $studentStatusStmt->close();
 
-if (strtolower((string)($studentStatusRow['status'] ?? 'active')) !== 'active') {
-    submitEvaluationResponse([
-        "success" => false,
-        "message" => "Your account has been set to inactive by an admin. You cannot evaluate until your account is active again."
-    ], 403);
+if (
+    strtolower((string) ($studentStatusRow["status"] ?? "active")) !== "active"
+) {
+    submitEvaluationResponse(
+        [
+            "success" => false,
+            "message" =>
+                "Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.",
+        ],
+        403,
+    );
 }
 
-$faculty_id = intval($payload['faculty_id'] ?? 0);
-$subject_id = intval($payload['subject_id'] ?? 0);
-$class_id = intval($payload['class_id'] ?? 0);
-$answers = $payload['answers'] ?? [];
-$feedback = trim($payload['feedback'] ?? '');
+$faculty_id = intval($payload["faculty_id"] ?? 0);
+$subject_id = intval($payload["subject_id"] ?? 0);
+$class_id = intval($payload["class_id"] ?? 0);
+$answers = $payload["answers"] ?? [];
+$feedback = trim($payload["feedback"] ?? "");
 
-if ($faculty_id <= 0 || $subject_id <= 0 || !is_array($answers) || empty($answers)) {
-    submitEvaluationResponse(["success" => false, "message" => "Invalid evaluation payload"], 422);
+if (
+    $faculty_id <= 0 ||
+    $subject_id <= 0 ||
+    !is_array($answers) ||
+    empty($answers)
+) {
+    submitEvaluationResponse(
+        ["success" => false, "message" => "Invalid evaluation payload"],
+        422,
+    );
 }
 
 $submittedQuestionIds = [];
 foreach (array_keys($answers) as $answerKey) {
-    if (preg_match('/^q_(\d+)$/', (string)$answerKey, $match)) {
+    if (preg_match('/^q_(\d+)$/', (string) $answerKey, $match)) {
         $submittedQuestionIds[] = intval($match[1]);
     }
 }
-$submittedQuestionIds = array_values(array_unique(array_filter($submittedQuestionIds, static fn($id) => $id > 0)));
+$submittedQuestionIds = array_values(
+    array_unique(
+        array_filter($submittedQuestionIds, static fn($id) => $id > 0),
+    ),
+);
 if (empty($submittedQuestionIds)) {
-    submitEvaluationResponse(["success" => false, "message" => "No valid questions submitted"], 422);
+    submitEvaluationResponse(
+        ["success" => false, "message" => "No valid questions submitted"],
+        422,
+    );
 }
 
 $questionCheck = $conn->query("SELECT id FROM add_questions");
 $knownQuestionIds = [];
 if ($questionCheck) {
     while ($questionRow = $questionCheck->fetch_assoc()) {
-        $knownQuestionIds[] = intval($questionRow['id']);
+        $knownQuestionIds[] = intval($questionRow["id"]);
     }
 }
 if (count(array_diff($submittedQuestionIds, $knownQuestionIds)) > 0) {
-    submitEvaluationResponse(["success" => false, "message" => "Invalid evaluation question submitted"], 422);
+    submitEvaluationResponse(
+        [
+            "success" => false,
+            "message" => "Invalid evaluation question submitted",
+        ],
+        422,
+    );
 }
 
 // Block feedback that contains bad words (server-side enforcement).
-if ($feedback !== '') {
+if ($feedback !== "") {
     $badWords = [
         "putangina",
         "puta",
@@ -143,12 +200,22 @@ if ($feedback !== '') {
         "dick",
         "cunt",
         "faggot",
-        "nigger"
+        "nigger",
     ];
-    $normalized = ' ' . preg_replace('/\s+/', ' ', trim(preg_replace('/[^a-z0-9]+/i', ' ', strtolower($feedback)))) . ' ';
+    $normalized =
+        " " .
+        preg_replace(
+            "/\s+/",
+            " ",
+            trim(preg_replace("/[^a-z0-9]+/i", " ", strtolower($feedback))),
+        ) .
+        " ";
     foreach ($badWords as $w) {
-        if (strpos($normalized, ' ' . $w . ' ') !== false) {
-            submitEvaluationResponse(["success" => false, "message" => "Bad words is not allowed"], 422);
+        if (strpos($normalized, " " . $w . " ") !== false) {
+            submitEvaluationResponse(
+                ["success" => false, "message" => "Bad words is not allowed"],
+                422,
+            );
         }
     }
 }
@@ -173,7 +240,7 @@ $sum = 0;
 $count = 0;
 $normalizedAnswers = [];
 foreach ($answers as $key => $value) {
-    if (!preg_match('/^q_(\d+)$/', (string)$key, $m)) {
+    if (!preg_match('/^q_(\d+)$/', (string) $key, $m)) {
         continue;
     }
     $question_id = intval($m[1]);
@@ -187,7 +254,10 @@ foreach ($answers as $key => $value) {
 }
 
 if ($count === 0) {
-    submitEvaluationResponse(["success" => false, "message" => "No valid answers found"], 422);
+    submitEvaluationResponse(
+        ["success" => false, "message" => "No valid answers found"],
+        422,
+    );
 }
 
 $assignmentValid = false;
@@ -226,9 +296,17 @@ if ($class_id > 0) {
         LIMIT 1
     ");
     if ($assignmentStmt) {
-        $assignmentStmt->bind_param("iiiiii", $student_id, $student_id, $faculty_id, $subject_id, $class_id, $activePeriodId);
+        $assignmentStmt->bind_param(
+            "iiiiii",
+            $student_id,
+            $student_id,
+            $faculty_id,
+            $subject_id,
+            $class_id,
+            $activePeriodId,
+        );
         $assignmentStmt->execute();
-        $assignmentValid = (bool)$assignmentStmt->get_result()->fetch_assoc();
+        $assignmentValid = (bool) $assignmentStmt->get_result()->fetch_assoc();
         $assignmentStmt->close();
     }
 } else {
@@ -246,19 +324,32 @@ if ($class_id > 0) {
         LIMIT 1
     ");
     if ($assignmentStmt) {
-                $assignmentStmt->bind_param("iiii", $activePeriodId, $student_id, $subject_id, $faculty_id);
+        $assignmentStmt->bind_param(
+            "iiii",
+            $activePeriodId,
+            $student_id,
+            $subject_id,
+            $faculty_id,
+        );
         $assignmentStmt->execute();
-        $assignmentValid = (bool)$assignmentStmt->get_result()->fetch_assoc();
+        $assignmentValid = (bool) $assignmentStmt->get_result()->fetch_assoc();
         $assignmentStmt->close();
     }
 }
 
 if (!$assignmentValid) {
-    submitEvaluationResponse(["success" => false, "message" => "This faculty-subject assignment is not available for your account"], 403);
+    submitEvaluationResponse(
+        [
+            "success" => false,
+            "message" =>
+                "This faculty-subject assignment is not available for your account",
+        ],
+        403,
+    );
 }
 
 // Use weighted category scoring instead of a flat mean.
-require_once __DIR__ . '/../shared/weighted_score_helper.php';
+require_once __DIR__ . "/../shared/weighted_score_helper.php";
 $overall = calcWeightedScoreFromAnswers($conn, $normalizedAnswers);
 // Fallback to flat mean if weighted calculation returns 0 unexpectedly
 if ($overall <= 0 && $count > 0) {
@@ -276,14 +367,32 @@ try {
     if (!$upsert) {
         throw new Exception("Unable to prepare evaluation");
     }
-    $upsert->bind_param("iiiidsi", $student_id, $faculty_id, $subject_id, $class_id, $overall, $feedback, $activePeriodId);
+    $upsert->bind_param(
+        "iiiidsi",
+        $student_id,
+        $faculty_id,
+        $subject_id,
+        $class_id,
+        $overall,
+        $feedback,
+        $activePeriodId,
+    );
     if (!$upsert->execute()) {
         throw new Exception("Unable to save evaluation");
     }
     $upsert->close();
 
-    $evalStmt = $conn->prepare("SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? AND period_id = ? LIMIT 1");
-    $evalStmt->bind_param("iiiii", $student_id, $faculty_id, $subject_id, $class_id, $activePeriodId);
+    $evalStmt = $conn->prepare(
+        "SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? AND period_id = ? LIMIT 1",
+    );
+    $evalStmt->bind_param(
+        "iiiii",
+        $student_id,
+        $faculty_id,
+        $subject_id,
+        $class_id,
+        $activePeriodId,
+    );
     $evalStmt->execute();
     $evalRes = $evalStmt->get_result();
     $evalRow = $evalRes->fetch_assoc();
@@ -292,9 +401,11 @@ try {
     if (!$evalRow) {
         throw new Exception("Failed to resolve evaluation ID");
     }
-    $evaluation_id = intval($evalRow['id']);
+    $evaluation_id = intval($evalRow["id"]);
 
-    $del = $conn->prepare("DELETE FROM evaluation_answers WHERE evaluation_id = ?");
+    $del = $conn->prepare(
+        "DELETE FROM evaluation_answers WHERE evaluation_id = ?",
+    );
     if (!$del) {
         throw new Exception("Unable to prepare evaluation answers");
     }
@@ -304,13 +415,15 @@ try {
     }
     $del->close();
 
-    $ins = $conn->prepare("INSERT INTO evaluation_answers (evaluation_id, question_id, rating) VALUES (?, ?, ?)");
+    $ins = $conn->prepare(
+        "INSERT INTO evaluation_answers (evaluation_id, question_id, rating) VALUES (?, ?, ?)",
+    );
     if (!$ins) {
         throw new Exception("Unable to prepare evaluation answers");
     }
     foreach ($normalizedAnswers as $row) {
-        $qid = $row['question_id'];
-        $rt = $row['rating'];
+        $qid = $row["question_id"];
+        $rt = $row["rating"];
         $ins->bind_param("iii", $evaluation_id, $qid, $rt);
         if (!$ins->execute()) {
             throw new Exception("Unable to save evaluation answers");
@@ -322,12 +435,15 @@ try {
     submitEvaluationResponse([
         "success" => true,
         "message" => "Evaluation submitted successfully",
-        "overall_rating" => $overall
+        "overall_rating" => $overall,
     ]);
 } catch (Exception $e) {
     $conn->rollback();
-    submitEvaluationResponse([
-        "success" => false,
-        "message" => "Submission failed: " . $e->getMessage()
-    ], 500);
+    submitEvaluationResponse(
+        [
+            "success" => false,
+            "message" => "Submission failed: " . $e->getMessage(),
+        ],
+        500,
+    );
 }

@@ -306,7 +306,7 @@ CREATE TABLE `faculty_uploaded_reports` (
 CREATE TABLE `password_reset_codes` (
   `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `code` varchar(6) NOT NULL,
+  `code` varchar(255) NOT NULL,
   `expires_at` datetime NOT NULL,
   `used` tinyint(1) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp()
@@ -723,4 +723,3 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-

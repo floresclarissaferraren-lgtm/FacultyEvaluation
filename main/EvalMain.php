@@ -33,7 +33,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 <!-- NAVBAR -->
 <nav>
   <div class="logo-container">
-    <img class="logo-img" src="../assets/images/schoollogo.png">
+    <img class="logo-img" src="../assets/images/schoollogo.png" alt="Granby Colleges logo">
     <div class="logo-text">
       <span class="main-title">Faculty Evaluation</span>
       <span class="sub-title">Granby Colleges of Science and Technology</span>
@@ -63,6 +63,20 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
         <div class="hero-actions">
           <a href="#" id="loginBtn2" class="btn-primary"><i class="ph ph-sign-in"></i> Get Started</a>
           <a href="#" class="btn-ghost page-link" data-page="1"><i class="ph ph-info"></i> Learn More</a>
+        </div>
+      </div>
+      <div class="hero-highlights" aria-label="Key benefits of the evaluation system">
+        <div class="hero-highlight">
+          <i class="ph ph-chat-circle-text" aria-hidden="true"></i>
+          <div><h2>Student voice matters</h2><p>Share feedback through a clear, guided evaluation.</p></div>
+        </div>
+        <div class="hero-highlight">
+          <i class="ph ph-list-checks" aria-hidden="true"></i>
+          <div><h2>Fair, structured process</h2><p>Use consistent criteria to support thoughtful reviews.</p></div>
+        </div>
+        <div class="hero-highlight">
+          <i class="ph ph-shield-check" aria-hidden="true"></i>
+          <div><h2>Privacy-aware reporting</h2><p>Results are hidden when response groups are too small.</p></div>
         </div>
       </div>
     </div>
@@ -104,13 +118,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
         <div class="about-card"><div class="about-icon"><i class="ph ph-shield-check"></i></div><h3>Administrative Control</h3><p>Admins manage records, evaluation criteria, and system settings.</p></div>
       </div>
     </div>
-    <!-- Quick links -->
-    <div class="quick-links">
-      <span class="ql-label">Quick Links</span>
-      <a href="#" class="ql-item page-link" data-page="0"><i class="ph ph-house"></i><span>Home</span></a>
-      <a href="#" class="ql-item page-link" data-page="2"><i class="ph ph-list-checks"></i><span>How It Works</span></a>
-      <a href="#" class="ql-item page-link" data-page="3"><i class="ph ph-envelope"></i><span>Contact</span></a>
-    </div>
     <div class="scroll-indicator page-link" data-page="2"><i class="ph ph-caret-down"></i></div>
   </div>
 
@@ -140,36 +147,29 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
         </div>
       </div>
     </div>
-    <!-- Quick links -->
-    <div class="quick-links">
-      <span class="ql-label">Quick Links</span>
-      <a href="#" class="ql-item page-link" data-page="0"><i class="ph ph-house"></i><span>Home</span></a>
-      <a href="#" class="ql-item page-link" data-page="1"><i class="ph ph-info"></i><span>About</span></a>
-      <a href="#" class="ql-item page-link" data-page="3"><i class="ph ph-envelope"></i><span>Contact</span></a>
-    </div>
     <div class="scroll-indicator page-link" data-page="3"><i class="ph ph-caret-down"></i></div>
   </div>
 
   <!-- ── PAGE 3 : CONTACT ── -->
   <div class="page" id="contact">
     <div class="page-inner contact-inner">
-      <div class="section-label"><i class="ph ph-envelope"></i> Contact</div>
-      <h2 class="section-heading">Get In Touch</h2>
-      <p class="section-sub" style="margin:0 auto;">Questions? Reach out to us and we'll get back to you.</p>
-      <div class="contact-info">
-        <div class="info-box"><i class="ph ph-map-pin"></i><h3>Location</h3><p>Granby Colleges of Science and Technology</p></div>
-        <div class="info-box"><i class="ph ph-phone"></i><h3>Phone</h3><p>+63 912 345 6789</p></div>
-        <div class="info-box"><i class="ph ph-envelope"></i><h3>Email</h3><p>support@granbycollege.edu</p></div>
-        <div class="info-box"><i class="ph ph-clock"></i><h3>Office Hours</h3><p>Monday–Saturday<br>8:00 AM – 5:00 PM</p></div>
+      <div class="contact-main">
+        <div class="contact-intro">
+          <div class="section-label"><i class="ph ph-envelope"></i> Contact</div>
+          <h2 class="section-heading">Get in Touch</h2>
+          <p class="section-sub">Questions? Reach out to us and we'll get back to you</p>
+        </div>
+        <div class="contact-info">
+          <div class="info-box"><i class="ph ph-map-pin"></i><div><h3>Visit</h3><p>Granby Colleges of Science and Technology</p></div></div>
+          <div class="info-box"><i class="ph ph-phone"></i><div><h3>Call</h3><p>+63 912 345 6789</p></div></div>
+          <div class="info-box"><i class="ph ph-envelope"></i><div><h3>Email</h3><p>support@granbycollege.edu</p></div></div>
+          <div class="info-box"><i class="ph ph-clock"></i><div><h3>Office Hours</h3><p>Mon–Sat · 8:00 AM–5:00 PM</p></div></div>
+        </div>
       </div>
-      <p class="contact-copy">© 2026 Faculty Evaluation System · All Rights Reserved</p>
-    </div>
-    <!-- Quick links -->
-    <div class="quick-links">
-      <span class="ql-label">Quick Links</span>
-      <a href="#" class="ql-item page-link" data-page="0"><i class="ph ph-house"></i><span>Home</span></a>
-      <a href="#" class="ql-item page-link" data-page="1"><i class="ph ph-info"></i><span>About</span></a>
-      <a href="#" class="ql-item page-link" data-page="2"><i class="ph ph-list-checks"></i><span>How It Works</span></a>
+      <footer class="contact-copy">
+        <span>© 2026 Granby Colleges of Science and Technology</span>
+        <span>Faculty Evaluation System · All rights reserved</span>
+      </footer>
     </div>
   </div>
 

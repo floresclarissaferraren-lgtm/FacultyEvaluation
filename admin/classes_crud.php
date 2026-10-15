@@ -1,29 +1,51 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('admin');
-include __DIR__ . '/../shared/connect.php';
-require_once __DIR__ . '/../shared/class_period_helper.php';
+require_once __DIR__ . "/../shared/security.php";
+requireRole("admin");
+include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/class_period_helper.php";
 
 header("Content-Type: application/json");
 
-$action = $_REQUEST['action'] ?? "";
-if (in_array($action, ['get', 'get_faculty_by_subject', 'get_faculty_by_subjects', 'get_subjects_by_program_year', 'get_subject_class_options'], true)) {
-    requireMethod('GET');
+$action = $_REQUEST["action"] ?? "";
+if (
+    in_array(
+        $action,
+        [
+            "get",
+            "get_faculty_by_subject",
+            "get_faculty_by_subjects",
+            "get_subjects_by_program_year",
+            "get_subject_class_options",
+        ],
+        true,
+    )
+) {
+    requireMethod("GET");
 } else {
-    requireMethod('POST');
+    requireMethod("POST");
 }
 
-function ensureClassSemesterColumn(mysqli $conn): void {
+function ensureClassSemesterColumn(mysqli $conn): void
+{
     $check = $conn->query("SHOW COLUMNS FROM add_classes LIKE 'semester'");
     if ($check && $check->num_rows === 0) {
-        $conn->query("ALTER TABLE add_classes ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER year_level");
+        $conn->query(
+            "ALTER TABLE add_classes ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER year_level",
+        );
     }
 }
 
-function getAcademicPeriod(mysqli $conn, int $period_id): ?array {
-    if ($period_id <= 0) return null;
-    $stmt = $conn->prepare("SELECT id, ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1");
-    if (!$stmt) return null;
+function getAcademicPeriod(mysqli $conn, int $period_id): ?array
+{
+    if ($period_id <= 0) {
+        return null;
+    }
+    $stmt = $conn->prepare(
+        "SELECT id, ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1",
+    );
+    if (!$stmt) {
+        return null;
+    }
     $stmt->bind_param("i", $period_id);
     $stmt->execute();
     $period = $stmt->get_result()->fetch_assoc();
@@ -31,23 +53,35 @@ function getAcademicPeriod(mysqli $conn, int $period_id): ?array {
     return $period ?: null;
 }
 
-function validateSubjectsForPeriod(mysqli $conn, array $subjects, int $program_id, string $year_level, string $semester): bool {
+function validateSubjectsForPeriod(
+    mysqli $conn,
+    array $subjects,
+    int $program_id,
+    string $year_level,
+    string $semester,
+): bool {
     $yearVariants = classYearVariants($year_level);
-    if (empty($yearVariants)) return false;
+    if (empty($yearVariants)) {
+        return false;
+    }
 
-    $placeholders = implode(',', array_fill(0, count($yearVariants), '?'));
+    $placeholders = implode(",", array_fill(0, count($yearVariants), "?"));
     $stmt = $conn->prepare("SELECT id FROM add_subjects
         WHERE id = ? AND program_id = ? AND semester = ? AND year_level IN ($placeholders) LIMIT 1");
-    if (!$stmt) return false;
+    if (!$stmt) {
+        return false;
+    }
 
     foreach ($subjects as $subject_id) {
         $subjectId = intval($subject_id);
-        $types = 'iis' . str_repeat('s', count($yearVariants));
+        $types = "iis" . str_repeat("s", count($yearVariants));
         $params = [$subjectId, $program_id, $semester, ...$yearVariants];
         $refs = [];
-        foreach ($params as $key => $value) $refs[$key] = &$params[$key];
+        foreach ($params as $key => $value) {
+            $refs[$key] = &$params[$key];
+        }
         array_unshift($refs, $types);
-        call_user_func_array([$stmt, 'bind_param'], $refs);
+        call_user_func_array([$stmt, "bind_param"], $refs);
         $stmt->execute();
         if (!$stmt->get_result()->fetch_assoc()) {
             $stmt->close();
@@ -59,16 +93,20 @@ function validateSubjectsForPeriod(mysqli $conn, array $subjects, int $program_i
     return true;
 }
 
-function ensureSubjectSemesterColumn(mysqli $conn): void {
+function ensureSubjectSemesterColumn(mysqli $conn): void
+{
     $check = $conn->query("SHOW COLUMNS FROM add_subjects LIKE 'semester'");
     if ($check && $check->num_rows === 0) {
-        $conn->query("ALTER TABLE add_subjects ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER subject_desc");
+        $conn->query(
+            "ALTER TABLE add_subjects ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER subject_desc",
+        );
     }
 }
 
-function classYearVariants(string $classYear): array {
+function classYearVariants(string $classYear): array
+{
     $variants = [trim($classYear)];
-    if (preg_match('/^(\d+)/', $classYear, $m)) {
+    if (preg_match("/^(\d+)/", $classYear, $m)) {
         $num = $m[1];
         if (!in_array($num, $variants, true)) {
             $variants[] = $num;
@@ -77,8 +115,11 @@ function classYearVariants(string $classYear): array {
     return array_values(array_filter(array_unique($variants)));
 }
 
-function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
-    $classStmt = $conn->prepare("SELECT program_id, year_level, block FROM add_classes WHERE id = ? LIMIT 1");
+function syncRegularStudentsForClass(mysqli $conn, int $class_id): void
+{
+    $classStmt = $conn->prepare(
+        "SELECT program_id, year_level, block FROM add_classes WHERE id = ? LIMIT 1",
+    );
     if (!$classStmt) {
         return;
     }
@@ -92,16 +133,16 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
         return;
     }
 
-    $program_id = intval($class['program_id']);
-    $year_level = trim((string)$class['year_level']);
-    $block = trim((string)$class['block']);
+    $program_id = intval($class["program_id"]);
+    $year_level = trim((string) $class["year_level"]);
+    $block = trim((string) $class["block"]);
     $yearVariants = classYearVariants($year_level);
 
     if (empty($yearVariants)) {
         return;
     }
 
-    $yearPlaceholders = implode(',', array_fill(0, count($yearVariants), '?'));
+    $yearPlaceholders = implode(",", array_fill(0, count($yearVariants), "?"));
     $studentSql = "
         SELECT s.id
         FROM add_students s
@@ -134,7 +175,7 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
 
     $studentIds = [];
     while ($row = $studentRes->fetch_assoc()) {
-        $studentIds[] = intval($row['id']);
+        $studentIds[] = intval($row["id"]);
     }
     $studentStmt->close();
 
@@ -142,7 +183,9 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
         return;
     }
 
-    $subjectStmt = $conn->prepare("SELECT subject_id FROM class_subjects WHERE class_id = ? ORDER BY subject_id ASC");
+    $subjectStmt = $conn->prepare(
+        "SELECT subject_id FROM class_subjects WHERE class_id = ? ORDER BY subject_id ASC",
+    );
     if (!$subjectStmt) {
         return;
     }
@@ -151,19 +194,31 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
     $subjectRes = $subjectStmt->get_result();
     $subjectIds = [];
     while ($row = $subjectRes->fetch_assoc()) {
-        $subjectIds[] = intval($row['subject_id']);
+        $subjectIds[] = intval($row["subject_id"]);
     }
     $subjectStmt->close();
 
     ensureStudentSubjectClassesSchema($conn);
 
-    $delClass = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ? AND class_id = ?");
-    $ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
-    $insClass = $conn->prepare("INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
+    $delClass = $conn->prepare(
+        "DELETE FROM student_subject_classes WHERE student_id = ? AND class_id = ?",
+    );
+    $ins = $conn->prepare(
+        "INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)",
+    );
+    $insClass = $conn->prepare(
+        "INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)",
+    );
     if (!$delClass || !$ins || !$insClass) {
-        if ($delClass) $delClass->close();
-        if ($ins) $ins->close();
-        if ($insClass) $insClass->close();
+        if ($delClass) {
+            $delClass->close();
+        }
+        if ($ins) {
+            $ins->close();
+        }
+        if ($insClass) {
+            $insClass->close();
+        }
         return;
     }
 
@@ -196,19 +251,29 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void {
     $insClass->close();
 }
 
-function validateClassSubjectAssignments(array $subjects, array $faculty_assignments): array {
+function validateClassSubjectAssignments(
+    array $subjects,
+    array $faculty_assignments,
+): array {
     if (empty($subjects)) {
-        return ["valid" => false, "message" => "Please select at least one subject."];
+        return [
+            "valid" => false,
+            "message" => "Please select at least one subject.",
+        ];
     }
 
     foreach ($subjects as $subject_id) {
         $subjectId = intval($subject_id);
-        $facultyId = intval($faculty_assignments[$subject_id] ?? $faculty_assignments[(string)$subject_id] ?? 0);
+        $facultyId = intval(
+            $faculty_assignments[$subject_id] ??
+                ($faculty_assignments[(string) $subject_id] ?? 0),
+        );
 
         if ($subjectId <= 0 || $facultyId <= 0) {
             return [
                 "valid" => false,
-                "message" => "You must complete all required selections before adding a class subject."
+                "message" =>
+                    "You must complete all required selections before adding a class subject.",
             ];
         }
     }
@@ -218,13 +283,13 @@ function validateClassSubjectAssignments(array $subjects, array $faculty_assignm
 
 /* ========================= GET FACULTY BY SUBJECT ========================= */
 if ($action === "get_faculty_by_subject") {
-    $subject_id = $_GET['subject_id'] ?? 0;
-    
+    $subject_id = $_GET["subject_id"] ?? 0;
+
     if (!$subject_id) {
         echo json_encode([]);
-        exit;
+        exit();
     }
-    
+
     $stmt = $conn->prepare("
         SELECT DISTINCT f.id, f.faculty_id, f.firstname, f.lastname, f.suffix
         FROM add_faculties f
@@ -232,40 +297,45 @@ if ($action === "get_faculty_by_subject") {
         WHERE fs.subject_id = ?
         ORDER BY f.lastname ASC, f.firstname ASC
     ");
-    
+
     $stmt->bind_param("i", $subject_id);
     $stmt->execute();
-    
+
     $result = $stmt->get_result();
     $faculty = [];
-    
+
     while ($row = $result->fetch_assoc()) {
         $faculty[] = [
-            'id' => $row['id'],
-            'faculty_id' => $row['faculty_id'],
-            'name' => $row['firstname'] . ' ' . $row['lastname'] . ' ' . ($row['suffix'] ?? ''),
-            'firstname' => $row['firstname'],
-            'lastname' => $row['lastname'],
-            'suffix' => $row['suffix'] ?? ''
+            "id" => $row["id"],
+            "faculty_id" => $row["faculty_id"],
+            "name" =>
+                $row["firstname"] .
+                " " .
+                $row["lastname"] .
+                " " .
+                ($row["suffix"] ?? ""),
+            "firstname" => $row["firstname"],
+            "lastname" => $row["lastname"],
+            "suffix" => $row["suffix"] ?? "",
         ];
     }
-    
+
     echo json_encode($faculty);
-    exit;
+    exit();
 }
 
 /* ========================= GET FACULTY BY MULTIPLE SUBJECTS ========================= */
 if ($action === "get_faculty_by_subjects") {
-    $subject_ids = $_GET['subject_ids'] ?? "";
-    
+    $subject_ids = $_GET["subject_ids"] ?? "";
+
     if (empty($subject_ids)) {
         echo json_encode([]);
-        exit;
+        exit();
     }
-    
+
     $subject_array = explode(",", $subject_ids);
-    $placeholders = str_repeat('?,', count($subject_array) - 1) . '?';
-    
+    $placeholders = str_repeat("?,", count($subject_array) - 1) . "?";
+
     $stmt = $conn->prepare("
         SELECT DISTINCT f.id, f.faculty_id, f.firstname, f.lastname, f.suffix
         FROM add_faculties f
@@ -273,39 +343,47 @@ if ($action === "get_faculty_by_subjects") {
         WHERE fs.subject_id IN ($placeholders)
         ORDER BY f.lastname ASC, f.firstname ASC
     ");
-    
-    $stmt->bind_param(str_repeat('i', count($subject_array)), ...$subject_array);
+
+    $stmt->bind_param(
+        str_repeat("i", count($subject_array)),
+        ...$subject_array,
+    );
     $stmt->execute();
-    
+
     $result = $stmt->get_result();
     $faculty = [];
-    
+
     while ($row = $result->fetch_assoc()) {
         $faculty[] = [
-            'id' => $row['id'],
-            'faculty_id' => $row['faculty_id'],
-            'name' => $row['firstname'] . ' ' . $row['lastname'] . ' ' . ($row['suffix'] ?? ''),
-            'firstname' => $row['firstname'],
-            'lastname' => $row['lastname'],
-            'suffix' => $row['suffix'] ?? ''
+            "id" => $row["id"],
+            "faculty_id" => $row["faculty_id"],
+            "name" =>
+                $row["firstname"] .
+                " " .
+                $row["lastname"] .
+                " " .
+                ($row["suffix"] ?? ""),
+            "firstname" => $row["firstname"],
+            "lastname" => $row["lastname"],
+            "suffix" => $row["suffix"] ?? "",
         ];
     }
-    
+
     echo json_encode($faculty);
-    exit;
+    exit();
 }
 
 /* ========================= GET SUBJECTS BY PROGRAM AND YEAR ========================= */
 if ($action === "get_subjects_by_program_year") {
-    $program_id = $_GET['program_id'] ?? 0;
-    $year_level = $_GET['year_level'] ?? "";
-    $semester = trim($_GET['semester'] ?? "");
-    
+    $program_id = $_GET["program_id"] ?? 0;
+    $year_level = $_GET["year_level"] ?? "";
+    $semester = trim($_GET["semester"] ?? "");
+
     if (!$program_id || !$year_level) {
         echo json_encode([]);
-        exit;
+        exit();
     }
-    
+
     ensureSubjectSemesterColumn($conn);
 
     if ($semester !== "") {
@@ -328,26 +406,26 @@ if ($action === "get_subjects_by_program_year") {
         $stmt->bind_param("is", $program_id, $year_level);
     }
     $stmt->execute();
-    
+
     $result = $stmt->get_result();
     $subjects = [];
-    
+
     while ($row = $result->fetch_assoc()) {
         $subjects[] = $row;
     }
-    
+
     echo json_encode($subjects);
-    exit;
+    exit();
 }
 
 /* ========================= GET CLASS OPTIONS BY SUBJECT ========================= */
 if ($action === "get_subject_class_options") {
-    $program_id = intval($_GET['program_id'] ?? 0);
-    $subject_id = intval($_GET['subject_id'] ?? 0);
+    $program_id = intval($_GET["program_id"] ?? 0);
+    $subject_id = intval($_GET["subject_id"] ?? 0);
 
     if (!$program_id || !$subject_id) {
         echo json_encode([]);
-        exit;
+        exit();
     }
 
     ensureClassSemesterColumn($conn);
@@ -381,15 +459,15 @@ if ($action === "get_subject_class_options") {
     }
 
     echo json_encode($rows);
-    exit;
+    exit();
 }
 
 /* ========================= GET CLASSES OR CLASS SUBJECTS ========================= */
 if ($action === "get") {
-    $class_id = $_GET['class_id'] ?? 0;
+    $class_id = $_GET["class_id"] ?? 0;
     if ($class_id) {
         error_log("GET CLASS SUBJECTS - class_id: $class_id");
-        
+
         ensureSubjectSemesterColumn($conn);
 
         ensureClassPeriodColumn($conn);
@@ -413,19 +491,24 @@ if ($action === "get") {
         while ($row = $result->fetch_assoc()) {
             $subjects[] = $row;
         }
-        
-        error_log("GET CLASS SUBJECTS - Found " . count($subjects) . " subjects: " . print_r($subjects, true));
+
+        error_log(
+            "GET CLASS SUBJECTS - Found " .
+                count($subjects) .
+                " subjects: " .
+                print_r($subjects, true),
+        );
         echo json_encode($subjects);
-        exit;
+        exit();
     }
 
-    $program_id = $_GET['program_id'] ?? 0;
-    
+    $program_id = $_GET["program_id"] ?? 0;
+
     if (!$program_id) {
         echo json_encode([]);
-        exit;
+        exit();
     }
-    
+
     // Create table if not exists
     $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -436,66 +519,94 @@ if ($action === "get") {
     )");
     ensureClassSemesterColumn($conn);
     ensureClassPeriodColumn($conn);
-    
+
     $stmt = $conn->prepare("
-        SELECT ac.id, ac.year_level, ac.block, ac.semester, ac.period_id, ep.ay AS academic_year, ep.semester AS period_semester
+        SELECT ac.id, ac.year_level, ac.block, ac.semester, ac.period_id,
+            ep.ay AS academic_year, ep.semester AS period_semester,
+            (
+                SELECT COUNT(*)
+                FROM add_students st
+                WHERE (
+                    st.program = CAST(ac.program_id AS CHAR)
+                    OR UPPER(TRIM(st.program)) = UPPER(TRIM(p.program_code))
+                    OR UPPER(TRIM(st.program)) = UPPER(TRIM(p.program_name))
+                )
+                  AND TRIM(UPPER(st.section)) = TRIM(UPPER(ac.block))
+                  AND LOWER(TRIM(st.yearlevel)) != 'irregular'
+                  AND st.yearlevel IN (ac.year_level, CAST(ac.year_level AS UNSIGNED))
+            ) AS enrolled_students
         FROM add_classes ac
+        LEFT JOIN add_programs p ON p.id = ac.program_id
         LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
-        WHERE program_id = ?
+        WHERE ac.program_id = ?
         ORDER BY ac.year_level ASC, ep.ay DESC, ac.semester ASC, ac.block ASC
     ");
-    
+
     if ($stmt) {
         $stmt->bind_param("i", $program_id);
         $stmt->execute();
-        
+
         $result = $stmt->get_result();
         $classes = [];
-        
+
         while ($row = $result->fetch_assoc()) {
             $classes[] = $row;
         }
-        
+
         echo json_encode($classes);
     } else {
         echo json_encode([]);
     }
-    exit;
+    exit();
 }
 
 /* ========================= ADD CLASS ========================= */
 if ($action === "add") {
     error_log("ADD CLASS - Raw POST data: " . print_r($_POST, true));
-    
-    $program_id = $_POST['program_id'] ?? null;
-    $section_name = $_POST['section_name'] ?? "";
-    $year_level = $_POST['year_level'] ?? "";
-    $block = $_POST['block'] ?? "";
-    $period_id = intval($_POST['period_id'] ?? 0);
-    
+
+    $program_id = $_POST["program_id"] ?? null;
+    $section_name = $_POST["section_name"] ?? "";
+    $year_level = $_POST["year_level"] ?? "";
+    $block = $_POST["block"] ?? "";
+    $period_id = intval($_POST["period_id"] ?? 0);
+
     $subjects = [];
-    if (isset($_POST['subjects'])) {
-        $subjects = json_decode($_POST['subjects'], true);
+    if (isset($_POST["subjects"])) {
+        $subjects = json_decode($_POST["subjects"], true);
         if (!is_array($subjects)) {
             $subjects = [];
         }
     }
 
     $faculty_assignments = [];
-    if (isset($_POST['faculty_assignments'])) {
-        $faculty_assignments = json_decode($_POST['faculty_assignments'], true);
+    if (isset($_POST["faculty_assignments"])) {
+        $faculty_assignments = json_decode($_POST["faculty_assignments"], true);
         if (!is_array($faculty_assignments)) {
             $faculty_assignments = [];
         }
     }
-    
-    error_log("ADD CLASS - Parsed data: program_id=$program_id, section_name=$section_name, year_level=$year_level, block=$block");
+
+    error_log(
+        "ADD CLASS - Parsed data: program_id=$program_id, section_name=$section_name, year_level=$year_level, block=$block",
+    );
     error_log("ADD CLASS - Subjects: " . print_r($subjects, true));
-    error_log("ADD CLASS - Faculty assignments: " . print_r($faculty_assignments, true));
-    
-    if (!$program_id || !$year_level || !$block || $period_id <= 0 || empty($subjects)) {
-        echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
-        exit;
+    error_log(
+        "ADD CLASS - Faculty assignments: " .
+            print_r($faculty_assignments, true),
+    );
+
+    if (
+        !$program_id ||
+        !$year_level ||
+        !$block ||
+        $period_id <= 0 ||
+        empty($subjects)
+    ) {
+        echo json_encode([
+            "status" => "error",
+            "message" => "Missing required fields",
+        ]);
+        exit();
     }
 
     $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
@@ -510,39 +621,76 @@ if ($action === "add") {
     ensureClassPeriodColumn($conn);
     $period = getAcademicPeriod($conn, $period_id);
     if (!$period) {
-        echo json_encode(["status" => "error", "message" => "Select a valid academic year and semester."]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Select a valid academic year and semester.",
+        ]);
+        exit();
     }
-    $semester = (string)$period['semester'];
-    if (!validateSubjectsForPeriod($conn, $subjects, intval($program_id), $year_level, $semester)) {
-        echo json_encode(["status" => "error", "message" => "Select subjects that match this program, year level, and semester."]);
-        exit;
+    $semester = (string) $period["semester"];
+    if (
+        !validateSubjectsForPeriod(
+            $conn,
+            $subjects,
+            intval($program_id),
+            $year_level,
+            $semester,
+        )
+    ) {
+        echo json_encode([
+            "status" => "error",
+            "message" =>
+                "Select subjects that match this program, year level, and semester.",
+        ]);
+        exit();
     }
 
-    $assignmentValidation = validateClassSubjectAssignments($subjects, $faculty_assignments);
+    $assignmentValidation = validateClassSubjectAssignments(
+        $subjects,
+        $faculty_assignments,
+    );
     if (!$assignmentValidation["valid"]) {
-        echo json_encode(["status" => "error", "message" => $assignmentValidation["message"]]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => $assignmentValidation["message"],
+        ]);
+        exit();
     }
-    
+
     // Reuse an existing class for the same section; subjects are checked below.
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ?");
-    $check_stmt->bind_param("issi", $program_id, $year_level, $block, $period_id);
+    $check_stmt = $conn->prepare(
+        "SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ?",
+    );
+    $check_stmt->bind_param(
+        "issi",
+        $program_id,
+        $year_level,
+        $block,
+        $period_id,
+    );
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
     $check_stmt->close();
-    
+
     $existingClassId = 0;
-    if ($row['count'] > 0) {
-        $existingStmt = $conn->prepare("SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? LIMIT 1");
-        $existingStmt->bind_param("issi", $program_id, $year_level, $block, $period_id);
+    if ($row["count"] > 0) {
+        $existingStmt = $conn->prepare(
+            "SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? LIMIT 1",
+        );
+        $existingStmt->bind_param(
+            "issi",
+            $program_id,
+            $year_level,
+            $block,
+            $period_id,
+        );
         $existingStmt->execute();
         $existingRow = $existingStmt->get_result()->fetch_assoc();
-        $existingClassId = intval($existingRow['id'] ?? 0);
+        $existingClassId = intval($existingRow["id"] ?? 0);
         $existingStmt->close();
     }
-    
+
     // Create tables if not exist
     $conn->query("CREATE TABLE IF NOT EXISTS add_classes (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -553,7 +701,7 @@ if ($action === "add") {
     )");
     ensureClassSemesterColumn($conn);
     ensureClassPeriodColumn($conn);
-    
+
     $conn->query("CREATE TABLE IF NOT EXISTS class_subjects (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         class_id int(11) NOT NULL,
@@ -561,42 +709,68 @@ if ($action === "add") {
         faculty_id int(11) NOT NULL,
         UNIQUE KEY unique_class_subject (class_id, subject_id)
     )");
-    
+
     $conn->begin_transaction();
-    
+
     try {
         error_log("ADD CLASS - Starting transaction");
 
         if ($existingClassId > 0) {
             $class_id = $existingClassId;
-            $subjectCheck = $conn->prepare("SELECT subject_id FROM class_subjects WHERE class_id = ? AND subject_id = ? LIMIT 1");
+            $subjectCheck = $conn->prepare(
+                "SELECT subject_id FROM class_subjects WHERE class_id = ? AND subject_id = ? LIMIT 1",
+            );
             foreach ($subjects as $subject_id) {
                 $subjectCheck->bind_param("ii", $class_id, $subject_id);
                 $subjectCheck->execute();
                 if ($subjectCheck->get_result()->fetch_assoc()) {
-                    throw new Exception("Subject already exists in this section");
+                    throw new Exception(
+                        "Subject already exists in this section",
+                    );
                 }
             }
             $subjectCheck->close();
         } else {
-            $stmt = $conn->prepare("INSERT INTO add_classes (program_id, year_level, semester, period_id, block) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("issis", $program_id, $year_level, $semester, $period_id, $block);
+            $stmt = $conn->prepare(
+                "INSERT INTO add_classes (program_id, year_level, semester, period_id, block) VALUES (?, ?, ?, ?, ?)",
+            );
+            $stmt->bind_param(
+                "issis",
+                $program_id,
+                $year_level,
+                $semester,
+                $period_id,
+                $block,
+            );
             $stmt->execute();
             $class_id = $stmt->insert_id;
             $stmt->close();
         }
-        
+
         error_log("ADD CLASS - Created class with ID: $class_id");
-        
+
         if (!empty($subjects)) {
             error_log("ADD CLASS - Adding " . count($subjects) . " subjects");
-            $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
+            $sub_stmt = $conn->prepare(
+                "INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)",
+            );
             foreach ($subjects as $subject_id) {
-                $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
-                error_log("ADD CLASS - Adding subject $subject_id with faculty $faculty_id to class $class_id");
-                $sub_stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
+                $faculty_id = isset($faculty_assignments[$subject_id])
+                    ? intval($faculty_assignments[$subject_id])
+                    : 0;
+                error_log(
+                    "ADD CLASS - Adding subject $subject_id with faculty $faculty_id to class $class_id",
+                );
+                $sub_stmt->bind_param(
+                    "iii",
+                    $class_id,
+                    $subject_id,
+                    $faculty_id,
+                );
                 $sub_stmt->execute();
-                error_log("ADD CLASS - Successfully inserted subject $subject_id");
+                error_log(
+                    "ADD CLASS - Successfully inserted subject $subject_id",
+                );
             }
             $sub_stmt->close();
         } else {
@@ -604,105 +778,164 @@ if ($action === "add") {
         }
 
         syncRegularStudentsForClass($conn, intval($class_id));
-        
+
         $conn->commit();
         error_log("ADD CLASS - Transaction committed successfully");
-        echo json_encode(["status" => "success", "message" => "Class added successfully with ID: $class_id"]);
-        
+        echo json_encode([
+            "status" => "success",
+            "message" => "Class added successfully with ID: $class_id",
+        ]);
     } catch (Exception $e) {
         $conn->rollback();
         error_log("ADD CLASS - Transaction rolled back: " . $e->getMessage());
-        echo json_encode(["status"=>"error","message"=>"Failed to add class: " . $e->getMessage()]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to add class: " . $e->getMessage(),
+        ]);
     }
-    
-    exit;
+
+    exit();
 }
 
 /* ========================= EDIT CLASS ========================= */
 if ($action === "edit") {
-    $id = $_POST['id'] ?? null;
-    $program_id = $_POST['program_id'] ?? null;
-    $section_name = $_POST['section_name'] ?? "";
-    $year_level = $_POST['year_level'] ?? "";
-    $block = $_POST['block'] ?? "";
-    $period_id = intval($_POST['period_id'] ?? 0);
-    
+    $id = $_POST["id"] ?? null;
+    $program_id = $_POST["program_id"] ?? null;
+    $section_name = $_POST["section_name"] ?? "";
+    $year_level = $_POST["year_level"] ?? "";
+    $block = $_POST["block"] ?? "";
+    $period_id = intval($_POST["period_id"] ?? 0);
+
     $subjects = [];
-    if (isset($_POST['subjects'])) {
-        $subjects = json_decode($_POST['subjects'], true);
+    if (isset($_POST["subjects"])) {
+        $subjects = json_decode($_POST["subjects"], true);
         if (!is_array($subjects)) {
             $subjects = [];
         }
     }
 
     $faculty_assignments = [];
-    if (isset($_POST['faculty_assignments'])) {
-        $faculty_assignments = json_decode($_POST['faculty_assignments'], true);
+    if (isset($_POST["faculty_assignments"])) {
+        $faculty_assignments = json_decode($_POST["faculty_assignments"], true);
         if (!is_array($faculty_assignments)) {
             $faculty_assignments = [];
         }
     }
-    
-    if (!$id || !$program_id || !$year_level || !$block || $period_id <= 0 || empty($subjects)) {
-        echo json_encode(["status"=>"error","message"=>"Missing required fields"]);
-        exit;
+
+    if (
+        !$id ||
+        !$program_id ||
+        !$year_level ||
+        !$block ||
+        $period_id <= 0 ||
+        empty($subjects)
+    ) {
+        echo json_encode([
+            "status" => "error",
+            "message" => "Missing required fields",
+        ]);
+        exit();
     }
 
     ensureClassSemesterColumn($conn);
     ensureClassPeriodColumn($conn);
     $period = getAcademicPeriod($conn, $period_id);
     if (!$period) {
-        echo json_encode(["status" => "error", "message" => "Select a valid academic year and semester."]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Select a valid academic year and semester.",
+        ]);
+        exit();
     }
-    $semester = (string)$period['semester'];
-    if (!validateSubjectsForPeriod($conn, $subjects, intval($program_id), $year_level, $semester)) {
-        echo json_encode(["status" => "error", "message" => "Select subjects that match this program, year level, and semester."]);
-        exit;
+    $semester = (string) $period["semester"];
+    if (
+        !validateSubjectsForPeriod(
+            $conn,
+            $subjects,
+            intval($program_id),
+            $year_level,
+            $semester,
+        )
+    ) {
+        echo json_encode([
+            "status" => "error",
+            "message" =>
+                "Select subjects that match this program, year level, and semester.",
+        ]);
+        exit();
     }
 
-    $assignmentValidation = validateClassSubjectAssignments($subjects, $faculty_assignments);
+    $assignmentValidation = validateClassSubjectAssignments(
+        $subjects,
+        $faculty_assignments,
+    );
     if (!$assignmentValidation["valid"]) {
-        echo json_encode(["status" => "error", "message" => $assignmentValidation["message"]]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => $assignmentValidation["message"],
+        ]);
+        exit();
     }
-    
+
     // Check for duplicate class (same year level and section in same program), excluding current class
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? AND id != ?");
-    $check_stmt->bind_param("issii", $program_id, $year_level, $block, $period_id, $id);
+    $check_stmt = $conn->prepare(
+        "SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? AND id != ?",
+    );
+    $check_stmt->bind_param(
+        "issii",
+        $program_id,
+        $year_level,
+        $block,
+        $period_id,
+        $id,
+    );
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
     $check_stmt->close();
-    
-    if ($row['count'] > 0) {
+
+    if ($row["count"] > 0) {
         echo json_encode([
-            "status" => "error", 
-            "message" => "Class section already exists"
+            "status" => "error",
+            "message" => "Class section already exists",
         ]);
-        exit;
+        exit();
     }
-    
+
     $conn->begin_transaction();
-    
+
     try {
         // Update class
-        $stmt = $conn->prepare("UPDATE add_classes SET program_id = ?, year_level = ?, semester = ?, period_id = ?, block = ? WHERE id = ?");
-        $stmt->bind_param("issisi", $program_id, $year_level, $semester, $period_id, $block, $id);
+        $stmt = $conn->prepare(
+            "UPDATE add_classes SET program_id = ?, year_level = ?, semester = ?, period_id = ?, block = ? WHERE id = ?",
+        );
+        $stmt->bind_param(
+            "issisi",
+            $program_id,
+            $year_level,
+            $semester,
+            $period_id,
+            $block,
+            $id,
+        );
         $stmt->execute();
         $stmt->close();
-        
+
         // Delete existing class subjects
         $stmt = $conn->prepare("DELETE FROM class_subjects WHERE class_id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $stmt->close();
-        
+
         // Add new class subjects
         if (!empty($subjects)) {
-            $sub_stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
+            $sub_stmt = $conn->prepare(
+                "INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)",
+            );
             foreach ($subjects as $subject_id) {
-                $faculty_id = isset($faculty_assignments[$subject_id]) ? intval($faculty_assignments[$subject_id]) : 0;
+                $faculty_id = isset($faculty_assignments[$subject_id])
+                    ? intval($faculty_assignments[$subject_id])
+                    : 0;
                 $sub_stmt->bind_param("iii", $id, $subject_id, $faculty_id);
                 $sub_stmt->execute();
             }
@@ -710,30 +943,36 @@ if ($action === "edit") {
         }
 
         syncRegularStudentsForClass($conn, intval($id));
-        
+
         $conn->commit();
-        echo json_encode(["status" => "success", "message" => "Class updated successfully"]);
-        
+        echo json_encode([
+            "status" => "success",
+            "message" => "Class updated successfully",
+        ]);
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(["status"=>"error","message"=>"Failed to update class: " . $e->getMessage()]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to update class: " . $e->getMessage(),
+        ]);
     }
-    
-    exit;
+
+    exit();
 }
 
 /* ========================= ADD SUBJECT TO CLASS ========================= */
 if ($action === "add_subject_to_class") {
-    $class_id = $_POST['class_id'] ?? 0;
-    $subject_id = $_POST['subject_id'] ?? 0;
-    $faculty_id = $_POST['faculty_id'] ?? 0;
-    
+    $class_id = $_POST["class_id"] ?? 0;
+    $subject_id = $_POST["subject_id"] ?? 0;
+    $faculty_id = $_POST["faculty_id"] ?? 0;
+
     if (!$class_id || !$subject_id || !$faculty_id) {
         echo json_encode([
             "status" => "error",
-            "message" => "You must complete all required selections before adding a class subject."
+            "message" =>
+                "You must complete all required selections before adding a class subject.",
         ]);
-        exit;
+        exit();
     }
 
     ensureClassPeriodColumn($conn);
@@ -746,12 +985,22 @@ if ($action === "add_subject_to_class") {
     $periodSubjectStmt->execute();
     $periodSubject = $periodSubjectStmt->get_result()->fetch_assoc();
     $periodSubjectStmt->close();
-    if (!$periodSubject || strcasecmp(trim($periodSubject['period_semester']), trim($periodSubject['subject_semester'])) !== 0) {
-        echo json_encode(["status" => "error", "message" => "This subject does not belong to the class academic period."]);
-        exit;
+    if (
+        !$periodSubject ||
+        strcasecmp(
+            trim($periodSubject["period_semester"]),
+            trim($periodSubject["subject_semester"]),
+        ) !== 0
+    ) {
+        echo json_encode([
+            "status" => "error",
+            "message" =>
+                "This subject does not belong to the class academic period.",
+        ]);
+        exit();
     }
 
-        // Prevent duplicate subjects only; the same instructor may teach multiple subjects.
+    // Prevent duplicate subjects only; the same instructor may teach multiple subjects.
     $dup_stmt = $conn->prepare("
         SELECT id
         FROM class_subjects
@@ -759,107 +1008,140 @@ if ($action === "add_subject_to_class") {
                     AND subject_id = ?
         LIMIT 1
     ");
-        $dup_stmt->bind_param("ii", $class_id, $subject_id);
+    $dup_stmt->bind_param("ii", $class_id, $subject_id);
     $dup_stmt->execute();
     $dup_res = $dup_stmt->get_result();
     if ($dup_res && $dup_res->num_rows > 0) {
         $dup_stmt->close();
         echo json_encode([
             "status" => "error",
-            "message" => "Subject already exists in this section"
+            "message" => "Subject already exists in this section",
         ]);
-        exit;
+        exit();
     }
     $dup_stmt->close();
-    
-    $stmt = $conn->prepare("INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)");
+
+    $stmt = $conn->prepare(
+        "INSERT INTO class_subjects (class_id, subject_id, faculty_id) VALUES (?, ?, ?)",
+    );
     $stmt->bind_param("iii", $class_id, $subject_id, $faculty_id);
-    
+
     if ($stmt->execute()) {
         syncRegularStudentsForClass($conn, intval($class_id));
-        echo json_encode(["status" => "success", "message" => "Subject added to class successfully"]);
+        echo json_encode([
+            "status" => "success",
+            "message" => "Subject added to class successfully",
+        ]);
     } else {
-        echo json_encode(["status" => "error", "message" => "Failed to add subject: " . $stmt->error]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to add subject: " . $stmt->error,
+        ]);
     }
-    
+
     $stmt->close();
-    exit;
+    exit();
 }
 
 /* ========================= DELETE SUBJECT FROM CLASS ========================= */
 if ($action === "delete_subject") {
     error_log("DELETE_SUBJECT called");
     error_log("POST data: " . print_r($_POST, true));
-    
-    $class_id = $_POST['class_id'] ?? 0;
-    $subject_id = $_POST['subject_id'] ?? 0;
-    
+
+    $class_id = $_POST["class_id"] ?? 0;
+    $subject_id = $_POST["subject_id"] ?? 0;
+
     error_log("class_id: $class_id, subject_id: $subject_id");
-    
+
     if (!$class_id || !$subject_id) {
         error_log("Missing IDs");
-        echo json_encode(["status" => "error", "message" => "Missing class ID or subject ID"]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Missing class ID or subject ID",
+        ]);
+        exit();
     }
-    
-    $stmt = $conn->prepare("DELETE FROM class_subjects WHERE class_id = ? AND subject_id = ?");
+
+    $stmt = $conn->prepare(
+        "DELETE FROM class_subjects WHERE class_id = ? AND subject_id = ?",
+    );
     $stmt->bind_param("ii", $class_id, $subject_id);
-    
+
     if ($stmt->execute()) {
         error_log("Execute successful, affected_rows: " . $stmt->affected_rows);
         if ($stmt->affected_rows > 0) {
             syncRegularStudentsForClass($conn, intval($class_id));
-            echo json_encode(["status" => "success", "message" => "Subject removed from class successfully"]);
+            echo json_encode([
+                "status" => "success",
+                "message" => "Subject removed from class successfully",
+            ]);
         } else {
-            echo json_encode(["status" => "error", "message" => "Subject not found in this class"]);
+            echo json_encode([
+                "status" => "error",
+                "message" => "Subject not found in this class",
+            ]);
         }
     } else {
         error_log("Execute failed: " . $stmt->error);
-        echo json_encode(["status" => "error", "message" => "Failed to remove subject: " . $stmt->error]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to remove subject: " . $stmt->error,
+        ]);
     }
-    
+
     $stmt->close();
-    exit;
+    exit();
 }
 
 /* ========================= DELETE CLASS ========================= */
 if ($action === "delete") {
-    $id = $_POST['id'] ?? 0;
-    
+    $id = $_POST["id"] ?? 0;
+
     if (!$id) {
-        echo json_encode(["status" => "error", "message" => "Missing class ID"]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Missing class ID",
+        ]);
+        exit();
     }
-    
+
     $conn->begin_transaction();
-    
+
     try {
         // Delete class subjects first
         $stmt = $conn->prepare("DELETE FROM class_subjects WHERE class_id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $stmt->close();
-        
+
         // Delete class
         $stmt = $conn->prepare("DELETE FROM add_classes WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        
+
         if ($stmt->affected_rows > 0) {
             $conn->commit();
-            echo json_encode(["status" => "success", "message" => "Class deleted successfully"]);
+            echo json_encode([
+                "status" => "success",
+                "message" => "Class deleted successfully",
+            ]);
         } else {
             $conn->rollback();
-            echo json_encode(["status" => "error", "message" => "Class not found"]);
+            echo json_encode([
+                "status" => "error",
+                "message" => "Class not found",
+            ]);
         }
         $stmt->close();
-        
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(["status" => "error", "message" => "Failed to delete class: " . $e->getMessage()]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to delete class: " . $e->getMessage(),
+        ]);
     }
-    
-    exit;
+
+    exit();
 }
 
 echo json_encode(["status" => "error", "message" => "Invalid action"]);

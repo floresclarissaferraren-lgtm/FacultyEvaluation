@@ -256,7 +256,7 @@ if ($subjectStmt) {
     <div class="stat-card">
       <div class="stat-content">
         <div class="stat-header">
-          <span class="stat-label">TOTAL RESPONSES</span>
+          <span class="stat-label">STUDENT RESPONDENTS</span>
           <div class="stat-icon-small blue">
             <i class="ph-fill ph-users-three"></i>
           </div>

@@ -7,12 +7,6 @@ include __DIR__ . '/../shared/connect.php';
 require_once __DIR__ . '/../shared/mailer.php';
 require_once __DIR__ . '/../shared/ensure_schema_column.php';
 
-// Generate random password function
-function generateRandomPassword($length = 8) {
-    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    return substr(str_shuffle($chars), 0, $length);
-}
-
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
@@ -32,7 +26,7 @@ if ($action === "add") {
     $subjects = $data['subjects'] ?? [];
     
     // Generate random password
-    $password = generateRandomPassword();
+    $password = generateTemporaryPassword();
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Handle photo - if base64 string, store as is
@@ -218,9 +212,9 @@ if ($action === "add") {
 
     echo json_encode([
         "success" => true,
-        "message" => $sent ? "Faculty added successfully and email sent with password" : "Faculty added successfully but email failed to send",
-        "username" => $faculty_username,
-        "temporary_password" => $sent ? null : $password
+        "message" => $sent
+            ? "Faculty added and temporary password sent by email."
+            : "Faculty added, but the password email could not be sent. Ask the faculty member to use Forgot Password."
     ]);
 }
 
@@ -249,6 +243,8 @@ elseif ($action === "edit") {
         exit;
     }
 
+    $conn->begin_transaction();
+    try {
     $stmt = $conn->prepare("
         UPDATE add_faculties
         SET faculty_id=?, email=?, firstname=?, lastname=?, suffix=?, photo=?
@@ -268,7 +264,10 @@ elseif ($action === "edit") {
 
     if ($stmt->execute()) {
 
-        $conn->query("DELETE FROM faculty_subjects WHERE faculty_id=$id");
+        $deleteSubjects = $conn->prepare("DELETE FROM faculty_subjects WHERE faculty_id = ?");
+        $deleteSubjects->bind_param("i", $id);
+        $deleteSubjects->execute();
+        $deleteSubjects->close();
 
         if (!empty($subjects)) {
 
@@ -280,18 +279,27 @@ elseif ($action === "edit") {
             foreach ($subjects as $sid) {
                 $sid = intval($sid);
                 $sub->bind_param("ii", $id, $sid);
-                $sub->execute();
+                if (!$sub->execute()) {
+                    throw new RuntimeException('Unable to save faculty subject assignments.');
+                }
             }
 
             $sub->close();
         }
 
+        $conn->commit();
         echo json_encode(["success"=>true,"message"=>"Faculty updated"]);
     } else {
-        echo json_encode(["success"=>false,"message"=>$stmt->error]);
+        throw new RuntimeException('Unable to update faculty profile.');
     }
 
     $stmt->close();
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Faculty update error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(["success"=>false,"message"=>"Unable to update faculty. Please try again."]);
+    }
 }
 
 /* =========================
@@ -333,10 +341,29 @@ elseif ($action === "delete") {
         exit;
     }
 
-    $conn->query("DELETE FROM faculty_subjects WHERE faculty_id=$id");
-    $conn->query("DELETE FROM add_faculties WHERE id=$id");
+    $conn->begin_transaction();
+    try {
+        $deleteSubjects = $conn->prepare("DELETE FROM faculty_subjects WHERE faculty_id = ?");
+        $deleteSubjects->bind_param("i", $id);
+        $deleteSubjects->execute();
+        $deleteSubjects->close();
 
-    echo json_encode(["success"=>true,"message"=>"Faculty deleted"]);
+        $deleteFaculty = $conn->prepare("DELETE FROM add_faculties WHERE id = ?");
+        $deleteFaculty->bind_param("i", $id);
+        $deleteFaculty->execute();
+        $deleted = $deleteFaculty->affected_rows;
+        $deleteFaculty->close();
+        if ($deleted === 0) {
+            throw new RuntimeException('Faculty record not found.');
+        }
+        $conn->commit();
+        echo json_encode(["success"=>true,"message"=>"Faculty deleted"]);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Faculty delete error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(["success"=>false,"message"=>"Unable to delete faculty. Please try again."]);
+    }
 }
 
 $conn->close();

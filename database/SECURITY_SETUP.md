@@ -48,6 +48,33 @@ The app intentionally returns an error instead of falling back to MySQL root
 when the configuration is missing. Keep the password out of source control and
 out of files served by Apache.
 
+Password-reset codes are stored as password hashes, expire after 10 minutes,
+and only the newest code per email remains valid. Verification is rate-limited,
+and final code consumption and the password update are performed together.
+Existing plaintext reset codes are invalidated when a new reset is requested;
+users with a pending reset should request a fresh code.
+
+## Evaluation privacy
+
+Students can view only their own evaluation history. Faculty can view reports
+only for their own account; administrators can access system-wide reports.
+Individual answer rows are not returned by report endpoints, and report data
+does not include student names or IDs. The database still links each evaluation
+to its student to prevent duplicate submissions, so this is confidentiality in
+the reporting interface, not unlinkable storage.
+
+Faculty and report views suppress scores, response counts, category details,
+and comments when a selected cohort has fewer than five distinct respondents.
+The minimum is defined in `shared/evaluation_privacy.php`; update it only if
+institutional evaluation policy specifies a different disclosure threshold.
+Free-text comments can themselves identify a respondent, so they follow the
+same minimum-size rule.
+
+Account-creation temporary passwords are generated with a cryptographically
+secure random source, sent by email only, and are never returned in the admin
+or login API response. If delivery fails, the account holder should use Forgot
+Password to set a password.
+
 ## HTTPS and sessions
 
 In production, set `FACULTY_FORCE_HTTPS` to `1`; the app then redirects HTTP

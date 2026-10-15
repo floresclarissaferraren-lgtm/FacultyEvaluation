@@ -187,7 +187,7 @@ if ($action === "add") {
     }
     $check->close();
 
-    $password = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 8);
+    $password = generateTemporaryPassword();
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     $defaultStatus = 'active';
 
@@ -213,11 +213,14 @@ if ($action === "add") {
         $hashedPassword
     );
 
+    $conn->begin_transaction();
+    try {
     if ($stmt->execute()) {
 
         $student_id = $stmt->insert_id;
 
         $assignResult = assignStudentSubjects($conn, $student_id, $program, $yearlevelValue, $section, $subjects, $student_type !== 'irregular');
+        $conn->commit();
 
         /* ================= EMAIL WITH PASSWORD ================= */
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -254,14 +257,22 @@ if ($action === "add") {
 
         echo json_encode([
             "success" => true,
-            "message" => $sent ? "Student added + email sent" : "Student added but email failed",
-            "temporary_password" => $sent ? null : $password,
+            "message" => $sent
+                ? "Student added and temporary password sent by email."
+                : "Student added, but the password email could not be sent. Ask the student to use Forgot Password.",
             "subject_inserted" => $assignResult['inserted'] ?? 0,
             "subject_message" => $assignResult['message'] ?? ""
         ]);
 
     } else {
-        echo json_encode(["success"=>false,"message"=>$stmt->error]);
+        $conn->rollback();
+        echo json_encode(["success"=>false,"message"=>"Unable to create student account."]);
+    }
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Student creation error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(["success"=>false,"message"=>"Unable to create student account. Please try again."]);
     }
 
     $stmt->close();
@@ -311,12 +322,20 @@ elseif ($action === "edit") {
         $id
     );
 
+    $conn->begin_transaction();
+    try {
     if ($stmt->execute()) {
-
-        $conn->query("DELETE FROM student_subjects WHERE student_id=$id");
-        $conn->query("DELETE FROM student_subject_classes WHERE student_id=$id");
+        $deleteSubjects = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
+        $deleteSubjects->bind_param("i", $id);
+        $deleteSubjects->execute();
+        $deleteSubjects->close();
+        $deleteClasses = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ?");
+        $deleteClasses->bind_param("i", $id);
+        $deleteClasses->execute();
+        $deleteClasses->close();
 
         $assignResult = assignStudentSubjects($conn, $id, $program, $yearlevelValue, $section, $subjects, $student_type !== 'irregular');
+        $conn->commit();
 
         echo json_encode([
             "success"=>true,
@@ -325,7 +344,14 @@ elseif ($action === "edit") {
             "subject_message" => $assignResult['message'] ?? ""
         ]);
     } else {
-        echo json_encode(["success"=>false,"message"=>$stmt->error]);
+        $conn->rollback();
+        echo json_encode(["success"=>false,"message"=>"Unable to update student account."]);
+    }
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Student update error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(["success"=>false,"message"=>"Unable to update student. Please try again."]);
     }
 
     $stmt->close();
@@ -343,11 +369,32 @@ elseif ($action === "delete") {
         exit;
     }
 
-    $conn->query("DELETE FROM student_subjects WHERE student_id=$id");
-    $conn->query("DELETE FROM student_subject_classes WHERE student_id=$id");
-    $conn->query("DELETE FROM add_students WHERE id=$id");
-
-    echo json_encode(["success"=>true,"message"=>"Student deleted"]);
+    $conn->begin_transaction();
+    try {
+        $deleteSubjects = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
+        $deleteSubjects->bind_param("i", $id);
+        $deleteSubjects->execute();
+        $deleteSubjects->close();
+        $deleteClasses = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ?");
+        $deleteClasses->bind_param("i", $id);
+        $deleteClasses->execute();
+        $deleteClasses->close();
+        $deleteStudent = $conn->prepare("DELETE FROM add_students WHERE id = ?");
+        $deleteStudent->bind_param("i", $id);
+        $deleteStudent->execute();
+        $deleted = $deleteStudent->affected_rows;
+        $deleteStudent->close();
+        if ($deleted === 0) {
+            throw new RuntimeException('Student record not found.');
+        }
+        $conn->commit();
+        echo json_encode(["success"=>true,"message"=>"Student deleted"]);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Student delete error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(["success"=>false,"message"=>"Unable to delete student. Please try again."]);
+    }
 }
 
 /* =========================

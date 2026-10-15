@@ -25,21 +25,25 @@
  * @param int    $faculty_id
  * @return float
  */
-function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): array
-{
-    $sql = '';
-    $types = '';
+function evaluationContextFilterSql(
+    string $alias,
+    ?int $subject_id = null,
+    ?int $class_id = null,
+    ?int $period_id = null,
+): array {
+    $sql = "";
+    $types = "";
     $params = [];
 
     if ($subject_id !== null && $subject_id > 0) {
         $sql .= " AND {$alias}.subject_id = ?";
-        $types .= 'i';
+        $types .= "i";
         $params[] = $subject_id;
     }
 
     if ($class_id !== null) {
         $sql .= " AND {$alias}.class_id = ?";
-        $types .= 'i';
+        $types .= "i";
         $params[] = max(0, $class_id);
     }
 
@@ -56,27 +60,42 @@ function evaluationContextFilterSql(string $alias, ?int $subject_id = null, ?int
                 )
             )
         )";
-        $types .= 'ii';
+        $types .= "ii";
         $params[] = $period_id;
         $params[] = $period_id;
     }
 
-    return ['sql' => $sql, 'types' => $types, 'params' => $params];
+    return ["sql" => $sql, "types" => $types, "params" => $params];
 }
 
-function bindDynamicParams(mysqli_stmt $stmt, string $types, array $params): void
-{
-    if ($types === '') return;
+function bindDynamicParams(
+    mysqli_stmt $stmt,
+    string $types,
+    array $params,
+): void {
+    if ($types === "") {
+        return;
+    }
     $refs = [$types];
     foreach ($params as $key => $value) {
         $refs[] = &$params[$key];
     }
-    call_user_func_array([$stmt, 'bind_param'], $refs);
+    call_user_func_array([$stmt, "bind_param"], $refs);
 }
 
-function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): float
-{
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
+function calcWeightedScore(
+    mysqli $conn,
+    int $faculty_id,
+    ?int $subject_id = null,
+    ?int $class_id = null,
+    ?int $period_id = null,
+): float {
+    $context = evaluationContextFilterSql(
+        "e",
+        $subject_id,
+        $class_id,
+        $period_id,
+    );
     // Fetch per-category averages + weights in one query.
     $sql = "
         SELECT
@@ -88,37 +107,47 @@ function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = nul
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
-                                     {$context['sql']}
+                                     {$context["sql"]}
         GROUP BY c.id, c.weight
         ORDER BY c.section_number ASC
     ";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) return 0.00;
-    bindDynamicParams($stmt, 'i' . $context['types'], array_merge([$faculty_id], $context['params']));
+    if (!$stmt) {
+        return 0.0;
+    }
+    bindDynamicParams(
+        $stmt,
+        "i" . $context["types"],
+        array_merge([$faculty_id], $context["params"]),
+    );
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
 
     $rows = [];
     while ($row = $result->fetch_assoc()) {
-        if ($row['cat_avg'] === null) continue; // skip categories with no answers
+        if ($row["cat_avg"] === null) {
+            continue;
+        } // skip categories with no answers
         $rows[] = [
-            'weight' => floatval($row['cat_weight']),
-            'avg'    => floatval($row['cat_avg']),
+            "weight" => floatval($row["cat_weight"]),
+            "avg" => floatval($row["cat_avg"]),
         ];
     }
 
-    if (empty($rows)) return 0.00;
+    if (empty($rows)) {
+        return 0.0;
+    }
 
     // Normalise weights
-    $totalWeight = array_sum(array_column($rows, 'weight'));
+    $totalWeight = array_sum(array_column($rows, "weight"));
 
     if ($totalWeight <= 0) {
         // Fall back: equal weight for each category that has data
         $equalWeight = 100.0 / count($rows);
         foreach ($rows as &$r) {
-            $r['weight'] = $equalWeight;
+            $r["weight"] = $equalWeight;
         }
         unset($r);
         $totalWeight = 100.0;
@@ -126,8 +155,8 @@ function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = nul
 
     $weighted = 0.0;
     foreach ($rows as $r) {
-        $normalised  = ($r['weight'] / $totalWeight) * 100.0;
-        $weighted   += $r['avg'] * ($normalised / 100.0);
+        $normalised = ($r["weight"] / $totalWeight) * 100.0;
+        $weighted += $r["avg"] * ($normalised / 100.0);
     }
 
     return round($weighted, 2);
@@ -144,12 +173,14 @@ function calcWeightedScore(mysqli $conn, int $faculty_id, ?int $subject_id = nul
  */
 function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
 {
-    if (empty($answers)) return 0.00;
+    if (empty($answers)) {
+        return 0.0;
+    }
 
     // Build question_id -> rating map
     $ratingMap = [];
     foreach ($answers as $a) {
-        $ratingMap[intval($a['question_id'])] = intval($a['rating']);
+        $ratingMap[intval($a["question_id"])] = intval($a["rating"]);
     }
 
     // Fetch category weights and their question ids
@@ -160,31 +191,38 @@ function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
         ORDER BY c.section_number ASC
     ";
     $result = $conn->query($sql);
-    if (!$result) return 0.00;
+    if (!$result) {
+        return 0.0;
+    }
 
     // Group questions by category
     $categories = []; // cat_id => ['weight'=>float, 'ratings'=>[]]
     while ($row = $result->fetch_assoc()) {
-        $cid = intval($row['cat_id']);
+        $cid = intval($row["cat_id"]);
         if (!isset($categories[$cid])) {
-            $categories[$cid] = ['weight' => floatval($row['cat_weight']), 'ratings' => []];
+            $categories[$cid] = [
+                "weight" => floatval($row["cat_weight"]),
+                "ratings" => [],
+            ];
         }
-        $qid = intval($row['q_id']);
+        $qid = intval($row["q_id"]);
         if (isset($ratingMap[$qid])) {
-            $categories[$cid]['ratings'][] = $ratingMap[$qid];
+            $categories[$cid]["ratings"][] = $ratingMap[$qid];
         }
     }
 
     // Filter out categories with no answered questions
-    $active = array_filter($categories, fn($c) => !empty($c['ratings']));
-    if (empty($active)) return 0.00;
+    $active = array_filter($categories, fn($c) => !empty($c["ratings"]));
+    if (empty($active)) {
+        return 0.0;
+    }
 
-    $totalWeight = array_sum(array_column($active, 'weight'));
+    $totalWeight = array_sum(array_column($active, "weight"));
 
     if ($totalWeight <= 0) {
         $equalWeight = 100.0 / count($active);
         foreach ($active as &$c) {
-            $c['weight'] = $equalWeight;
+            $c["weight"] = $equalWeight;
         }
         unset($c);
         $totalWeight = 100.0;
@@ -192,9 +230,9 @@ function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
 
     $weighted = 0.0;
     foreach ($active as $c) {
-        $catAvg      = array_sum($c['ratings']) / count($c['ratings']);
-        $normalised  = ($c['weight'] / $totalWeight) * 100.0;
-        $weighted   += $catAvg * ($normalised / 100.0);
+        $catAvg = array_sum($c["ratings"]) / count($c["ratings"]);
+        $normalised = ($c["weight"] / $totalWeight) * 100.0;
+        $weighted += $catAvg * ($normalised / 100.0);
     }
 
     return round($weighted, 2);
@@ -207,9 +245,19 @@ function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
  * @param int    $faculty_id
  * @return array
  */
-function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): array
-{
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
+function getCategoryStats(
+    mysqli $conn,
+    int $faculty_id,
+    ?int $subject_id = null,
+    ?int $class_id = null,
+    ?int $period_id = null,
+): array {
+    $context = evaluationContextFilterSql(
+        "e",
+        $subject_id,
+        $class_id,
+        $period_id,
+    );
     $sql = "
         SELECT
             c.id                                                            AS cat_id,
@@ -222,14 +270,20 @@ function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
-                                     {$context['sql']}
+                                     {$context["sql"]}
         GROUP BY c.id, c.category_name, c.weight
         ORDER BY c.section_number ASC
     ";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) return [];
-    bindDynamicParams($stmt, 'i' . $context['types'], array_merge([$faculty_id], $context['params']));
+    if (!$stmt) {
+        return [];
+    }
+    bindDynamicParams(
+        $stmt,
+        "i" . $context["types"],
+        array_merge([$faculty_id], $context["params"]),
+    );
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
@@ -240,19 +294,24 @@ function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null
         $rows[] = $row;
     }
 
-    $activeRows = array_filter($rows, static fn($row) => intval($row['responses'] ?? 0) > 0);
-    $totalWeight = array_sum(array_column($activeRows, 'weight'));
+    $activeRows = array_filter(
+        $rows,
+        static fn($row) => intval($row["responses"] ?? 0) > 0,
+    );
+    $totalWeight = array_sum(array_column($activeRows, "weight"));
     $activeCount = count($activeRows);
     foreach ($rows as &$row) {
-        $row['weight']            = floatval($row['weight']);
-        $hasResponses = intval($row['responses'] ?? 0) > 0;
-        $row['normalised_weight'] = !$hasResponses
+        $row["weight"] = floatval($row["weight"]);
+        $hasResponses = intval($row["responses"] ?? 0) > 0;
+        $row["normalised_weight"] = !$hasResponses
             ? 0
             : ($totalWeight > 0
-            ? round(($row['weight'] / $totalWeight) * 100, 2)
-            : ($activeCount > 0 ? round(100 / $activeCount, 2) : 0));
-        $row['avg_rating']        = number_format(floatval($row['avg_rating']), 2);
-        $row['responses']         = intval($row['responses']);
+                ? round(($row["weight"] / $totalWeight) * 100, 2)
+                : ($activeCount > 0
+                    ? round(100 / $activeCount, 2)
+                    : 0));
+        $row["avg_rating"] = number_format(floatval($row["avg_rating"]), 2);
+        $row["responses"] = intval($row["responses"]);
     }
     unset($row);
 
@@ -268,9 +327,20 @@ function getCategoryStats(mysqli $conn, int $faculty_id, ?int $subject_id = null
  * @param string $program_name  Full program name from add_programs.program_name
  * @return float
  */
-function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): float
-{
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
+function calcWeightedScoreByProgram(
+    mysqli $conn,
+    int $faculty_id,
+    string $program_name,
+    ?int $subject_id = null,
+    ?int $class_id = null,
+    ?int $period_id = null,
+): float {
+    $context = evaluationContextFilterSql(
+        "e",
+        $subject_id,
+        $class_id,
+        $period_id,
+    );
     $sql = "
         SELECT
             c.id          AS cat_id,
@@ -281,7 +351,7 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
-                                     {$context['sql']}
+                                     {$context["sql"]}
                                      AND EXISTS (
                                          SELECT 1
                                          FROM add_students s
@@ -296,35 +366,47 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
     ";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) return 0.00;
-    bindDynamicParams($stmt, 'i' . $context['types'] . 's', array_merge([$faculty_id], $context['params'], [$program_name]));
+    if (!$stmt) {
+        return 0.0;
+    }
+    bindDynamicParams(
+        $stmt,
+        "i" . $context["types"] . "s",
+        array_merge([$faculty_id], $context["params"], [$program_name]),
+    );
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
 
     $rows = [];
     while ($row = $result->fetch_assoc()) {
-        if ($row['cat_avg'] === null) continue;
+        if ($row["cat_avg"] === null) {
+            continue;
+        }
         $rows[] = [
-            'weight' => floatval($row['cat_weight']),
-            'avg'    => floatval($row['cat_avg']),
+            "weight" => floatval($row["cat_weight"]),
+            "avg" => floatval($row["cat_avg"]),
         ];
     }
 
-    if (empty($rows)) return 0.00;
+    if (empty($rows)) {
+        return 0.0;
+    }
 
-    $totalWeight = array_sum(array_column($rows, 'weight'));
+    $totalWeight = array_sum(array_column($rows, "weight"));
     if ($totalWeight <= 0) {
         $equalWeight = 100.0 / count($rows);
-        foreach ($rows as &$r) { $r['weight'] = $equalWeight; }
+        foreach ($rows as &$r) {
+            $r["weight"] = $equalWeight;
+        }
         unset($r);
         $totalWeight = 100.0;
     }
 
     $weighted = 0.0;
     foreach ($rows as $r) {
-        $normalised  = ($r['weight'] / $totalWeight) * 100.0;
-        $weighted   += $r['avg'] * ($normalised / 100.0);
+        $normalised = ($r["weight"] / $totalWeight) * 100.0;
+        $weighted += $r["avg"] * ($normalised / 100.0);
     }
 
     return round($weighted, 2);
@@ -338,9 +420,20 @@ function calcWeightedScoreByProgram(mysqli $conn, int $faculty_id, string $progr
  * @param string $program_name  Full program name from add_programs.program_name
  * @return array
  */
-function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $program_name, ?int $subject_id = null, ?int $class_id = null, ?int $period_id = null): array
-{
-    $context = evaluationContextFilterSql('e', $subject_id, $class_id, $period_id);
+function getCategoryStatsByProgram(
+    mysqli $conn,
+    int $faculty_id,
+    string $program_name,
+    ?int $subject_id = null,
+    ?int $class_id = null,
+    ?int $period_id = null,
+): array {
+    $context = evaluationContextFilterSql(
+        "e",
+        $subject_id,
+        $class_id,
+        $period_id,
+    );
     $sql = "
         SELECT
             c.id                                                                    AS cat_id,
@@ -353,7 +446,7 @@ function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $progra
         LEFT JOIN evaluation_answers ea ON ea.question_id = q.id
         LEFT JOIN evaluations e      ON e.id = ea.evaluation_id
                                      AND e.faculty_id = ?
-                                     {$context['sql']}
+                                     {$context["sql"]}
                                      AND EXISTS (
                                          SELECT 1
                                          FROM add_students s
@@ -368,8 +461,14 @@ function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $progra
     ";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) return [];
-    bindDynamicParams($stmt, 'i' . $context['types'] . 's', array_merge([$faculty_id], $context['params'], [$program_name]));
+    if (!$stmt) {
+        return [];
+    }
+    bindDynamicParams(
+        $stmt,
+        "i" . $context["types"] . "s",
+        array_merge([$faculty_id], $context["params"], [$program_name]),
+    );
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
@@ -379,19 +478,24 @@ function getCategoryStatsByProgram(mysqli $conn, int $faculty_id, string $progra
         $rows[] = $row;
     }
 
-    $activeRows = array_filter($rows, static fn($row) => intval($row['responses'] ?? 0) > 0);
-    $totalWeight = array_sum(array_column($activeRows, 'weight'));
+    $activeRows = array_filter(
+        $rows,
+        static fn($row) => intval($row["responses"] ?? 0) > 0,
+    );
+    $totalWeight = array_sum(array_column($activeRows, "weight"));
     $activeCount = count($activeRows);
     foreach ($rows as &$row) {
-        $row['weight']            = floatval($row['weight']);
-        $hasResponses = intval($row['responses'] ?? 0) > 0;
-        $row['normalised_weight'] = !$hasResponses
+        $row["weight"] = floatval($row["weight"]);
+        $hasResponses = intval($row["responses"] ?? 0) > 0;
+        $row["normalised_weight"] = !$hasResponses
             ? 0
             : ($totalWeight > 0
-            ? round(($row['weight'] / $totalWeight) * 100, 2)
-            : ($activeCount > 0 ? round(100 / $activeCount, 2) : 0));
-        $row['avg_rating']        = number_format(floatval($row['avg_rating']), 2);
-        $row['responses']         = intval($row['responses']);
+                ? round(($row["weight"] / $totalWeight) * 100, 2)
+                : ($activeCount > 0
+                    ? round(100 / $activeCount, 2)
+                    : 0));
+        $row["avg_rating"] = number_format(floatval($row["avg_rating"]), 2);
+        $row["responses"] = intval($row["responses"]);
     }
     unset($row);
 

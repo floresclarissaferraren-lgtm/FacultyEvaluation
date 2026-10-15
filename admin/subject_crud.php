@@ -1,25 +1,35 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('admin');
-include __DIR__ . '/../shared/connect.php';
+require_once __DIR__ . "/../shared/security.php";
+requireRole("admin");
+include __DIR__ . "/../shared/connect.php";
 
 header("Content-Type: application/json");
 
-// Enable error reporting for debugging
+// Keep PHP diagnostics in the server log; never expose internals in API responses.
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set("display_errors", "0");
+ini_set("log_errors", "1");
 
-$action = $_REQUEST['action'] ?? "";
-if (in_array($action, ['get', 'get_all', 'get_by_year', 'get_all_by_program'], true)) {
-    requireMethod('GET');
+$action = $_REQUEST["action"] ?? "";
+if (
+    in_array(
+        $action,
+        ["get", "get_all", "get_by_year", "get_all_by_program"],
+        true,
+    )
+) {
+    requireMethod("GET");
 } else {
-    requireMethod('POST');
+    requireMethod("POST");
 }
 
-function ensureSubjectSemesterColumn(mysqli $conn): void {
+function ensureSubjectSemesterColumn(mysqli $conn): void
+{
     $check = $conn->query("SHOW COLUMNS FROM add_subjects LIKE 'semester'");
     if ($check && $check->num_rows === 0) {
-        $conn->query("ALTER TABLE add_subjects ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER subject_desc");
+        $conn->query(
+            "ALTER TABLE add_subjects ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER subject_desc",
+        );
     }
 }
 
@@ -29,19 +39,20 @@ error_log("POST data: " . print_r($_POST, true));
 
 /* ========================= ADD SUBJECT ========================= */
 if ($action === "add") {
+    $program_id = $_POST["program_id"] ?? null;
+    $code = $_POST["subject_code"] ?? "";
+    $desc = $_POST["subject_desc"] ?? "";
+    $semester = $_POST["semester"] ?? "";
+    $year_level = $_POST["year_level"] ?? "";
 
-    $program_id = $_POST['program_id'] ?? null;
-    $code       = $_POST['subject_code'] ?? "";
-    $desc       = $_POST['subject_desc'] ?? "";
-    $semester   = $_POST['semester'] ?? "";
-    $year_level = $_POST['year_level'] ?? "";
-
-    error_log("Adding subject - Program ID: $program_id, Code: $code, Desc: $desc, Semester: $semester, Year: $year_level");
+    error_log(
+        "Adding subject - Program ID: $program_id, Code: $code, Desc: $desc, Semester: $semester, Year: $year_level",
+    );
 
     if (!$program_id || !$code || !$desc || !$semester || !$year_level) {
         error_log("Missing fields detected");
-        echo json_encode(["status"=>"error","message"=>"Missing fields"]);
-        exit;
+        echo json_encode(["status" => "error", "message" => "Missing fields"]);
+        exit();
     }
 
     ensureSubjectSemesterColumn($conn);
@@ -53,28 +64,43 @@ if ($action === "add") {
 
     if (!$stmt) {
         error_log("Prepare failed: " . $conn->error);
-        echo json_encode(["status"=>"error","message"=>"Database prepare failed"]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Database prepare failed",
+        ]);
+        exit();
     }
 
-    $stmt->bind_param("issss", $program_id, $code, $desc, $semester, $year_level);
+    $stmt->bind_param(
+        "issss",
+        $program_id,
+        $code,
+        $desc,
+        $semester,
+        $year_level,
+    );
 
     if ($stmt->execute()) {
         error_log("Subject added successfully");
-        echo json_encode(["status" => "success", "message" => "Subject added successfully"]);
+        echo json_encode([
+            "status" => "success",
+            "message" => "Subject added successfully",
+        ]);
     } else {
         error_log("Execute failed: " . $stmt->error);
-        echo json_encode(["status" => "error", "message" => "Failed to add subject: " . $stmt->error]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Failed to add subject: " . $stmt->error,
+        ]);
     }
 
     $stmt->close();
-    exit;
+    exit();
 }
 
 /* ========================= GET SUBJECTS ========================= */
 if ($action === "get") {
-
-    $program_id = $_GET['program_id'] ?? 0;
+    $program_id = $_GET["program_id"] ?? 0;
 
     ensureSubjectSemesterColumn($conn);
 
@@ -96,31 +122,39 @@ if ($action === "get") {
     }
 
     echo json_encode($data);
-    exit;
+    exit();
 }
 
 /* ========================= DELETE SUBJECT ========================= */
 if ($action === "delete") {
+    $id = $_POST["id"] ?? 0;
 
-    $id = $_POST['id'] ?? 0;
-    
     error_log("Attempting to delete subject with ID: $id");
 
     // Check if subject is assigned to any classes first
-    $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM class_subjects WHERE subject_id = ?");
+    $check_stmt = $conn->prepare(
+        "SELECT COUNT(*) as count FROM class_subjects WHERE subject_id = ?",
+    );
     $check_stmt->bind_param("i", $id);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $row = $result->fetch_assoc();
     $check_stmt->close();
-    
-    if ($row['count'] > 0) {
-        error_log("Subject is assigned to " . $row['count'] . " classes, cannot delete");
+
+    if ($row["count"] > 0) {
+        error_log(
+            "Subject is assigned to " .
+                $row["count"] .
+                " classes, cannot delete",
+        );
         echo json_encode([
-            "status" => "error", 
-            "message" => "Cannot delete subject. It is currently assigned to " . $row['count'] . " class(es). Please remove it from all classes first."
+            "status" => "error",
+            "message" =>
+                "Cannot delete subject. It is currently assigned to " .
+                $row["count"] .
+                " class(es). Please remove it from all classes first.",
         ]);
-        exit;
+        exit();
     }
 
     $stmt = $conn->prepare("DELETE FROM add_subjects WHERE id=?");
@@ -130,32 +164,31 @@ if ($action === "delete") {
         error_log("Subject deleted successfully");
         echo json_encode([
             "status" => "success",
-            "message" => "Subject deleted successfully"
+            "message" => "Subject deleted successfully",
         ]);
     } else {
         error_log("Failed to delete subject: " . $stmt->error);
         echo json_encode([
             "status" => "error",
-            "message" => "Failed to delete subject: " . $stmt->error
+            "message" => "Failed to delete subject: " . $stmt->error,
         ]);
     }
 
     $stmt->close();
-    exit;
+    exit();
 }
 
 /* ========================= EDIT SUBJECT ========================= */
 if ($action === "edit") {
-
-    $id         = $_POST['id'] ?? 0;
-    $code       = $_POST['subject_code'] ?? "";
-    $desc       = $_POST['subject_desc'] ?? "";
-    $semester   = $_POST['semester'] ?? "";
-    $year_level = $_POST['year_level'] ?? "";
+    $id = $_POST["id"] ?? 0;
+    $code = $_POST["subject_code"] ?? "";
+    $desc = $_POST["subject_desc"] ?? "";
+    $semester = $_POST["semester"] ?? "";
+    $year_level = $_POST["year_level"] ?? "";
 
     if (!$id || !$code || !$desc || !$semester || !$year_level) {
-        echo json_encode(["status"=>"error","message"=>"Missing fields"]);
-        exit;
+        echo json_encode(["status" => "error", "message" => "Missing fields"]);
+        exit();
     }
 
     ensureSubjectSemesterColumn($conn);
@@ -169,19 +202,18 @@ if ($action === "edit") {
     $stmt->bind_param("ssssi", $code, $desc, $semester, $year_level, $id);
 
     echo json_encode([
-        "status" => $stmt->execute() ? "success" : "error"
+        "status" => $stmt->execute() ? "success" : "error",
     ]);
 
-    exit;
+    exit();
 }
 
 /* ========================= GET BY YEAR (FIXED) ========================= */
 if ($action === "get_by_year") {
-
     header("Content-Type: application/json");
 
-    $program_id = $_GET['program_id'] ?? 0;
-    $year_level = $_GET['year_level'] ?? '';
+    $program_id = $_GET["program_id"] ?? 0;
+    $year_level = $_GET["year_level"] ?? "";
 
     ensureSubjectSemesterColumn($conn);
 
@@ -202,12 +234,11 @@ if ($action === "get_by_year") {
     }
 
     echo json_encode($data);
-    exit;
+    exit();
 }
 
 /* ========================= GET ALL SUBJECTS ========================= */
 if ($action === "get_all") {
-
     header("Content-Type: application/json");
 
     ensureSubjectSemesterColumn($conn);
@@ -229,15 +260,14 @@ if ($action === "get_all") {
     }
 
     echo json_encode($data);
-    exit;
+    exit();
 }
 
 /* ========================= GET ALL SUBJECTS FOR PROGRAM ========================= */
 if ($action === "get_all_by_program") {
-
     header("Content-Type: application/json");
 
-    $program_id = $_GET['program_id'] ?? 0;
+    $program_id = $_GET["program_id"] ?? 0;
 
     ensureSubjectSemesterColumn($conn);
 
@@ -259,20 +289,22 @@ if ($action === "get_all_by_program") {
     }
 
     echo json_encode($data);
-    exit;
+    exit();
 }
 
 /* ========================= GET SUBJECTS BY PROGRAM AND YEAR LEVEL ========================= */
 if ($action === "get_by_program_and_year") {
-
     header("Content-Type: application/json");
 
-    $program_id = $_GET['program_id'] ?? 0;
-    $year_level = $_GET['year_level'] ?? "";
+    $program_id = $_GET["program_id"] ?? 0;
+    $year_level = $_GET["year_level"] ?? "";
 
     if (!$program_id || !$year_level) {
-        echo json_encode(["status" => "error", "message" => "Program ID and year level are required"]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Program ID and year level are required",
+        ]);
+        exit();
     }
 
     ensureSubjectSemesterColumn($conn);
@@ -295,20 +327,22 @@ if ($action === "get_by_program_and_year") {
     }
 
     echo json_encode($data);
-    exit;
+    exit();
 }
 
 /* ========================= GET SUBJECTS AUTOMATICALLY FOR STUDENTS ========================= */
 if ($action === "get_auto_subjects") {
-
     header("Content-Type: application/json");
 
-    $program_id = $_GET['program_id'] ?? 0;
-    $year_level = $_GET['year_level'] ?? "";
+    $program_id = $_GET["program_id"] ?? 0;
+    $year_level = $_GET["year_level"] ?? "";
 
     if (!$program_id || !$year_level) {
-        echo json_encode(["status" => "error", "message" => "Program ID and year level are required"]);
-        exit;
+        echo json_encode([
+            "status" => "error",
+            "message" => "Program ID and year level are required",
+        ]);
+        exit();
     }
 
     ensureSubjectSemesterColumn($conn);
@@ -331,17 +365,17 @@ if ($action === "get_auto_subjects") {
     }
 
     echo json_encode([
-        "status" => "success", 
+        "status" => "success",
         "subjects" => $data,
-        "count" => count($data)
+        "count" => count($data),
     ]);
-    exit;
+    exit();
 }
 
 /* ========================= DEFAULT ========================= */
 echo json_encode([
     "status" => "error",
-    "message" => "Invalid action"
+    "message" => "Invalid action",
 ]);
-exit;
+exit();
 ?>

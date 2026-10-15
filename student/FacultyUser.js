@@ -1,5 +1,3 @@
-
-
 //walang password open ================= DROPDOWN =================
 function closeStudentDropdown() {
   const menu = document.getElementById("dropdownMenu");
@@ -42,42 +40,52 @@ window.confirmLogout = () => {
 
   logoutButton.classList.add("is-loading");
   logoutButton.disabled = true;
-  logoutButton.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
+  logoutButton.innerHTML =
+    '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
   if (cancelButton) cancelButton.disabled = true;
 
   setTimeout(() => location.replace("../shared/logout.php"), 800);
 };
-window.logout = e => { 
-  e.preventDefault(); 
-  showLogoutModal(); 
+window.logout = (e) => {
+  e.preventDefault();
+  showLogoutModal();
 };
 
-window.addEventListener("pageshow", event => {
-  if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+window.addEventListener("pageshow", (event) => {
+  if (
+    event.persisted ||
+    performance.getEntriesByType("navigation")[0]?.type === "back_forward"
+  ) {
     window.location.reload();
   }
 });
 
-document.addEventListener("click", e => {
+document.addEventListener("click", (e) => {
   const m = document.getElementById("dropdownMenu"),
-        t = document.querySelector(".student-box");
-  if (m && t && m.classList.contains("show") && !t.contains(e.target) && !m.contains(e.target)) {
+    t = document.querySelector(".student-box");
+  if (
+    m &&
+    t &&
+    m.classList.contains("show") &&
+    !t.contains(e.target) &&
+    !m.contains(e.target)
+  ) {
     closeStudentDropdown();
   }
 });
 
 const logoutModal = document.getElementById("logoutModal");
-logoutModal?.addEventListener("click", e => {
+logoutModal?.addEventListener("click", (e) => {
   if (e.target === logoutModal) closeLogoutModal();
 });
 
-function showPasswordForm(e){
+function showPasswordForm(e) {
   if (e) e.preventDefault();
   closeStudentDropdown();
-  
+
   const passwordForm = document.getElementById("passwordForm");
   const formContent = passwordForm.querySelector(".LoginForm-content");
-  
+
   // Reset any previous animations/transforms
   if (formContent) {
     formContent.style.animation = "none";
@@ -85,19 +93,21 @@ function showPasswordForm(e){
     // Force reflow to restart animation
     void formContent.offsetHeight;
   }
-  
+
   document.body.classList.add("modal-open");
   passwordForm.classList.add("show");
-  
+
   // Reset button state when opening form
-  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  const submitBtn = document.querySelector(
+    "#passwordChangeForm .modern-login-btn",
+  );
   if (submitBtn) {
     submitBtn.disabled = false;
     submitBtn.textContent = "Update Password";
     submitBtn.style.opacity = "1";
     submitBtn.style.cursor = "pointer";
   }
-  
+
   // Clear input fields
   document.getElementById("oldPass").value = "";
   document.getElementById("newPass").value = "";
@@ -105,13 +115,13 @@ function showPasswordForm(e){
   if (typeof clearPassMsgs === "function") clearPassMsgs();
 }
 
-function closePasswordForm(){
+function closePasswordForm() {
   const passwordForm = document.getElementById("passwordForm");
   const formContent = passwordForm.querySelector(".LoginForm-content");
-  
+
   document.body.classList.remove("modal-open");
   passwordForm.classList.remove("show");
-  
+
   // Reset animations after closing
   setTimeout(() => {
     if (formContent) {
@@ -119,13 +129,15 @@ function closePasswordForm(){
       formContent.style.transform = "";
     }
   }, 300);
-  
+
   if (typeof clearPassMsgs === "function") clearPassMsgs();
   const box = document.getElementById("passGlobalMsg");
   if (box) box.style.display = "none";
-  
+
   // Reset button state when closing form
-  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  const submitBtn = document.querySelector(
+    "#passwordChangeForm .modern-login-btn",
+  );
   if (submitBtn) {
     submitBtn.disabled = false;
     submitBtn.textContent = "Update Password";
@@ -138,18 +150,23 @@ function formatStudentYearLevel(value) {
   if (!level) return "N/A";
   if (/^irregular$/i.test(level)) return "Irregular";
   if (/year$/i.test(level)) return level;
-  const suffix = level === "1" ? "st" : level === "2" ? "nd" : level === "3" ? "rd" : "th";
+  const suffix =
+    level === "1" ? "st" : level === "2" ? "nd" : level === "3" ? "rd" : "th";
   return `${level}${suffix} Year`;
 }
 
 function formatStudentStatus(value) {
   const status = String(value || "Active").trim();
-  return status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : "Active";
+  return status
+    ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+    : "Active";
 }
 
 function formatStudentType(value) {
   const type = String(value || "Regular").trim();
-  return type ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase() : "Regular";
+  return type
+    ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+    : "Regular";
 }
 
 function formatStudentYearAndSection(yearLevel, section) {
@@ -162,10 +179,10 @@ function formatStudentYearAndSection(yearLevel, section) {
   return `${yearNumber}-${block}`;
 }
 
-function showProfile(e){
+function showProfile(e) {
   if (e) e.preventDefault();
   closeStudentDropdown();
-  
+
   // Get student information from hidden fields
   const studentId = document.getElementById("studentId")?.value;
   const studentName = document.getElementById("studentName")?.value;
@@ -173,31 +190,45 @@ function showProfile(e){
   const studentYearLevel = document.getElementById("studentYearLevel")?.value;
   const studentSection = document.getElementById("studentSection")?.value;
   const studentProgram = document.getElementById("studentProgram")?.value;
-  
+
   // Fetch additional student data from database
-  fetchStudentProfileData(studentId).then(additionalData => {
-    // Create profile modal content with real data
-    const currentStudentStatus = String(
-      additionalData.status || document.getElementById("studentStatus")?.value || "active"
-    ).trim().toLowerCase();
-    const formattedStatus = formatStudentStatus(currentStudentStatus);
-    const studentStatusClass = formattedStatus.toLowerCase() === 'active' ? 'is-active' : 'is-inactive';
+  fetchStudentProfileData(studentId)
+    .then((additionalData) => {
+      // Create profile modal content with real data
+      const currentStudentStatus = String(
+        additionalData.status ||
+          document.getElementById("studentStatus")?.value ||
+          "active",
+      )
+        .trim()
+        .toLowerCase();
+      const formattedStatus = formatStudentStatus(currentStudentStatus);
+      const studentStatusClass =
+        formattedStatus.toLowerCase() === "active"
+          ? "is-active"
+          : "is-inactive";
 
-    const statusInput = document.getElementById("studentStatus");
-    if (statusInput) statusInput.value = currentStudentStatus;
-    const statusIndicator = document.querySelector(".status-indicator");
-    if (statusIndicator) {
-      statusIndicator.classList.toggle("active", currentStudentStatus === "active");
-      statusIndicator.classList.toggle("inactive", currentStudentStatus !== "active");
-    }
+      const statusInput = document.getElementById("studentStatus");
+      if (statusInput) statusInput.value = currentStudentStatus;
+      const statusIndicator = document.querySelector(".status-indicator");
+      if (statusIndicator) {
+        statusIndicator.classList.toggle(
+          "active",
+          currentStudentStatus === "active",
+        );
+        statusIndicator.classList.toggle(
+          "inactive",
+          currentStudentStatus !== "active",
+        );
+      }
 
-    const profileContent = `
+      const profileContent = `
       <div class="sp-modal">
         <div class="sp-body">
           <div class="sp-name-row">
-            <div class="sp-initial">${(studentName || 'S').charAt(0).toUpperCase()}</div>
+            <div class="sp-initial">${(studentName || "S").charAt(0).toUpperCase()}</div>
             <div>
-              <div class="sp-name">${studentName || 'Student'}</div>
+              <div class="sp-name">${studentName || "Student"}</div>
               <div class="sp-role-badge">Student</div>
             </div>
             <span class="sp-status-badge ${studentStatusClass}"><span class="sp-status-dot" aria-hidden="true"></span>${formattedStatus}</span>
@@ -209,13 +240,13 @@ function showProfile(e){
             <div class="sp-info-row">
               <div class="sp-info-content">
                 <span class="sp-info-label">Student ID</span>
-                <span class="sp-info-value">${studentNumber || 'N/A'}</span>
+                <span class="sp-info-value">${studentNumber || "N/A"}</span>
               </div>
             </div>
             <div class="sp-info-row">
               <div class="sp-info-content">
                 <span class="sp-info-label">Program</span>
-                <span class="sp-info-value">${additionalData.program_name || studentProgram || 'N/A'}</span>
+                <span class="sp-info-value">${additionalData.program_name || studentProgram || "N/A"}</span>
               </div>
             </div>
             <div class="sp-info-row">
@@ -236,54 +267,55 @@ function showProfile(e){
         </div>
       </div>
     `;
-    
-    // Create modal if it doesn't exist
-    let profileModal = document.getElementById("profileModal");
-    if (!profileModal) {
-      profileModal = document.createElement("div");
-      profileModal.id = "profileModal";
-      profileModal.className = "profileform";
-      document.body.appendChild(profileModal);
-    }
-    
-    profileModal.innerHTML = profileContent;
-    profileModal.style.display = "flex";
 
-    // Attach click-outside listener only once
-    if (!profileModal._clickListenerAttached) {
-      profileModal.addEventListener('click', function(event) {
-        if (event.target === profileModal) {
-          closeProfileModal();
-        }
-      });
-      profileModal._clickListenerAttached = true;
-    }
-  }).catch(error => {
-    console.error('Error fetching student profile data:', error);
-  });
+      // Create modal if it doesn't exist
+      let profileModal = document.getElementById("profileModal");
+      if (!profileModal) {
+        profileModal = document.createElement("div");
+        profileModal.id = "profileModal";
+        profileModal.className = "profileform";
+        document.body.appendChild(profileModal);
+      }
+
+      profileModal.innerHTML = profileContent;
+      profileModal.style.display = "flex";
+
+      // Attach click-outside listener only once
+      if (!profileModal._clickListenerAttached) {
+        profileModal.addEventListener("click", function (event) {
+          if (event.target === profileModal) {
+            closeProfileModal();
+          }
+        });
+        profileModal._clickListenerAttached = true;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching student profile data:", error);
+    });
 }
 
 // Function to fetch additional student profile data from database
 async function fetchStudentProfileData(studentId) {
   try {
-    const response = await fetch('get_student_profile.php', {
-      method: 'POST',
-      cache: 'no-store',
-      credentials: 'same-origin',
+    const response = await fetch("get_student_profile.php", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "same-origin",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: `student_id=${studentId}`
+      body: `student_id=${studentId}`,
     });
-    
+
     if (!response.ok) {
-      throw new Error('Failed to fetch student profile data');
+      throw new Error("Failed to fetch student profile data");
     }
-    
+
     const data = await response.json();
     return data.success ? data.data : {};
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     return {};
   }
 }
@@ -293,19 +325,25 @@ window.closeProfileModal = () => {
 };
 function showPassMsg(fieldId, message) {
   const el = document.getElementById(fieldId);
-  if (el) { el.textContent = message; el.style.display = message ? "block" : "none"; }
+  if (el) {
+    el.textContent = message;
+    el.style.display = message ? "block" : "none";
+  }
 }
 
 function clearPassMsgs() {
-  ["oldPassError", "newPassError", "confirmPassError"].forEach(id => showPassMsg(id, ""));
+  ["oldPassError", "newPassError", "confirmPassError"].forEach((id) =>
+    showPassMsg(id, ""),
+  );
 }
 
 function validatePasswordStrength(password) {
   const errors = [];
-  if (password.length < 8)               errors.push("at least 8 characters");
-  if (!/[A-Z]/.test(password))           errors.push("at least one uppercase letter");
-  if (!/[a-z]/.test(password))           errors.push("at least one lowercase letter");
-  if (!/[^A-Za-z0-9]/.test(password))   errors.push("at least one special character");
+  if (password.length < 8) errors.push("at least 8 characters");
+  if (!/[A-Z]/.test(password)) errors.push("at least one uppercase letter");
+  if (!/[a-z]/.test(password)) errors.push("at least one lowercase letter");
+  if (!/[^A-Za-z0-9]/.test(password))
+    errors.push("at least one special character");
   return errors;
 }
 
@@ -316,30 +354,33 @@ function showPasswordMessageBox(message, type) {
     box.id = "passGlobalMsg";
     box.className = "password-message-box";
   }
-  const container = document.querySelector("#passwordForm .login-form-container");
+  const container = document.querySelector(
+    "#passwordForm .login-form-container",
+  );
   if (container && box.parentElement !== container) {
     container.insertBefore(box, container.firstChild);
   }
   box.style.display = "flex";
-  
+
   // Create icon based on type
-  const icon = type === "success" 
-    ? '<i class="ph ph-check-circle"></i>' 
-    : '<i class="ph ph-warning-circle"></i>';
-  
+  const icon =
+    type === "success"
+      ? '<i class="ph ph-check-circle"></i>'
+      : '<i class="ph ph-warning-circle"></i>';
+
   box.innerHTML = `
     <div class="message-icon">${icon}</div>
     <div class="message-text">${message}</div>
   `;
-  
+
   // Remove existing type classes
   box.classList.remove("success", "error", "show");
-  
+
   // Add type class and trigger animation
   setTimeout(() => {
     box.classList.add(type, "show");
   }, 10);
-  
+
   // Auto hide after 4 seconds
   setTimeout(() => {
     box.classList.remove("show");
@@ -350,9 +391,9 @@ function showPasswordMessageBox(message, type) {
 // Old function removed - using consistent notifications across all pages
 
 function updatePassword() {
-  const studentId   = document.getElementById("studentId").value.trim();
-  const oldPass     = document.getElementById("oldPass").value.trim();
-  const newPass     = document.getElementById("newPass").value.trim();
+  const studentId = document.getElementById("studentId").value.trim();
+  const oldPass = document.getElementById("oldPass").value.trim();
+  const newPass = document.getElementById("newPass").value.trim();
   const confirmPass = document.getElementById("confirmPass").value.trim();
 
   clearPassMsgs();
@@ -370,7 +411,10 @@ function updatePassword() {
   } else {
     const strengthErrors = validatePasswordStrength(newPass);
     if (strengthErrors.length > 0) {
-      showPassMsg("newPassError", "Password must have: " + strengthErrors.join(", ") + ".");
+      showPassMsg(
+        "newPassError",
+        "Password must have: " + strengthErrors.join(", ") + ".",
+      );
       hasError = true;
     }
   }
@@ -386,11 +430,13 @@ function updatePassword() {
   if (hasError) return;
 
   // Get button and disable it during submission
-  const submitBtn = document.querySelector('#passwordChangeForm .modern-login-btn');
+  const submitBtn = document.querySelector(
+    "#passwordChangeForm .modern-login-btn",
+  );
   const originalText = submitBtn.textContent;
-  
+
   if (submitBtn.disabled) return; // Prevent double submission
-  
+
   submitBtn.disabled = true;
   submitBtn.textContent = "Updating...";
   submitBtn.style.opacity = "0.6";
@@ -415,7 +461,7 @@ function updatePassword() {
       submitBtn.textContent = originalText;
       submitBtn.style.opacity = "1";
       submitBtn.style.cursor = "pointer";
-      
+
       if (data.success) {
         // Close form first
         closePasswordForm();
@@ -423,16 +469,24 @@ function updatePassword() {
         document.getElementById("newPass").value = "";
         document.getElementById("confirmPass").value = "";
         clearPassMsgs();
-        
+
         // Show success notification outside the modal
         showGlobalNotification("Password updated successfully!", "success");
       } else {
-        if ((data.message || "").toLowerCase().includes("old") ||
-            (data.message || "").toLowerCase().includes("current") ||
-            (data.message || "").toLowerCase().includes("incorrect")) {
-          showPassMsg("oldPassError", data.message || "Current password is incorrect.");
+        if (
+          (data.message || "").toLowerCase().includes("old") ||
+          (data.message || "").toLowerCase().includes("current") ||
+          (data.message || "").toLowerCase().includes("incorrect")
+        ) {
+          showPassMsg(
+            "oldPassError",
+            data.message || "Current password is incorrect.",
+          );
         } else {
-          showPasswordMessageBox(data.message || "Failed to update password.", "error");
+          showPasswordMessageBox(
+            data.message || "Failed to update password.",
+            "error",
+          );
         }
       }
     })
@@ -442,9 +496,12 @@ function updatePassword() {
       submitBtn.textContent = originalText;
       submitBtn.style.opacity = "1";
       submitBtn.style.cursor = "pointer";
-      
+
       console.error("Error updating password:", err);
-      showPasswordMessageBox("Something went wrong. Please try again.", "error");
+      showPasswordMessageBox(
+        "Something went wrong. Please try again.",
+        "error",
+      );
     });
 }
 
@@ -470,46 +527,72 @@ function togglePassword(id, icon) {
 
 function updateStudentAcademicPeriodDisplay(status) {
   console.log("updateStudentAcademicPeriodDisplay called with:", status);
-  const evaluationStatusEl = document.getElementById("evaluation-period-status");
+  const evaluationStatusEl = document.getElementById(
+    "evaluation-period-status",
+  );
   if (evaluationStatusEl) {
-    evaluationStatusEl.classList.remove("is-checking", "is-open", "is-closed", "is-unavailable");
+    evaluationStatusEl.classList.remove(
+      "is-checking",
+      "is-open",
+      "is-closed",
+      "is-unavailable",
+    );
     if (!status || !status.success) {
       evaluationStatusEl.classList.add("is-unavailable");
-      evaluationStatusEl.innerHTML = '<i class="ph ph-warning-circle" aria-hidden="true"></i> Status unavailable';
+      evaluationStatusEl.innerHTML =
+        '<i class="ph ph-warning-circle" aria-hidden="true"></i> Status unavailable';
     } else if (status.evaluation_open) {
       evaluationStatusEl.classList.add("is-open");
-      evaluationStatusEl.innerHTML = '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation is open';
+      evaluationStatusEl.innerHTML =
+        '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation is open';
     } else {
       evaluationStatusEl.classList.add("is-closed");
-      evaluationStatusEl.innerHTML = '<i class="ph ph-lock" aria-hidden="true"></i> Evaluation is closed';
+      evaluationStatusEl.innerHTML =
+        '<i class="ph ph-lock" aria-hidden="true"></i> Evaluation is closed';
     }
   }
 
   const academicPeriodEl = document.getElementById("studentAcademicPeriod");
-  const academicYear = String(status?.active_academic_year || status?.current_academic_year || "").trim();
-  const semester = String(status?.active_semester || status?.current_semester || "").trim();
+  const academicYear = String(
+    status?.active_academic_year || status?.current_academic_year || "",
+  ).trim();
+  const semester = String(
+    status?.active_semester || status?.current_semester || "",
+  ).trim();
   const shortSemester = semester.replace(/\s+semester$/i, "").trim();
   if (academicPeriodEl) {
     const hasAcademicPeriod = !!(academicYear && shortSemester);
     academicPeriodEl.hidden = !hasAcademicPeriod;
-    academicPeriodEl.dataset.academicYear = hasAcademicPeriod ? academicYear : "";
+    academicPeriodEl.dataset.academicYear = hasAcademicPeriod
+      ? academicYear
+      : "";
     academicPeriodEl.dataset.semester = hasAcademicPeriod ? shortSemester : "";
     const periodLabel = academicPeriodEl.querySelector(".welcome-period-label");
     if (periodLabel) {
-      periodLabel.textContent = hasAcademicPeriod ? `${shortSemester} | ${academicYear}` : "";
+      periodLabel.textContent = hasAcademicPeriod
+        ? `${shortSemester} | ${academicYear}`
+        : "";
     }
   }
 
-  const accessMessage = document.getElementById("evaluation-period-access-message");
+  const accessMessage = document.getElementById(
+    "evaluation-period-access-message",
+  );
   if (accessMessage) {
-    const evaluationOpen = !!(status && status.success && status.evaluation_open);
+    const evaluationOpen = !!(
+      status &&
+      status.success &&
+      status.evaluation_open
+    );
     const startDate = status?.active_start_date;
     if (status?.active_period_status === "scheduled" && startDate) {
-      const formattedStartDate = new Date(`${startDate}T00:00:00+08:00`).toLocaleDateString("en-PH", {
+      const formattedStartDate = new Date(
+        `${startDate}T00:00:00+08:00`,
+      ).toLocaleDateString("en-PH", {
         year: "numeric",
         month: "long",
         day: "numeric",
-        timeZone: "Asia/Manila"
+        timeZone: "Asia/Manila",
       });
       accessMessage.textContent = `Evaluations open on ${formattedStartDate}. You can start evaluating on that date.`;
       accessMessage.hidden = false;
@@ -524,9 +607,21 @@ function updateStudentAcademicPeriodDisplay(status) {
   // Update Evaluate Now button state in real-time
   const evaluateBtn = document.querySelector(".evaluate-now-btn");
   if (evaluateBtn) {
-    const studentActive = (document.getElementById("studentStatus")?.value || "active").trim().toLowerCase() === "active";
-    const evaluationOpen = !!(status && status.success && status.evaluation_open);
-    console.log("Button state check - Student Active:", studentActive, "Evaluation Open:", evaluationOpen);
+    const studentActive =
+      (document.getElementById("studentStatus")?.value || "active")
+        .trim()
+        .toLowerCase() === "active";
+    const evaluationOpen = !!(
+      status &&
+      status.success &&
+      status.evaluation_open
+    );
+    console.log(
+      "Button state check - Student Active:",
+      studentActive,
+      "Evaluation Open:",
+      evaluationOpen,
+    );
     if (studentActive && evaluationOpen) {
       console.log("ENABLING button");
       evaluateBtn.removeAttribute("disabled");
@@ -535,7 +630,12 @@ function updateStudentAcademicPeriodDisplay(status) {
       evaluateBtn.style.opacity = "1";
       evaluateBtn.style.cursor = "pointer";
     } else {
-      console.log("DISABLING button - studentActive:", studentActive, "evaluationOpen:", evaluationOpen);
+      console.log(
+        "DISABLING button - studentActive:",
+        studentActive,
+        "evaluationOpen:",
+        evaluationOpen,
+      );
       evaluateBtn.setAttribute("disabled", "true");
       evaluateBtn.disabled = true;
       evaluateBtn.setAttribute("aria-disabled", "true");
@@ -549,7 +649,10 @@ function updateStudentAcademicPeriodDisplay(status) {
 
 async function loadStudentAcademicPeriod() {
   try {
-    const statusRes = await fetch("../shared/periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const statusRes = await fetch("../shared/periods_api.php?action=status", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
     const status = await statusRes.json();
     console.log("Period status received:", status);
     if (status && status.success) {
@@ -565,19 +668,29 @@ async function loadStudentAcademicPeriod() {
 }
 
 async function showEvaluateSection() {
-  if ((document.getElementById("studentStatus")?.value || "active").trim().toLowerCase() !== "active") {
-    alert("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.");
+  if (
+    (document.getElementById("studentStatus")?.value || "active")
+      .trim()
+      .toLowerCase() !== "active"
+  ) {
+    alert(
+      "Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.",
+    );
     return;
   }
 
   try {
-    const statusRes = await fetch("../shared/periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const statusRes = await fetch("../shared/periods_api.php?action=status", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
     const status = await statusRes.json();
     updateStudentAcademicPeriodDisplay(status);
     if (!status || !status.success || !status.evaluation_open) {
-      const message = status?.active_period_status === "scheduled" && status.active_start_date
-        ? `Evaluation starts on ${status.active_start_date}.`
-        : "Evaluation is closed";
+      const message =
+        status?.active_period_status === "scheduled" && status.active_start_date
+          ? `Evaluation starts on ${status.active_start_date}.`
+          : "Evaluation is closed";
       showGlobalNotification(message, "warning");
       return;
     }
@@ -621,21 +734,29 @@ function goBackToMain() {
 
 async function refreshStudentPeriodAccess() {
   try {
-    const statusRes = await fetch("../shared/periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const statusRes = await fetch("../shared/periods_api.php?action=status", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
     const status = await statusRes.json();
     updateStudentAcademicPeriodDisplay(status);
 
     const evaluateSection = document.getElementById("evaluateSection");
-    const isEvaluating = evaluateSection && evaluateSection.style.display !== "none";
+    const isEvaluating =
+      evaluateSection && evaluateSection.style.display !== "none";
     if (isEvaluating) {
       if (!status || !status.success || !status.evaluation_open) {
         goBackToMain();
-        showGlobalNotification("Evaluation period has ended or is closed", "warning");
+        showGlobalNotification(
+          "Evaluation period has ended or is closed",
+          "warning",
+        );
       }
     }
   } catch (_) {
     const evaluateSection = document.getElementById("evaluateSection");
-    const isEvaluating = evaluateSection && evaluateSection.style.display !== "none";
+    const isEvaluating =
+      evaluateSection && evaluateSection.style.display !== "none";
     if (isEvaluating) {
       goBackToMain();
       showGlobalNotification("Evaluation is closed", "warning");
@@ -650,121 +771,164 @@ let criteriaTables = [];
 let evaluationSubmitting = false;
 
 async function loadStudentFacultyCards() {
-  const studentId = document.getElementById('studentId')?.value.trim();
-  const yearLevel = document.getElementById('studentYearLevel')?.value.trim();
-  const container = document.getElementById('facultyContainer');
+  const studentId = document.getElementById("studentId")?.value.trim();
+  const yearLevel = document.getElementById("studentYearLevel")?.value.trim();
+  const container = document.getElementById("facultyContainer");
 
   if (!container) return;
 
   // Block evaluate when evaluation is closed
-  const studentActive = (document.getElementById("studentStatus")?.value || "active").trim().toLowerCase() === "active";
+  const studentActive =
+    (document.getElementById("studentStatus")?.value || "active")
+      .trim()
+      .toLowerCase() === "active";
   let evaluationOpen = false;
   try {
-    const statusRes = await fetch("../shared/periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+    const statusRes = await fetch("../shared/periods_api.php?action=status", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
     const status = await statusRes.json();
-    evaluationOpen = studentActive && !!(status && status.success && status.evaluation_open);
+    evaluationOpen =
+      studentActive && !!(status && status.success && status.evaluation_open);
   } catch (_) {
     evaluationOpen = false;
   }
 
   if (!studentId && !yearLevel) {
-    container.innerHTML = renderFacultyEmptyState("No Faculty Available", "There are no instructors assigned to your account for evaluation right now.");
+    container.innerHTML = renderFacultyEmptyState(
+      "No Faculty Available",
+      "There are no instructors assigned to your account for evaluation right now.",
+    );
     return;
   }
 
   const params = new URLSearchParams();
-  if (studentId) params.set('student_id', studentId);
-  else if (yearLevel) params.set('year_level', yearLevel);
+  if (studentId) params.set("student_id", studentId);
+  else if (yearLevel) params.set("year_level", yearLevel);
 
   try {
     const res = await fetch(`../shared/getFaculty.php?${params.toString()}`, {
       cache: "no-store",
-      credentials: "same-origin"
+      credentials: "same-origin",
     });
     const facultyList = await res.json();
 
     const assignments = Array.isArray(facultyList) ? facultyList : [];
-    const evaluatedCount = assignments.filter(faculty => Number(faculty.evaluation_id || 0) > 0).length;
+    const evaluatedCount = assignments.filter(
+      (faculty) => Number(faculty.evaluation_id || 0) > 0,
+    ).length;
     const pendingCount = assignments.length - evaluatedCount;
     updateEvaluationSummary(pendingCount, evaluatedCount);
     const academicPeriodEl = document.getElementById("studentAcademicPeriod");
     const academicYear = academicPeriodEl?.dataset.academicYear || "";
     const semester = academicPeriodEl?.dataset.semester || "";
-    const periodLabel = academicYear && semester
-      ? `${academicYear} - ${semester}`
-      : "";
+    const periodLabel =
+      academicYear && semester ? `${academicYear} - ${semester}` : "";
     const periodLabelEl = document.getElementById("evaluationPeriodLabel");
     const subjectCountEl = document.getElementById("evaluationSubjectCount");
-    if (periodLabelEl) periodLabelEl.textContent = periodLabel ? `— ${periodLabel}` : "";
-    if (subjectCountEl) subjectCountEl.textContent = `${assignments.length} subject${assignments.length === 1 ? "" : "s"}`;
+    if (periodLabelEl)
+      periodLabelEl.textContent = periodLabel ? `— ${periodLabel}` : "";
+    if (subjectCountEl)
+      subjectCountEl.textContent = `${assignments.length} subject${assignments.length === 1 ? "" : "s"}`;
 
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     if (assignments.length > 0) {
-      assignments.forEach(faculty => {
-        const subject = Array.isArray(faculty.subjects) && faculty.subjects.length
-          ? faculty.subjects[0]
-          : faculty;
-        const subjectCode = subject.subject_code || faculty.subject_code || '';
-        const subjectDesc = subject.subject_desc || faculty.subject_desc || '';
-        const subjectLabels = [subjectCode, subjectDesc].filter(Boolean).join(' - ');
-        const isIrregularStudent = yearLevel.toLowerCase() === 'irregular';
-        const subjectYearLevel = subject.year_level || subject.class_year_level || '';
-        const programCode = subject.program_code || faculty.program_code || '';
+      assignments.forEach((faculty) => {
+        const subject =
+          Array.isArray(faculty.subjects) && faculty.subjects.length
+            ? faculty.subjects[0]
+            : faculty;
+        const subjectCode = subject.subject_code || faculty.subject_code || "";
+        const subjectDesc = subject.subject_desc || faculty.subject_desc || "";
+        const subjectLabels = [subjectCode, subjectDesc]
+          .filter(Boolean)
+          .join(" - ");
+        const isIrregularStudent = yearLevel.toLowerCase() === "irregular";
+        const subjectYearLevel =
+          subject.year_level || subject.class_year_level || "";
+        const programCode = subject.program_code || faculty.program_code || "";
         const classLabel = [
-          subject.class_year_level || faculty.class_year_level || '',
-          subject.class_section || faculty.class_section || ''
-        ].filter(Boolean).join(' / ');
+          subject.class_year_level || faculty.class_year_level || "",
+          subject.class_section || faculty.class_section || "",
+        ]
+          .filter(Boolean)
+          .join(" / ");
 
         const nameParts = [
-          faculty.firstname || '',
-          faculty.lastname || '',
-          faculty.suffix ? faculty.suffix : ''
+          faculty.firstname || "",
+          faculty.lastname || "",
+          faculty.suffix ? faculty.suffix : "",
         ].filter(Boolean);
 
-        const fullName = nameParts.join(' ');
+        const fullName = nameParts.join(" ");
         const isEvaluated = Number(faculty.evaluation_id || 0) > 0;
-        const leftLabel = isIrregularStudent && subjectYearLevel ? subjectYearLevel : subjectCode;
+        const leftLabel =
+          isIrregularStudent && subjectYearLevel
+            ? subjectYearLevel
+            : subjectCode;
 
-        const card = document.createElement('div');
-        card.className = 'faculty-evaluation-row';
+        const card = document.createElement("div");
+        card.className = "faculty-evaluation-row";
         card.onclick = () => {
           if (isEvaluated) return;
-          if (!studentActive) return showGlobalNotification("Your account has been set to inactive by an admin. You cannot evaluate until your account is active again", "warning");
-          if (!evaluationOpen) return showGlobalNotification("Evaluation is closed", "warning");
+          if (!studentActive)
+            return showGlobalNotification(
+              "Your account has been set to inactive by an admin. You cannot evaluate until your account is active again",
+              "warning",
+            );
+          if (!evaluationOpen)
+            return showGlobalNotification("Evaluation is closed", "warning");
           selectFaculty(faculty.id, fullName, {
             subject_id: Number(subject.subject_id || faculty.subject_id || 0),
             class_id: Number(subject.class_id || faculty.class_id || 0),
             subject_label: subjectLabels,
-            class_label: classLabel
+            class_label: classLabel,
           });
         };
-         
+
         card.innerHTML = `
-          <div class="subject-code-badge">${leftLabel || 'Subject'}</div>
+          <div class="subject-code-badge">${leftLabel || "Subject"}</div>
           <div class="faculty-evaluation-details">
-            <h3 class="faculty-name">${subjectLabels || 'Assigned Subject'}</h3>
-            <p class="faculty-evaluation-meta">${fullName || 'Faculty Member'}${programCode ? ` <span>·</span> ${programCode}` : ''}</p>
+            <h3 class="faculty-name">${subjectLabels || "Assigned Subject"}</h3>
+            <p class="faculty-evaluation-meta">${fullName || "Faculty Member"}${programCode ? ` <span>·</span> ${programCode}` : ""}</p>
           </div>
             <button class="evaluate-faculty-btn ${isEvaluated ? "evaluated" : ""}" ${evaluationOpen && !isEvaluated ? "" : "disabled"}>
               <i class="ph ${isEvaluated ? "ph-check-circle" : "ph-note-pencil"}"></i> ${isEvaluated ? "Evaluated" : "Evaluate Now"}
           </button>
         `;
-        
+
         container.appendChild(card);
       });
     } else {
-      container.innerHTML = evaluatedCount > 0
-        ? renderFacultyEmptyState("All Done!", "You have completed all evaluations.", "ph-check-circle")
-        : renderFacultyEmptyState("No Faculty Available", "There are no instructors assigned to your account for evaluation right now.");
+      container.innerHTML =
+        evaluatedCount > 0
+          ? renderFacultyEmptyState(
+              "All Done!",
+              "You have completed all evaluations.",
+              "ph-check-circle",
+            )
+          : renderFacultyEmptyState(
+              "No Faculty Available",
+              "There are no instructors assigned to your account for evaluation right now.",
+            );
     }
   } catch (err) {
-    console.error('Error loading faculty cards:', err);
-    container.innerHTML = renderFacultyEmptyState("Unable to Load Faculty", "Please refresh the page or try again later.", "ph-warning-circle");
+    console.error("Error loading faculty cards:", err);
+    container.innerHTML = renderFacultyEmptyState(
+      "Unable to Load Faculty",
+      "Please refresh the page or try again later.",
+      "ph-warning-circle",
+    );
   }
 }
 
-function renderFacultyEmptyState(title, message, icon = "ph-chalkboard-teacher") {
+function renderFacultyEmptyState(
+  title,
+  message,
+  icon = "ph-chalkboard-teacher",
+) {
   return `
     <div class="no-faculty" role="status">
       <div class="no-faculty-icon"><i class="ph ${icon}"></i></div>
@@ -787,7 +951,8 @@ function updateEvaluationSummary(pendingCount, evaluatedCount) {
   const progressLabel = progressEl?.querySelector("span");
 
   if (percentEl) percentEl.textContent = total > 0 ? `${percent}%` : "—";
-  if (progressLabel) progressLabel.textContent = total > 0 ? "Complete" : "No subjects";
+  if (progressLabel)
+    progressLabel.textContent = total > 0 ? "Complete" : "No subjects";
   if (progressEl) progressEl.style.setProperty("--progress", percent);
   if (totalEl) totalEl.textContent = total;
   if (evaluatedEl) evaluatedEl.textContent = evaluatedCount;
@@ -801,14 +966,14 @@ function selectFaculty(facultyId, facultyName, assignment) {
     name: facultyName,
     subject_id: Number(assignment?.subject_id || 0),
     class_id: Number(assignment?.class_id || 0),
-    subject_label: assignment?.subject_label || '',
-    class_label: assignment?.class_label || ''
+    subject_label: assignment?.subject_label || "",
+    class_label: assignment?.class_label || "",
   };
-  
+
   // Hide faculty cards and show evaluation form
-  document.getElementById('facultyCards').style.display = 'none';
-  document.getElementById('evaluationContainer').style.display = 'block';
-  
+  document.getElementById("facultyCards").style.display = "none";
+  document.getElementById("evaluationContainer").style.display = "block";
+
   // Load evaluation categories and questions
   loadFacultyCategories();
 }
@@ -831,18 +996,20 @@ async function loadFacultyCategories() {
     // Create main evaluation container with header
     const mainEvaluationContainer = document.createElement("div");
     mainEvaluationContainer.className = "main-evaluation-container";
-    
+
     // Create header section
     const headerSection = document.createElement("div");
     headerSection.className = "evaluation-header-section";
     const selectedSubjectText = [
-      window.selectedFaculty?.name || '',
-      window.selectedFaculty?.subject_label || '',
-      window.selectedFaculty?.class_label || ''
-    ].filter(Boolean).join(' | ');
+      window.selectedFaculty?.name || "",
+      window.selectedFaculty?.subject_label || "",
+      window.selectedFaculty?.class_label || "",
+    ]
+      .filter(Boolean)
+      .join(" | ");
     headerSection.innerHTML = `
       <h2 class="performance-evaluation-title">Performance Evaluation</h2>
-      ${selectedSubjectText ? `<p class="performance-evaluation-subtitle">${selectedSubjectText}</p>` : ''}
+      ${selectedSubjectText ? `<p class="performance-evaluation-subtitle">${selectedSubjectText}</p>` : ""}
       <div class="rating-legends-mini">
         <ul>
           <li><span class="dot dot5"></span>5 - Outstanding</li>
@@ -853,7 +1020,7 @@ async function loadFacultyCategories() {
         </ul>
       </div>
     `;
-    
+
     // Create form content area
     const formContentArea = document.createElement("div");
     formContentArea.className = "evaluation-form-area";
@@ -861,23 +1028,27 @@ async function loadFacultyCategories() {
     const timeline = document.createElement("div");
     timeline.className = "evaluation-timeline";
     timeline.setAttribute("aria-label", "Evaluation pages");
-    timeline.innerHTML = categories.map((category, index) => `
+    timeline.innerHTML = categories
+      .map(
+        (category, index) => `
       <div class="evaluation-timeline-step${index === 0 ? " active" : ""}" data-page="${index}">
         <span class="evaluation-timeline-dot">${index + 1}</span>
         <span class="evaluation-timeline-label">${category.category_name}</span>
       </div>
-    `).join("");
+    `,
+      )
+      .join("");
     formContentArea.appendChild(timeline);
 
     criteriaTables = [];
     currentCriteria = 0;
-    
+
     for (let i = 0; i < categories.length; i++) {
       const c = categories[i];
       const table = document.createElement("table");
       table.className = "evaluationform";
       if (i === 0) table.classList.add("active");
-      
+
       table.innerHTML = `
         <thead>
           <tr>
@@ -887,9 +1058,11 @@ async function loadFacultyCategories() {
         </thead>
         <tbody></tbody>
       `;
-      
+
       const tbody = table.querySelector("tbody");
-      const qRes = await fetch(`../shared/get_question.php?category_id=${c.id}`);
+      const qRes = await fetch(
+        `../shared/get_question.php?category_id=${c.id}`,
+      );
       const questions = await qRes.json();
       console.log("Questions for", c.id, questions);
 
@@ -916,7 +1089,7 @@ async function loadFacultyCategories() {
       formContentArea.appendChild(table);
       criteriaTables.push(table);
     }
-    
+
     // Add feedback container (hidden initially)
     const feedbackSubmitContainer = document.createElement("div");
     feedbackSubmitContainer.id = "feedbackSubmitContainer";
@@ -932,7 +1105,7 @@ async function loadFacultyCategories() {
         </div>
       </div>
     `;
-    
+
     formContentArea.appendChild(feedbackSubmitContainer);
 
     // Bad words filtering for feedback
@@ -961,26 +1134,32 @@ async function loadFacultyCategories() {
       "dick",
       "cunt",
       "faggot",
-      "nigger"
+      "nigger",
     ];
 
     function normalizeFeedbackText(text) {
-      return (" " + String(text || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim() + " ");
+      return (
+        " " +
+        String(text || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim() +
+        " "
+      );
     }
 
     function feedbackHasBadWords(text) {
       const normalized = normalizeFeedbackText(text);
-      return badWordsList.some(w => normalized.includes(` ${w} `));
+      return badWordsList.some((w) => normalized.includes(` ${w} `));
     }
 
     function setFeedbackBadwordsState(hasBadWords) {
       const feedbackBox = document.querySelector(".feedback-box");
-      if (feedbackBox) feedbackBox.classList.toggle("has-badwords", hasBadWords);
-      if (badwordsMsg) badwordsMsg.style.display = hasBadWords ? "block" : "none";
+      if (feedbackBox)
+        feedbackBox.classList.toggle("has-badwords", hasBadWords);
+      if (badwordsMsg)
+        badwordsMsg.style.display = hasBadWords ? "block" : "none";
     }
 
     if (feedbackTextarea) {
@@ -989,7 +1168,7 @@ async function loadFacultyCategories() {
         setFeedbackBadwordsState(feedbackHasBadWords(feedbackTextarea.value));
       });
     }
-    
+
     // Create navigation section
     const navigationSection = document.createElement("div");
     navigationSection.className = "evaluation-navigation";
@@ -1004,16 +1183,15 @@ async function loadFacultyCategories() {
       </div>
       <div class="pagination-info" id="pageInfo">1 / ${categories.length}</div>
     `;
-    
+
     // Assemble the main container
     mainEvaluationContainer.appendChild(headerSection);
     mainEvaluationContainer.appendChild(formContentArea);
     mainEvaluationContainer.appendChild(navigationSection);
-    
+
     container.appendChild(mainEvaluationContainer);
-    
+
     updatePaginationButtons();
-    
   } catch (err) {
     console.error("Error loading faculty categories:", err);
   }
@@ -1041,9 +1219,11 @@ function updatePaginationButtons() {
   const pageInfo = document.getElementById("pageInfo");
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
-  const feedbackSubmitContainer = document.getElementById("feedbackSubmitContainer");
+  const feedbackSubmitContainer = document.getElementById(
+    "feedbackSubmitContainer",
+  );
   const timelineSteps = document.querySelectorAll(".evaluation-timeline-step");
-  
+
   if (pageInfo) {
     pageInfo.textContent = `${currentCriteria + 1} / ${criteriaTables.length}`;
   }
@@ -1052,11 +1232,11 @@ function updatePaginationButtons() {
     step.classList.toggle("active", index === currentCriteria);
     step.classList.toggle("completed", index < currentCriteria);
   });
-  
+
   if (prevBtn) {
     prevBtn.disabled = currentCriteria === 0;
   }
-  
+
   if (nextBtn) {
     const isLastPage = currentCriteria === criteriaTables.length - 1;
     nextBtn.disabled = evaluationSubmitting;
@@ -1064,10 +1244,11 @@ function updatePaginationButtons() {
     if (evaluationSubmitting) nextBtn.textContent = "Submitting...";
     nextBtn.onclick = isLastPage ? submitEvaluation : nextCriteria;
   }
-  
+
   // Show feedback and submit button only on last page
   if (feedbackSubmitContainer) {
-    feedbackSubmitContainer.style.display = currentCriteria === criteriaTables.length - 1 ? "block" : "none";
+    feedbackSubmitContainer.style.display =
+      currentCriteria === criteriaTables.length - 1 ? "block" : "none";
   }
 }
 
@@ -1080,17 +1261,46 @@ function setFeedbackBadwordsState(hasBadWords) {
 
 // ================= SUBMIT =================
 function submitEvaluation() {
-  const studentId = document.getElementById('studentId')?.value?.trim() || '';
-  const facultyId = window.selectedFaculty?.id || '';
-  const subjectId = window.selectedFaculty?.subject_id || '';
-  const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
+  const studentId = document.getElementById("studentId")?.value?.trim() || "";
+  const facultyId = window.selectedFaculty?.id || "";
+  const subjectId = window.selectedFaculty?.subject_id || "";
+  const feedbackText =
+    document.getElementById("studentFeedback")?.value.trim() || "";
 
   // Prevent submission when feedback has bad words
-  const normalizedFeedback = (" " + feedbackText.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ");
+  const normalizedFeedback =
+    " " +
+    feedbackText
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() +
+    " ";
   const hasBadWords = [
-    "putangina","puta","tangina","tang ina","gago","tanga","bobo","ulol","tarantado","inutil","leche","bwiset","bwisit","punyeta",
-    "fuck you","fuck","shit","bitch","asshole","dick","cunt","faggot","nigger"
-  ].some(w => normalizedFeedback.includes(` ${w} `));
+    "putangina",
+    "puta",
+    "tangina",
+    "tang ina",
+    "gago",
+    "tanga",
+    "bobo",
+    "ulol",
+    "tarantado",
+    "inutil",
+    "leche",
+    "bwiset",
+    "bwisit",
+    "punyeta",
+    "fuck you",
+    "fuck",
+    "shit",
+    "bitch",
+    "asshole",
+    "dick",
+    "cunt",
+    "faggot",
+    "nigger",
+  ].some((w) => normalizedFeedback.includes(` ${w} `));
 
   if (hasBadWords) {
     setFeedbackBadwordsState(true);
@@ -1109,11 +1319,11 @@ function submitEvaluation() {
   const selected = document.querySelectorAll('input[type="radio"]:checked');
   const data = {};
 
-  selected.forEach(r => {
+  selected.forEach((r) => {
     data[r.name] = r.value;
   });
 
-  const totalQuestions = document.querySelectorAll('.question-list').length;
+  const totalQuestions = document.querySelectorAll(".question-list").length;
 
   if (Object.keys(data).length < totalQuestions) {
     showGlobalNotification("Please answer all questions!", "warning");
@@ -1135,32 +1345,41 @@ function escapeReviewHtml(value) {
 }
 
 function getEvaluationReviewSummary() {
-  const feedback = document.getElementById('studentFeedback')?.value.trim() || '';
-  const categories = Array.from(document.querySelectorAll('.evaluationform')).map(table => {
-    const title = table.querySelector('thead th:first-child')?.textContent?.trim() || 'Evaluation';
-    const questions = Array.from(table.querySelectorAll('tbody tr')).map(row => {
-      const question = row.querySelector('.question-list')?.textContent?.trim() || '';
-      const selected = row.querySelector('input[type="radio"]:checked')?.value || '';
+  const feedback =
+    document.getElementById("studentFeedback")?.value.trim() || "";
+  const categories = Array.from(document.querySelectorAll(".evaluationform"))
+    .map((table) => {
+      const title =
+        table.querySelector("thead th:first-child")?.textContent?.trim() ||
+        "Evaluation";
+      const questions = Array.from(table.querySelectorAll("tbody tr"))
+        .map((row) => {
+          const question =
+            row.querySelector(".question-list")?.textContent?.trim() || "";
+          const selected =
+            row.querySelector('input[type="radio"]:checked')?.value || "";
 
-      return { question, selected };
-    }).filter(item => item.question);
+          return { question, selected };
+        })
+        .filter((item) => item.question);
 
-    return { title, questions };
-  }).filter(category => category.questions.length);
+      return { title, questions };
+    })
+    .filter((category) => category.questions.length);
 
   return {
     categories,
-    feedback: feedback || "No feedback provided."
+    feedback: feedback || "No feedback provided.",
   };
 }
 
 function showFinalReviewModal() {
-  let modal = document.getElementById('finalReviewModal');
+  let modal = document.getElementById("finalReviewModal");
   if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'finalReviewModal';
-    modal.className = 'final-review-overlay';
-    modal.addEventListener('click', e => {
+    modal = document.createElement("div");
+    modal.id = "finalReviewModal";
+    modal.className = "final-review-overlay";
+    modal.addEventListener("click", (e) => {
       if (e.target === modal) closeFinalReviewModal();
     });
     document.body.appendChild(modal);
@@ -1181,15 +1400,17 @@ function showFinalReviewModal() {
       </button>
     </div>
   `;
-  requestAnimationFrame(() => modal.classList.add('fr-visible'));
+  requestAnimationFrame(() => modal.classList.add("fr-visible"));
 }
 
 function showReviewAgainSummaryModal() {
-  const modal = document.getElementById('finalReviewModal');
+  const modal = document.getElementById("finalReviewModal");
   if (!modal) return;
 
   const summary = getEvaluationReviewSummary();
-  const summaryHtml = summary.categories.map(category => `
+  const summaryHtml = summary.categories
+    .map(
+      (category) => `
     <div class="fr-mini-category">
       <div class="fr-mini-category-title">${escapeReviewHtml(category.title)}</div>
       <div class="fr-mini-table" role="table" aria-label="${escapeReviewHtml(category.title)}">
@@ -1201,17 +1422,27 @@ function showReviewAgainSummaryModal() {
           <span>2</span>
           <span>1</span>
         </div>
-        ${category.questions.map(item => `
+        ${category.questions
+          .map(
+            (item) => `
           <div class="fr-mini-row" role="row">
             <span class="fr-mini-question">${escapeReviewHtml(item.question)}</span>
-            ${[5, 4, 3, 2, 1].map(score => `
-              <span class="fr-mini-rating ${String(score) === item.selected ? 'is-selected' : ''}" aria-label="${String(score) === item.selected ? `Selected ${score}` : `Not selected ${score}`}"></span>
-            `).join("")}
+            ${[5, 4, 3, 2, 1]
+              .map(
+                (score) => `
+              <span class="fr-mini-rating ${String(score) === item.selected ? "is-selected" : ""}" aria-label="${String(score) === item.selected ? `Selected ${score}` : `Not selected ${score}`}"></span>
+            `,
+              )
+              .join("")}
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 
   modal.innerHTML = `
     <div class="final-review-card fr-summary-card" role="dialog" aria-modal="true" aria-labelledby="frSummaryTitle">
@@ -1234,9 +1465,9 @@ function showReviewAgainSummaryModal() {
 }
 
 function closeFinalReviewModal() {
-  const modal = document.getElementById('finalReviewModal');
+  const modal = document.getElementById("finalReviewModal");
   if (modal) {
-    modal.classList.remove('fr-visible');
+    modal.classList.remove("fr-visible");
   }
 }
 
@@ -1245,14 +1476,17 @@ function _doSubmitEvaluation() {
   evaluationSubmitting = true;
   closeFinalReviewModal();
 
-  const studentId = document.getElementById('studentId')?.value?.trim() || '';
-  const facultyId = window.selectedFaculty?.id || '';
-  const subjectId = window.selectedFaculty?.subject_id || '';
+  const studentId = document.getElementById("studentId")?.value?.trim() || "";
+  const facultyId = window.selectedFaculty?.id || "";
+  const subjectId = window.selectedFaculty?.subject_id || "";
   const classId = window.selectedFaculty?.class_id || 0;
-  const feedbackText = document.getElementById('studentFeedback')?.value.trim() || '';
+  const feedbackText =
+    document.getElementById("studentFeedback")?.value.trim() || "";
   const selected = document.querySelectorAll('input[type="radio"]:checked');
   const data = {};
-  selected.forEach(r => { data[r.name] = r.value; });
+  selected.forEach((r) => {
+    data[r.name] = r.value;
+  });
 
   const nextBtn = document.getElementById("nextBtn");
   if (nextBtn) {
@@ -1260,25 +1494,25 @@ function _doSubmitEvaluation() {
     nextBtn.textContent = "Submitting...";
   }
 
-  const facultyLabel = window.selectedFaculty?.name || '';
+  const facultyLabel = window.selectedFaculty?.name || "";
   const submission = {
     student_id: studentId,
     faculty_id: facultyId,
     subject_id: subjectId,
     class_id: classId,
     faculty_name: facultyLabel,
-    subject_name: window.selectedFaculty?.subject_label || '',
+    subject_name: window.selectedFaculty?.subject_label || "",
     answers: data,
-    feedback: feedbackText
+    feedback: feedbackText,
   };
 
   fetch("submit_evaluation.php", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(submission)
+    body: JSON.stringify(submission),
   })
-    .then(async response => {
+    .then(async (response) => {
       const responseText = await response.text();
       let result;
       try {
@@ -1287,38 +1521,54 @@ function _doSubmitEvaluation() {
         throw new Error(`Invalid submission response (${response.status})`);
       }
       if (!response.ok) {
-        throw new Error(result.message || `Submission failed (${response.status})`);
+        throw new Error(
+          result.message || `Submission failed (${response.status})`,
+        );
       }
       return result;
     })
-    .then(async res => {
+    .then(async (res) => {
       if (!res.success) {
         if ((res.message || "").toLowerCase().includes("bad words")) {
           setFeedbackBadwordsState(true);
           return;
         }
-        showGlobalNotification(res.message || "Failed to submit evaluation.", "error");
+        showGlobalNotification(
+          res.message || "Failed to submit evaluation.",
+          "error",
+        );
         return;
       }
 
       // Show the success modal with rating
       showSuccessModal(res.overall_rating);
 
-      document.querySelectorAll('input[type="radio"]:checked').forEach(el => { el.checked = false; });
-      const fb = document.getElementById('studentFeedback');
-      if (fb) fb.value = '';
+      document.querySelectorAll('input[type="radio"]:checked').forEach((el) => {
+        el.checked = false;
+      });
+      const fb = document.getElementById("studentFeedback");
+      if (fb) fb.value = "";
 
       // Refresh faculty cards to remove evaluated faculty
       try {
         await loadStudentFacultyCards();
         await updateStudentStats();
       } catch (refreshError) {
-        console.error("Evaluation saved, but faculty list refresh failed:", refreshError);
+        console.error(
+          "Evaluation saved, but faculty list refresh failed:",
+          refreshError,
+        );
       }
 
-      document.getElementById("evaluateSection")?.style.setProperty("display", "block");
-      document.getElementById("facultyCards")?.style.setProperty("display", "block");
-      document.getElementById("evaluationContainer")?.style.setProperty("display", "none");
+      document
+        .getElementById("evaluateSection")
+        ?.style.setProperty("display", "block");
+      document
+        .getElementById("facultyCards")
+        ?.style.setProperty("display", "block");
+      document
+        .getElementById("evaluationContainer")
+        ?.style.setProperty("display", "none");
       window.selectedFaculty = null;
 
       // Reset to first criteria page
@@ -1328,9 +1578,12 @@ function _doSubmitEvaluation() {
       });
       updatePaginationButtons();
     })
-    .catch(err => {
+    .catch((err) => {
       console.error("Submit error:", err);
-      showGlobalNotification(err.message || "Error submitting evaluation. Please try again.", "error");
+      showGlobalNotification(
+        err.message || "Error submitting evaluation. Please try again.",
+        "error",
+      );
     })
     .finally(() => {
       evaluationSubmitting = false;
@@ -1340,14 +1593,16 @@ function _doSubmitEvaluation() {
 
 // ================= SUCCESS MODAL =================
 function showSuccessModal(overallRating) {
-  let modal = document.getElementById('evalSuccessModal');
+  let modal = document.getElementById("evalSuccessModal");
   if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'evalSuccessModal';
-    modal.className = 'success-overlay';
+    modal = document.createElement("div");
+    modal.id = "evalSuccessModal";
+    modal.className = "success-overlay";
     document.body.appendChild(modal);
   }
-  const ratingText = overallRating ? `Overall Rating: ${parseFloat(overallRating).toFixed(2)} / 5.00` : '';
+  const ratingText = overallRating
+    ? `Overall Rating: ${parseFloat(overallRating).toFixed(2)} / 5.00`
+    : "";
   modal.innerHTML = `
     <div class="success-card" role="dialog" aria-modal="true">
       <div class="su-icon-wrap">
@@ -1355,33 +1610,35 @@ function showSuccessModal(overallRating) {
       </div>
       <h2 class="su-title">Success!</h2>
       <p class="su-message">Evaluation submitted successfully!</p>
-      ${ratingText ? `<span class="su-rating">${ratingText}</span>` : ''}
+      ${ratingText ? `<span class="su-rating">${ratingText}</span>` : ""}
       <button class="su-ok-btn" onclick="closeSuccessModal()">OK</button>
     </div>
   `;
-  requestAnimationFrame(() => modal.classList.add('su-visible'));
+  requestAnimationFrame(() => modal.classList.add("su-visible"));
 }
 
 function closeSuccessModal() {
-  const modal = document.getElementById('evalSuccessModal');
-  if (modal) modal.classList.remove('su-visible');
+  const modal = document.getElementById("evalSuccessModal");
+  if (modal) modal.classList.remove("su-visible");
 }
 
 // Add event listener for password form back button
-document.addEventListener("DOMContentLoaded", function() {
-  Promise.allSettled([loadStudentAcademicPeriod(), loadStudentStats()]).finally(() => {
-    const dashboard = document.getElementById("mainPage");
-    const navbar = document.getElementById("studentNavbar");
-    dashboard?.classList.remove("student-dashboard-loading");
-    dashboard?.removeAttribute("aria-busy");
-    navbar?.classList.remove("student-navbar-loading");
-    navbar?.removeAttribute("aria-busy");
-  });
+document.addEventListener("DOMContentLoaded", function () {
+  Promise.allSettled([loadStudentAcademicPeriod(), loadStudentStats()]).finally(
+    () => {
+      const dashboard = document.getElementById("mainPage");
+      const navbar = document.getElementById("studentNavbar");
+      dashboard?.classList.remove("student-dashboard-loading");
+      dashboard?.removeAttribute("aria-busy");
+      navbar?.classList.remove("student-navbar-loading");
+      navbar?.removeAttribute("aria-busy");
+    },
+  );
   setInterval(loadStudentAcademicPeriod, 15000);
 
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {
-    backBtn.addEventListener("click", function(e) {
+    backBtn.addEventListener("click", function (e) {
       e.preventDefault();
       closePasswordForm();
     });
@@ -1390,35 +1647,39 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // ================= LOAD STUDENT STATS =================
 async function loadStudentStats() {
-  const studentId = document.getElementById('studentId')?.value.trim();
+  const studentId = document.getElementById("studentId")?.value.trim();
   if (!studentId) return;
 
   try {
     // Get evaluations done count
-    const evalResponse = await fetch(`get_student_evaluations.php?student_id=${studentId}`);
+    const evalResponse = await fetch(
+      `get_student_evaluations.php?student_id=${studentId}`,
+    );
     const evalData = await evalResponse.json();
-    
+
     if (evalData && evalData.success) {
       const evaluationsDone = evalData.count || 0;
-      const evaluationsDoneEl = document.getElementById('evaluationsDone');
+      const evaluationsDoneEl = document.getElementById("evaluationsDone");
       if (evaluationsDoneEl) {
         evaluationsDoneEl.textContent = evaluationsDone;
       }
     }
 
     // Get pending faculty count
-    const facultyResponse = await fetch(`../shared/getFaculty.php?student_id=${studentId}`);
+    const facultyResponse = await fetch(
+      `../shared/getFaculty.php?student_id=${studentId}`,
+    );
     const facultyData = await facultyResponse.json();
-    
+
     if (Array.isArray(facultyData)) {
       const pendingFaculty = facultyData.length;
-      const pendingFacultyEl = document.getElementById('pendingFaculty');
+      const pendingFacultyEl = document.getElementById("pendingFaculty");
       if (pendingFacultyEl) {
         pendingFacultyEl.textContent = pendingFaculty;
       }
     }
   } catch (error) {
-    console.error('Error loading student stats:', error);
+    console.error("Error loading student stats:", error);
   }
 }
 
@@ -1427,44 +1688,44 @@ async function showEvaluationHistory(event) {
   if (event) event.preventDefault();
   closeStudentDropdown();
 
-  const studentId = document.getElementById('studentId')?.value.trim();
-  
+  const studentId = document.getElementById("studentId")?.value.trim();
+
   if (!studentId) {
-    alert('Student ID not found');
+    alert("Student ID not found");
     return;
   }
-  
+
   try {
-    const response = await fetch('get_student_evaluation_history.php', {
-      method: 'GET',
-      credentials: 'same-origin',
-      cache: 'no-cache'
+    const response = await fetch("get_student_evaluation_history.php", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-cache",
     });
     const data = await response.json();
-    
+
     if (!data.success) {
-      alert(data.message || 'Failed to load evaluation history');
+      alert(data.message || "Failed to load evaluation history");
       return;
     }
-    
+
     displayEvaluationHistory(data.data);
   } catch (error) {
-    console.error('Error fetching evaluation history:', error);
-    alert('Error loading evaluation history');
+    console.error("Error fetching evaluation history:", error);
+    alert("Error loading evaluation history");
   }
 }
 
 function displayEvaluationHistory(history) {
-  let historyModal = document.getElementById('historyModal');
+  let historyModal = document.getElementById("historyModal");
   if (!historyModal) {
-    historyModal = document.createElement('div');
-    historyModal.id = 'historyModal';
-    historyModal.className = 'historyform';
+    historyModal = document.createElement("div");
+    historyModal.id = "historyModal";
+    historyModal.className = "historyform";
     document.body.appendChild(historyModal);
   }
-  
-  let historyContent = '';
-  
+
+  let historyContent = "";
+
   if (history.length === 0) {
     historyContent = `
       <div class="history-content">
@@ -1478,7 +1739,9 @@ function displayEvaluationHistory(history) {
       </div>
     `;
   } else {
-    const historyItems = history.map(item => `
+    const historyItems = history
+      .map(
+        (item) => `
       <div class="history-item">
         <div class="history-faculty">
           <i class="ph ph-user-circle"></i>
@@ -1491,10 +1754,12 @@ function displayEvaluationHistory(history) {
           </div>
           <div class="history-date">${item.date_evaluated}</div>
         </div>
-        ${item.feedback ? `<div class="history-feedback"><strong>Feedback:</strong> ${item.feedback}</div>` : ''}
+        ${item.feedback ? `<div class="history-feedback"><strong>Feedback:</strong> ${item.feedback}</div>` : ""}
       </div>
-    `).join('');
-    
+    `,
+      )
+      .join("");
+
     historyContent = `
       <div class="history-content">
         <div class="history-header">
@@ -1509,18 +1774,18 @@ function displayEvaluationHistory(history) {
       </div>
     `;
   }
-  
+
   historyModal.innerHTML = `
     <div class="logout-content">
       ${historyContent}
     </div>
   `;
-  
-  historyModal.style.display = 'flex';
+
+  historyModal.style.display = "flex";
 
   // Attach click-outside listener only once
   if (!historyModal._clickListenerAttached) {
-    historyModal.addEventListener('click', function(event) {
+    historyModal.addEventListener("click", function (event) {
       if (event.target === historyModal) {
         closeHistoryModal();
       }
@@ -1530,46 +1795,53 @@ function displayEvaluationHistory(history) {
 }
 
 function closeHistoryModal() {
-  const historyModal = document.getElementById('historyModal');
+  const historyModal = document.getElementById("historyModal");
   if (historyModal) {
-    historyModal.style.display = 'none';
+    historyModal.style.display = "none";
   }
 }
 
 function displayEvaluationHistory(history) {
-  let historyModal = document.getElementById('historyModal');
+  let historyModal = document.getElementById("historyModal");
   if (!historyModal) {
-    historyModal = document.createElement('div');
-    historyModal.id = 'historyModal';
-    historyModal.className = 'historyform';
+    historyModal = document.createElement("div");
+    historyModal.id = "historyModal";
+    historyModal.className = "historyform";
     document.body.appendChild(historyModal);
   }
 
-  const escapeHistoryHtml = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  const escapeHistoryHtml = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
-  const normalizeRatingLabel = label => {
+  const normalizeRatingLabel = (label) => {
     const value = String(label || "").trim();
     return value.toLowerCase() === "excellent" ? "Outstanding" : value;
   };
 
-  const historyItems = history.length === 0
-    ? `<p class="no-history">No evaluations submitted yet.</p>`
-    : history.map(item => {
-      const facultyName = escapeHistoryHtml(item.faculty_name);
-      const subjectName = escapeHistoryHtml(item.subject_label || item.subject_name || "");
-      const initial = facultyName.trim().charAt(0).toUpperCase() || "F";
-      const label = escapeHistoryHtml(normalizeRatingLabel(item.rating_label));
-      const ratingClass = label.toLowerCase().replace(/\s+/g, "-");
-      const rating = Number(item.overall_rating || 0).toFixed(2);
-      const date = escapeHistoryHtml(item.date_evaluated);
-      const feedback = escapeHistoryHtml(item.feedback || "");
+  const historyItems =
+    history.length === 0
+      ? `<p class="no-history">No evaluations submitted yet.</p>`
+      : history
+          .map((item) => {
+            const facultyName = escapeHistoryHtml(item.faculty_name);
+            const subjectName = escapeHistoryHtml(
+              item.subject_label || item.subject_name || "",
+            );
+            const initial = facultyName.trim().charAt(0).toUpperCase() || "F";
+            const label = escapeHistoryHtml(
+              normalizeRatingLabel(item.rating_label),
+            );
+            const ratingClass = label.toLowerCase().replace(/\s+/g, "-");
+            const rating = Number(item.overall_rating || 0).toFixed(2);
+            const date = escapeHistoryHtml(item.date_evaluated);
+            const feedback = escapeHistoryHtml(item.feedback || "");
 
-      return `
+            return `
         <div class="history-item" data-history-name="${facultyName.toLowerCase()}">
           <div class="history-item-top">
             <div class="history-main">
@@ -1588,7 +1860,8 @@ function displayEvaluationHistory(history) {
           ${feedback ? `<div class="history-feedback"><span>Feedback:</span> ${feedback}</div>` : ""}
         </div>
       `;
-    }).join('');
+          })
+          .join("");
 
   historyModal.innerHTML = `
     <div class="history-content">
@@ -1618,18 +1891,20 @@ function displayEvaluationHistory(history) {
     const items = historyModal.querySelectorAll(".history-item");
     let visibleCount = 0;
 
-    items.forEach(item => {
+    items.forEach((item) => {
       const isVisible = item.dataset.historyName.includes(query);
       item.style.display = isVisible ? "flex" : "none";
       if (isVisible) visibleCount++;
     });
 
     const noResults = historyModal.querySelector("#historyNoResults");
-    if (noResults) noResults.style.display = items.length && visibleCount === 0 ? "block" : "none";
+    if (noResults)
+      noResults.style.display =
+        items.length && visibleCount === 0 ? "block" : "none";
   });
 
-  historyModal.style.display = 'flex';
-  historyModal.onclick = event => {
+  historyModal.style.display = "flex";
+  historyModal.onclick = (event) => {
     if (event.target === historyModal) closeHistoryModal();
   };
 }

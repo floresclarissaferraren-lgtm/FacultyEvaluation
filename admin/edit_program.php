@@ -1,28 +1,38 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('admin');
-requireMethod('POST');
-include __DIR__ . '/../shared/connect.php';
+require_once __DIR__ . "/../shared/security.php";
+requireRole("admin");
+requireMethod("POST");
+include __DIR__ . "/../shared/connect.php";
 
 // 🔥 IMPORTANT: set JSON header
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 
-function normalizeProgramCodeInput(string $code): string {
+function normalizeProgramCodeInput(string $code): string
+{
     $code = trim($code);
-    $code = preg_replace('/\\\\[rnt]/i', '', $code);
-    $code = preg_replace('/\s+/', '', $code);
+    $code = preg_replace("/\\\\[rnt]/i", "", $code);
+    $code = preg_replace("/\s+/", "", $code);
     return strtoupper($code);
 }
 
-function programCodeExists(mysqli $conn, string $normalizedCode, int $excludeId): bool {
+function programCodeExists(
+    mysqli $conn,
+    string $normalizedCode,
+    int $excludeId,
+): bool {
     $result = $conn->query("SELECT id, program_code FROM add_programs");
-    if (!$result) return false;
+    if (!$result) {
+        return false;
+    }
 
     while ($row = $result->fetch_assoc()) {
-        if (intval($row['id']) === $excludeId) {
+        if (intval($row["id"]) === $excludeId) {
             continue;
         }
-        if (normalizeProgramCodeInput((string)$row['program_code']) === $normalizedCode) {
+        if (
+            normalizeProgramCodeInput((string) $row["program_code"]) ===
+            $normalizedCode
+        ) {
             return true;
         }
     }
@@ -31,28 +41,31 @@ function programCodeExists(mysqli $conn, string $normalizedCode, int $excludeId)
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id   = intval($_POST['id'] ?? 0);
-    $code = normalizeProgramCodeInput($_POST['program_code'] ?? '');
-    $name = trim($_POST['program_name'] ?? '');
+    $id = intval($_POST["id"] ?? 0);
+    $code = normalizeProgramCodeInput($_POST["program_code"] ?? "");
+    $name = trim($_POST["program_name"] ?? "");
 
     // basic validation
     if (empty($code) || empty($name)) {
         echo json_encode([
             "status" => "error",
-            "message" => "Program code and name are required."
+            "message" => "Program code and name are required.",
         ]);
-        exit;
+        exit();
     }
 
     if (programCodeExists($conn, $code, $id)) {
         echo json_encode([
             "status" => "error",
-            "message" => "Program code already exists. Please use a different program code."
+            "message" =>
+                "Program code already exists. Please use a different program code.",
         ]);
-        exit;
+        exit();
     }
-    
-    $stmt = $conn->prepare("UPDATE add_programs SET program_code=?, program_name=? WHERE id=?");
+
+    $stmt = $conn->prepare(
+        "UPDATE add_programs SET program_code=?, program_name=? WHERE id=?",
+    );
     $stmt->bind_param("ssi", $code, $name, $id);
 
     if ($stmt->execute()) {
@@ -60,12 +73,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             "status" => "success",
             "id" => $id,
             "program_code" => $code,
-            "program_name" => $name
+            "program_name" => $name,
         ]);
     } else {
         echo json_encode([
             "status" => "error",
-            "message" => $stmt->error
+            "message" => $stmt->error,
         ]);
     }
 

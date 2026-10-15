@@ -1,16 +1,16 @@
 <?php
-require_once __DIR__ . '/security.php';
-requireRole('admin', 'faculty', 'student');
-include __DIR__ . '/connect.php';
-header('Content-Type: application/json');
+require_once __DIR__ . "/security.php";
+requireRole("admin", "faculty", "student");
+include __DIR__ . "/connect.php";
+header("Content-Type: application/json");
 
 // check kung may category_id
-if (!isset($_GET['category_id'])) {
+if (!isset($_GET["category_id"])) {
     echo json_encode(["error" => "Missing category_id"]);
-    exit;
+    exit();
 }
 
-$category_id = intval($_GET['category_id']); // sanitize input
+$category_id = intval($_GET["category_id"]); // sanitize input
 $sql = "SELECT id, question_text FROM add_questions WHERE category_id = $category_id";
 $result = $conn->query($sql);
 

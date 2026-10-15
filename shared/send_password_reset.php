@@ -57,29 +57,59 @@ $code    = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 $conn->query("CREATE TABLE IF NOT EXISTS password_reset_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
-    code VARCHAR(6) NOT NULL,
+    code VARCHAR(255) NOT NULL,
     expires_at DATETIME NOT NULL,
     used TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_email (email)
-)");
+ ) ENGINE=InnoDB");
 
-// Keep all fresh unused codes valid for 10 minutes; remove only expired/used ones.
-$stmt = $conn->prepare("DELETE FROM password_reset_codes WHERE email = ? AND (expires_at <= NOW() OR used = 1)");
+$columnResult = $conn->query("SHOW COLUMNS FROM password_reset_codes LIKE 'code'");
+$codeColumn = $columnResult ? $columnResult->fetch_assoc() : null;
+if (!$codeColumn) {
+    error_log('Password reset code column is missing.');
+    http_response_code(500);
+    echo json_encode(['success' => true, 'message' => 'If the email is registered, a reset code will be sent shortly.']);
+    $conn->close();
+    exit;
+}
+if (strtolower((string)$codeColumn['Type']) !== 'varchar(255)') {
+    $conn->query("ALTER TABLE password_reset_codes MODIFY code VARCHAR(255) NOT NULL");
+}
+
+$hashedCode = password_hash($code, PASSWORD_DEFAULT);
+if ($hashedCode === false) {
+    error_log('Unable to hash password reset code.');
+    http_response_code(500);
+    echo json_encode(['success' => true, 'message' => 'If the email is registered, a reset code will be sent shortly.']);
+    $conn->close();
+    exit;
+}
+
+$conn->begin_transaction();
+$stmt = $conn->prepare("SELECT id FROM password_reset_codes WHERE email = ? FOR UPDATE");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $stmt->close();
 
-// Insert new code
+// Keep only the newest active code and store only its password hash.
+$stmt = $conn->prepare("DELETE FROM password_reset_codes WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$stmt->close();
+
 $stmt = $conn->prepare("INSERT INTO password_reset_codes (email, code, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))");
-$stmt->bind_param("ss", $email, $code);
+$stmt->bind_param("ss", $email, $hashedCode);
 if (!$stmt->execute()) {
+    $conn->rollback();
     $stmt->close();
     $conn->close();
     echo json_encode(['success' => false, 'message' => 'Failed to generate reset code. Please try again.']);
     exit;
 }
+$resetId = $stmt->insert_id;
 $stmt->close();
+$conn->commit();
 
 // Send email
 $subject = "Faculty Evaluation System - Password Reset Code";
@@ -114,12 +144,10 @@ if ($sent) {
     $conn->close();
     echo json_encode(['success' => true, 'message' => 'If the email is registered, a reset code will be sent shortly.']);
 } else {
-    $stmt = $conn->prepare("DELETE FROM password_reset_codes WHERE email = ? AND code = ?");
-    if ($stmt) {
-        $stmt->bind_param("ss", $email, $code);
-        $stmt->execute();
-        $stmt->close();
-    }
+    $stmt = $conn->prepare("DELETE FROM password_reset_codes WHERE id = ?");
+    $stmt->bind_param("i", $resetId);
+    $stmt->execute();
+    $stmt->close();
     $conn->close();
 
     error_log('Faculty evaluation password-reset email could not be sent.');

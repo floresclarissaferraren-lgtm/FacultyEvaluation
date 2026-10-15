@@ -1,41 +1,59 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('admin');
+require_once __DIR__ . "/../shared/security.php";
+requireRole("admin");
 header("Content-Type: application/json");
-require __DIR__ . '/../shared/connect.php';
-require_once __DIR__ . '/../shared/class_period_helper.php';
+require __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/class_period_helper.php";
 
-function formattedYearLevel(string $yearlevel): string {
+function formattedYearLevel(string $yearlevel): string
+{
     $val = trim($yearlevel);
     if (ctype_digit($val)) {
         $n = intval($val);
-        $suffix = $n === 1 ? 'st' : ($n === 2 ? 'nd' : ($n === 3 ? 'rd' : 'th'));
-        return $n . $suffix . ' Year';
+        $suffix =
+            $n === 1 ? "st" : ($n === 2 ? "nd" : ($n === 3 ? "rd" : "th"));
+        return $n . $suffix . " Year";
     }
     return $val;
 }
 
-function resolveProgramId(mysqli $conn, string $program): int {
+function resolveProgramId(mysqli $conn, string $program): int
+{
     $program = trim($program);
-    if ($program === '') return 0;
-    if (ctype_digit($program)) return intval($program);
-    $stmt = $conn->prepare("SELECT id FROM add_programs WHERE program_code = ? OR program_name = ? LIMIT 1");
-    if (!$stmt) return 0;
+    if ($program === "") {
+        return 0;
+    }
+    if (ctype_digit($program)) {
+        return intval($program);
+    }
+    $stmt = $conn->prepare(
+        "SELECT id FROM add_programs WHERE program_code = ? OR program_name = ? LIMIT 1",
+    );
+    if (!$stmt) {
+        return 0;
+    }
     $stmt->bind_param("ss", $program, $program);
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res ? $res->fetch_assoc() : null;
     $stmt->close();
-    return $row ? intval($row['id']) : 0;
+    return $row ? intval($row["id"]) : 0;
 }
 
-function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void {
-    $student_id = intval($student['id'] ?? 0);
-    $year_raw = trim((string)($student['yearlevel'] ?? ''));
-    $section = trim((string)($student['section'] ?? ''));
-    $program_id = resolveProgramId($conn, (string)($student['program'] ?? ''));
+function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void
+{
+    $student_id = intval($student["id"] ?? 0);
+    $year_raw = trim((string) ($student["yearlevel"] ?? ""));
+    $section = trim((string) ($student["section"] ?? ""));
+    $program_id = resolveProgramId($conn, (string) ($student["program"] ?? ""));
 
-    if ($student_id <= 0 || $program_id <= 0 || $section === '' || $year_raw === '' || strtolower($year_raw) === 'irregular') {
+    if (
+        $student_id <= 0 ||
+        $program_id <= 0 ||
+        $section === "" ||
+        $year_raw === "" ||
+        strtolower($year_raw) === "irregular"
+    ) {
         return;
     }
 
@@ -48,20 +66,32 @@ function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void {
           AND TRIM(UPPER(block)) = TRIM(UPPER(?))
         ORDER BY period_id ASC, id ASC
     ");
-    if (!$classStmt) return;
+    if (!$classStmt) {
+        return;
+    }
     $classStmt->bind_param("isss", $program_id, $year_raw, $year_fmt, $section);
     $classStmt->execute();
     $classRes = $classStmt->get_result();
     $classIds = [];
     if ($classRes) {
-        while ($class = $classRes->fetch_assoc()) $classIds[] = intval($class['id']);
+        while ($class = $classRes->fetch_assoc()) {
+            $classIds[] = intval($class["id"]);
+        }
     }
     $classStmt->close();
-    if (empty($classIds)) return;
+    if (empty($classIds)) {
+        return;
+    }
 
-    $deleteSubjects = $conn->prepare("DELETE FROM student_subjects WHERE student_id = ?");
-    $deleteClasses = $conn->prepare("DELETE FROM student_subject_classes WHERE student_id = ?");
-    if (!$deleteSubjects || !$deleteClasses) return;
+    $deleteSubjects = $conn->prepare(
+        "DELETE FROM student_subjects WHERE student_id = ?",
+    );
+    $deleteClasses = $conn->prepare(
+        "DELETE FROM student_subject_classes WHERE student_id = ?",
+    );
+    if (!$deleteSubjects || !$deleteClasses) {
+        return;
+    }
     $deleteSubjects->bind_param("i", $student_id);
     $deleteSubjects->execute();
     $deleteClasses->bind_param("i", $student_id);
@@ -69,17 +99,25 @@ function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void {
     $deleteSubjects->close();
     $deleteClasses->close();
 
-    $subStmt = $conn->prepare("SELECT subject_id FROM class_subjects WHERE class_id = ?");
-    $ins = $conn->prepare("INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
-    $insClass = $conn->prepare("INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)");
-    if (!$subStmt || !$ins || !$insClass) return;
+    $subStmt = $conn->prepare(
+        "SELECT subject_id FROM class_subjects WHERE class_id = ?",
+    );
+    $ins = $conn->prepare(
+        "INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)",
+    );
+    $insClass = $conn->prepare(
+        "INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)",
+    );
+    if (!$subStmt || !$ins || !$insClass) {
+        return;
+    }
 
     foreach ($classIds as $class_id) {
         $subStmt->bind_param("i", $class_id);
         $subStmt->execute();
         $subRes = $subStmt->get_result();
         while ($subject = $subRes->fetch_assoc()) {
-            $subject_id = intval($subject['subject_id']);
+            $subject_id = intval($subject["subject_id"]);
             $ins->bind_param("ii", $student_id, $subject_id);
             $ins->execute();
             $insClass->bind_param("iii", $student_id, $subject_id, $class_id);
@@ -93,24 +131,26 @@ function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void {
 
 // Check if connection works
 if ($conn->connect_error) {
-    echo json_encode(['error' => 'Database connection failed: ' . $conn->connect_error]);
-    exit;
+    echo json_encode([
+        "error" => "Database connection failed: " . $conn->connect_error,
+    ]);
+    exit();
 }
 
 ensureStudentSubjectClassesSchema($conn);
 
 $result = $conn->query("SELECT * FROM add_students ORDER BY id ASC");
 if (!$result) {
-    echo json_encode(['error' => 'Query failed: ' . $conn->error]);
-    exit;
+    echo json_encode(["error" => "Query failed: " . $conn->error]);
+    exit();
 }
 
 $students = [];
-while($row = $result->fetch_assoc()){
+while ($row = $result->fetch_assoc()) {
     syncRegularStudentSubjectsByClass($conn, $row);
 
     // Get subjects for this student
-    $student_id = $row['id'];
+    $student_id = $row["id"];
     $subject_query = "
         SELECT
             s.id,
@@ -145,26 +185,29 @@ while($row = $result->fetch_assoc()){
         WHERE ss.student_id = ?
         ORDER BY s.subject_code ASC
     ";
-    
+
     $stmt = $conn->prepare($subject_query);
-    $year_fmt = formattedYearLevel((string)$row['yearlevel']);
+    $year_fmt = formattedYearLevel((string) $row["yearlevel"]);
     $stmt->bind_param("si", $year_fmt, $student_id);
     $stmt->execute();
     $subject_result = $stmt->get_result();
-    
+
     $subjects = [];
-    while($subject_row = $subject_result->fetch_assoc()){
+    while ($subject_row = $subject_result->fetch_assoc()) {
         $subjects[] = $subject_row;
     }
 
     // Fallback: derive subjects from class mapping for regular students with empty student_subjects.
-    if (empty($subjects) && strtolower(trim((string)$row['yearlevel'])) !== 'irregular') {
-        $year_raw = trim((string)$row['yearlevel']);
+    if (
+        empty($subjects) &&
+        strtolower(trim((string) $row["yearlevel"])) !== "irregular"
+    ) {
+        $year_raw = trim((string) $row["yearlevel"]);
         $year_fmt = formattedYearLevel($year_raw);
-        $program_id = $row['program'] ?? 0;
-        $section = trim((string)($row['section'] ?? ''));
+        $program_id = $row["program"] ?? 0;
+        $section = trim((string) ($row["section"] ?? ""));
 
-        if (!empty($program_id) && $year_raw !== '' && $section !== '') {
+        if (!empty($program_id) && $year_raw !== "" && $section !== "") {
             $class_stmt = $conn->prepare("
                 SELECT
                     s.id,
@@ -186,7 +229,13 @@ while($row = $result->fetch_assoc()){
                   AND TRIM(UPPER(ac.block)) = TRIM(UPPER(?))
                 ORDER BY s.subject_code ASC
             ");
-            $class_stmt->bind_param("isss", $program_id, $year_raw, $year_fmt, $section);
+            $class_stmt->bind_param(
+                "isss",
+                $program_id,
+                $year_raw,
+                $year_fmt,
+                $section,
+            );
             $class_stmt->execute();
             $class_result = $class_stmt->get_result();
 
@@ -196,16 +245,18 @@ while($row = $result->fetch_assoc()){
             $class_stmt->close();
         }
     }
-    
-    $row['subjects'] = $subjects;
+
+    // Never return password hashes to the browser, even to authenticated admins.
+    unset($row["password"]);
+    $row["subjects"] = $subjects;
     $students[] = $row;
     $stmt->close();
 }
 
 // Add debug info
 $debug_info = [
-    'total_students' => count($students),
-    'query_success' => true
+    "total_students" => count($students),
+    "query_success" => true,
 ];
 
 echo json_encode($students);

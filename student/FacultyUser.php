@@ -78,9 +78,8 @@ $conn->close();
     </div>
   </div>
   <div class="user-menu">
-    <div class="student-box" onclick="toggleDropdown()" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+    <div class="student-box" onclick="toggleDropdown()" role="button" tabindex="0" aria-label="Student account menu" aria-haspopup="true" aria-expanded="false">
       <span class="student-account-icon" aria-hidden="true">SP</span>
-      <span class="student-label">Student</span>
       <i class="ph ph-caret-down student-caret" aria-hidden="true"></i>
     </div>
     <div class="dropdown-menu" id="dropdownMenu">

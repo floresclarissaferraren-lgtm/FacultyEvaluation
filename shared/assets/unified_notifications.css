@@ -29,7 +29,9 @@
   gap: 12px;
   padding: 16px 24px;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
   min-width: 320px;
   max-width: 500px;
   backdrop-filter: blur(8px);
@@ -152,7 +154,9 @@
   z-index: 10000;
   padding: 16px 24px;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
   font-size: 14px;
   font-weight: 500;
   color: white;

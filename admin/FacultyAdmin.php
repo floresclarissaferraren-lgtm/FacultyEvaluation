@@ -18,6 +18,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
   <link rel="stylesheet" href="FacultyAdmin.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     window.addEventListener("pageshow", event => {
@@ -59,15 +60,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
       </div>
       <div class="admin-notification-list" id="adminNotificationList">
         <div class="admin-notification-empty">Checking evaluation deadlines...</div>
-      </div>
-    </div>
-    <div class="admin-box">
-      <div class="admin-icon">
-        <span>SA</span>
-      </div>
-      <div class="admin-text">
-        <span class="admin-title">System Administrator</span>
-        <span class="admin-subtitle">admin</span>
       </div>
     </div>
   </div>
@@ -143,7 +135,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <span>Main</span>
       </div>
       <div class="menu-items">
-        <a href="#" data-section="dashboard-section" data-tooltip="Dashboard" aria-label="Dashboard"
+        <a href="#" class="active" data-section="dashboard-section" data-tooltip="Dashboard" aria-label="Dashboard"
            onclick="showSection('dashboard-section', event)">
           <i class="ph ph-squares-four"></i>
           <span>Dashboard</span>
@@ -203,6 +195,13 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
   <!-- Sidebar Bottom / Logout -->
   <div class="sidebar-bottom">
+    <div class="sidebar-profile" aria-label="Signed in as System Administrator">
+      <div class="sidebar-profile-avatar" aria-hidden="true">SA</div>
+      <div class="sidebar-profile-text">
+        <span class="sidebar-profile-name">System Administrator</span>
+        <span class="sidebar-profile-role">Administrator</span>
+      </div>
+    </div>
     <a href="#" class="sidebar-logout-btn" id="logoutLink" data-tooltip="Logout" aria-label="Logout">
       <i class="ph ph-sign-out"></i>
       <span>Logout</span>
@@ -259,7 +258,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
           <span>Registered Users</span>
         </div>
-        <div class="icon-box"><i class="ph ph-chalkboard-teacher"></i></div>
+        <div class="icon-box"><i class="ph-fill ph-chalkboard-teacher"></i></div>
       </div>
     </div>
 
@@ -273,7 +272,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <p id="totalStudents" class="dashboard-value"><?php echo $totalStudentsCount; ?></p>
           <span>Registered Users</span>
         </div>
-        <div class="icon-box"><i class="ph ph-graduation-cap"></i></div>
+        <div class="icon-box"><i class="ph-fill ph-graduation-cap"></i></div>
       </div>
     </div>
 
@@ -285,7 +284,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <p id="totalEvaluations" class="dashboard-value"><?php echo $totalEvaluationsCount; ?></p>
           <span>Overall</span>
         </div>
-        <div class="icon-box"><i class="ph ph-chart-bar"></i></div>
+        <div class="icon-box"><i class="ph-fill ph-chart-bar"></i></div>
       </div>
     </div>
 
@@ -297,7 +296,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <p id="overallRating" class="dashboard-value">0.00</p>
           <span>Out of 5.0</span>
         </div>
-        <div class="icon-box"><i class="ph ph-star"></i></div>
+        <div class="icon-box"><i class="ph-fill ph-star"></i></div>
       </div>
     </div>
 
@@ -443,7 +442,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
     <div class="programs-header">
       <div class="programs-stats">
         <div class="stats-icon">
-          <i class="ph ph-graduation-cap"></i>
+          <i class="ph-fill ph-graduation-cap"></i>
         </div>
         <div class="stats-info">
           <p class="stats-number" id="totalPrograms">0 Program Record</p>
@@ -485,7 +484,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <!-- Add Delete Forms ==============================================================================================================================-->
 <div id="deleteModal" class="modal">
   <div class="modal-content delete-modal-card">
-    <div class="delete-icon-circle"><i class="ph ph-warning"></i></div>
+    <div class="delete-icon-circle"><i class="ph-fill ph-warning"></i></div>
     <p id="deleteMessage" class="delete-main-text">
       Do you want to delete <strong>category</strong>?<br><b>TEACHING SKILLS</b>
     </p>
@@ -510,16 +509,17 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
-  
-  <!-- Blue Banner with Program Info and Stats -->
   <div class="manage-program-banner">
+    <button type="button" class="back-btn manage-back-programs">
+      <i class="ph ph-arrow-left"></i>
+      <span>Back to all programs</span>
+    </button>
     <div class="program-banner-header">
+      <div class="program-badge" id="manageProgramCode">PROGRAM</div>
       <div class="program-info">
-        <h2 id="manageTitle">Bachelor of Science in Education in Math Major</h2>
-        <p class="program-meta"><span id="manageProgramType">Academic Program</span> · <span id="manageProgramStatus">Active</span></p>
+        <h2 id="manageTitle">Academic Program</h2>
       </div>
     </div>
-    
     <div class="program-stats-row">
       <div class="program-stat-item">
         <i class="ph ph-book"></i>
@@ -538,49 +538,67 @@ include __DIR__ . '/totalstudents_dashcount.php';
     </div>
   </div>
 
-  <!-- Tabs and Actions Row -->
-  <div class="manage-tabs-row">
-    <div class="manage-tabs">
-      <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
-      <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
+  <div class="manage-curriculum-heading">
+    <div>
+      <p class="manage-section-eyebrow">Curriculum Structure</p>
+      <span class="manage-class-heading-icon" aria-hidden="true"><i class="ph ph-book-open"></i></span>
+      <h3 id="manageContentTitle">Explore by year level</h3>
+      <p id="manageContentSubtitle" class="manage-content-subtitle"></p>
     </div>
-    <div class="manage-actions">
+    <div class="manage-content-actions">
+      <button type="button" id="manageDetailBack" class="manage-detail-back-btn" hidden>
+        <i class="ph ph-arrow-left"></i> Back to year levels
+      </button>
       <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add Subject</button>
-      <button class="back-btn"><i class="ph ph-arrow-left"></i> Back</button>
     </div>
   </div>
 
-  
-  <!-- Subject Table -->
+  <div id="manageYearLevelView" class="manage-year-level-view">
+    <div id="manageYearLevelCards" class="manage-year-level-cards" aria-live="polite"></div>
+  </div>
+
+  <div id="manageDetailView" class="manage-detail-view" hidden>
+    <div class="manage-tabs-row" hidden>
+      <div class="manage-tabs">
+        <button class="subject-btn active"><i class="ph ph-book"></i> Subjects</button>
+        <button class="classes-btn"><i class="ph ph-users"></i> Classes</button>
+      </div>
+      <div class="manage-actions"></div>
+    </div>
+
   <div class="manage-body">
     <div id="subjects" class="table-wrapper">
       <div class="subject-control-box manage-subject-control-box">
+        <button type="button" class="clear-search-btn manage-subject-clear-btn" data-clear-targets="manage-subjects-search,manage-subjects-semester-filter,manage-subjects-year-filter" title="Clear subject filters" aria-label="Clear subject filters">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
         <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <i class="ph ph-magnifying-glass manage-subject-search-icon" aria-hidden="true"></i>
           <input type="text" id="manage-subjects-search" placeholder="Search subjects...">
         </div>
-        <div class="program-filter-wrapper">
+        <div class="program-filter-wrapper manage-semester-filter-wrapper">
           <i class="ph ph-calendar-blank"></i>
           <select id="manage-subjects-semester-filter" class="program-dropdown">
-            <option value="">-- All Semesters --</option>
+            <option value="">All Semesters</option>
             <option value="1st Semester">1st Semester</option>
             <option value="2nd Semester">2nd Semester</option>
             <option value="Summer">Summer</option>
           </select>
         </div>
-        <div class="program-filter-wrapper">
+        <div class="program-filter-wrapper manage-year-filter-wrapper">
           <i class="ph ph-graduation-cap"></i>
           <select id="manage-subjects-year-filter" class="program-dropdown">
-            <option value="">-- All Year Levels --</option>
+            <option value="">All Year Levels</option>
             <option value="1st Year">1st Year</option>
             <option value="2nd Year">2nd Year</option>
             <option value="3rd Year">3rd Year</option>
             <option value="4th Year">4th Year</option>
           </select>
         </div>
-        <button type="button" class="clear-search-btn" data-clear-targets="manage-subjects-search,manage-subjects-semester-filter,manage-subjects-year-filter" title="Clear search" aria-label="Clear subject search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
+      </div>
+      <div class="manage-subjects-results" aria-live="polite">
+        <strong id="manageSubjectsResultCount">0 subjects found</strong>
+        <span id="manageSubjectsAcademicYear"></span>
       </div>
       <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
@@ -600,6 +618,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <tbody></tbody>
         </table>
       </div>
+    </div>
     </div>
   </div>
 </div>
@@ -626,16 +645,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
             <option value="Summer">Summer</option>
           </select>
         </div>
-        <div>
-          <label for="subject-year">Year</label>
-          <select id="subject-year">
-            <option value="">Select Year Level</option>
-            <option value="1st Year">1st Year</option>
-            <option value="2nd Year">2nd Year</option>
-            <option value="3rd Year">3rd Year</option>
-            <option value="4th Year">4th Year</option>
-          </select>
-        </div>
       </div>
       <button id="save-subject-btn" class="submit-btn">SAVE SUBJECT</button>
     </div>
@@ -654,27 +663,18 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <div>
           <label for="class-academic-year">Academic Year</label>
           <select id="class-academic-year">
-            <option value="">Select Academic Year</option>
+            <option value="">Academic Year</option>
           </select>
         </div>
         <div>
           <label for="class-semester">Semester</label>
           <select id="class-semester" disabled>
-            <option value="">Select academic year first</option>
+            <option value="">Semester</option>
           </select>
         </div>
       </div>
-      <div class="form-row">
-        <div>
-          <label for="class-year">Year Level</label>
-          <select id="class-year">
-            <option value="">Select Year Level</option>
-            <option value="1st Year">1st Year</option>
-            <option value="2nd Year">2nd Year</option>
-            <option value="3rd Year">3rd Year</option>
-            <option value="4th Year">4th Year</option>
-          </select>
-        </div>
+      <input type="hidden" id="class-year" value="">
+      <div class="form-row class-section-row">
         <div>
           <label for="class-block">Section</label>
           <input type="text" id="class-block">
@@ -688,16 +688,11 @@ include __DIR__ . '/totalstudents_dashcount.php';
             <i class="ph ph-magnifying-glass"></i>
           </div>
           <div class="class-subject-options">
-            <small>Select year level first to load subjects</small>
+            <small>Select academic year and semester to load this year level's subjects</small>
           </div>
         </div>
       </div>
-      <div class="section-box">
-        <div id="faculty-list" class="subjects-list">
-          <h4><i class="ph ph-user"></i> Available Faculty</h4>
-          <small>Select subjects to show available faculty</small>
-        </div>
-      </div>
+      <div id="faculty-list" hidden aria-hidden="true"></div>
       <button id="save-class-btn" class="submit-btn">SAVE CLASS</button>
     </div>
   </div>
@@ -811,6 +806,9 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
   <div class="faculty-toolbar">
     <div class="search-filters-container">
+      <button type="button" class="clear-search-btn" data-clear-targets="faculty-search,faculty-status-filter" title="Clear search" aria-label="Clear faculty search">
+        <i class="ph ph-arrow-clockwise"></i>
+      </button>
       <div class="search-wrapper">
         <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
         <input id="faculty-search" placeholder="Search faculty...">
@@ -824,9 +822,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <option value="on leave">On Leave</option>
         </select>
       </div>
-      <button type="button" class="clear-search-btn" data-clear-targets="faculty-search,faculty-status-filter" title="Clear search" aria-label="Clear faculty search">
-        <i class="ph ph-arrow-clockwise"></i>
-      </button>
     </div>
     <div class="header-actions">
       <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
@@ -938,7 +933,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
       <div class="form-row">
         <div>
           <label for="faculty-subject-selection-search">Search Subject Code or Name</label>
-          <input type="text" id="faculty-subject-selection-search" placeholder="Search subject code or name...">
+          <input type="text" id="faculty-subject-selection-search" placeholder="Search code or name...">
         </div>
         <div>
           <label for="faculty-subject-year-filter">Year Level</label>
@@ -1002,6 +997,9 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <button class="show-archived-student-btn">Show Archived</button>
       </div>
       <div class="student-filter-row">
+        <button type="button" class="clear-search-btn" data-clear-targets="student-search,student-program-filter,student-yearlevel-filter" title="Clear search" aria-label="Clear student search">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
         <div class="search-wrapper">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input id="student-search" placeholder="Search student...">
@@ -1023,9 +1021,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
             <option value="irregular">Irregular</option>
           </select>
         </div>
-        <button type="button" class="clear-search-btn" data-clear-targets="student-search,student-program-filter,student-yearlevel-filter" title="Clear search" aria-label="Clear student search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
       </div>
     </div>
     </div>
@@ -1211,6 +1206,8 @@ include __DIR__ . '/totalstudents_dashcount.php';
           </tbody>
         </table>
       </div>
+
+      <div id="student-subject-pagination" class="student-subject-pagination" aria-label="Subject pages"></div>
       
       <div class="modal-actions">
         <button type="button" id="cancel-subject-selection" class="cancel-btn">Cancel</button>
@@ -1236,13 +1233,13 @@ include __DIR__ . '/totalstudents_dashcount.php';
       </div>
       <div class="criteria-header-controls">
         <div class="criteria-search-container">
+          <button type="button" class="clear-search-btn" id="criteria-search-clear" title="Clear search" aria-label="Clear criteria search">
+            <i class="ph ph-arrow-clockwise"></i>
+          </button>
           <div class="search-wrapper">
             <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
             <input type="text" id="criteria-search-input" placeholder="Search categories...">
           </div>
-          <button type="button" class="clear-search-btn" id="criteria-search-clear" title="Clear search" aria-label="Clear criteria search">
-            <i class="ph ph-arrow-clockwise"></i>
-          </button>
         </div>
         <div class="header-actions">
           <button id="addCategoryBtn" class="add-program-btn button-gradient">
@@ -1369,33 +1366,31 @@ include __DIR__ . '/totalstudents_dashcount.php';
   <div class="table-wrapper academic-year-controls">
     <div class="table-header">
       <div class="search-filters-container">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input type="text" id="academic-year-search" placeholder="Search academic year...">
+        <div class="academic-year-filter-pair">
+          <button type="button" class="clear-search-btn" data-clear-targets="academic-year-filter,semester-filter" title="Clear filters" aria-label="Clear academic year filters">
+            <i class="ph ph-arrow-clockwise"></i>
+          </button>
+          <div class="program-filter-wrapper academic-year-select-wrapper">
+            <i class="ph ph-calendar-blank"></i>
+            <select id="academic-year-filter" class="program-dropdown">
+              <option value="">Academic Year</option>
+            </select>
+          </div>
+          <div class="program-filter-wrapper semester-select-wrapper">
+            <i class="ph ph-calendar"></i>
+            <select id="semester-filter" class="program-dropdown">
+              <option value="">All Semesters</option>
+              <option value="1st Semester">1st Semester</option>
+              <option value="2nd Semester">2nd Semester</option>
+              <option value="Summer">Summer</option>
+            </select>
+          </div>
         </div>
-        <div class="program-filter-wrapper academic-year-select-wrapper">
-          <i class="ph ph-calendar-blank"></i>
-          <select id="academic-year-filter" class="program-dropdown">
-            <option value="">Academic Year</option>
-          </select>
+        <div class="header-actions academic-year-add-action">
+          <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
+            <i class="ph ph-plus"></i> Add Academic Year
+          </button>
         </div>
-        <div class="program-filter-wrapper semester-select-wrapper">
-          <i class="ph ph-calendar"></i>
-          <select id="semester-filter" class="program-dropdown">
-            <option value="">All Semesters</option>
-            <option value="1st Semester">1st Semester</option>
-            <option value="2nd Semester">2nd Semester</option>
-            <option value="Summer">Summer</option>
-          </select>
-        </div>
-        <button type="button" class="clear-search-btn" data-clear-targets="academic-year-search,academic-year-filter,semester-filter" title="Clear search" aria-label="Clear academic year search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
-      </div>
-      <div class="header-actions">
-        <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
-          <i class="ph ph-plus"></i> Add New
-        </button>
       </div>
     </div>
 
@@ -1458,6 +1453,9 @@ include __DIR__ . '/totalstudents_dashcount.php';
   <div class="table-wrapper">
     <div class="table-header">
       <div class="search-filters-container">
+        <button type="button" class="clear-search-btn report-clear-btn" data-clear-targets="searchInput,report-ay-filter,report-semester-filter" title="Clear report filters" aria-label="Clear report filters">
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
         <div class="search-wrapper">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="searchInput" placeholder="Search Faculty...">
@@ -1479,9 +1477,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
         </div>
       </div>
       <div class="header-actions">
-        <button type="button" class="clear-search-btn report-clear-btn" data-clear-targets="searchInput,report-ay-filter,report-semester-filter" title="Clear report filters" aria-label="Clear report filters">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
         <button class="generate-report-btn" onclick="generateEvaluationReport()">
           <i class="ph ph-download-simple"></i> Generate Report
         </button>
@@ -1519,12 +1514,16 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <div class="report-chart-heading"><div><h3>Ratings Trend Over Time</h3></div></div>
         <div class="report-line-canvas"><canvas id="reportRatingsTrendChart"></canvas></div>
       </div>
-      <div id="reportRankingCard" class="report-chart-card report-ranking-card" onclick="openReportFacultyRankings(event)" onkeydown="if (event.key === 'Enter' || event.key === ' ') openReportFacultyRankings(event)" tabindex="0" role="button" aria-label="View all report faculty rankings">
-        <div class="report-chart-heading rating-header"><div><h3>Top Faculty Rankings</h3></div></div>
-        <div id="reportRankingClickTarget" class="top-performance-chart-wrapper" role="button" tabindex="0" aria-label="View all report faculty rankings">
-          <div id="reportFacultyRankings" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all report faculty rankings"></div>
+      <div id="reportRankingCard" class="dashboard-card top-performance report-chart-card report-ranking-card" onclick="openReportFacultyRankings(event)" onkeydown="if (event.key === 'Enter' || event.key === ' ') openReportFacultyRankings(event)" tabindex="0" role="button" aria-label="View all report faculty rankings">
+        <div class="dashboard-content">
+          <div class="rating-header">
+            <h3>Top Faculty Rankings</h3>
+          </div>
+          <div id="reportRankingClickTarget" class="top-performance-chart-wrapper">
+            <div id="reportFacultyRankings" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all report faculty rankings"></div>
+          </div>
+          <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
         </div>
-        <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
       </div>
     </div>
   </div>

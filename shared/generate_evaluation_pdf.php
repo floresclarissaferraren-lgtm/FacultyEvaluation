@@ -1,60 +1,126 @@
 <?php
-require_once __DIR__ . '/security.php';
-include __DIR__ . '/connect.php';
-require_once __DIR__ . '/evaluation_period_helper.php';
+require_once __DIR__ . "/security.php";
+requireRole("admin", "faculty");
+include __DIR__ . "/connect.php";
+require_once __DIR__ . "/evaluation_period_helper.php";
 
-if (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty' && isEvaluationOngoing($conn)) {
+if (
+    isset($_SESSION["role"]) &&
+    $_SESSION["role"] === "faculty" &&
+    isEvaluationOngoing($conn)
+) {
     http_response_code(403);
-    exit('Evaluation results are unavailable while the evaluation process is still ongoing.');
+    exit(
+        "Evaluation results are unavailable while the evaluation process is still ongoing."
+    );
 }
 
 // Get JSON data, with GET fallback for direct URL access/testing.
-$data = json_decode(file_get_contents('php://input'), true);
+$data = json_decode(file_get_contents("php://input"), true);
 if (!is_array($data) || empty($data)) {
     $data = $_GET;
 }
 
 // Validate required fields from either JSON or GET.
 if (
-    !isset($data['facultyName']) ||
-    !isset($data['facultyId']) ||
-    trim((string)$data['facultyName']) === '' ||
-    trim((string)$data['facultyId']) === ''
+    !isset($data["facultyName"]) ||
+    !isset($data["facultyId"]) ||
+    trim((string) $data["facultyName"]) === "" ||
+    trim((string) $data["facultyId"]) === ""
 ) {
     http_response_code(400);
-    exit('Missing required data');
+    exit("Missing required data");
 }
 
 // Load FPDF once
-if (!class_exists('FPDF', false)) {
-    require_once __DIR__ . '/../vendor/fpdf/fpdf.php';
+if (!class_exists("FPDF", false)) {
+    require_once __DIR__ . "/../vendor/fpdf/fpdf.php";
 }
 
-// Fix font path for Windows
-define('FPDF_FONTPATH', dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'fpdf' . DIRECTORY_SEPARATOR . 'font' . DIRECTORY_SEPARATOR);
-
 // Fix UTF-8 text for FPDF
-function cleanText($text) {
-    return iconv('UTF-8', 'windows-1252//TRANSLIT', $text);
+function cleanText($text)
+{
+    return iconv("UTF-8", "windows-1252//TRANSLIT", $text);
+}
+
+function ratingLabel(float $score): string
+{
+    if ($score <= 0) {
+        return "No Responses";
+    }
+    if ($score >= 4.5) {
+        return "Outstanding";
+    }
+    if ($score >= 3.5) {
+        return "Very Good";
+    }
+    if ($score >= 2.5) {
+        return "Good";
+    }
+    if ($score >= 1.5) {
+        return "Fair";
+    }
+    return "Poor";
 }
 
 // Safe values
-$facultyName   = cleanText($data['facultyName']);
-$facultyId     = cleanText($data['facultyId']);
-$overallRating = cleanText($data['overallRating'] ?? '0.00');
-$totalResponses = cleanText($data['totalResponses'] ?? '0');
-$feedback      = cleanText($data['feedback'] ?? 'No feedback available');
-$evaluationDetails = is_array($data['evaluationDetails'] ?? null) ? $data['evaluationDetails'] : [];
-$allFeedback = cleanText($data['allFeedback'] ?? ($data['feedback'] ?? 'No feedback available'));
-$evaluationPeriod = cleanText($data['evaluationPeriod'] ?? '');
-$academicYear = cleanText($data['academicYear'] ?? '');
-$semester = cleanText($data['semester'] ?? '');
-$programFilter = cleanText($data['programFilter'] ?? '');
-$subjectLabel = cleanText($data['subjectLabel'] ?? '');
+$facultyName = cleanText($data["facultyName"]);
+$facultyId = cleanText($data["facultyId"]);
+$overallRating = cleanText($data["overallRating"] ?? "0.00");
+$totalResponses = cleanText($data["totalResponses"] ?? "0");
+$feedback = cleanText($data["feedback"] ?? "No feedback available");
+$evaluationDetails = is_array($data["evaluationDetails"] ?? null)
+    ? $data["evaluationDetails"]
+    : [];
+$allFeedback = cleanText(
+    $data["allFeedback"] ?? ($data["feedback"] ?? "No feedback available"),
+);
+$evaluationPeriod = cleanText($data["evaluationPeriod"] ?? "");
+$academicYear = cleanText($data["academicYear"] ?? "");
+$semester = cleanText($data["semester"] ?? "");
+$programFilter = cleanText($data["programFilter"] ?? "");
+$subjectLabel = cleanText($data["subjectLabel"] ?? "");
 $subjectContext = $subjectLabel;
 
-$isFacultyReport = ($data['reportType'] ?? '') === 'faculty';
-$isAdminRequest = !$isFacultyReport && (empty($data['feedback']) || $data['feedback'] === '');
+$isFacultyReport = ($data["reportType"] ?? "") === "faculty";
+$privacySuppressed =
+    (string) ($_SESSION["role"] ?? "") !== "faculty" &&
+    !empty($data["privacySuppressed"]);
+
+if ((string) ($_SESSION["role"] ?? "") === "faculty") {
+    if (!$isFacultyReport) {
+        http_response_code(403);
+        exit("Access denied.");
+    }
+
+    $requestedFacultyId = trim((string) $data["facultyId"]);
+    if (ctype_digit($requestedFacultyId)) {
+        $requestedFacultyNumericId = intval($requestedFacultyId);
+    } else {
+        $facultyLookup = $conn->prepare(
+            "SELECT id FROM add_faculties WHERE faculty_id = ? LIMIT 1",
+        );
+        $facultyLookup->bind_param("s", $requestedFacultyId);
+        $facultyLookup->execute();
+        $facultyLookupRow = $facultyLookup->get_result()->fetch_assoc();
+        $facultyLookup->close();
+        $requestedFacultyNumericId = intval($facultyLookupRow["id"] ?? 0);
+    }
+
+    if ($requestedFacultyNumericId !== intval($_SESSION["id"] ?? 0)) {
+        http_response_code(403);
+        exit("Access denied.");
+    }
+}
+
+if ($privacySuppressed) {
+    $overallRating = "Withheld";
+    $totalResponses = "Withheld";
+    $feedback =
+        "Feedback and results are withheld until at least 5 students have responded.";
+    $allFeedback = $feedback;
+    $evaluationDetails = [];
+}
 
 // Get faculty_id from add_faculties table
 $facultyIdDisplay = $facultyId; // Default to original ID
@@ -64,181 +130,278 @@ $stmt->execute();
 $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    $facultyIdDisplay = $row['faculty_id'];
+    $facultyIdDisplay = $row["faculty_id"];
 }
 $stmt->close();
 
 // Create PDF
-$pdf = new FPDF();
+$pdf = new class ("P", "mm", "A4") extends FPDF {
+    public function Footer(): void
+    {
+        $this->SetY(-12);
+        $this->SetDrawColor(210, 220, 232);
+        $this->Line(10, $this->GetY(), 200, $this->GetY());
+        $this->SetY(-10);
+        $this->SetFont("Arial", "", 8);
+        $this->SetTextColor(120, 130, 145);
+        $this->Cell(
+            130,
+            6,
+            cleanText("Generated " . date("M j, Y  h:i A")),
+            0,
+            0,
+            "L",
+        );
+        $this->Cell(60, 6, cleanText("Page " . $this->PageNo()), 0, 0, "R");
+    }
+};
+$pdf->SetAutoPageBreak(true, 17);
 $pdf->AddPage();
 
-// Set colors
-$headerColor = array(70, 130, 180); // Steel blue
-$borderColor = array(200, 200, 200); // Light gray
-$textColor = array(50, 50, 50); // Dark gray
+$blue = [11, 126, 196];
+$navy = [30, 64, 120];
+$light = [245, 249, 255];
+$border = [215, 225, 238];
+$textColor = [50, 50, 50];
 
-// =====================
-// CALCULATE HEADER DIMENSIONS
-// =====================
-$logoWidth = 25;
-$logoHeight = 25;
-$padding = 10;
+// Use one shared layout for the admin and faculty evaluation reports.
+$pdf->SetFillColor($blue[0], $blue[1], $blue[2]);
+$pdf->Rect(10, 10, 190, 34, "F");
 
-$pdf->SetFont('Arial', 'B', 18);
-$collegeName = 'Granby Colleges of Science and Technology';
-$collegeNameWidth = $pdf->GetStringWidth($collegeName);
-
-$pdf->SetFont('Arial', 'B', 14);
-$reportTitle = $isAdminRequest ? 'Individual Performance Report' : 'Faculty Evaluation Report';
-$reportTitleWidth = $pdf->GetStringWidth($reportTitle);
-
-$maxTextWidth = max($collegeNameWidth, $reportTitleWidth);
-$headerWidth = $logoWidth + 15 + $maxTextWidth + 20; // logo + spacing + text + padding
-$headerHeight = 40;
-$headerX = (210 - $headerWidth) / 2; // Center horizontally
-$headerY = 10;
-
-// =====================
-// HEADER BACKGROUND
-// =====================
-$pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
-$pdf->Rect($headerX, $headerY, $headerWidth, $headerHeight, 'F');
-
-// =====================
-// LOGO
-// =====================
-if (file_exists(__DIR__ . '/../assets/images/logo.png')) {
-    $pdf->Image(__DIR__ . '/../assets/images/logo.png', $headerX + 10, $headerY + 7, $logoWidth);
+$logoPath = __DIR__ . "/../assets/images/logo.png";
+if (is_file($logoPath)) {
+    $pdf->Image($logoPath, 15, 15, 23);
 }
 
-// =====================
-// HEADER TEXT
-// =====================
-$pdf->SetTextColor(255, 255, 255); // White text
-
-// College name - centered
-$pdf->SetFont('Arial', 'B', 18);
-$pdf->SetXY($headerX + $logoWidth + 15, $headerY + 8);
-$pdf->Cell($maxTextWidth, 12, $collegeName, 0, 1, 'C');
-
-// Report title - centered under college name (subtitle)
-$pdf->SetFont('Arial', 'B', 14);
-$pdf->SetX($headerX + $logoWidth + 15);
-$pdf->Cell($maxTextWidth, 10, $reportTitle, 0, 1, 'C');
-
-$pdf->Ln(15);
-
-// Reset text color for content
-$pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-
-// =====================
-// FACULTY DETAILS BOX
-// =====================
-$boxX = 15; // Left margin
-$boxWidth = 180; // Full width minus margins
-$detailRows = [
-    ['Name:', $facultyName],
-    ['Faculty ID:', $facultyIdDisplay],
-];
-if ($academicYear !== '') {
-    $detailRows[] = ['Academic Year:', $academicYear];
-}
-if ($semester !== '') {
-    $detailRows[] = ['Semester:', $semester];
-}
-if ($evaluationPeriod !== '') {
-    $detailRows[] = ['Evaluation Period:', $evaluationPeriod];
-}
-if ($subjectContext !== '') {
-    $detailRows[] = ['Subject:', $subjectContext];
-}
-if ($programFilter !== '') {
-    $detailRows[] = ['Program:', $programFilter];
-}
-$detailRows[] = ['Overall Rating:', $overallRating . ' / 5.00'];
-$detailRows[] = ['Total Responses:', $totalResponses];
-$boxHeight = 10 + (count($detailRows) * 10);
-$boxY = 60;
-
-$pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
-$pdf->SetFillColor(248, 248, 248); // Light background
-$pdf->Rect($boxX, $boxY, $boxWidth, $boxHeight, 'DF');
-
-$pdf->SetXY($boxX + 10, $boxY + 5);
-foreach ($detailRows as [$label, $value]) {
-    $pdf->SetX($boxX + 10);
-    $pdf->SetFont('Arial', 'B', 10);
-    $pdf->Cell(45, 10, cleanText($label), 0, 0);
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(125, 10, $value, 0, 1);
-}
-
-// =====================
-// CATEGORY DETAILS
-// =====================
-if (!empty($evaluationDetails)) {
-    $pdf->Ln(12);
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
-    $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(0, 9, '  Category Breakdown', 0, 1, 'L', true);
-
-    $categoryWidth = 75;
-    $ratingWidth = 35;
-    $responsesWidth = 32;
-    $weightWidth = 38;
-    $tableX = 15;
-
-    $pdf->SetX($tableX);
-    $pdf->SetFont('Arial', 'B', 10);
-    $pdf->SetFillColor(30, 64, 175);
-    $pdf->SetDrawColor($borderColor[0], $borderColor[1], $borderColor[2]);
-    $pdf->Cell($categoryWidth, 8, 'Category', 1, 0, 'C', true);
-    $pdf->Cell($ratingWidth, 8, 'Average', 1, 0, 'C', true);
-    $pdf->Cell($responsesWidth, 8, 'Responses', 1, 0, 'C', true);
-    $pdf->Cell($weightWidth, 8, 'Weight', 1, 1, 'C', true);
-
-    $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-    $pdf->SetFont('Arial', '', 9);
-
-    foreach ($evaluationDetails as $detail) {
-        $category = cleanText($detail['category'] ?? 'N/A');
-        $rating = cleanText($detail['average_score'] ?? $detail['overall_rating'] ?? '0.00');
-        $responses = cleanText((string)($detail['responses'] ?? '0'));
-        $weight = number_format((float)($detail['normalised_weight'] ?? 0), 2) . '%';
-
-        $pdf->SetX($tableX);
-        $pdf->Cell($categoryWidth, 9, $category, 1, 0, 'L');
-        $pdf->Cell($ratingWidth, 9, $rating . ' / 5.00', 1, 0, 'C');
-        $pdf->Cell($responsesWidth, 9, $responses, 1, 0, 'C');
-        $pdf->Cell($weightWidth, 9, cleanText($weight), 1, 1, 'C');
-    }
-} elseif ($isAdminRequest) {
-    $pdf->Ln(12);
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(0, 10, 'No evaluation details available', 0, 1, 'C');
-}
-
-if ($isAdminRequest) {
-    $feedbackText = cleanText($allFeedback);
-} else {
-    $feedbackText = cleanText($feedback);
-}
-if ($feedbackText === '') {
-    $feedbackText = 'No feedback available';
-}
-
-$pdf->Ln(10);
-
-$pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
 $pdf->SetTextColor(255, 255, 255);
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, '  Feedback Comments', 0, 1, 'L', true);
+$pdf->SetFont("Arial", "B", 15);
+$pdf->SetXY(10, 16);
+$pdf->Cell(190, 9, "Granby Colleges of Science and Technology", 0, 1, "C");
+$pdf->SetFont("Arial", "B", 11);
+$pdf->SetX(10);
+$pdf->Cell(190, 8, "Faculty Evaluation Report", 0, 1, "C");
+$pdf->SetY(64);
 
 $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-$pdf->SetFont('Arial', '', 11);
-$pdf->SetXY(15, $pdf->GetY() + 3);
-$pdf->MultiCell(180, 6, $feedbackText, 0, 'L');
+
+$boxX = 10;
+$boxWidth = 190;
+$detailRows = [
+    ["Faculty Name:", $facultyName],
+    ["Faculty ID:", $facultyIdDisplay],
+];
+if ($academicYear !== "") {
+    $detailRows[] = ["Academic Year:", $academicYear];
+}
+if ($semester !== "") {
+    $detailRows[] = ["Semester:", $semester];
+}
+if ($evaluationPeriod !== "") {
+    $detailRows[] = ["Evaluation Period:", $evaluationPeriod];
+}
+if ($subjectContext !== "") {
+    $detailRows[] = ["Subject:", $subjectContext];
+}
+if ($programFilter !== "") {
+    $detailRows[] = ["Program:", $programFilter];
+}
+$boxHeight = 8 + count($detailRows) * 7;
+$boxY = $pdf->GetY();
+
+$pdf->SetDrawColor($border[0], $border[1], $border[2]);
+$pdf->SetFillColor($light[0], $light[1], $light[2]);
+$pdf->Rect($boxX, $boxY, $boxWidth, $boxHeight, "DF");
+
+$pdf->SetXY($boxX + 4, $boxY + 4);
+foreach ($detailRows as [$label, $value]) {
+    $pdf->SetX($boxX + 4);
+    $pdf->SetFont("Arial", "B", 10);
+    $pdf->Cell(40, 7, cleanText($label), 0, 0);
+    $pdf->SetFont("Arial", "", 10);
+    $pdf->Cell(142, 7, $value, 0, 1);
+}
+
+$pdf->SetY($boxY + $boxHeight + 4);
+
+$score = is_numeric($data["overallRating"] ?? null)
+    ? (float) $data["overallRating"]
+    : 0.0;
+$performancePercent = max(0, min(100, $score * 20));
+$performanceStatus = $privacySuppressed
+    ? "Withheld"
+    : (string) ($data["overallStatus"] ??
+        ($data["overall_status"] ?? ratingLabel($score)));
+$evaluationCount = $privacySuppressed ? "Withheld" : $totalResponses;
+
+$pdf->SetFillColor($navy[0], $navy[1], $navy[2]);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->SetFont("Arial", "B", 10);
+$pdf->Cell(190, 8, "  OVERALL FACULTY RATING", 0, 1, "L", true);
+
+$summaryY = $pdf->GetY();
+$summaryWidth = 47.5;
+$pdf->SetFillColor($light[0], $light[1], $light[2]);
+$pdf->SetDrawColor($border[0], $border[1], $border[2]);
+$pdf->Rect(10, $summaryY, 190, 23, "DF");
+$summaryItems = [
+    [
+        "OVERALL RATING",
+        $privacySuppressed ? "Withheld" : cleanText($overallRating) . " / 5.00",
+    ],
+    [
+        "PERFORMANCE SCORE",
+        $privacySuppressed
+            ? "Withheld"
+            : number_format($performancePercent, 1) . "%",
+    ],
+    ["EVALUATIONS", $evaluationCount],
+    ["STATUS", $performanceStatus],
+];
+foreach ($summaryItems as $index => [$label, $value]) {
+    $x = 10 + $index * $summaryWidth;
+    if ($index > 0) {
+        $pdf->Line($x, $summaryY + 3, $x, $summaryY + 20);
+    }
+    $pdf->SetXY($x + 3, $summaryY + 4);
+    $pdf->SetFont("Arial", "B", 7);
+    $pdf->SetTextColor(95, 110, 130);
+    $pdf->Cell($summaryWidth - 6, 4, $label, 0, 1, "L");
+    $pdf->SetX($x + 3);
+    $pdf->SetFont("Arial", "B", 10);
+    $pdf->SetTextColor($navy[0], $navy[1], $navy[2]);
+    $pdf->Cell($summaryWidth - 6, 7, cleanText((string) $value), 0, 1, "L");
+}
+$pdf->SetY($summaryY + 27);
+
+$pdf->SetFillColor($navy[0], $navy[1], $navy[2]);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->SetFont("Arial", "B", 10);
+$pdf->Cell(190, 8, "  Overall Category Ratings", 0, 1, "L", true);
+
+$pdf->SetFillColor($navy[0], $navy[1], $navy[2]);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->SetDrawColor($border[0], $border[1], $border[2]);
+$pdf->SetFont("Arial", "B", 8);
+$categoryWidths = [53, 22, 22, 31, 27, 35];
+foreach (
+    ["Category", "Weight", "Score", "Average", "Responses", "Status"]
+    as $index => $heading
+) {
+    $pdf->Cell(
+        $categoryWidths[$index],
+        7,
+        $heading,
+        1,
+        $index === 5 ? 1 : 0,
+        "C",
+        true,
+    );
+}
+
+$pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+$pdf->SetFont("Arial", "", 8);
+if (empty($evaluationDetails)) {
+    $pdf->Cell(190, 8, "No category evaluation data available.", 1, 1, "C");
+} else {
+    foreach ($evaluationDetails as $index => $detail) {
+        $category = cleanText(
+            $detail["category"] ?? ($detail["category_name"] ?? "N/A"),
+        );
+        $rawRating =
+            $detail["average_score"] ??
+            ($detail["overall_rating"] ?? ($detail["avg_rating"] ?? "0.00"));
+        $ratingValue = is_numeric($rawRating) ? (float) $rawRating : 0.0;
+        $rating = cleanText((string) $rawRating);
+        $responses = cleanText(
+            (string) ($detail["responses"] ??
+                ($detail["total_responses"] ?? "0")),
+        );
+        $weight =
+            number_format(
+                (float) ($detail["normalised_weight"] ??
+                    ($detail["weight"] ?? 0)),
+                1,
+            ) . "%";
+        $scorePercent =
+            number_format(max(0, min(100, $ratingValue * 20)), 0) . "%";
+        $status = cleanText(
+            $detail["rating"] ??
+                ($detail["status"] ?? ratingLabel($ratingValue)),
+        );
+        $pdf->SetFillColor(
+            ...$index % 2 === 0 ? [255, 255, 255] : [247, 250, 255],
+        );
+        $values = [
+            $category,
+            cleanText($weight),
+            cleanText($scorePercent),
+            $ratingValue > 0 ? $rating . " / 5" : "N/A",
+            $responses,
+            $status,
+        ];
+        foreach ($values as $column => $value) {
+            $pdf->Cell(
+                $categoryWidths[$column],
+                7,
+                $value,
+                1,
+                $column === 5 ? 1 : 0,
+                $column === 0 ? "L" : "C",
+                true,
+            );
+        }
+    }
+}
+
+$feedbackText =
+    trim((string) ($data["feedback"] ?? "")) !== "" ? $feedback : $allFeedback;
+if ($feedbackText === "") {
+    $feedbackText = "No feedback available";
+}
+
+$comments = array_values(
+    array_filter(
+        array_map("trim", preg_split("/\R{2,}/", $feedbackText) ?: []),
+        static fn($comment) => $comment !== "",
+    ),
+);
+if (empty($comments)) {
+    $comments = [$feedbackText];
+}
+
+$pdf->Ln(4);
+$pdf->SetFillColor(220, 235, 255);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->SetTextColor(20, 40, 100);
+$pdf->SetFont("Arial", "B", 9);
+$pdf->Cell(
+    190,
+    7,
+    "  Student Comments  (" . count($comments) . ")",
+    0,
+    1,
+    "L",
+    true,
+);
+
+$pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+$pdf->SetFont("Arial", "", 8);
+foreach ($comments as $index => $comment) {
+    if ($pdf->GetY() > 265) {
+        $pdf->AddPage();
+    }
+    $pdf->SetFillColor(250, 252, 255);
+    $pdf->SetDrawColor($border[0], $border[1], $border[2]);
+    $pdf->SetX(13);
+    $pdf->MultiCell(
+        184,
+        5,
+        cleanText($index + 1 . ". " . $comment),
+        1,
+        "L",
+        true,
+    );
+}
 
 // =====================
 // OUTPUT PDF
@@ -247,17 +410,21 @@ while (ob_get_level() > 0) {
     ob_end_clean();
 }
 header_remove();
-header('Content-Type: application/pdf');
-header('Content-Disposition: attachment; filename="Faculty_Evaluation_Report_' . preg_replace('/[^A-Za-z0-9._-]+/', '_', $facultyName) . '.pdf"');
-header('Cache-Control: private, no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
+header("Content-Type: application/pdf");
+header(
+    'Content-Disposition: attachment; filename="Faculty_Evaluation_Report_' .
+        preg_replace("/[^A-Za-z0-9._-]+/", "_", $facultyName) .
+        '.pdf"',
+);
+header("Cache-Control: private, no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
 
-$output = $pdf->Output('S');
-if ($output === false || $output === '') {
+$output = $pdf->Output("S");
+if ($output === false || $output === "") {
     http_response_code(500);
-    exit('Failed to generate PDF stream.');
+    exit("Failed to generate PDF stream.");
 }
 
 echo $output;
-exit;
+exit();

@@ -537,112 +537,174 @@ function helperGetFacultyPerSubjectReportData(mysqli $conn, int $faculty_id, int
  */
 function helperGenerateEvaluationSummaryPDF(array $data, string $outputPath): bool {
     try {
-        $facultyName = iconv('UTF-8', 'windows-1252//TRANSLIT', (string)($data['facultyName'] ?? 'N/A'));
-        $facultyId = iconv('UTF-8', 'windows-1252//TRANSLIT', (string)($data['facultyId'] ?? 'N/A'));
+        $toPdfText = static fn($text): string => (string)iconv('UTF-8', 'windows-1252//TRANSLIT', (string)$text);
+        $facultyName = $toPdfText($data['facultyName'] ?? 'N/A');
+        $facultyId = $toPdfText($data['facultyId'] ?? 'N/A');
         $period = $data['period'] ?? [];
         $overall = $data['overall'] ?? [];
-        $categories = $overall['category_totals'] ?? [];
-        $comments = $overall['comments'] ?? [];
-        $toPdfText = static fn($text): string => (string)iconv('UTF-8', 'windows-1252//TRANSLIT', (string)$text);
-
-        $pdf = new FPDF('P', 'mm', 'A4');
-        $pdf->SetAutoPageBreak(true, 15);
+        $categories = is_array($overall['category_totals'] ?? null) ? $overall['category_totals'] : [];
+        $comments = is_array($overall['comments'] ?? null) ? $overall['comments'] : [];
+        $pdf = new class('P', 'mm', 'A4') extends FPDF {
+            public function Footer(): void {
+                $this->SetY(-12);
+                $this->SetDrawColor(210, 220, 232);
+                $this->Line(10, $this->GetY(), 200, $this->GetY());
+                $this->SetY(-10);
+                $this->SetFont('Arial', '', 8);
+                $this->SetTextColor(120, 130, 145);
+                $this->Cell(130, 6, iconv('UTF-8', 'windows-1252//TRANSLIT', 'Generated ' . date('M j, Y  h:i A')), 0, 0, 'L');
+                $this->Cell(60, 6, 'Page ' . $this->PageNo(), 0, 0, 'R');
+            }
+        };
+        $pdf->SetAutoPageBreak(true, 17);
         $pdf->AddPage();
-        $pdf->SetFillColor(70, 130, 180);
-        $pdf->Rect(10, 10, 190, 32, 'F');
+        $blue = [11, 126, 196];
+        $navy = [30, 64, 120];
+        $light = [245, 249, 255];
+        $border = [215, 225, 238];
+        $textColor = [50, 50, 50];
 
-        $logoPath = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'logo.png';
+        $pdf->SetFillColor($blue[0], $blue[1], $blue[2]);
+        $pdf->Rect(10, 10, 190, 34, 'F');
+        $logoPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'logo.png';
         if (is_file($logoPath)) {
-            $pdf->Image($logoPath, 14, 14, 22);
+            $pdf->Image($logoPath, 15, 15, 23);
         }
 
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->SetXY(40, 16);
-        $pdf->Cell(155, 9, 'Granby Colleges of Science and Technology', 0, 1, 'C');
+        $pdf->SetFont('Arial', 'B', 15);
+        $pdf->SetXY(10, 16);
+        $pdf->Cell(190, 9, 'Granby Colleges of Science and Technology', 0, 1, 'C');
         $pdf->SetFont('Arial', 'B', 11);
-        $pdf->SetX(40);
-        $pdf->Cell(155, 8, 'Faculty Evaluation Report', 0, 1, 'C');
-        $pdf->Ln(17);
+        $pdf->SetX(10);
+        $pdf->Cell(190, 8, 'Faculty Evaluation Report', 0, 1, 'C');
+        $pdf->SetY(64);
 
-        $pdf->SetTextColor(50, 50, 50);
-        $pdf->SetFillColor(248, 249, 250);
-        $pdf->SetDrawColor(200, 200, 200);
-        $pdf->Rect(10, $pdf->GetY(), 190, 45, 'DF');
-        $pdf->SetXY(14, $pdf->GetY() + 4);
-        foreach ([
+        $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+        $detailRows = [
             ['Faculty Name:', $facultyName],
             ['Faculty ID:', $facultyId],
             ['Academic Year:', $toPdfText($period['ay'] ?? 'Not specified')],
             ['Semester:', $toPdfText($period['semester'] ?? 'Not specified')],
-            ['Evaluation Dates:', $toPdfText(
+            ['Evaluation Period:', $toPdfText(
                 !empty($period['start_date']) && !empty($period['end_date'])
                     ? date('F j, Y', strtotime($period['start_date'])) . ' - ' . date('F j, Y', strtotime($period['end_date']))
                     : 'Not specified'
             )],
-        ] as [$label, $value]) {
+        ];
+        $boxHeight = 8 + (count($detailRows) * 7);
+        $boxY = $pdf->GetY();
+        $pdf->SetDrawColor($border[0], $border[1], $border[2]);
+        $pdf->SetFillColor($light[0], $light[1], $light[2]);
+        $pdf->Rect(10, $boxY, 190, $boxHeight, 'DF');
+        $pdf->SetXY(14, $boxY + 4);
+        foreach ($detailRows as [$label, $value]) {
             $pdf->SetX(14);
             $pdf->SetFont('Arial', 'B', 10);
-            $pdf->Cell(43, 7, $label, 0, 0);
+            $pdf->Cell(40, 7, $label, 0, 0);
             $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(140, 7, $value, 0, 1);
+            $pdf->Cell(142, 7, $value, 0, 1);
         }
-        $pdf->SetY(max(108, $pdf->GetY() + 6));
+        $pdf->SetY($boxY + $boxHeight + 4);
 
-        $pdf->SetFillColor(70, 130, 180);
-        $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(190, 9, 'Overall Performance Summary', 0, 1, 'L', true);
-        $pdf->SetTextColor(50, 50, 50);
-        $pdf->SetFont('Arial', '', 11);
-        $pdf->Cell(95, 9, 'Overall Rating: ' . $toPdfText(($overall['avg_rating'] ?? '0.00') . ' / 5.00'), 1, 0);
-        $pdf->Cell(95, 9, 'Performance Score: ' . $toPdfText(($overall['percentage'] ?? '0.00') . '%'), 1, 1);
-        $pdf->Cell(95, 9, 'Performance Status: ' . $toPdfText($overall['rating_label'] ?? 'N/A'), 1, 0);
-        $pdf->Cell(95, 9, 'Total Responses: ' . $toPdfText((string)($overall['eval_count'] ?? 0)), 1, 1);
+        $score = is_numeric($overall['avg_rating'] ?? null) ? (float)$overall['avg_rating'] : 0.0;
+        $performancePercent = max(0, min(100, $score * 20));
+        $performanceStatus = $toPdfText($overall['rating_label'] ?? 'No Responses');
+        $evaluationCount = (string)max(0, (int)($overall['eval_count'] ?? 0));
 
-        $pdf->Ln(8);
-        $pdf->SetFillColor(70, 130, 180);
+        $pdf->SetFillColor($navy[0], $navy[1], $navy[2]);
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(190, 9, 'Category Breakdown', 0, 1, 'L', true);
-        $pdf->SetFont('Arial', 'B', 9);
-        $pdf->SetFillColor(30, 64, 175);
-        $pdf->Cell(75, 8, 'Category', 1, 0, 'C', true);
-        $pdf->Cell(35, 8, 'Average', 1, 0, 'C', true);
-        $pdf->Cell(35, 8, 'Responses', 1, 0, 'C', true);
-        $pdf->Cell(45, 8, 'Weight', 1, 1, 'C', true);
-        $pdf->SetTextColor(50, 50, 50);
-        $pdf->SetFont('Arial', '', 9);
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(190, 8, '  OVERALL FACULTY RATING', 0, 1, 'L', true);
+
+        $summaryY = $pdf->GetY();
+        $summaryWidth = 47.5;
+        $pdf->SetFillColor($light[0], $light[1], $light[2]);
+        $pdf->SetDrawColor($border[0], $border[1], $border[2]);
+        $pdf->Rect(10, $summaryY, 190, 23, 'DF');
+        $summaryItems = [
+            ['OVERALL RATING', $toPdfText(number_format($score, 2) . ' / 5.00')],
+            ['PERFORMANCE SCORE', number_format($performancePercent, 1) . '%'],
+            ['EVALUATIONS', $evaluationCount],
+            ['STATUS', $performanceStatus],
+        ];
+        foreach ($summaryItems as $index => [$label, $value]) {
+            $x = 10 + ($index * $summaryWidth);
+            if ($index > 0) {
+                $pdf->Line($x, $summaryY + 3, $x, $summaryY + 20);
+            }
+            $pdf->SetXY($x + 3, $summaryY + 4);
+            $pdf->SetFont('Arial', 'B', 7);
+            $pdf->SetTextColor(95, 110, 130);
+            $pdf->Cell($summaryWidth - 6, 4, $label, 0, 1, 'L');
+            $pdf->SetX($x + 3);
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetTextColor($navy[0], $navy[1], $navy[2]);
+            $pdf->Cell($summaryWidth - 6, 7, $toPdfText((string)$value), 0, 1, 'L');
+        }
+        $pdf->SetY($summaryY + 27);
+
+        $pdf->SetFillColor($navy[0], $navy[1], $navy[2]);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(190, 8, '  Overall Category Ratings', 0, 1, 'L', true);
+
+        $pdf->SetDrawColor($border[0], $border[1], $border[2]);
+        $pdf->SetFont('Arial', 'B', 8);
+        $categoryWidths = [53, 22, 22, 31, 27, 35];
+        foreach (['Category', 'Weight', 'Score', 'Average', 'Responses', 'Status'] as $index => $heading) {
+            $pdf->Cell($categoryWidths[$index], 7, $heading, 1, $index === 5 ? 1 : 0, 'C', true);
+        }
+
+        $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+        $pdf->SetFont('Arial', '', 8);
         if (empty($categories)) {
-            $pdf->Cell(190, 9, 'No category evaluation data available.', 1, 1, 'C');
+            $pdf->Cell(190, 8, 'No category evaluation data available.', 1, 1, 'C');
         } else {
-            foreach ($categories as $category) {
+            foreach (array_values($categories) as $index => $category) {
                 if ($pdf->GetY() > 265) {
                     $pdf->AddPage();
                 }
-                $pdf->Cell(75, 8, $toPdfText($category['category_name'] ?? 'N/A'), 1, 0);
-                $pdf->Cell(35, 8, $toPdfText(($category['avg_rating'] ?? '0.00') . ' / 5.00'), 1, 0, 'C');
-                $pdf->Cell(35, 8, $toPdfText((string)($category['responses'] ?? 0)), 1, 0, 'C');
-                $pdf->Cell(45, 8, number_format((float)($category['normalised_weight'] ?? 0), 2) . '%', 1, 1, 'C');
+                $categoryScore = is_numeric($category['avg_rating'] ?? null) ? (float)$category['avg_rating'] : 0.0;
+                $categoryStatus = $categoryScore <= 0 ? 'No Responses'
+                    : ($categoryScore >= 4.5 ? 'Outstanding'
+                    : ($categoryScore >= 3.5 ? 'Very Good'
+                    : ($categoryScore >= 2.5 ? 'Good'
+                    : ($categoryScore >= 1.5 ? 'Fair' : 'Poor'))));
+                $pdf->SetFillColor(...($index % 2 === 0 ? [255, 255, 255] : [247, 250, 255]));
+                $values = [
+                    $toPdfText($category['category_name'] ?? 'N/A'),
+                    number_format((float)($category['normalised_weight'] ?? 0), 1) . '%',
+                    number_format(max(0, min(100, $categoryScore * 20)), 0) . '%',
+                    $categoryScore > 0 ? number_format($categoryScore, 2) . ' / 5' : 'N/A',
+                    (string)max(0, (int)($category['responses'] ?? 0)),
+                    $categoryStatus,
+                ];
+                foreach ($values as $column => $value) {
+                    $pdf->Cell($categoryWidths[$column], 7, $toPdfText((string)$value), 1, $column === 5 ? 1 : 0, $column === 0 ? 'L' : 'C', true);
+                }
             }
         }
 
-        $pdf->Ln(8);
-        $pdf->SetFillColor(70, 130, 180);
-        $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(190, 9, 'Student Feedback', 0, 1, 'L', true);
-        $pdf->SetTextColor(50, 50, 50);
-        $pdf->SetFont('Arial', '', 9);
+        $comments = array_values(array_filter(array_map(static fn($comment): string => trim((string)$comment), $comments), static fn($comment): bool => $comment !== ''));
         if (empty($comments)) {
-            $pdf->MultiCell(190, 6, 'No feedback comments available.', 1, 'L');
-        } else {
-            foreach ($comments as $index => $comment) {
-                if ($pdf->GetY() > 265) {
-                    $pdf->AddPage();
-                }
-                $pdf->MultiCell(190, 6, $toPdfText(($index + 1) . '. ' . $comment), 1, 'L');
+            $comments = ['No feedback available'];
+        }
+        $pdf->Ln(4);
+        $pdf->SetFillColor(220, 235, 255);
+        $pdf->SetTextColor(20, 40, 100);
+        $pdf->SetFont('Arial', 'B', 9);
+        $pdf->Cell(190, 7, '  Student Comments  (' . count($comments) . ')', 0, 1, 'L', true);
+        $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+        $pdf->SetFont('Arial', '', 8);
+        foreach ($comments as $index => $comment) {
+            if ($pdf->GetY() > 265) {
+                $pdf->AddPage();
             }
+            $pdf->SetFillColor(250, 252, 255);
+            $pdf->SetDrawColor($border[0], $border[1], $border[2]);
+            $pdf->SetX(13);
+            $pdf->MultiCell(184, 5, $toPdfText(($index + 1) . '. ' . $comment), 1, 'L', true);
         }
 
         $pdf->Output('F', $outputPath);
@@ -662,18 +724,26 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
         $facultyId   = iconv('UTF-8', 'windows-1252//TRANSLIT', $data['facultyId'] ?? 'N/A');
         $period      = $data['period'] ?? [];
         $departments = $data['departments']    ?? [];
-        $overall     = $data['overall']        ?? [];
-
-        $pdf = new FPDF('P', 'mm', 'A4');
-        $pdf->SetAutoPageBreak(true, 15);
+        $pdf = new class('P', 'mm', 'A4') extends FPDF {
+            public function Footer(): void {
+                $this->SetY(-12);
+                $this->SetDrawColor(210, 220, 232);
+                $this->Line(10, $this->GetY(), 200, $this->GetY());
+                $this->SetY(-10);
+                $this->SetFont('Arial', '', 8);
+                $this->SetTextColor(120, 130, 145);
+                $this->Cell(130, 6, iconv('UTF-8', 'windows-1252//TRANSLIT', 'Generated ' . date('M j, Y  h:i A')), 0, 0, 'L');
+                $this->Cell(60, 6, iconv('UTF-8', 'windows-1252//TRANSLIT', 'Page ' . $this->PageNo()), 0, 0, 'R');
+            }
+        };
+        $pdf->SetAutoPageBreak(true, 17);
         $pdf->AddPage();
 
-        $BLUE  = [70, 130, 180];
+        $BLUE  = [11, 126, 196];
         $DARK  = [50, 50, 50];
-        $LIGHT = [248, 249, 250];
-        $GRAY  = [200, 200, 200];
-        $WHITE = [255, 255, 255];
-        $NAVY  = [30, 64, 175];
+        $LIGHT = [245, 249, 255];
+        $GRAY  = [215, 225, 238];
+        $NAVY  = [30, 64, 120];
 
         $ratingLabel = function(float $score) {
             if ($score <= 0)   return 'N/A';
@@ -688,31 +758,23 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
             return iconv('UTF-8', 'windows-1252//TRANSLIT', (string)$text);
         };
 
-        $drawSectionBar = function(FPDF $pdf, string $text, array $color) use ($ct) {
-            $pdf->SetFillColor($color[0], $color[1], $color[2]);
-            $pdf->SetTextColor(255, 255, 255);
-            $pdf->SetFont('Arial', 'B', 10);
-            $pdf->Cell(0, 8, '  ' . $ct($text), 0, 1, 'L', true);
-            $pdf->SetTextColor(50, 50, 50);
-        };
-
         // Header block
         $pdf->SetFillColor($BLUE[0], $BLUE[1], $BLUE[2]);
-        $pdf->Rect(10, 10, 190, 32, 'F');
+        $pdf->Rect(10, 10, 190, 34, 'F');
         
-        $logoPath = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'logo.png';
-        if (file_exists($logoPath)) {
-            $pdf->Image($logoPath, 14, 14, 22);
+        $logoPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'logo.png';
+        if (is_file($logoPath)) {
+            $pdf->Image($logoPath, 15, 15, 23);
         }
         
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->SetXY(40, 16);
-        $pdf->Cell(155, 9, 'Granby Colleges of Science and Technology', 0, 1, 'C');
+        $pdf->SetFont('Arial', 'B', 15);
+        $pdf->SetXY(10, 16);
+        $pdf->Cell(190, 9, 'Granby Colleges of Science and Technology', 0, 1, 'C');
         $pdf->SetFont('Arial', 'B', 11);
-        $pdf->SetX(40);
-        $pdf->Cell(155, 8, 'Faculty Per-Subject Evaluation Report', 0, 1, 'C');
-        $pdf->Ln(18);
+        $pdf->SetX(10);
+        $pdf->Cell(190, 8, 'Faculty Per-Subject Evaluation Report', 0, 1, 'C');
+        $pdf->Ln(20);
         $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
 
         // Faculty Info Box
@@ -740,68 +802,23 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
         $pdf->SetFont('Arial', '',  11); $pdf->Cell(0,  7, $ct($dates), 0, 1);
         $pdf->SetY($infoY + 48);
 
-        // Overall rating
-        $drawSectionBar($pdf, 'OVERALL FACULTY RATING  (All Subjects Combined)', $BLUE);
-        $pdf->SetFillColor($LIGHT[0], $LIGHT[1], $LIGHT[2]);
-        $pdf->Rect(10, $pdf->GetY(), 190, 22, 'DF');
-        $pdf->SetXY(14, $pdf->GetY() + 4);
-        $pdf->SetFont('Arial', 'B', 11);
-        $pdf->Cell(60, 7, 'Weighted Average:', 0, 0);
-        $pdf->SetFont('Arial', '', 11);
-        $pdf->Cell(40, 7, $ct(($overall['avg_rating'] ?? '0.00') . ' / 5.00'), 0, 0);
-        $pdf->SetFont('Arial', 'B', 11);
-        $pdf->Cell(40, 7, 'Score:', 0, 0);
-        $pdf->SetFont('Arial', '', 11);
-        $pdf->Cell(0, 7, $ct(($overall['percentage'] ?? '0.00') . '%'), 0, 1);
-        $pdf->SetX(14);
-        $pdf->SetFont('Arial', 'B', 11);
-        $pdf->Cell(60, 7, 'Performance Status:', 0, 0);
-        $pdf->SetFont('Arial', '', 11);
-        $pdf->Cell(40, 7, $ct($overall['rating_label'] ?? 'N/A'), 0, 0);
-        $pdf->SetFont('Arial', 'B', 11);
-        $pdf->Cell(40, 7, 'Total Evaluations:', 0, 0);
-        $pdf->SetFont('Arial', '', 11);
-        $pdf->Cell(0, 7, $ct(strval($overall['eval_count'] ?? 0)), 0, 1);
-        $pdf->Ln(5);
-
-        // Overall Category Breakdown
-        if (!empty($overall['category_totals'])) {
-            $drawSectionBar($pdf, 'Overall Category Ratings', $NAVY);
-            $pdf->SetFillColor($NAVY[0], $NAVY[1], $NAVY[2]);
-            $pdf->SetTextColor(255, 255, 255);
-            $pdf->SetFont('Arial', 'B', 9);
-            $pdf->Cell(80, 7, 'Category', 1, 0, 'C', true);
-            $pdf->Cell(30, 7, 'Avg Rating', 1, 0, 'C', true);
-            $pdf->Cell(30, 7, 'Responses', 1, 0, 'C', true);
-            $pdf->Cell(50, 7, 'Status', 1, 1, 'C', true);
-            $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
-            $pdf->SetFont('Arial', '', 9);
-            foreach ($overall['category_totals'] as $cat) {
-                $cavg = floatval($cat['avg_rating'] ?? 0);
-                $pdf->Cell(80, 6, $ct($cat['category_name'] ?? ''), 1, 0, 'L');
-                $pdf->Cell(30, 6, $ct($cat['avg_rating'] ?? '0.00') . ' / 5.00', 1, 0, 'C');
-                $pdf->Cell(30, 6, $ct(strval($cat['responses'] ?? 0)), 1, 0, 'C');
-                $pdf->Cell(50, 6, $ct($ratingLabel($cavg)), 1, 1, 'C');
-            }
-            $pdf->Ln(4);
-        }
-
         // Departments & Subjects Breakdown
         foreach ($departments as $dept) {
             $progName = $ct($dept['program_name'] ?? 'Unknown Program');
             $progCode = $ct($dept['program_code'] ?? '');
             $label    = $progCode ? "$progName ($progCode)" : $progName;
 
-            if ($pdf->GetY() > 230) $pdf->AddPage();
+            if ($pdf->GetY() > 250) $pdf->AddPage();
 
-            $pdf->SetFillColor(30, 80, 140);
+            $pdf->SetFillColor($NAVY[0], $NAVY[1], $NAVY[2]);
             $pdf->SetTextColor(255, 255, 255);
-            $pdf->SetFont('Arial', 'B', 11);
-            $pdf->Cell(0, 9, '  ' . $label, 0, 1, 'L', true);
+            $subjects = is_array($dept['subjects'] ?? null) ? $dept['subjects'] : [];
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->Cell(0, 8, '  ' . $label . '  |  ' . count($subjects) . (count($subjects) === 1 ? ' subject' : ' subjects'), 0, 1, 'L', true);
             $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
 
-            foreach ($dept['subjects'] ?? [] as $subj) {
-                if ($pdf->GetY() > 240) $pdf->AddPage();
+            foreach ($subjects as $subj) {
+                if ($pdf->GetY() > 235) $pdf->AddPage();
 
                 $code  = $ct($subj['subject_code'] ?? '');
                 $desc  = $ct($subj['subject_desc'] ?? '');
@@ -813,74 +830,105 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
                 $pdf->Cell(0, 7, '  ' . $title, 0, 1, 'L', true);
                 $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
 
+                $avg = (float)($subj['avg_rating'] ?? 0);
+                $scorePercent = max(0, min(100, (float)($subj['percentage'] ?? 0)));
+                $evaluationCount = max(0, (int)($subj['eval_count'] ?? 0));
+                $summaryY = $pdf->GetY() + 3;
                 $pdf->SetFillColor($LIGHT[0], $LIGHT[1], $LIGHT[2]);
-                $pdf->SetFont('Arial', 'B', 9);
-                $pdf->Cell(45, 6, 'Average Rating:', 1, 0, 'L', true);
-                $pdf->SetFont('Arial', '', 9);
-                $pdf->Cell(45, 6, $ct(($subj['avg_rating'] ?? '0.00') . ' / 5.00'), 1, 0, 'C');
-                $pdf->SetFont('Arial', 'B', 9);
-                $pdf->Cell(35, 6, 'Evaluations:', 1, 0, 'L', true);
-                $pdf->SetFont('Arial', '', 9);
-                $pdf->Cell(30, 6, $ct(strval($subj['eval_count'] ?? 0)), 1, 0, 'C');
-                $pdf->SetFont('Arial', 'B', 9);
-                $pdf->Cell(15, 6, 'Status:', 1, 0, 'L', true);
-                $pdf->SetFont('Arial', '', 9);
-                $pdf->Cell(0, 6, $ct($subj['rating_label'] ?? 'N/A'), 1, 1, 'C');
-
+                $pdf->SetDrawColor($GRAY[0], $GRAY[1], $GRAY[2]);
+                $pdf->Rect(10, $summaryY, 190, 24, 'DF');
+                $summaryItems = [
+                    ['AVERAGE RATING', number_format($avg, 2) . ' / 5.00'],
+                    ['PERFORMANCE SCORE', number_format($scorePercent, 1) . '%'],
+                    ['EVALUATIONS', (string)$evaluationCount],
+                    ['STATUS', $evaluationCount > 0 ? ($subj['rating_label'] ?? $ratingLabel($avg)) : 'No Responses'],
+                ];
+                $summaryWidth = 47.5;
+                foreach ($summaryItems as $index => [$summaryLabel, $value]) {
+                    $x = 10 + ($index * $summaryWidth);
+                    if ($index > 0) {
+                        $pdf->SetDrawColor($GRAY[0], $GRAY[1], $GRAY[2]);
+                        $pdf->Line($x, $summaryY + 4, $x, $summaryY + 20);
+                    }
+                    $pdf->SetXY($x + 3, $summaryY + 4);
+                    $pdf->SetFont('Arial', 'B', 7);
+                    $pdf->SetTextColor(95, 110, 130);
+                    $pdf->Cell($summaryWidth - 6, 4, $ct($summaryLabel), 0, 1, 'L');
+                    $pdf->SetX($x + 3);
+                    $pdf->SetFont('Arial', 'B', 10);
+                    $pdf->SetTextColor($NAVY[0], $NAVY[1], $NAVY[2]);
+                    $pdf->Cell($summaryWidth - 6, 7, $ct($value), 0, 1, 'L');
+                }
+                $pdf->SetY($summaryY + 27);
+                $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
                 $pdf->SetFont('Arial', '', 8);
                 $pdf->Cell(0, 5, $ct('Evaluation period: ' . ($subj['period'] ?? 'N/A')), 0, 1, 'L');
-                $pdf->Ln(1);
+                $pdf->Ln(2);
 
                 if (!empty($subj['category_totals'])) {
                     $pdf->SetFont('Arial', 'B', 8);
-                    $pdf->SetFillColor($BLUE[0], $BLUE[1], $BLUE[2]);
+                    $pdf->SetFillColor($NAVY[0], $NAVY[1], $NAVY[2]);
                     $pdf->SetTextColor(255, 255, 255);
-                    $pdf->Cell(75, 6, 'Category', 1, 0, 'C', true);
-                    $pdf->Cell(28, 6, 'Avg Rating', 1, 0, 'C', true);
-                    $pdf->Cell(28, 6, 'Responses', 1, 0, 'C', true);
-                    $pdf->Cell(59, 6, 'Status', 1, 1, 'C', true);
+                    $pdf->Cell(57, 7, 'Category', 1, 0, 'L', true);
+                    $pdf->Cell(23, 7, 'Weight', 1, 0, 'C', true);
+                    $pdf->Cell(24, 7, 'Score', 1, 0, 'C', true);
+                    $pdf->Cell(28, 7, 'Average', 1, 0, 'C', true);
+                    $pdf->Cell(27, 7, 'Responses', 1, 0, 'C', true);
+                    $pdf->Cell(30, 7, 'Status', 1, 1, 'C', true);
                     $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
                     $pdf->SetFont('Arial', '', 8);
-                    foreach ($subj['category_totals'] as $cat) {
-                        $subcatavg = floatval($cat['avg_rating'] ?? 0);
-                        $pdf->Cell(75, 5, $ct($cat['category_name'] ?? ''), 1, 0, 'L');
-                        $pdf->Cell(28, 5, $ct($cat['avg_rating'] ?? '0.00') . ' / 5', 1, 0, 'C');
-                        $pdf->Cell(28, 5, $ct(strval($cat['responses'] ?? 0)), 1, 0, 'C');
-                        $pdf->Cell(59, 5, $ct($ratingLabel($subcatavg)), 1, 1, 'C');
+                    foreach (array_values($subj['category_totals']) as $rowIndex => $cat) {
+                        $subcatavg = max(0, (float)($cat['avg_rating'] ?? 0));
+                        $catResponses = max(0, (int)($cat['responses'] ?? 0));
+                        $catWeight = max(0, (float)($cat['normalised_weight'] ?? 0));
+                        $catPercent = $catResponses > 0 ? max(0, min(100, ($subcatavg / 5) * 100)) : 0;
+                        $pdf->SetFillColor(...($rowIndex % 2 === 0 ? [255, 255, 255] : [247, 250, 255]));
+                        $pdf->Cell(57, 7, $ct($cat['category_name'] ?? ''), 1, 0, 'L', true);
+                        $pdf->Cell(23, 7, $ct(number_format($catWeight, 1) . '%'), 1, 0, 'C', true);
+                        $pdf->Cell(24, 7, $ct(number_format($catPercent, 0) . '%'), 1, 0, 'C', true);
+                        $pdf->Cell(28, 7, $catResponses > 0 ? $ct(number_format($subcatavg, 2) . ' / 5') : 'N/A', 1, 0, 'C', true);
+                        $pdf->Cell(27, 7, $ct((string)$catResponses), 1, 0, 'C', true);
+                        $pdf->Cell(30, 7, $ct($catResponses > 0 ? $ratingLabel($subcatavg) : 'N/A'), 1, 1, 'C', true);
                     }
+                } else {
+                    $pdf->SetFont('Arial', '', 8);
+                    $pdf->SetTextColor(110, 120, 135);
+                    $pdf->Cell(0, 7, $ct('No category ratings available for this subject.'), 0, 1, 'L');
                 }
                 $pdf->Ln(2);
 
-                // Student comments (max 5)
-                $comments = $subj['comments'] ?? [];
+                $comments = is_array($subj['comments'] ?? null) ? $subj['comments'] : [];
                 if (!empty($comments)) {
                     $pdf->SetFont('Arial', 'B', 8);
-                    $pdf->SetFillColor(240, 245, 255);
-                    $pdf->SetTextColor(30, 50, 100);
-                    $pdf->Cell(0, 5, '  Student Comments', 0, 1, 'L', true);
+                    $pdf->SetFillColor(235, 243, 255);
+                    $pdf->SetTextColor($NAVY[0], $NAVY[1], $NAVY[2]);
+                    $pdf->Cell(0, 7, '  Student Comments  (' . count($comments) . ')', 0, 1, 'L', true);
                     $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
                     $pdf->SetFont('Arial', '', 8);
                     $shown = array_slice($comments, 0, 5);
                     foreach ($shown as $i => $comment) {
-                        if ($pdf->GetY() > 260) $pdf->AddPage();
+                        if ($pdf->GetY() > 265) $pdf->AddPage();
                         $num = $i + 1;
-                        $pdf->MultiCell(0, 4, $ct("$num. $comment"), 0, 'L');
-                        $pdf->Ln(1);
+                        $pdf->SetFillColor(250, 252, 255);
+                        $pdf->SetDrawColor($GRAY[0], $GRAY[1], $GRAY[2]);
+                        $pdf->SetX(13);
+                        $pdf->MultiCell(184, 5, $ct($num . '. ' . trim((string)$comment)), 1, 'L', true);
                     }
                     if (count($comments) > 5) {
                         $pdf->SetFont('Arial', '', 7);
-                        $pdf->Cell(0, 4, $ct('... and ' . (count($comments) - 5) . ' more comment(s).'), 0, 1, 'L');
+                        $pdf->SetTextColor(110, 120, 135);
+                        $pdf->Cell(0, 5, $ct('Showing 5 of ' . count($comments) . ' comments.'), 0, 1, 'L');
                     }
+                } else {
+                    $pdf->SetFont('Arial', '', 8);
+                    $pdf->SetTextColor(110, 120, 135);
+                    $pdf->Cell(0, 7, $ct('No comments were submitted for this subject.'), 0, 1, 'L');
                 }
+                $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
                 $pdf->Ln(3);
             }
             $pdf->Ln(3);
         }
-
-        // Footer
-        $pdf->SetFont('Arial', '', 8);
-        $pdf->SetTextColor(150, 150, 150);
-        $pdf->Cell(0, 5, $ct('Generated on: ' . date('F j, Y  h:i A')), 0, 1, 'R');
 
         // Output to local file
         $pdf->Output('F', $outputPath);

@@ -4,9 +4,15 @@ const addStudentModal = document.getElementById("addStudentModal");
 const addCategoryModal = document.getElementById("addCategoryModal");
 const addQuestionModal = document.getElementById("addQuestionModal");
 const subjectSelectionModal = document.getElementById("subjectSelectionModal");
-const facultySubjectSelectionModal = document.getElementById("facultySubjectSelectionModal");
-const viewStudentSubjectsModal = document.getElementById("viewStudentSubjectsModal");
-const viewFacultySubjectsModal = document.getElementById("viewFacultySubjectsModal");
+const facultySubjectSelectionModal = document.getElementById(
+  "facultySubjectSelectionModal",
+);
+const viewStudentSubjectsModal = document.getElementById(
+  "viewStudentSubjectsModal",
+);
+const viewFacultySubjectsModal = document.getElementById(
+  "viewFacultySubjectsModal",
+);
 const managePeriodsModal = document.getElementById("managePeriodsModal");
 
 (() => {
@@ -20,7 +26,8 @@ const managePeriodsModal = document.getElementById("managePeriodsModal");
 
   function showSidebarTooltip(link) {
     const sidebar = document.getElementById("sidebar");
-    if (!sidebar?.classList.contains("collapsed") || window.innerWidth <= 768) return;
+    if (!sidebar?.classList.contains("collapsed") || window.innerWidth <= 768)
+      return;
 
     const label = link.dataset.tooltip;
     if (!label) return;
@@ -43,23 +50,25 @@ const managePeriodsModal = document.getElementById("managePeriodsModal");
     tooltip.style.top = `${Math.max(8, Math.min(rect.top + (rect.height - tooltipRect.height) / 2, window.innerHeight - tooltipRect.height - 8))}px`;
   }
 
-  document.addEventListener("pointerover", event => {
+  document.addEventListener("pointerover", (event) => {
     const link = event.target.closest("#sidebar a[data-tooltip]");
-    if (!link || (event.relatedTarget && link.contains(event.relatedTarget))) return;
+    if (!link || (event.relatedTarget && link.contains(event.relatedTarget)))
+      return;
     showSidebarTooltip(link);
   });
 
-  document.addEventListener("pointerout", event => {
+  document.addEventListener("pointerout", (event) => {
     const link = event.target.closest("#sidebar a[data-tooltip]");
-    if (link && (!event.relatedTarget || !link.contains(event.relatedTarget))) hideSidebarTooltip();
+    if (link && (!event.relatedTarget || !link.contains(event.relatedTarget)))
+      hideSidebarTooltip();
   });
 
-  document.addEventListener("focusin", event => {
+  document.addEventListener("focusin", (event) => {
     const link = event.target.closest("#sidebar a[data-tooltip]");
     if (link) showSidebarTooltip(link);
   });
 
-  document.addEventListener("focusout", event => {
+  document.addEventListener("focusout", (event) => {
     if (event.target.closest("#sidebar a[data-tooltip]")) hideSidebarTooltip();
   });
 
@@ -120,12 +129,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getSectionScrollableElements(section) {
     if (!section) return [];
-    return Array.from(section.querySelectorAll(".programs-cards-container, .table-scroll-container, .subjects-grid, .table-wrapper, main"))
-      .filter(el => {
-        const overflowY = getComputedStyle(el).overflowY;
-        const overflowX = getComputedStyle(el).overflowX;
-        return el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1 || overflowY === "auto" || overflowY === "scroll" || overflowX === "auto" || overflowX === "scroll";
-      });
+    return Array.from(
+      section.querySelectorAll(
+        ".programs-cards-container, .table-scroll-container, .subjects-grid, .table-wrapper, main",
+      ),
+    ).filter((el) => {
+      const overflowY = getComputedStyle(el).overflowY;
+      const overflowX = getComputedStyle(el).overflowX;
+      return (
+        el.scrollHeight > el.clientHeight + 1 ||
+        el.scrollWidth > el.clientWidth + 1 ||
+        overflowY === "auto" ||
+        overflowY === "scroll" ||
+        overflowX === "auto" ||
+        overflowX === "scroll"
+      );
+    });
   }
 
   function saveSectionScrollState(sectionId) {
@@ -138,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
       documentY: document.documentElement.scrollTop,
       bodyY: document.body.scrollTop,
       mainY: document.querySelector("main")?.scrollTop || 0,
-      elements: {}
+      elements: {},
     };
 
     getSectionScrollableElements(section).forEach((el, index) => {
@@ -146,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         top: el.scrollTop,
         left: el.scrollLeft,
         tag: el.tagName,
-        className: el.className
+        className: el.className,
       };
     });
 
@@ -176,12 +195,51 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function resetSectionScrollPosition(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    const reset = () => {
+      const state = {
+        windowY: 0,
+        documentY: 0,
+        bodyY: 0,
+        mainY: 0,
+        elements: {},
+      };
+
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      const main = document.querySelector("main");
+      if (main) main.scrollTop = 0;
+
+      getSectionScrollableElements(section).forEach((el, index) => {
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
+        state.elements[`node-${index}`] = {
+          top: 0,
+          left: 0,
+          tag: el.tagName,
+          className: el.className,
+        };
+      });
+
+      sectionScrollState[sectionId] = state;
+    };
+
+    reset();
+    requestAnimationFrame(reset);
+  }
+
   function attachSectionScrollPersistence(sectionId) {
     const section = document.getElementById(sectionId);
     if (!section) return;
 
-    getSectionScrollableElements(section).forEach(el => {
-      el.addEventListener("scroll", () => saveSectionScrollState(sectionId), { passive: true });
+    getSectionScrollableElements(section).forEach((el) => {
+      el.addEventListener("scroll", () => saveSectionScrollState(sectionId), {
+        passive: true,
+      });
     });
 
     const observer = new MutationObserver(() => {
@@ -193,12 +251,16 @@ document.addEventListener("DOMContentLoaded", () => {
     observer.observe(section, { childList: true, subtree: true });
   }
 
-  document.querySelectorAll(".section").forEach(section => attachSectionScrollPersistence(section.id));
+  document
+    .querySelectorAll(".section")
+    .forEach((section) => attachSectionScrollPersistence(section.id));
 
   const sectionSkeletons = {
     "dashboard-section": `
       <div class="dashboard admin-skeleton-grid">
-        ${Array.from({ length: 4 }).map(() => `
+        ${Array.from({ length: 4 })
+          .map(
+            () => `
           <div class="dashboard-card admin-skeleton-card">
             <div class="dashboard-content">
               <div class="admin-skeleton-stack">
@@ -209,20 +271,26 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="icon-box admin-skeleton-icon"></span>
             </div>
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
       <div class="dashboard-row-2 admin-skeleton-grid">
         <div class="dashboard-card admin-skeleton-card admin-skeleton-chart-card">
           <div class="dashboard-content">
             <span class="admin-skeleton-line title"></span>
             <span class="admin-skeleton-chart"></span>
-            <div class="admin-skeleton-list">${Array.from({ length: 5 }).map(() => `<span class="admin-skeleton-line"></span>`).join("")}</div>
+            <div class="admin-skeleton-list">${Array.from({ length: 5 })
+              .map(() => `<span class="admin-skeleton-line"></span>`)
+              .join("")}</div>
           </div>
         </div>
         <div class="dashboard-card admin-skeleton-card">
           <div class="dashboard-content">
             <span class="admin-skeleton-line title"></span>
-            <div class="admin-skeleton-list">${Array.from({ length: 5 }).map(() => `<span class="admin-skeleton-line row"></span>`).join("")}</div>
+            <div class="admin-skeleton-list">${Array.from({ length: 5 })
+              .map(() => `<span class="admin-skeleton-line row"></span>`)
+              .join("")}</div>
           </div>
         </div>
       </div>
@@ -237,26 +305,62 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="programs-stats"><span class="stats-icon admin-skeleton-icon"></span><span class="admin-skeleton-line value"></span></div>
           <div class="programs-actions"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control short"></span></div>
         </div>
-        <div class="programs-cards-container">${Array.from({ length: 6 }).map(() => `<div class="program-card admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line meta"></span><div class="program-card-actions"><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span></div></div>`).join("")}</div>
+        <div class="programs-cards-container">${Array.from({ length: 6 })
+          .map(
+            () =>
+              `<div class="program-card admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line meta"></span><div class="program-card-actions"><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span></div></div>`,
+          )
+          .join("")}</div>
       </div>
     `,
-    "faculties-section": buildPeopleSkeleton("faculty-stats-container", 0, "faculty-toolbar", 6, "faculty"),
-    "students-section": buildPeopleSkeleton("student-stats-container", 0, "student-toolbar-box", 5, "students"),
+    "faculties-section": buildPeopleSkeleton(
+      "faculty-stats-container",
+      0,
+      "faculty-toolbar",
+      6,
+      "faculty",
+    ),
+    "students-section": buildPeopleSkeleton(
+      "student-stats-container",
+      0,
+      "student-toolbar-box",
+      5,
+      "students",
+    ),
     "subjects-section": buildTableSkeleton("subjects-grid", 4, 5),
     "criteria-section": `
       <div class="section-header admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line control short"></span></div>
       <div class="criteria-layout">
-        <div class="categories-column">${Array.from({ length: 4 }).map(() => `<div class="admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line row"></span><span class="admin-skeleton-line row short"></span></div>`).join("")}</div>
-        <div class="summary-panel admin-skeleton-card"><span class="admin-skeleton-line title"></span>${Array.from({ length: 7 }).map(() => `<span class="admin-skeleton-line row"></span>`).join("")}</div>
+        <div class="categories-column">${Array.from({ length: 4 })
+          .map(
+            () =>
+              `<div class="admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line row"></span><span class="admin-skeleton-line row short"></span></div>`,
+          )
+          .join("")}</div>
+        <div class="summary-panel admin-skeleton-card"><span class="admin-skeleton-line title"></span>${Array.from(
+          { length: 7 },
+        )
+          .map(() => `<span class="admin-skeleton-line row"></span>`)
+          .join("")}</div>
       </div>
     `,
-    "report-section": buildTableSkeleton("table-wrapper", 6, 6)
+    "report-section": buildTableSkeleton("table-wrapper", 6, 6),
   };
 
-  function buildPeopleSkeleton(statsClass, statCount, toolbarClass, columnCount, countSummaryType = "") {
-    const statsSkeleton = statCount > 0 ? `
+  function buildPeopleSkeleton(
+    statsClass,
+    statCount,
+    toolbarClass,
+    columnCount,
+    countSummaryType = "",
+  ) {
+    const statsSkeleton =
+      statCount > 0
+        ? `
       <div class="${statsClass}">
-        ${Array.from({ length: statCount }).map(() => `
+        ${Array.from({ length: statCount })
+          .map(
+            () => `
           <div class="admin-skeleton-stat-card">
             <div class="stat-content">
               <div class="stat-info admin-skeleton-stack">
@@ -267,9 +371,12 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="stat-icon admin-skeleton-icon"></span>
             </div>
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
-    ` : "";
+    `
+        : "";
 
     return `
       ${statsSkeleton}
@@ -281,24 +388,41 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  function buildTableSkeleton(wrapperClass, columnCount, rowCount, countSummaryType = "") {
-    const cells = Array.from({ length: columnCount }).map((_, index) => `<span class="admin-skeleton-cell ${index === 1 ? "wide" : ""}"></span>`).join("");
-    const countSummary = countSummaryType === "faculty"
-      ? '<div class="faculty-count-summary"><span class="admin-skeleton-line meta"></span></div>'
-      : countSummaryType === "students"
-        ? '<div class="student-count-summary"><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line meta"></span></div>'
-        : "";
+  function buildTableSkeleton(
+    wrapperClass,
+    columnCount,
+    rowCount,
+    countSummaryType = "",
+  ) {
+    const cells = Array.from({ length: columnCount })
+      .map(
+        (_, index) =>
+          `<span class="admin-skeleton-cell ${index === 1 ? "wide" : ""}"></span>`,
+      )
+      .join("");
+    const countSummary =
+      countSummaryType === "faculty"
+        ? '<div class="faculty-count-summary"><span class="admin-skeleton-line meta"></span></div>'
+        : countSummaryType === "students"
+          ? '<div class="student-count-summary"><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line meta"></span></div>'
+          : "";
     return `
       <div class="${wrapperClass} admin-skeleton-table-card">
         ${countSummary}
-        ${countSummaryType ? "" : `<div class="table-header admin-skeleton-toolbar">
+        ${
+          countSummaryType
+            ? ""
+            : `<div class="table-header admin-skeleton-toolbar">
           <div class="search-filters-container"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control"></span></div>
           <div class="header-actions"><span class="admin-skeleton-line control short"></span></div>
-        </div>`}
+        </div>`
+        }
         <div class="table-scroll-container">
           <div class="admin-skeleton-table" style="--skeleton-columns:${columnCount};">
             <div class="admin-skeleton-table-row head">${cells}</div>
-            ${Array.from({ length: rowCount }).map(() => `<div class="admin-skeleton-table-row">${cells}</div>`).join("")}
+            ${Array.from({ length: rowCount })
+              .map(() => `<div class="admin-skeleton-table-row">${cells}</div>`)
+              .join("")}
           </div>
         </div>
       </div>
@@ -307,7 +431,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showSectionSkeleton(sectionId) {
     const section = document.getElementById(sectionId);
-    if (!section || !sectionSkeletons[sectionId] || section.querySelector(":scope > .admin-section-skeleton")) return;
+    if (
+      !section ||
+      !sectionSkeletons[sectionId] ||
+      section.querySelector(":scope > .admin-section-skeleton")
+    )
+      return;
 
     const skeleton = document.createElement("div");
     skeleton.className = "admin-section-skeleton";
@@ -336,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
   //     modal.style.display = "flex";
   //     modal.style.zIndex = "10002";
   //     modal.style.position = "fixed";
-  //     
+  //
   //     // Ensure OK button is clickable when modal is shown
   //     setTimeout(() => {
   //         const okBtn = document.getElementById("notificationModalOkBtn");
@@ -351,7 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // function closeNotificationModal() {
   //     const modal = document.getElementById("notificationModal");
   //     modal.style.display = "none";
-  //     
+  //
   //     // Also close the add question modal
   //     const addQuestionModal = document.getElementById("addQuestionModal");
   //     if (addQuestionModal) {
@@ -359,12 +488,11 @@ document.addEventListener("DOMContentLoaded", () => {
   //     }
   // }
 
-
   // DEPRECATED: Setup notification modal event listeners - replaced with unified notification system
   // document.addEventListener("DOMContentLoaded", () => {
   //     const notificationModal = document.getElementById("notificationModal");
   //     const okBtn = document.getElementById("notificationModalOkBtn");
-  //     
+  //
   //     if (notificationModal) {
   //         // Click outside to close
   //         notificationModal.addEventListener("click", (e) => {
@@ -373,11 +501,11 @@ document.addEventListener("DOMContentLoaded", () => {
   //                 closeNotificationModal();
   //             }
   //         });
-  //         
+  //
   //         // Ensure modal has proper z-index
   //         notificationModal.style.zIndex = "10002";
   //     }
-  //     
+  //
   //     if (okBtn) {
   //         // OK button click to close
   //         okBtn.addEventListener("click", (e) => {
@@ -385,16 +513,22 @@ document.addEventListener("DOMContentLoaded", () => {
   //             e.stopPropagation();
   //             closeNotificationModal();
   //         });
-  //         
+  //
   //         // Ensure button is clickable
   //         okBtn.style.pointerEvents = "auto";
   //         okBtn.style.cursor = "pointer";
   //     }
   // });
 
-  const adminNotificationButton = document.getElementById("adminNotificationBtn");
-  const adminNotificationPanel = document.getElementById("adminNotificationPanel");
-  const adminNotificationList = document.getElementById("adminNotificationList");
+  const adminNotificationButton = document.getElementById(
+    "adminNotificationBtn",
+  );
+  const adminNotificationPanel = document.getElementById(
+    "adminNotificationPanel",
+  );
+  const adminNotificationList = document.getElementById(
+    "adminNotificationList",
+  );
   const notificationDot = document.querySelector(".notification-dot");
 
   function getDaysUntil(dateString) {
@@ -403,7 +537,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!year || !month || !day) return null;
 
     const today = new Date();
-    const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayUtc = Date.UTC(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
     const endUtc = Date.UTC(year, month - 1, day);
     return Math.round((endUtc - todayUtc) / 86400000);
   }
@@ -414,12 +552,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return new Date(year, month - 1, day).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
     });
   }
 
   function renderAdminNotifications(periods) {
-    const closingPeriods = periods.filter(period => {
+    const closingPeriods = periods.filter((period) => {
       const daysLeft = getDaysUntil(period.end_date);
       return period.is_active && daysLeft >= 1 && daysLeft <= 3;
     });
@@ -428,41 +566,57 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!adminNotificationList) return;
 
     if (closingPeriods.length === 0) {
-      adminNotificationList.innerHTML = '<div class="admin-notification-empty"><i class="ph ph-check-circle"></i><span>No notification</span></div>';
+      adminNotificationList.innerHTML =
+        '<div class="admin-notification-empty"><i class="ph ph-check-circle"></i><span>No notification</span></div>';
       return;
     }
 
-    adminNotificationList.innerHTML = closingPeriods.map(period => {
-      const daysLeft = getDaysUntil(period.end_date);
-      const label = daysLeft === 1 ? "1 day left" : `${daysLeft} days left`;
-      const periodName = `${period.semester || "Evaluation"} ${period.ay || ""}`.trim();
-      return `<div class="admin-notification-item">
+    adminNotificationList.innerHTML = closingPeriods
+      .map((period) => {
+        const daysLeft = getDaysUntil(period.end_date);
+        const label = daysLeft === 1 ? "1 day left" : `${daysLeft} days left`;
+        const periodName =
+          `${period.semester || "Evaluation"} ${period.ay || ""}`.trim();
+        return `<div class="admin-notification-item">
         <span class="admin-notification-icon"><i class="ph ph-warning"></i></span>
         <div><strong>Evaluation is closing soon</strong><p>${periodName} ends on ${formatNotificationDate(period.end_date)} (${label}).</p></div>
       </div>`;
-    }).join("");
+      })
+      .join("");
   }
 
   async function loadAdminNotifications() {
     try {
-      const response = await fetch("../shared/periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+      const response = await fetch("../shared/periods_api.php?action=list", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
       const data = await response.json();
-      renderAdminNotifications(data.success && Array.isArray(data.periods) ? data.periods : []);
+      renderAdminNotifications(
+        data.success && Array.isArray(data.periods) ? data.periods : [],
+      );
     } catch (error) {
       console.error("Failed to load admin notifications:", error);
       if (notificationDot) notificationDot.hidden = true;
-      if (adminNotificationList) adminNotificationList.innerHTML = '<div class="admin-notification-empty">Unable to load notifications.</div>';
+      if (adminNotificationList)
+        adminNotificationList.innerHTML =
+          '<div class="admin-notification-empty">Unable to load notifications.</div>';
     }
   }
 
-  adminNotificationButton?.addEventListener("click", event => {
+  adminNotificationButton?.addEventListener("click", (event) => {
     event.stopPropagation();
-    if (adminNotificationPanel) adminNotificationPanel.hidden = !adminNotificationPanel.hidden;
+    if (adminNotificationPanel)
+      adminNotificationPanel.hidden = !adminNotificationPanel.hidden;
   });
 
-  document.addEventListener("click", event => {
-    if (adminNotificationPanel && !adminNotificationPanel.hidden &&
-        !adminNotificationPanel.contains(event.target) && !adminNotificationButton?.contains(event.target)) {
+  document.addEventListener("click", (event) => {
+    if (
+      adminNotificationPanel &&
+      !adminNotificationPanel.hidden &&
+      !adminNotificationPanel.contains(event.target) &&
+      !adminNotificationButton?.contains(event.target)
+    ) {
       adminNotificationPanel.hidden = true;
     }
   });
@@ -489,9 +643,15 @@ document.addEventListener("DOMContentLoaded", () => {
       m.style.marginLeft = "0";
       m.style.width = "100%";
       s.classList.remove("collapsed");
-      document.body.classList.toggle("sidebar-open", s.classList.contains("active"));
+      document.body.classList.toggle(
+        "sidebar-open",
+        s.classList.contains("active"),
+      );
       if (sidebarOverlay) {
-        sidebarOverlay.classList.toggle("visible", s.classList.contains("active"));
+        sidebarOverlay.classList.toggle(
+          "visible",
+          s.classList.contains("active"),
+        );
       }
       return;
     }
@@ -516,9 +676,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (window.innerWidth <= 768) {
       s.classList.toggle("active");
-      document.body.classList.toggle("sidebar-open", s.classList.contains("active"));
+      document.body.classList.toggle(
+        "sidebar-open",
+        s.classList.contains("active"),
+      );
       if (sidebarOverlay) {
-        sidebarOverlay.classList.toggle("visible", s.classList.contains("active"));
+        sidebarOverlay.classList.toggle(
+          "visible",
+          s.classList.contains("active"),
+        );
       }
       return;
     }
@@ -536,10 +702,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("resize", applySidebarLayout);
 
-  document.addEventListener("click", e => {
+  document.addEventListener("click", (e) => {
     const s = document.getElementById("sidebar");
     const overlay = document.getElementById("sidebarOverlay");
-    if (window.innerWidth <= 768 && s && s.classList.contains("active") && !s.contains(e.target) && !e.target.closest(".hamburger") && !e.target.closest("#sidebarOverlay")) {
+    if (
+      window.innerWidth <= 768 &&
+      s &&
+      s.classList.contains("active") &&
+      !s.contains(e.target) &&
+      !e.target.closest(".hamburger") &&
+      !e.target.closest("#sidebarOverlay")
+    ) {
       s.classList.remove("active");
       document.body.classList.remove("sidebar-open");
       if (overlay) overlay.classList.remove("visible");
@@ -566,7 +739,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   applySidebarLayout();
 
-
   // ================= Section Switching May nabago==========================================================================================
   function refreshRealtimeSection(silent = true) {
     if (document.hidden) return;
@@ -579,8 +751,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startAdminRealtimeRefresh() {
     if (adminRealtimeTimer) clearInterval(adminRealtimeTimer);
-    if (!["dashboard-section", "report-section"].includes(activeAdminSection)) return;
-    adminRealtimeTimer = setInterval(() => refreshRealtimeSection(true), REALTIME_REFRESH_MS);
+    if (!["dashboard-section", "report-section"].includes(activeAdminSection))
+      return;
+    adminRealtimeTimer = setInterval(
+      () => refreshRealtimeSection(true),
+      REALTIME_REFRESH_MS,
+    );
   }
 
   document.addEventListener("visibilitychange", () => {
@@ -588,8 +764,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   window.showSection = (id, e) => {
-    const currentSection = Array.from(document.querySelectorAll(".section"))
-      .find(section => section.style.display !== "none")?.id;
+    const currentSection = Array.from(
+      document.querySelectorAll(".section"),
+    ).find((section) => section.style.display !== "none")?.id;
 
     if (currentSection && currentSection !== id) {
       saveSectionScrollState(currentSection);
@@ -597,8 +774,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     activeAdminSection = id;
-
-    document.querySelectorAll(".section").forEach(s => {
+    document.querySelectorAll(".section").forEach((s) => {
       s.style.display = "none";
     });
 
@@ -611,7 +787,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // sidebar active state
-    document.querySelectorAll(".sidebar a").forEach(l => l.classList.remove("active"));
+    document
+      .querySelectorAll(".sidebar a")
+      .forEach((l) => l.classList.remove("active"));
 
     const link =
       e?.target.closest("a") ||
@@ -634,19 +812,27 @@ document.addEventListener("DOMContentLoaded", () => {
       "academic-year-section": "Academic Year Management",
       "report-section": "Evaluation Report",
       "subjects-section": "Subjects Management",
-      "manage-section": "Manage Program"
+      "manage-section": "Manage Program",
     };
 
     const sectionSubtitles = {
-      "dashboard-section": "Real-time Overview of Faculty Performance and Evaluation Status",
-      "programs-section": "Manage and update academic programs offered by the institution",
-      "faculties-section": "This section contains all faculty members with their profiles and teaching assignments",
-      "students-section": "This section shows all students with their basic details and records for easy management",
-      "criteria-section": "This section shows the list of criteria used for evaluating faculty performance",
-      "academic-year-section": "Manage evaluation periods and academic year settings",
-      "report-section": "This section shows faculty evaluation results and performance ratings",
-      "subjects-section": "Manage and update subjects offered across different programs",
-      "manage-section": "Manage subjects and classes for this program"
+      "dashboard-section":
+        "Real-time Overview of Faculty Performance and Evaluation Status",
+      "programs-section":
+        "Manage and update academic programs offered by the institution",
+      "faculties-section":
+        "This section contains all faculty members with their profiles and teaching assignments",
+      "students-section":
+        "This section shows all students with their basic details and records for easy management",
+      "criteria-section":
+        "This section shows the list of criteria used for evaluating faculty performance",
+      "academic-year-section":
+        "Manage evaluation periods and academic year settings",
+      "report-section":
+        "This section shows faculty evaluation results and performance ratings",
+      "subjects-section":
+        "Manage and update subjects offered across different programs",
+      "manage-section": "Manage subjects and classes for this program",
     };
 
     if (navbarTitle && sectionTitles[id]) {
@@ -691,8 +877,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (evaluationTable) {
       const tableWrapper = evaluationTable.closest(".table-wrapper");
       if (tableWrapper) {
-        tableWrapper.style.display =
-          id === "report-section" ? "block" : "none";
+        tableWrapper.style.display = id === "report-section" ? "block" : "none";
       }
     }
     startAdminRealtimeRefresh();
@@ -718,19 +903,19 @@ document.addEventListener("DOMContentLoaded", () => {
       "faculty-status-filter",
       "student-search",
       "student-program-filter",
-      "student-yearlevel-filter"
+      "student-yearlevel-filter",
     ];
 
-    ids.forEach(id => clearControlValue(document.getElementById(id)));
+    ids.forEach((id) => clearControlValue(document.getElementById(id)));
   }
 
-  document.addEventListener("click", event => {
+  document.addEventListener("click", (event) => {
     const clearBtn = event.target.closest(".clear-search-btn");
     if (!clearBtn) return;
 
     const targets = (clearBtn.dataset.clearTargets || "")
       .split(",")
-      .map(id => id.trim())
+      .map((id) => id.trim())
       .filter(Boolean);
 
     clearSearchControls(targets);
@@ -749,9 +934,11 @@ document.addEventListener("DOMContentLoaded", () => {
       subjectSelectionModal,
       viewStudentSubjectsModal,
       viewFacultySubjectsModal,
-      managePeriodsModal
+      managePeriodsModal,
     ];
-    modalsToClose.forEach(m => { if (m) m.style.display = "none"; });
+    modalsToClose.forEach((m) => {
+      if (m) m.style.display = "none";
+    });
 
     deleteTarget = el;
     deleteType = type;
@@ -764,8 +951,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    document.getElementById("deleteMessage").innerText = `Do you want to delete ${type}? \n${name}`;
-    document.getElementById("deleteWarning").innerText = `Warning: All details about this ${type} will be deleted.`;
+    document.getElementById("deleteMessage").innerText =
+      `Do you want to delete ${type}? \n${name}`;
+    document.getElementById("deleteWarning").innerText =
+      `Warning: All details about this ${type} will be deleted.`;
 
     // Add wider class for subjects delete modal
     const deleteModalCard = document.querySelector(".delete-modal-card");
@@ -781,7 +970,11 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Modal display set to flex");
   }
 
-  const closeDeleteModal = () => { document.getElementById("deleteModal").style.display = "none"; deleteTarget = null; deleteType = ""; };
+  const closeDeleteModal = () => {
+    document.getElementById("deleteModal").style.display = "none";
+    deleteTarget = null;
+    deleteType = "";
+  };
   const confirmDelete = async () => {
     console.log("confirmDelete called with deleteType:", deleteType);
     console.log("confirmDelete called with deleteTarget:", deleteTarget);
@@ -791,13 +984,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const cfg = {
       faculty: { url: "deleteFaculty.php", key: "faculty_id", type: "form" },
       program: { url: "deleteProgram.php", key: "program_code", type: "form" },
-      category: { url: "delete_category.php", key: "category_id", type: "form" },
-      question: { url: "delete_question.php", key: "question_id", type: "form" },
+      category: {
+        url: "delete_category.php",
+        key: "category_id",
+        type: "form",
+      },
+      question: {
+        url: "delete_question.php",
+        key: "question_id",
+        type: "form",
+      },
       student: { url: "student_crud.php", key: "id", type: "json" }, // student uses JSON
       subject: { url: "subject_crud.php", key: "id", type: "form" }, // subject uses form
       class: { url: "classes_crud.php", key: "id", type: "form" }, // class uses form
       class_subject: { url: "classes_crud.php", key: "custom", type: "form" }, // class subject uses custom handling
-      period: { url: "../shared/periods_api.php?action=delete", key: "id", type: "json_period" }
+      period: {
+        url: "../shared/periods_api.php?action=delete",
+        key: "id",
+        type: "json_period",
+      },
     }[deleteType];
 
     if (!cfg) return closeDeleteModal();
@@ -812,28 +1017,34 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchOptions = {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body
+        body: body,
       };
     } else if (cfg.type === "json_period") {
-      const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
+      const val =
+        deleteTarget.dataset[cfg.key] ||
+        deleteTarget.id.replace(`${deleteType}-`, "");
       fetchOptions = {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: val })
+        body: JSON.stringify({ id: val }),
       };
     } else if (cfg.type === "json") {
       // For students, send JSON with action + id
-      const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
+      const val =
+        deleteTarget.dataset[cfg.key] ||
+        deleteTarget.id.replace(`${deleteType}-`, "");
       fetchOptions = {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id: val })
+        body: JSON.stringify({ action: "delete", id: val }),
       };
     } else {
       // For other entities, send form-encoded
-      const val = deleteTarget.dataset[cfg.key] || deleteTarget.id.replace(`${deleteType}-`, "");
+      const val =
+        deleteTarget.dataset[cfg.key] ||
+        deleteTarget.id.replace(`${deleteType}-`, "");
       let body = `${cfg.key}=${encodeURIComponent(val)}`;
 
       // Add action parameter for subjects and classes
@@ -844,13 +1055,13 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchOptions = {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body
+        body: body,
       };
     }
 
     fetch(cfg.url, fetchOptions)
-      .then(r => r.json())
-      .then(async resp => {
+      .then((r) => r.json())
+      .then(async (resp) => {
         if (resp.success || resp.status === "success") {
           if (deleteType === "class_subject") {
             // Remove the subject card from DOM
@@ -895,7 +1106,9 @@ document.addEventListener("DOMContentLoaded", () => {
             // Update the count immediately so the total drops as soon as the delete succeeds
             loadPrograms();
             loadDashboardStats();
-            console.log("Program list and dashboard stats updated immediately after program delete");
+            console.log(
+              "Program list and dashboard stats updated immediately after program delete",
+            );
           }
 
           if (deleteType === "faculty") {
@@ -903,22 +1116,28 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
               loadFaculty();
               loadDashboardStats();
-              console.log("Faculty list and dashboard updated after faculty delete");
+              console.log(
+                "Faculty list and dashboard updated after faculty delete",
+              );
             }, 500);
           }
         } else {
-          const errorMessage = resp.error || resp.message || "Unknown error occurred";
+          const errorMessage =
+            resp.error || resp.message || "Unknown error occurred";
           console.error("Delete failed response:", resp);
           showNotification("Error deleting: " + errorMessage, "#f44336", 5000);
           closeDeleteModal();
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
-        showNotification("Unexpected error occurred while deleting", "#f44336", 5000);
+        showNotification(
+          "Unexpected error occurred while deleting",
+          "#f44336",
+          5000,
+        );
         closeDeleteModal();
       });
-
   };
 
   function openDeleteSuccess() {
@@ -937,7 +1156,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (deleteType === "program") {
       loadPrograms();
       loadDashboardStats();
-      console.log("Program list and dashboard stats updated on delete success modal");
+      console.log(
+        "Program list and dashboard stats updated on delete success modal",
+      );
     }
   }
   function closeDeleteSuccess() {
@@ -951,7 +1172,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (deleteType === "program") {
       loadPrograms();
       loadDashboardStats();
-      console.log("Program list and dashboard stats updated on delete success modal close");
+      console.log(
+        "Program list and dashboard stats updated on delete success modal close",
+      );
     }
     // Reset delete type
     deleteType = "";
@@ -976,7 +1199,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = overlay.querySelector(".archive-modal-message");
     const confirmBtn = document.getElementById("archiveConfirmBtn");
     if (title) title.textContent = `Archive ${label}`;
-    if (message) message.textContent = `Archive this ${label.toLowerCase()} account?`;
+    if (message)
+      message.textContent = `Archive this ${label.toLowerCase()} account?`;
     if (confirmBtn) confirmBtn.textContent = `Yes, Archive`;
     overlay.classList.add("show");
   }
@@ -988,34 +1212,47 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   window.closeArchiveModal = closeArchiveModal;
 
-  document.getElementById("archiveConfirmBtn").addEventListener("click", async () => {
-    if (!_archivePending) return;
-    const { row, record, statusMenu, type } = _archivePending;
-    closeArchiveModal();
-    try {
-      const result = await updateStatus(type, record.id, "archived");
-      if (result.success) {
-        row.dataset.status = "archived";
-        const statusCellIndex = type === "student" ? 4 : 5;
-        row.querySelector(`td:nth-child(${statusCellIndex})`).innerHTML = statusPillHtml("archived");
-        if (statusMenu) statusMenu.querySelectorAll(".status-option").forEach(btn => btn.classList.remove("selected"));
-        closeStatusMenus();
-        showNotification(`${type === "student" ? "Student" : "Faculty"} archived successfully`, "#4caf50");
-        refreshSectionStats();
-        if (type === "student") loadStudents();
-        else loadFaculty();
-      } else {
-        showNotification(`Failed to archive ${type}: ` + (result.message || "Unknown error"), "#f44336");
+  document
+    .getElementById("archiveConfirmBtn")
+    .addEventListener("click", async () => {
+      if (!_archivePending) return;
+      const { row, record, statusMenu, type } = _archivePending;
+      closeArchiveModal();
+      try {
+        const result = await updateStatus(type, record.id, "archived");
+        if (result.success) {
+          row.dataset.status = "archived";
+          const statusCellIndex = type === "student" ? 4 : 5;
+          row.querySelector(`td:nth-child(${statusCellIndex})`).innerHTML =
+            statusPillHtml("archived");
+          if (statusMenu)
+            statusMenu
+              .querySelectorAll(".status-option")
+              .forEach((btn) => btn.classList.remove("selected"));
+          closeStatusMenus();
+          showNotification(
+            `${type === "student" ? "Student" : "Faculty"} archived successfully`,
+            "#4caf50",
+          );
+          refreshSectionStats();
+          if (type === "student") loadStudents();
+          else loadFaculty();
+        } else {
+          showNotification(
+            `Failed to archive ${type}: ` + (result.message || "Unknown error"),
+            "#f44336",
+          );
+        }
+      } catch (error) {
+        console.error(`Archive ${type} error:`, error);
+        showNotification(`Error archiving ${type}`, "#f44336");
       }
-    } catch (error) {
-      console.error(`Archive ${type} error:`, error);
-      showNotification(`Error archiving ${type}`, "#f44336");
-    }
-  });
+    });
 
   // Click outside archive modal box to close
   document.getElementById("archiveModal").addEventListener("click", (e) => {
-    if (e.target.classList.contains("archive-modal-overlay")) closeArchiveModal();
+    if (e.target.classList.contains("archive-modal-overlay"))
+      closeArchiveModal();
   });
 
   // ===================== Logout Modal ==========================================================================================
@@ -1041,7 +1278,8 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.dataset.loggingOut = "true";
     submitBtn.disabled = true;
     submitBtn.classList.add("is-loading");
-    submitBtn.innerHTML = '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
+    submitBtn.innerHTML =
+      '<span class="logout-spinner" aria-hidden="true"></span> Logging out...';
     cancelBtn.disabled = true;
 
     setTimeout(() => {
@@ -1049,7 +1287,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 900);
   }
 
-  logoutContent.addEventListener("click", e => e.stopPropagation());
+  logoutContent.addEventListener("click", (e) => e.stopPropagation());
   logoutModal.addEventListener("click", closeLogoutModal);
   cancelBtn.addEventListener("click", closeLogoutModal);
   submitBtn.addEventListener("click", confirmLogout);
@@ -1065,7 +1303,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let editRowProgram = null;
 
   function normalizeProgramCode(code) {
-    return String(code || "").replace(/\\[rnt]/gi, "").replace(/\s+/g, "").toUpperCase();
+    return String(code || "")
+      .replace(/\\[rnt]/gi, "")
+      .replace(/\s+/g, "")
+      .toUpperCase();
   }
 
   function setProgramCodeMessage(message, type = "error") {
@@ -1077,8 +1318,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getExistingProgramCodes() {
     return Array.from(document.querySelectorAll(".program-card"))
-      .filter(card => !editRowProgram || card.dataset.id !== editRowProgram.dataset.id)
-      .map(card => normalizeProgramCode(card.dataset.programCode))
+      .filter(
+        (card) =>
+          !editRowProgram || card.dataset.id !== editRowProgram.dataset.id,
+      )
+      .map((card) => normalizeProgramCode(card.dataset.programCode))
       .filter(Boolean);
   }
 
@@ -1088,8 +1332,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // OPEN ADD MODAL
   document.querySelector(".add-program-btn")?.addEventListener("click", () => {
-    programHeader.innerText = "ADD PROGRAM"; programSubmitBtn.innerText = "SAVE PROGRAM";
-    programCodeInput.value = ""; programNameInput.value = ""; editRowProgram = null;
+    programHeader.innerText = "ADD PROGRAM";
+    programSubmitBtn.innerText = "SAVE PROGRAM";
+    programCodeInput.value = "";
+    programNameInput.value = "";
+    editRowProgram = null;
     // Clear validation states
     programCodeInput.style.borderColor = "";
     programCodeInput.title = "";
@@ -1121,25 +1368,31 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isDuplicateProgramCode(code)) {
       programCodeInput.style.borderColor = "#f44336";
       programCodeInput.title = "Program code already exists";
-      setProgramCodeMessage("Program code already exists. Please use a different program code.");
+      setProgramCodeMessage(
+        "Program code already exists. Please use a different program code.",
+      );
     } else {
-      programCodeInput.style.borderColor = "#4caf50";
+      programCodeInput.style.borderColor = "#3b82f6";
       programCodeInput.title = "";
       setProgramCodeMessage("");
     }
   });
 
-
   // SAVE / UPDATE
   programSubmitBtn.addEventListener("click", () => {
-    const code = programCodeInput.value.trim(), name = programNameInput.value.trim();
+    const code = programCodeInput.value.trim(),
+      name = programNameInput.value.trim();
     if (!code || !name) {
-      showGlobalNotification("Please fill in both Program Code and Program Name", "warning");
+      showGlobalNotification(
+        "Please fill in both Program Code and Program Name",
+        "warning",
+      );
       return;
     }
 
     if (isDuplicateProgramCode(code)) {
-      const message = "Program code already exists. Please use a different program code.";
+      const message =
+        "Program code already exists. Please use a different program code.";
       setProgramCodeMessage(message);
       showNotification(message, "#f44336", 4000);
       programCodeInput.focus();
@@ -1153,17 +1406,30 @@ document.addEventListener("DOMContentLoaded", () => {
     params.set("program_name", name);
 
     setButtonLoading(programSubmitBtn, true, "Saving Program...");
-    const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
-    fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() })
-      .then(r => r.text())
-      .then(async t => {
+    const minimumLoadingTime = new Promise((resolve) =>
+      setTimeout(resolve, 400),
+    );
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    })
+      .then((r) => r.text())
+      .then(async (t) => {
         await minimumLoadingTime;
-        try { return JSON.parse(t); } catch { return t; }
+        try {
+          return JSON.parse(t);
+        } catch {
+          return t;
+        }
       })
-      .then(res => {
-        const ok = (typeof res === "object" && res.status === "success") || (typeof res === "string" && res.toLowerCase().includes("success"));
+      .then((res) => {
+        const ok =
+          (typeof res === "object" && res.status === "success") ||
+          (typeof res === "string" && res.toLowerCase().includes("success"));
         if (ok) {
-          loadPrograms(); closeProgramModal();
+          loadPrograms();
+          closeProgramModal();
           if (editRowProgram) {
             showNotification("Program edited successfully!", "#4caf50");
           } else {
@@ -1171,15 +1437,24 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         } else {
           // Show simple notification for duplicate program errors
-          if (typeof res === "object" && res.message && res.message.includes("already exists")) {
+          if (
+            typeof res === "object" &&
+            res.message &&
+            res.message.includes("already exists")
+          ) {
             setProgramCodeMessage(res.message);
             programCodeInput.style.borderColor = "#f44336";
             showNotification(res.message, "#f44336", 4000);
           } else {
-            showNotification(res.message || res || "Error updating Program.", "#f44336", 4000);
+            showNotification(
+              res.message || res || "Error updating Program.",
+              "#f44336",
+              4000,
+            );
           }
         }
-      }).catch(async err => {
+      })
+      .catch(async (err) => {
         await minimumLoadingTime;
         console.error("FETCH ERROR:", err);
         showNotification("Something went wrong.", "#f44336", 4000);
@@ -1197,8 +1472,10 @@ document.addEventListener("DOMContentLoaded", () => {
       loadSubjects();
     });
     row.querySelector(".edit-btn")?.addEventListener("click", () => {
-      programHeader.innerText = "EDIT PROGRAM"; programSubmitBtn.innerText = "UPDATE PROGRAM";
-      programCodeInput.value = row.cells[0].innerText; programNameInput.value = row.cells[1].innerText;
+      programHeader.innerText = "EDIT PROGRAM";
+      programSubmitBtn.innerText = "UPDATE PROGRAM";
+      programCodeInput.value = row.cells[0].innerText;
+      programNameInput.value = row.cells[1].innerText;
       setProgramCodeMessage("");
       editRowProgram = row;
       // Clear validation states
@@ -1206,7 +1483,11 @@ document.addEventListener("DOMContentLoaded", () => {
       programCodeInput.title = "";
       addProgramModal.style.display = "flex";
     });
-    row.querySelector(".delete-btn")?.addEventListener("click", () => openDeleteModal("program", row.cells[1].innerText, row));
+    row
+      .querySelector(".delete-btn")
+      ?.addEventListener("click", () =>
+        openDeleteModal("program", row.cells[1].innerText, row),
+      );
   }
 
   function updateProgramCount() {
@@ -1221,8 +1502,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // LOAD PROGRAMS
   function loadPrograms() {
     fetch("getProgram.php")
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         const container = document.getElementById("programsCardsContainer");
         container.innerHTML = "";
 
@@ -1234,7 +1515,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check if no data or empty array
         if (!data || data.length === 0) {
-          container.innerHTML = '<div class="admin-empty-state">No programs found</div>';
+          container.innerHTML =
+            '<div class="admin-empty-state">No programs found</div>';
           return;
         }
 
@@ -1272,18 +1554,24 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>`;
 
           // Add event listeners
-          const manageBtn = card.querySelector('.btn-manage');
-          const editBtn = card.querySelector('.btn-edit');
-          const deleteBtn = card.querySelector('.btn-delete');
+          const manageBtn = card.querySelector(".btn-manage");
+          const editBtn = card.querySelector(".btn-edit");
+          const deleteBtn = card.querySelector(".btn-delete");
 
-          manageBtn.addEventListener('click', () => manageProgram(p.id, p.program_code));
-          editBtn.addEventListener('click', () => editProgram(p.id, p.program_code, p.program_name));
-          deleteBtn.addEventListener('click', () => deleteProgram(p.id, p.program_code));
+          manageBtn.addEventListener("click", () =>
+            manageProgram(p.id, p.program_code, p.program_name),
+          );
+          editBtn.addEventListener("click", () =>
+            editProgram(p.id, p.program_code, p.program_name),
+          );
+          deleteBtn.addEventListener("click", () =>
+            deleteProgram(p.id, p.program_code),
+          );
 
           container.appendChild(card);
         });
       })
-      .catch(err => console.error("FETCH ERROR:", err))
+      .catch((err) => console.error("FETCH ERROR:", err))
       .finally(() => hideSectionSkeleton("programs-section"));
   }
   // CLOSE MODAL
@@ -1297,46 +1585,52 @@ document.addEventListener("DOMContentLoaded", () => {
     addProgramModal.style.display = "none";
   }
 
-  document.getElementById("program-search")?.addEventListener("input", e => {
+  document.getElementById("program-search")?.addEventListener("input", (e) => {
     const term = e.target.value.toLowerCase();
     const cards = document.querySelectorAll(".program-card");
-    cards.forEach(card => {
+    cards.forEach((card) => {
       const text = card.textContent.toLowerCase();
       card.style.display = text.includes(term) ? "" : "none";
     });
   });
 
   // Program Card Action Functions
-  function manageProgram(id, code) {
+  function manageProgram(id, code, name = "") {
     // Set current program for management first
     currentProgramId = id;
     currentProgramCode = code;
+    currentProgramName = name || code;
+    selectedManageYear = "";
+    subjectsAllData = [];
+    classesAllData = [];
+    if (manageSearchInput) manageSearchInput.value = "";
+    document.getElementById("totalSubjectsCount").textContent = "0";
+    document.getElementById("activeClassesCount").textContent = "0";
 
     // Navigate to manage section for this program
-    showSection('manage-section', event);
+    showSection("manage-section", event);
 
-    // Update manage title
-    const manageTitle = document.getElementById('manageTitle');
-    if (manageTitle) {
-      manageTitle.textContent = `Manage Program - ${code}`;
-    }
+    updateManageProgramHeader();
 
     // Show subjects tab by default
-    const subjectsTab = document.querySelector('.subject-btn');
-    const classesTab = document.querySelector('.classes-btn');
-    const subjectsDiv = document.getElementById('subjects');
-    const classesDiv = document.getElementById('classes');
-    const mw = document.querySelector("#manage-section .header-actions-section .search-wrapper");
+    const subjectsTab = document.querySelector(".subject-btn");
+    const classesTab = document.querySelector(".classes-btn");
+    const subjectsDiv = document.getElementById("subjects");
+    const classesDiv = document.getElementById("classes");
+    const mw = document.querySelector(
+      "#manage-section .header-actions-section .search-wrapper",
+    );
     const mc = document.getElementById("manage-clear-search");
 
     if (subjectsTab && classesTab && subjectsDiv && classesDiv) {
-      subjectsTab.classList.add('active');
-      classesTab.classList.remove('active');
-      subjectsDiv.style.display = 'block';
-      classesDiv.style.display = 'none';
-      if (mw) mw.style.display = 'none';
-      if (mc) mc.style.display = 'none';
+      subjectsTab.classList.add("active");
+      classesTab.classList.remove("active");
+      subjectsDiv.style.display = "block";
+      classesDiv.style.display = "none";
+      if (mw) mw.style.display = "none";
+      if (mc) mc.style.display = "none";
     }
+    showManageYearLevels();
 
     // Load subjects and classes for this program
     loadSubjects();
@@ -1359,12 +1653,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function deleteProgram(id, code) {
-    const card = Array.from(document.querySelectorAll(".program-card"))
-      .find(item => String(item.dataset.id) === String(id));
+    const card = Array.from(document.querySelectorAll(".program-card")).find(
+      (item) => String(item.dataset.id) === String(id),
+    );
 
     const target = card || {
       dataset: { id: String(id), program_code: code, programCode: code },
-      remove: () => loadPrograms()
+      remove: () => loadPrograms(),
     };
     if (target.dataset) {
       target.dataset.program_code = code;
@@ -1389,7 +1684,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === modal) {
         console.log("Closing modal due to outside click");
         modal.style.display = "none";
-        if (modal.id === "addFacultyModal") document.body.classList.remove("faculty-modal-open");
+        if (modal.id === "addFacultyModal")
+          document.body.classList.remove("faculty-modal-open");
       }
     });
   }
@@ -1411,10 +1707,10 @@ document.addEventListener("DOMContentLoaded", () => {
       "managePeriodsModal",
       "deleteModal",
       "deleteSuccessModal",
-      "facultyReportModal"
+      "facultyReportModal",
     ];
 
-    modals.forEach(modalId => {
+    modals.forEach((modalId) => {
       const modal = document.getElementById(modalId);
       console.log("Found modal:", modalId, modal);
       setupModalClickOutside(modal);
@@ -1453,14 +1749,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelButton = document.getElementById("periodConfirmationCancel");
     const acceptButton = document.getElementById("periodConfirmationAccept");
 
-    if (!modal || !title || !period || !dates || !message || !cancelButton || !acceptButton) {
+    if (
+      !modal ||
+      !title ||
+      !period ||
+      !dates ||
+      !message ||
+      !cancelButton ||
+      !acceptButton
+    ) {
       console.error("Evaluation period confirmation dialog is unavailable.");
       return Promise.resolve(false);
     }
 
     if (periodConfirmationResolver) periodConfirmationResolver(false);
 
-    title.textContent = opening ? "Open evaluation period?" : "Close evaluation period?";
+    title.textContent = opening
+      ? "Open evaluation period?"
+      : "Close evaluation period?";
     period.textContent = periodName;
     dates.textContent = duration || "Schedule dates are not set";
     message.textContent = opening
@@ -1470,9 +1776,9 @@ document.addEventListener("DOMContentLoaded", () => {
     acceptButton.classList.toggle("is-close", !opening);
     modal.hidden = false;
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const trigger = document.activeElement;
-      const finish = confirmed => {
+      const finish = (confirmed) => {
         modal.hidden = true;
         cancelButton.removeEventListener("click", cancel);
         acceptButton.removeEventListener("click", accept);
@@ -1484,10 +1790,10 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       const cancel = () => finish(false);
       const accept = () => finish(true);
-      const dismissOnBackdrop = event => {
+      const dismissOnBackdrop = (event) => {
         if (event.target === modal) finish(false);
       };
-      const dismissOnEscape = event => {
+      const dismissOnEscape = (event) => {
         if (event.key === "Escape" && !modal.hidden) finish(false);
       };
 
@@ -1522,7 +1828,10 @@ document.addEventListener("DOMContentLoaded", () => {
         addSubjectMainModal.style.position = "fixed";
         console.log("Modal should be visible now");
         console.log("Modal element:", addSubjectMainModal);
-        console.log("Modal display style:", window.getComputedStyle(addSubjectMainModal).display);
+        console.log(
+          "Modal display style:",
+          window.getComputedStyle(addSubjectMainModal).display,
+        );
       });
     } else {
       console.log("Add Subject button not found");
@@ -1540,21 +1849,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // LOAD PROGRAMS FOR DROPDOWN
   function loadProgramsForDropdown() {
     return fetch("getProgram.php")
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         const select = document.getElementById("main-program-select");
-        select.innerHTML = '<option value="" disabled selected>-- Select Program --</option>';
+        select.innerHTML =
+          '<option value="" disabled selected>-- Select Program --</option>';
 
         data.sort((a, b) => a.program_name.localeCompare(b.program_name));
 
-        data.forEach(p => {
+        data.forEach((p) => {
           const option = document.createElement("option");
           option.value = p.id;
           option.textContent = `${p.program_code} - ${p.program_name}`;
           select.appendChild(option);
         });
       })
-      .catch(err => console.error("Error loading programs:", err));
+      .catch((err) => console.error("Error loading programs:", err));
   }
 
   // SAVE SUBJECT
@@ -1578,10 +1888,10 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("subject_crud.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body
+      body,
     })
-      .then(r => r.json())
-      .then(res => {
+      .then((r) => r.json())
+      .then((res) => {
         if (res.status === "success") {
           addSubjectMainModal.style.display = "none";
           editingMainSubjectId = null;
@@ -1591,7 +1901,7 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Error: " + (res.message || "Failed to add subject"));
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error:", err);
         alert("Something went wrong");
       })
@@ -1601,46 +1911,59 @@ document.addEventListener("DOMContentLoaded", () => {
   // LOAD ALL SUBJECTS
   function loadSubjectsMainTable() {
     fetch("subject_crud.php?action=get_all")
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         subjectsMainData = Array.isArray(data) ? data : [];
         renderSubjectsMainTable();
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading subjects:", err);
-        subjectsMainTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">Error loading subjects</td></tr>';
+        subjectsMainTbody.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;padding:20px;">Error loading subjects</td></tr>';
       })
       .finally(() => hideSectionSkeleton("subjects-section"));
   }
 
   function renderSubjectsMainTable() {
     if (!subjectsMainTbody) return;
-    const searchTerm = (document.getElementById("subjects-search")?.value || "").toLowerCase().trim();
-    const yearFilter = document.getElementById("subjects-year-filter")?.value || "";
-    const data = subjectsMainData.filter(s => {
-      const matchesSearch = !searchTerm ||
-        String(s.subject_code || "").toLowerCase().includes(searchTerm) ||
-        String(s.subject_desc || "").toLowerCase().includes(searchTerm) ||
-        String(s.program_name || "").toLowerCase().includes(searchTerm);
-      const matchesYear = !yearFilter || String(s.year_level || "") === yearFilter;
+    const searchTerm = (document.getElementById("subjects-search")?.value || "")
+      .toLowerCase()
+      .trim();
+    const yearFilter =
+      document.getElementById("subjects-year-filter")?.value || "";
+    const data = subjectsMainData.filter((s) => {
+      const matchesSearch =
+        !searchTerm ||
+        String(s.subject_code || "")
+          .toLowerCase()
+          .includes(searchTerm) ||
+        String(s.subject_desc || "")
+          .toLowerCase()
+          .includes(searchTerm) ||
+        String(s.program_name || "")
+          .toLowerCase()
+          .includes(searchTerm);
+      const matchesYear =
+        !yearFilter || String(s.year_level || "") === yearFilter;
       return matchesSearch && matchesYear;
     });
 
     subjectsMainTbody.innerHTML = "";
 
     if (!data || data.length === 0) {
-      subjectsMainTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No subjects found</td></tr>';
+      subjectsMainTbody.innerHTML =
+        '<tr><td colspan="6" class="admin-empty-state">No subjects found</td></tr>';
       return;
     }
 
-    data.forEach(s => {
+    data.forEach((s) => {
       const row = document.createElement("tr");
       row.dataset.id = s.id;
       row.innerHTML = `
           <td>${s.subject_code}</td>
           <td>${s.subject_desc}</td>
-          <td>${s.program_name || 'N/A'}</td>
-          <td>${s.semester || ''}</td>
+          <td>${s.program_name || "N/A"}</td>
+          <td>${s.semester || ""}</td>
           <td>${s.year_level}</td>
           <td class="action-cell">
             <div class="action-buttons">
@@ -1655,9 +1978,12 @@ document.addEventListener("DOMContentLoaded", () => {
         editingMainSubjectId = s.id;
         const modal = addSubjectMainModal;
         const programSelect = document.getElementById("main-program-select");
-        document.getElementById("main-subject-code").value = s.subject_code || "";
-        document.getElementById("main-subject-desc").value = s.subject_desc || "";
-        document.getElementById("main-semester-select").value = s.semester || "";
+        document.getElementById("main-subject-code").value =
+          s.subject_code || "";
+        document.getElementById("main-subject-desc").value =
+          s.subject_desc || "";
+        document.getElementById("main-semester-select").value =
+          s.semester || "";
         document.getElementById("main-year-select").value = s.year_level || "";
         loadProgramsForDropdown().then(() => {
           if (programSelect) {
@@ -1679,14 +2005,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  ["subjects-search", "subjects-year-filter"].forEach(id => {
-    document.getElementById(id)?.addEventListener("input", renderSubjectsMainTable);
-    document.getElementById(id)?.addEventListener("change", renderSubjectsMainTable);
+  ["subjects-search", "subjects-year-filter"].forEach((id) => {
+    document
+      .getElementById(id)
+      ?.addEventListener("input", renderSubjectsMainTable);
+    document
+      .getElementById(id)
+      ?.addEventListener("change", renderSubjectsMainTable);
   });
 
   function defaultAcademicYear() {
     const today = new Date();
-    const startYear = today.getMonth() >= 5 ? today.getFullYear() : today.getFullYear() - 1;
+    const startYear =
+      today.getMonth() >= 5 ? today.getFullYear() : today.getFullYear() - 1;
     return `${startYear}-${startYear + 1}`;
   }
 
@@ -1701,7 +2032,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadDashboardPeriodSetting() {
     try {
-      const res = await fetch("../shared/periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+      const res = await fetch("../shared/periods_api.php?action=status", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
       const data = await res.json();
       if (!data || !data.success) return;
 
@@ -1709,14 +2043,16 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedClassSemester = data.current_semester || "";
 
       try {
-        if (selectedAcademicYear) localStorage.setItem("selectedAcademicYear", selectedAcademicYear);
+        if (selectedAcademicYear)
+          localStorage.setItem("selectedAcademicYear", selectedAcademicYear);
         else localStorage.removeItem("selectedAcademicYear");
-        if (selectedClassSemester) localStorage.setItem("selectedClassSemester", selectedClassSemester);
+        if (selectedClassSemester)
+          localStorage.setItem("selectedClassSemester", selectedClassSemester);
         else localStorage.removeItem("selectedClassSemester");
-      } catch (err) { }
+      } catch (err) {}
 
       syncDashboardPeriodSetting();
-    } catch (err) { }
+    } catch (err) {}
   }
   window.loadDashboardPeriodSetting = loadDashboardPeriodSetting;
 
@@ -1725,28 +2061,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const semesterSelect = document.getElementById("class-semester");
     if (!academicYearSelect || !semesterSelect) return null;
 
-    academicYearSelect.innerHTML = '<option value="">Loading academic years...</option>';
-    semesterSelect.innerHTML = '<option value="">Select academic year first</option>';
+    academicYearSelect.innerHTML =
+      '<option value="">Loading academic years...</option>';
+    semesterSelect.innerHTML = '<option value="">Semester</option>';
     semesterSelect.disabled = true;
     try {
-      const response = await fetch("../shared/periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+      const response = await fetch("../shared/periods_api.php?action=list", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
       const data = await response.json();
-      classPeriods = data && data.success && Array.isArray(data.periods) ? data.periods : [];
+      classPeriods =
+        data && data.success && Array.isArray(data.periods) ? data.periods : [];
     } catch (_) {
       classPeriods = [];
     }
 
-    academicYearSelect.innerHTML = '<option value="">Select Academic Year</option>';
-    const academicYears = [...new Set(classPeriods.map(period => String(period.ay || "")).filter(Boolean))]
-      .sort((a, b) => b.localeCompare(a));
-    academicYears.forEach(academicYear => {
+    academicYearSelect.innerHTML = '<option value="">Academic Year</option>';
+    const academicYears = [
+      ...new Set(
+        classPeriods.map((period) => String(period.ay || "")).filter(Boolean),
+      ),
+    ].sort((a, b) => b.localeCompare(a));
+    academicYears.forEach((academicYear) => {
       const option = document.createElement("option");
       option.value = academicYear;
       option.textContent = academicYear;
       academicYearSelect.appendChild(option);
     });
 
-    const preferredPeriod = classPeriods.find(period => Number(period.id) === Number(preferredPeriodId));
+    const preferredPeriod = classPeriods.find(
+      (period) => Number(period.id) === Number(preferredPeriodId),
+    );
     if (preferredPeriod) {
       academicYearSelect.value = preferredPeriod.ay;
       populateClassSemesterOptions(preferredPeriod.ay, preferredPeriod.id);
@@ -1760,15 +2106,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const semesterSelect = document.getElementById("class-semester");
     if (!semesterSelect) return null;
 
-    semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+    semesterSelect.innerHTML = '<option value="">Semester</option>';
     if (!academicYear) {
-      semesterSelect.innerHTML = '<option value="">Select academic year first</option>';
       semesterSelect.disabled = true;
       return null;
     }
 
-    const periodsForYear = classPeriods.filter(period => String(period.ay) === String(academicYear));
-    periodsForYear.forEach(period => {
+    const periodsForYear = classPeriods.filter(
+      (period) => String(period.ay) === String(academicYear),
+    );
+    periodsForYear.forEach((period) => {
       const option = document.createElement("option");
       option.value = String(period.id);
       option.textContent = period.semester;
@@ -1776,14 +2123,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     semesterSelect.disabled = periodsForYear.length === 0;
 
-    const preferredPeriod = periodsForYear.find(period => Number(period.id) === Number(preferredPeriodId));
+    const preferredPeriod = periodsForYear.find(
+      (period) => Number(period.id) === Number(preferredPeriodId),
+    );
     semesterSelect.value = preferredPeriod ? String(preferredPeriod.id) : "";
     return preferredPeriod || null;
   }
 
   function getSelectedClassPeriod() {
-    const periodId = Number(document.getElementById("class-semester")?.value || 0);
-    return classPeriods.find(period => Number(period.id) === periodId) || null;
+    const periodId = Number(
+      document.getElementById("class-semester")?.value || 0,
+    );
+    return (
+      classPeriods.find((period) => Number(period.id) === periodId) || null
+    );
   }
 
   async function saveDashboardPeriodSetting() {
@@ -1794,61 +2147,110 @@ document.addEventListener("DOMContentLoaded", () => {
         credentials: "same-origin",
         body: JSON.stringify({
           academic_year: selectedAcademicYear || "",
-          semester: selectedClassSemester || ""
-        })
+          semester: selectedClassSemester || "",
+        }),
       });
       if (typeof window.refreshAdminPeriodCard === "function") {
         await window.refreshAdminPeriodCard();
       }
-    } catch (_) { }
+    } catch (_) {}
   }
 
   function syncPeriodFormDefaults() {
     const ayInput = document.getElementById("period-ay");
     const semSelect = document.getElementById("period-sem");
     if (ayInput && !editingPeriodId) ayInput.value = selectedAcademicYear || "";
-    if (semSelect && !editingPeriodId) semSelect.value = selectedClassSemester || "";
+    if (semSelect && !editingPeriodId)
+      semSelect.value = selectedClassSemester || "";
   }
 
   function handleSetClassSemester(semester) {
-    if (!semester) return showNotification("Please select semester first", "#f44336");
+    if (!semester)
+      return showNotification("Please select semester first", "#f44336");
     selectedClassSemester = semester;
     try {
       localStorage.setItem("selectedClassSemester", semester);
-    } catch (err) { }
+    } catch (err) {}
     syncDashboardPeriodSetting();
     updateDashboardPeriodBox();
     saveDashboardPeriodSetting();
 
     const classYear = document.getElementById("class-year")?.value || "";
-    if (document.getElementById("addClassModal")?.style.display !== "none" && classYear) {
+    if (
+      document.getElementById("addClassModal")?.style.display !== "none" &&
+      classYear
+    ) {
       const facultyBox = document.getElementById("faculty-list");
       if (facultyBox) {
         facultyBox.dataset.facultyData = JSON.stringify({});
-        facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+        facultyBox.innerHTML =
+          '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
       }
       loadSubjectsByYear(classYear);
     }
   }
 
   // CLOSE MODAL
-  addSubjectMainModal?.querySelector(".close-btn")?.addEventListener("click", () => {
-    addSubjectMainModal.style.display = "none";
-  });
+  addSubjectMainModal
+    ?.querySelector(".close-btn")
+    ?.addEventListener("click", () => {
+      addSubjectMainModal.style.display = "none";
+    });
 
   // ========================= GLOBAL STATE =========================
   let currentProgramId = null;
+  let currentProgramCode = "";
+  let currentProgramName = "";
   let currentSubjectId = null;
+  let selectedManageYear = "";
+  let classesAllData = [];
+  let manageSubjectsLoadRequestId = 0;
+  let manageClassesLoadRequestId = 0;
+
+  function normalizeManageYearLevel(value) {
+    const year = String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+    const namedYears = {
+      first: "1st Year",
+      second: "2nd Year",
+      third: "3rd Year",
+      fourth: "4th Year",
+    };
+
+    for (const [name, label] of Object.entries(namedYears)) {
+      if (new RegExp(`\\b${name}\\b`).test(year)) return label;
+    }
+
+    const numericYear = year.match(/\b([1-4])(?:st|nd|rd|th)?(?:\s*year)?\b/);
+    if (numericYear) {
+      return ["", "1st Year", "2nd Year", "3rd Year", "4th Year"][
+        Number(numericYear[1])
+      ];
+    }
+
+    return year;
+  }
+
+  function filterManageSubjectsByYear(subjects, yearLevel) {
+    const targetYear = normalizeManageYearLevel(yearLevel);
+    if (!targetYear) return Array.isArray(subjects) ? subjects : [];
+    return (Array.isArray(subjects) ? subjects : []).filter(
+      (subject) => normalizeManageYearLevel(subject.year_level) === targetYear,
+    );
+  }
 
   let isEditingSubject = false;
   let editSubjectId = null;
+  let editingSubjectYear = "";
 
   // Manage-section subjects pagination state
-  let subjectsAllData = [];   // full fetched list for current program
-  let subjectsFilteredData = [];   // after search/filter
+  let subjectsAllData = []; // full fetched list for current program
+  let subjectsFilteredData = []; // after search/filter
   let subjectsCurrentPage = 1;
-  const SUBJECTS_ROWS_PER_PAGE = 50;   // rows before pagination kicks in
-  const SUBJECTS_VISIBLE_ROWS = 5;    // rows visible at once inside scroll window
+  const SUBJECTS_ROWS_PER_PAGE = 50; // rows before pagination kicks in
+  const SUBJECTS_VISIBLE_ROWS = 5; // rows visible at once inside scroll window
 
   // ========================= ELEMENTS =========================
   const addManageBtn = document.querySelector(".add-manage-btn"),
@@ -1863,12 +2265,41 @@ document.addEventListener("DOMContentLoaded", () => {
       c = document.getElementById("classes"),
       sb = document.querySelector(".subject-btn"),
       cb = document.querySelector(".classes-btn"),
-      mw = document.querySelector("#manage-section .header-actions-section .search-wrapper"),
+      mw = document.querySelector(
+        "#manage-section .header-actions-section .search-wrapper",
+      ),
       mc = document.getElementById("manage-clear-search");
 
     if (!s || !c) return;
 
+    document
+      .getElementById("manage-section")
+      ?.classList.remove("manage-year-overview");
+    const overview = document.getElementById("manageYearLevelView");
+    const detail = document.getElementById("manageDetailView");
+    const detailTitle = document.getElementById("manageContentTitle");
+    const detailEyebrow = document.querySelector(
+      "#manage-section .manage-section-eyebrow",
+    );
+    const detailSubtitle = document.getElementById("manageContentSubtitle");
+    const detailBack = document.getElementById("manageDetailBack");
     const manageAddButton = document.querySelector(".add-manage-btn");
+
+    document
+      .getElementById("manage-section")
+      ?.classList.toggle("manage-classes-view", tab === "classes");
+    document
+      .getElementById("manage-section")
+      ?.classList.toggle("manage-subjects-view", tab === "subjects");
+    document
+      .getElementById("manage-section")
+      ?.classList.toggle(
+        "manage-specific-year",
+        tab === "subjects" && Boolean(selectedManageYear),
+      );
+    overview?.setAttribute("hidden", "");
+    detail?.removeAttribute("hidden");
+    detailBack?.removeAttribute("hidden");
 
     if (tab === "subjects") {
       s.style.display = "block";
@@ -1880,6 +2311,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (manageAddButton) {
         manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Subject';
       }
+      if (detailTitle) {
+        detailTitle.textContent = "All Subjects";
+      }
+      if (detailEyebrow) {
+        detailEyebrow.textContent =
+          `${currentProgramCode || "PROGRAM"}${selectedManageYear ? ` · ${selectedManageYear}` : ""}`.toUpperCase();
+      }
+      if (detailSubtitle) detailSubtitle.textContent = "";
     } else {
       s.style.display = "none";
       c.style.display = "block";
@@ -1888,15 +2327,151 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mw) mw.style.display = "flex";
       if (mc) mc.style.display = "inline-flex";
       if (manageAddButton) {
-        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Classes';
+        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Class';
       }
+      if (detailTitle) {
+        detailTitle.textContent = "Class Sections";
+      }
+      if (detailEyebrow) {
+        detailEyebrow.textContent =
+          `${currentProgramCode || "PROGRAM"} · ${selectedManageYear || "ALL YEARS"}`.toUpperCase();
+      }
+      if (detailSubtitle) detailSubtitle.textContent = "";
     }
+    const headingIcon = document.querySelector(
+      "#manage-section .manage-class-heading-icon i",
+    );
+    if (headingIcon) {
+      headingIcon.className =
+        tab === "subjects" ? "ph ph-book-open" : "ph ph-users-three";
+    }
+    resetSectionScrollPosition("manage-section");
+  }
+
+  function updateManageProgramHeader() {
+    const code = document.getElementById("manageProgramCode");
+    const title = document.getElementById("manageTitle");
+
+    if (code) code.textContent = currentProgramCode || "PROGRAM";
+    if (title)
+      title.textContent =
+        currentProgramName || currentProgramCode || "Academic Program";
+  }
+
+  function showManageYearLevels() {
+    selectedManageYear = "";
+    manageSubjectsLoadRequestId += 1;
+    manageClassesLoadRequestId += 1;
+    document
+      .getElementById("manage-section")
+      ?.classList.add("manage-year-overview");
+    document
+      .getElementById("manage-section")
+      ?.classList.remove(
+        "manage-classes-view",
+        "manage-subjects-view",
+        "manage-specific-year",
+      );
+    const overview = document.getElementById("manageYearLevelView");
+    const detail = document.getElementById("manageDetailView");
+    const detailBack = document.getElementById("manageDetailBack");
+    const contentTitle = document.getElementById("manageContentTitle");
+    const contentEyebrow = document.querySelector(
+      "#manage-section .manage-section-eyebrow",
+    );
+    const contentSubtitle = document.getElementById("manageContentSubtitle");
+    const subjects = document.getElementById("subjects");
+    const classes = document.getElementById("classes");
+    const subjectsTab = document.querySelector(".subject-btn");
+    const classesTab = document.querySelector(".classes-btn");
+    const addButton = document.querySelector(".add-manage-btn");
+
+    overview?.removeAttribute("hidden");
+    detail?.setAttribute("hidden", "");
+    detailBack?.setAttribute("hidden", "");
+    if (contentTitle) contentTitle.textContent = "Explore by year level";
+    if (contentEyebrow) contentEyebrow.textContent = "Curriculum Structure";
+    if (contentSubtitle) contentSubtitle.textContent = "";
+    subjects?.style.setProperty("display", "none");
+    classes?.style.setProperty("display", "none");
+    subjectsTab?.classList.add("active");
+    classesTab?.classList.remove("active");
+    if (addButton)
+      addButton.innerHTML = '<i class="ph ph-plus"></i> Add Subject';
+    renderManageYearLevelCards();
+  }
+
+  function openManageYearLevel(year, tab) {
+    selectedManageYear = year;
+    showTable(tab);
+
+    if (tab === "subjects") {
+      const yearFilter = document.getElementById("manage-subjects-year-filter");
+      if (yearFilter) yearFilter.value = year;
+      loadSubjects(false);
+      return;
+    }
+
+    if (manageSearchInput) manageSearchInput.value = "";
+    loadClasses();
+  }
+
+  function renderManageYearLevelCards() {
+    const container = document.getElementById("manageYearLevelCards");
+    if (!container) return;
+
+    const yearLevels = [
+      { name: "1st Year", number: "01" },
+      { name: "2nd Year", number: "02" },
+      { name: "3rd Year", number: "03" },
+      { name: "4th Year", number: "04" },
+    ];
+
+    container.replaceChildren();
+    yearLevels.forEach((year) => {
+      const subjectCount = subjectsAllData.filter((subject) => {
+        return normalizeManageYearLevel(subject.year_level) === year.name;
+      }).length;
+      const classCount = classesAllData.filter((item) => {
+        return normalizeManageYearLevel(item.year_level) === year.name;
+      }).length;
+      const card = document.createElement("article");
+      card.className = "manage-year-card";
+      card.innerHTML = `
+        <div class="manage-year-card-top">
+          <span class="manage-year-number">${year.number}</span>
+          <h4>${year.name}</h4>
+        </div>
+        <div class="manage-year-card-counts">
+          <span><i class="ph ph-book-open"></i>${subjectCount} ${subjectCount === 1 ? "subject" : "subjects"}</span>
+          <span><i class="ph ph-users"></i>${classCount} ${classCount === 1 ? "class" : "classes"}</span>
+        </div>
+        <div class="manage-year-card-actions">
+          <button type="button" class="manage-year-view-btn"><i class="ph ph-book-open"></i> Subjects</button>
+          <button type="button" class="manage-year-classes-btn"><i class="ph ph-users"></i> Classes</button>
+        </div>`;
+      card
+        .querySelector(".manage-year-view-btn")
+        .addEventListener("click", () => {
+          openManageYearLevel(year.name, "subjects");
+        });
+      card
+        .querySelector(".manage-year-classes-btn")
+        .addEventListener("click", () => {
+          openManageYearLevel(year.name, "classes");
+        });
+      container.appendChild(card);
+    });
   }
 
   // ========================= BACK =========================
   document.querySelector(".back-btn")?.addEventListener("click", () => {
     showSection("programs-section");
     currentSubjectId = null;
+  });
+  document.getElementById("manageDetailBack")?.addEventListener("click", () => {
+    if (manageSearchInput) manageSearchInput.value = "";
+    showManageYearLevels();
   });
 
   // ========================= TAB BUTTONS =========================
@@ -1924,9 +2499,12 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("subject-code").value = "";
       document.getElementById("subject-desc").value = "";
       document.getElementById("subject-semester").selectedIndex = 0;
-      document.getElementById("subject-year").selectedIndex = 0;
       isEditingSubject = false;
       editSubjectId = null;
+      editingSubjectYear = "";
+      addSubjectModal.querySelector(".modal-header h3").textContent =
+        "ADD SUBJECT";
+      saveSubjectBtn.textContent = "SAVE SUBJECT";
     } else if (classesTab) {
       // Open class modal
       const addClassModal = document.getElementById("addClassModal");
@@ -1939,19 +2517,30 @@ document.addEventListener("DOMContentLoaded", () => {
       delete addClassModal.dataset.existingSubjectIds;
       document.getElementById("class-academic-year").value = "";
       document.getElementById("class-semester").value = "";
-      document.getElementById("class-year").selectedIndex = 0;
+      const classYearInput = document.getElementById("class-year");
+      classYearInput.value = selectedManageYear || "";
       document.getElementById("class-block").value = "";
-      document.getElementById("subject-checkbox-list").innerHTML = classSubjectSearchHtml();
-      setClassSubjectMessage("Select year level first to load subjects");
+      document.getElementById("subject-checkbox-list").innerHTML =
+        classSubjectSearchHtml();
+      setClassSubjectMessage(
+        classYearInput.value
+          ? `Select academic year and semester to load ${classYearInput.value} subjects`
+          : "Select a year level card before adding a class",
+      );
       const facultyBox = document.getElementById("faculty-list");
       if (facultyBox) {
         facultyBox.dataset.facultyData = JSON.stringify({});
-        facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+        facultyBox.innerHTML =
+          '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
       }
       await loadClassPeriodOptions();
-      setClassSubjectMessage(classPeriods.length
-        ? "Select academic year, semester, and year level to load subjects"
-        : "Add an academic year and semester first");
+      if (!classPeriods.length) {
+        setClassSubjectMessage("Add an academic year and semester first");
+      } else if (classYearInput.value) {
+        setClassSubjectMessage(
+          `Select academic year and semester to load ${classYearInput.value} subjects`,
+        );
+      }
     }
   });
 
@@ -1984,34 +2573,50 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!input) return;
     input.addEventListener("input", () => {
       const term = input.value.toLowerCase().trim();
-      document.querySelectorAll("#subject-checkbox-list .class-subject-option").forEach(item => {
-        item.style.display = !term || item.dataset.search.includes(term) ? "" : "none";
-      });
+      document
+        .querySelectorAll("#subject-checkbox-list .class-subject-option")
+        .forEach((item) => {
+          item.style.display =
+            !term || item.dataset.search.includes(term) ? "" : "none";
+        });
     });
   }
 
   // ========================= LOAD SUBJECTS =========================
-  function loadSubjects() {
+  function loadSubjects(resetFilters = true) {
     if (!currentProgramId) return;
+    const requestId = ++manageSubjectsLoadRequestId;
+    const requestedProgramId = currentProgramId;
 
     // Reset filters
     const searchInput = document.getElementById("manage-subjects-search");
-    const semesterFilter = document.getElementById("manage-subjects-semester-filter");
+    const semesterFilter = document.getElementById(
+      "manage-subjects-semester-filter",
+    );
     const yearFilter = document.getElementById("manage-subjects-year-filter");
 
-    if (searchInput) searchInput.value = "";
-    if (semesterFilter) semesterFilter.value = "";
-    if (yearFilter) yearFilter.value = "";
+    if (resetFilters) {
+      if (searchInput) searchInput.value = "";
+      if (semesterFilter) semesterFilter.value = "";
+      if (yearFilter) yearFilter.value = "";
+    }
 
-    fetch(`subject_crud.php?action=get&program_id=${currentProgramId}`)
-      .then(r => r.json())
-      .then(data => {
+    fetch(`subject_crud.php?action=get&program_id=${requestedProgramId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (
+          requestId !== manageSubjectsLoadRequestId ||
+          requestedProgramId !== currentProgramId
+        )
+          return;
         subjectsAllData = Array.isArray(data) ? data : [];
         subjectsCurrentPage = 1;
         applyManageSubjectFilters();
-        
+        renderManageYearLevelCards();
+
         // Update total subjects count
-        const totalSubjectsCount = document.getElementById('totalSubjectsCount');
+        const totalSubjectsCount =
+          document.getElementById("totalSubjectsCount");
         if (totalSubjectsCount) {
           totalSubjectsCount.textContent = subjectsAllData.length;
         }
@@ -2019,22 +2624,44 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function applyManageSubjectFilters() {
-    const searchTerm = (document.getElementById("manage-subjects-search")?.value || "").toLowerCase().trim();
-    const semester = document.getElementById("manage-subjects-semester-filter")?.value || "";
-    const year = document.getElementById("manage-subjects-year-filter")?.value || "";
+    const searchTerm = (
+      document.getElementById("manage-subjects-search")?.value || ""
+    )
+      .toLowerCase()
+      .trim();
+    const semester =
+      document.getElementById("manage-subjects-semester-filter")?.value || "";
+    const year =
+      document.getElementById("manage-subjects-year-filter")?.value || "";
 
-    subjectsFilteredData = subjectsAllData.filter(s => {
-      const text = `${s.subject_code} ${s.subject_desc} ${s.semester} ${s.year_level}`.toLowerCase();
-      return (!searchTerm || text.includes(searchTerm))
-        && (!semester || s.semester === semester)
-        && (!year || s.year_level === year);
+    subjectsFilteredData = subjectsAllData.filter((s) => {
+      const text =
+        `${s.subject_code} ${s.subject_desc} ${s.semester} ${s.year_level}`.toLowerCase();
+      return (
+        (!searchTerm || text.includes(searchTerm)) &&
+        (!semester || s.semester === semester) &&
+        (!(selectedManageYear || year) ||
+          normalizeManageYearLevel(s.year_level) ===
+            normalizeManageYearLevel(selectedManageYear || year))
+      );
     });
+
+    const resultCount = document.getElementById("manageSubjectsResultCount");
+    if (resultCount) {
+      const count = subjectsFilteredData.length;
+      resultCount.textContent = `${count} ${count === 1 ? "subject" : "subjects"} found`;
+    }
+    const academicYear = document.getElementById("manageSubjectsAcademicYear");
+    if (academicYear) {
+      academicYear.textContent =
+        document.getElementById("academic-year-filter")?.value || "";
+    }
 
     subjectsCurrentPage = 1;
     renderManageSubjectsTable();
-    
+
     // Update total subjects count
-    const totalSubjectsCount = document.getElementById('totalSubjectsCount');
+    const totalSubjectsCount = document.getElementById("totalSubjectsCount");
     if (totalSubjectsCount) {
       totalSubjectsCount.textContent = subjectsAllData.length;
     }
@@ -2046,7 +2673,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const total = subjectsFilteredData.length;
 
     if (total === 0) {
-      subjectsTableBody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No Subject found for this program</td></tr>';
+      subjectsTableBody.innerHTML =
+        '<tr><td colspan="5" class="admin-empty-state">No Subject found for this program</td></tr>';
       renderManageSubjectsPagination(0);
       return;
     }
@@ -2054,14 +2682,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const usePagination = total > SUBJECTS_ROWS_PER_PAGE;
     const pageData = usePagination
       ? subjectsFilteredData.slice(
-        (subjectsCurrentPage - 1) * SUBJECTS_ROWS_PER_PAGE,
-        subjectsCurrentPage * SUBJECTS_ROWS_PER_PAGE
-      )
+          (subjectsCurrentPage - 1) * SUBJECTS_ROWS_PER_PAGE,
+          subjectsCurrentPage * SUBJECTS_ROWS_PER_PAGE,
+        )
       : subjectsFilteredData;
 
     subjectsTableBody.innerHTML = "";
 
-    pageData.forEach(s => {
+    pageData.forEach((s) => {
       const row = document.createElement("tr");
       row.dataset.id = s.id;
       row.dataset.semester = s.semester || "";
@@ -2070,7 +2698,7 @@ document.addEventListener("DOMContentLoaded", () => {
       row.innerHTML = `
       <td>${s.subject_code}</td>
       <td>${s.subject_desc}</td>
-      <td>${s.semester || ''}</td>
+      <td>${s.semester || ""}</td>
       <td>${s.year_level}</td>
       <td class="action-cell">
         <div class="action-buttons">
@@ -2084,6 +2712,8 @@ document.addEventListener("DOMContentLoaded", () => {
       row.addEventListener("click", (e) => {
         if (e.target.closest(".action-cell")) return;
         currentSubjectId = s.id;
+        selectedManageYear = normalizeManageYearLevel(s.year_level);
+        if (manageSearchInput) manageSearchInput.value = "";
         showTable("classes");
         loadClasses();
       });
@@ -2093,22 +2723,21 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation();
         isEditingSubject = true;
         editSubjectId = s.id;
+        editingSubjectYear =
+          normalizeManageYearLevel(s.year_level) || s.year_level;
+        addSubjectModal.querySelector(".modal-header h3").textContent =
+          "EDIT SUBJECT";
+        saveSubjectBtn.textContent = "UPDATE SUBJECT";
 
         document.getElementById("subject-code").value = s.subject_code;
         document.getElementById("subject-desc").value = s.subject_desc;
 
         const semesterSelect = document.getElementById("subject-semester");
         for (let i = 0; i < semesterSelect.options.length; i++) {
-          if (semesterSelect.options[i].value === (s.semester || "1st Semester")) {
+          if (
+            semesterSelect.options[i].value === (s.semester || "1st Semester")
+          ) {
             semesterSelect.selectedIndex = i;
-            break;
-          }
-        }
-
-        const yearSelect = document.getElementById("subject-year");
-        for (let i = 0; i < yearSelect.options.length; i++) {
-          if (yearSelect.options[i].value === s.year_level) {
-            yearSelect.selectedIndex = i;
             break;
           }
         }
@@ -2154,7 +2783,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Build page buttons: always show first, last, cur-1, cur, cur+1
     const pageSet = new Set(
-      [1, totalPages, cur - 1, cur, cur + 1].filter(p => p >= 1 && p <= totalPages)
+      [1, totalPages, cur - 1, cur, cur + 1].filter(
+        (p) => p >= 1 && p <= totalPages,
+      ),
     );
     const sorted = [...pageSet].sort((a, b) => a - b);
 
@@ -2177,18 +2808,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pager.innerHTML = html;
 
-    pager.querySelectorAll(".spager-btn:not([disabled])").forEach(btn => {
+    pager.querySelectorAll(".spager-btn:not([disabled])").forEach((btn) => {
       btn.addEventListener("click", () => {
         subjectsCurrentPage = parseInt(btn.dataset.page, 10);
         renderManageSubjectsTable();
-        subjectsWrapper.querySelector(".table-scroll-container")?.scrollTo({ top: 0, behavior: "smooth" });
+        subjectsWrapper
+          .querySelector(".table-scroll-container")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
       });
     });
   }
 
-  ["manage-subjects-search", "manage-subjects-semester-filter", "manage-subjects-year-filter"].forEach(id => {
-    document.getElementById(id)?.addEventListener("input", applyManageSubjectFilters);
-    document.getElementById(id)?.addEventListener("change", applyManageSubjectFilters);
+  [
+    "manage-subjects-search",
+    "manage-subjects-semester-filter",
+    "manage-subjects-year-filter",
+  ].forEach((id) => {
+    document
+      .getElementById(id)
+      ?.addEventListener("input", applyManageSubjectFilters);
+    document
+      .getElementById(id)
+      ?.addEventListener("change", applyManageSubjectFilters);
   });
 
   // ========================= SAVE SUBJECT =========================
@@ -2196,12 +2837,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const code = document.getElementById("subject-code").value.trim(),
       desc = document.getElementById("subject-desc").value.trim(),
       semester = document.getElementById("subject-semester").value.trim(),
-      year = document.getElementById("subject-year").value.trim();
+      year = isEditingSubject
+        ? editingSubjectYear
+        : normalizeManageYearLevel(selectedManageYear);
 
-    console.log("Saving subject:", { code, desc, semester, year, currentProgramId, isEditingSubject });
+    console.log("Saving subject:", {
+      code,
+      desc,
+      semester,
+      year,
+      currentProgramId,
+      isEditingSubject,
+    });
 
-    if (!code || !desc || !semester || !year) {
+    if (!code || !desc || !semester) {
       showGlobalNotification("Please fill all fields", "warning");
+      return;
+    }
+    if (!year) {
+      showGlobalNotification(
+        "Select a year level before adding a subject",
+        "warning",
+      );
       return;
     }
     if (!currentProgramId) {
@@ -2222,25 +2879,29 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body
+      body,
     })
-      .then(r => {
+      .then((r) => {
         console.log("Response status:", r.status);
         return r.json();
       })
-      .then(res => {
+      .then((res) => {
         console.log("Response:", res);
         if (res.status === "success") {
           isEditingSubject = false;
           editSubjectId = null;
+          editingSubjectYear = "";
           addSubjectModal.style.display = "none";
+          addSubjectModal.querySelector(".modal-header h3").textContent =
+            "ADD SUBJECT";
+          saveSubjectBtn.textContent = "SAVE SUBJECT";
           loadSubjects();
           showNotification("Subject saved successfully!", "#4caf50");
         } else {
           alert("Error: " + (res.message || "Unknown error"));
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error:", err);
         alert("Something went wrong: " + err.message);
       })
@@ -2248,30 +2909,39 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ========================= LOAD SUBJECTS BY YEAR =========================
-  function loadSubjectsByYear(yearLevel, callback = null, semesterOverride = selectedClassSemester) {
-
+  function loadSubjectsByYear(
+    yearLevel,
+    callback = null,
+    semesterOverride = selectedClassSemester,
+  ) {
     const box = document.getElementById("subject-checkbox-list");
     box.innerHTML = classSubjectSearchHtml();
-    getClassSubjectOptionsBox().innerHTML = "<small>Loading subjects...</small>";
+    getClassSubjectOptionsBox().innerHTML =
+      "<small>Loading subjects...</small>";
     bindClassSubjectSearch();
 
     if (!semesterOverride) {
       box.innerHTML = classSubjectSearchHtml();
-      getClassSubjectOptionsBox().innerHTML = "<small>Select an academic year and semester first</small>";
+      getClassSubjectOptionsBox().innerHTML =
+        "<small>Select an academic year and semester first</small>";
       bindClassSubjectSearch();
       if (typeof callback === "function") callback([]);
       return;
     }
 
-    console.log(`Fetching subjects for program_id: ${currentProgramId}, year_level: ${yearLevel}, semester: ${semesterOverride}`);
+    console.log(
+      `Fetching subjects for program_id: ${currentProgramId}, year_level: ${yearLevel}, semester: ${semesterOverride}`,
+    );
 
     const semesterParam = `&semester=${encodeURIComponent(semesterOverride)}`;
-    fetch(`classes_crud.php?action=get_subjects_by_program_year&program_id=${currentProgramId}&year_level=${encodeURIComponent(yearLevel)}${semesterParam}`)
-      .then(res => {
+    fetch(
+      `classes_crud.php?action=get_subjects_by_program_year&program_id=${currentProgramId}&year_level=${encodeURIComponent(yearLevel)}${semesterParam}`,
+    )
+      .then((res) => {
         console.log("Response status:", res.status);
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         console.log("Received data:", data);
 
         box.innerHTML = "";
@@ -2295,56 +2965,72 @@ document.addEventListener("DOMContentLoaded", () => {
           optionsBox.appendChild(note);
         }
 
-        data.forEach(sub => {
-          const label = document.createElement("label");
-          label.className = "class-subject-option";
-          label.dataset.search = `${sub.subject_code || ""} ${sub.subject_desc || ""} ${sub.year_level || ""}`.toLowerCase();
-          label.innerHTML = `
-          <input type="checkbox" value="${sub.id}">
-          ${sub.subject_code} - ${sub.subject_desc}
-        `;
-          optionsBox.appendChild(label);
+        data.forEach((sub) => {
+          const subjectOption = document.createElement("div");
+          subjectOption.className = "class-subject-option";
+          subjectOption.dataset.search =
+            `${sub.subject_code || ""} ${sub.subject_desc || ""} ${sub.year_level || ""}`.toLowerCase();
+          subjectOption.innerHTML = `
+            <label class="class-subject-choice">
+              <input type="checkbox" value="${sub.id}">
+              <span>${sub.subject_code} - ${sub.subject_desc}</span>
+            </label>
+            <div class="class-subject-faculty-slot"></div>
+          `;
+          optionsBox.appendChild(subjectOption);
 
-          const subjectCheckbox = label.querySelector("input[type='checkbox']");
+          const subjectCheckbox = subjectOption.querySelector(
+            "input[type='checkbox']",
+          );
           subjectCheckbox.disabled = true;
-          fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${sub.id}`)
-            .then(response => response.json())
-            .then(faculty => {
+          fetch(
+            `classes_crud.php?action=get_faculty_by_subject&subject_id=${sub.id}`,
+          )
+            .then((response) => response.json())
+            .then((faculty) => {
               if (!Array.isArray(faculty) || faculty.length === 0) {
-                label.classList.add("subject-without-faculty");
-                label.title = "No instructor available for this subject";
+                subjectOption.classList.add("subject-without-faculty");
+                subjectOption.title =
+                  "No instructor available for this subject";
               } else {
                 subjectCheckbox.disabled = false;
               }
             })
-            .catch(() => { });
+            .catch(() => {});
         });
 
         if (typeof callback === "function") callback(data);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading subjects:", err);
         box.innerHTML = classSubjectSearchHtml();
-        getClassSubjectOptionsBox().innerHTML = "<small>Error loading subjects</small>";
+        getClassSubjectOptionsBox().innerHTML =
+          "<small>Error loading subjects</small>";
         bindClassSubjectSearch();
         if (typeof callback === "function") callback([]);
       });
   }
 
   // ========================= AUTO LOAD ON YEAR CHANGE =========================
-  document.getElementById("class-academic-year")?.addEventListener("change", event => {
-    populateClassSemesterOptions(event.target.value);
-    document.getElementById("class-year").value = "";
-    document.getElementById("subject-checkbox-list").innerHTML = classSubjectSearchHtml();
-    const facultyBox = document.getElementById("faculty-list");
-    if (facultyBox) {
-      facultyBox.dataset.facultyData = JSON.stringify({});
-      facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
-    }
-    setClassSubjectMessage(event.target.value
-      ? "Select semester and year level to load subjects"
-      : "Select academic year first to load subjects");
-  });
+  document
+    .getElementById("class-academic-year")
+    ?.addEventListener("change", (event) => {
+      populateClassSemesterOptions(event.target.value);
+      document.getElementById("subject-checkbox-list").innerHTML =
+        classSubjectSearchHtml();
+      const facultyBox = document.getElementById("faculty-list");
+      if (facultyBox) {
+        facultyBox.dataset.facultyData = JSON.stringify({});
+        facultyBox.innerHTML =
+          '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+      }
+      const year = document.getElementById("class-year").value;
+      setClassSubjectMessage(
+        event.target.value
+          ? `Select semester to load ${year || "selected year level"} subjects`
+          : "Select academic year first to load subjects",
+      );
+    });
 
   document.getElementById("class-year")?.addEventListener("change", (e) => {
     const year = e.target.value;
@@ -2357,20 +3043,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!year) {
       console.log("No year selected, returning");
-      setClassSubjectMessage("Select year level first to load subjects");
+      setClassSubjectMessage("Select a year level card before adding a class");
       return;
     }
 
     if (!currentProgramId) {
       console.log("No program ID set");
-      setClassSubjectMessage("Please select a program first from the programs list, then click Manage");
+      setClassSubjectMessage(
+        "Please select a program first from the programs list, then click Manage",
+      );
       return;
     }
 
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
       facultyBox.dataset.facultyData = JSON.stringify({});
-      facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+      facultyBox.innerHTML =
+        '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
     }
 
     console.log("Calling loadSubjectsByYear with year:", year);
@@ -2388,10 +3077,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
       facultyBox.dataset.facultyData = JSON.stringify({});
-      facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+      facultyBox.innerHTML =
+        '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
     }
-    if (year) loadSubjectsByYear(year, null, getSelectedClassPeriod()?.semester || "");
-    else setClassSubjectMessage("Select year level first to load subjects");
+    if (year)
+      loadSubjectsByYear(year, null, getSelectedClassPeriod()?.semester || "");
+    else
+      setClassSubjectMessage("Select a year level card before adding a class");
   });
 
   // ========================= WATCH FOR SUBJECT SELECTION CHANGES =========================
@@ -2399,9 +3091,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.matches("#subject-checkbox-list input[type='checkbox']")) {
       const subjectId = e.target.value;
       const isChecked = e.target.checked;
-      const subjectLabel = e.target.closest('label')?.textContent.trim() || `Subject ${subjectId}`;
+      const subjectLabel =
+        e.target.closest("label")?.textContent.trim() || `Subject ${subjectId}`;
 
-      console.log(`Subject ${subjectId} ${isChecked ? 'checked' : 'unchecked'}`);
+      console.log(
+        `Subject ${subjectId} ${isChecked ? "checked" : "unchecked"}`,
+      );
 
       // Load faculty for this specific subject
       loadFacultyBySubject(subjectId, subjectLabel, isChecked);
@@ -2409,7 +3104,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ========================= LOAD FACULTY BY SUBJECT =========================
-  function loadFacultyBySubject(subjectId, subjectLabel, isChecked, selectedFacultyId = null) {
+  function loadFacultyBySubject(
+    subjectId,
+    subjectLabel,
+    isChecked,
+    selectedFacultyId = null,
+  ) {
     const facultyBox = document.getElementById("faculty-list");
 
     if (!facultyBox) {
@@ -2426,23 +3126,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isChecked) {
       // Add faculty for this subject
-      fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`)
-        .then(r => r.json())
-        .then(faculty => {
+      fetch(
+        `classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`,
+      )
+        .then((r) => r.json())
+        .then((faculty) => {
           console.log(`Faculty for subject ${subjectId}:`, faculty);
 
-          // Store faculty data for this subject
-          facultyData[subjectId] = {
+          const currentFacultyData = JSON.parse(
+            facultyBox.dataset.facultyData || "{}",
+          );
+          currentFacultyData[subjectId] = {
             subjectLabel,
             faculty,
-            selectedFacultyId: selectedFacultyId || null
+            selectedFacultyId: selectedFacultyId || null,
           };
-          facultyBox.dataset.facultyData = JSON.stringify(facultyData);
-
-          // Update display
-          updateFacultyDisplay(facultyData);
+          facultyBox.dataset.facultyData = JSON.stringify(currentFacultyData);
+          updateFacultyDisplay(currentFacultyData);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error loading faculty:", err);
         });
     } else {
@@ -2458,44 +3160,49 @@ document.addEventListener("DOMContentLoaded", () => {
   // ========================= UPDATE FACULTY DISPLAY =========================
   function updateFacultyDisplay(facultyData) {
     const facultyBox = document.getElementById("faculty-list");
+    document
+      .querySelectorAll("#subject-checkbox-list .class-subject-option")
+      .forEach((subjectOption) => {
+        const slot = subjectOption.querySelector(".class-subject-faculty-slot");
+        if (slot) slot.replaceChildren();
+      });
 
-    facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4>';
+    Object.entries(facultyData).forEach(([subjectId, data]) => {
+      const subjectCheckbox = [
+        ...document.querySelectorAll(
+          "#subject-checkbox-list .class-subject-option input[type='checkbox']",
+        ),
+      ].find((checkbox) => checkbox.value === String(subjectId));
+      const slot = subjectCheckbox
+        ?.closest(".class-subject-option")
+        ?.querySelector(".class-subject-faculty-slot");
+      if (!slot) return;
 
-    const entries = Object.entries(facultyData);
-    if (entries.length === 0) {
-      facultyBox.innerHTML += '<small>Select subjects to show available faculty and assign teachers</small>';
-      return;
-    }
-
-    entries.forEach(([subjectId, data]) => {
       const subjectSection = document.createElement("div");
       subjectSection.className = "faculty-subject-row";
-      subjectSection.style.margin = "1px 0";
-      subjectSection.style.padding = "2px 0";
-      subjectSection.style.position = "relative";
 
       const header = document.createElement("div");
-      header.style.marginBottom = "2px";
-      // Extract only the program code from the subjectLabel (e.g., "ITC16" from "ITC16 - System Integration and Architecture 2")
-      const programCode = data.subjectLabel.split(' - ')[0];
-      header.innerHTML = `<span style="font-weight: normal; font-size: 12px;">${programCode}</span>`;
+      header.className = "class-subject-faculty-label";
+      header.textContent = "Available Faculty";
       subjectSection.appendChild(header);
 
       if (!data.faculty || data.faculty.length === 0) {
-        return;
+        header.textContent = "No faculty available";
       } else {
         const select = document.createElement("select");
         select.dataset.subjectId = subjectId;
-        select.style.width = "100%";
-        select.style.padding = "8px";
-        select.style.border = "1px solid #ccc";
-        select.style.borderRadius = "4px";
-        select.innerHTML = `<option value="">Assigned faculty for this subject</option>` +
-          data.faculty.map(f => `
+        select.className = "class-subject-faculty-select";
+        select.innerHTML =
+          `<option value="">Assigned faculty for this subject</option>` +
+          data.faculty
+            .map(
+              (f) => `
           <option value="${f.id}" ${data.selectedFacultyId == f.id ? "selected" : ""}>
             ${f.name}
           </option>
-        `).join("");
+        `,
+            )
+            .join("");
 
         select.addEventListener("change", () => {
           facultyData[subjectId].selectedFacultyId = select.value || null;
@@ -2504,7 +3211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         subjectSection.appendChild(select);
       }
 
-      facultyBox.appendChild(subjectSection);
+      slot.appendChild(subjectSection);
     });
   }
 
@@ -2515,10 +3222,22 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    console.log("Loading classes for program_id:", currentProgramId);
+    const requestId = ++manageClassesLoadRequestId;
+    const requestedProgramId = currentProgramId;
+    const requestedYear = normalizeManageYearLevel(selectedManageYear);
+    if (classesTableBody) {
+      classesTableBody.innerHTML =
+        "<tr><td colspan='5' class='admin-empty-state'>Loading classes...</td></tr>";
+    }
+    console.log(
+      "Loading classes for program_id:",
+      requestedProgramId,
+      "year:",
+      requestedYear || "all",
+    );
 
-    fetch(`classes_crud.php?action=get&program_id=${currentProgramId}`)
-      .then(r => {
+    fetch(`classes_crud.php?action=get&program_id=${requestedProgramId}`)
+      .then((r) => {
         console.log("Response status:", r.status);
         console.log("Response headers:", r.headers);
         if (!r.ok) {
@@ -2526,8 +3245,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return r.json();
       })
-      .then(data => {
+      .then((data) => {
+        if (
+          requestId !== manageClassesLoadRequestId ||
+          requestedProgramId !== currentProgramId
+        )
+          return;
         console.log("Classes data received:", data);
+        classesAllData = Array.isArray(data) ? data : [];
 
         if (!classesTableBody) {
           console.error("classesTableBody not found");
@@ -2535,60 +3260,122 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         classesTableBody.innerHTML = "";
-        
+
         // Update active classes count
-        const activeClassesCount = document.getElementById('activeClassesCount');
-        const classCount = (data && Array.isArray(data)) ? data.length : 0;
+        const activeClassesCount =
+          document.getElementById("activeClassesCount");
+        const classCount = classesAllData.length;
         if (activeClassesCount) {
           activeClassesCount.textContent = classCount;
         }
+        renderManageYearLevelCards();
 
-        if (!data || data.length === 0) {
-          classesTableBody.innerHTML = "<tr><td colspan='5' class='admin-empty-state'>No classes found for this program</td></tr>";
+        const matchingClasses = requestedYear
+          ? classesAllData.filter(
+              (item) =>
+                normalizeManageYearLevel(item.year_level) === requestedYear,
+            )
+          : classesAllData;
+
+        if (matchingClasses.length === 0) {
+          const emptyMessage = requestedYear
+            ? `No classes found for ${escapeHtml(requestedYear)}`
+            : "No classes found for this program";
+          classesTableBody.innerHTML = `<tr><td colspan='5' class='admin-empty-state'>${emptyMessage}</td></tr>`;
           return;
         }
 
-        data.forEach(c => {
+        matchingClasses.forEach((c) => {
           const row = document.createElement("tr");
           row.dataset.id = c.id;
+          row.dataset.yearLevel = normalizeManageYearLevel(c.year_level);
           row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()}`;
+          const academicYear = c.academic_year
+            ? escapeHtml(c.academic_year)
+            : "";
+          const semester = c.period_semester
+            ? escapeHtml(c.period_semester)
+            : "";
+          const academicTerm =
+            academicYear && semester
+              ? `<strong>${academicYear}</strong><small>${semester}</small>`
+              : "<strong>Term not assigned</strong>";
+          const block = escapeHtml(c.block || "");
+          const yearLevel = escapeHtml(
+            normalizeManageYearLevel(c.year_level) || c.year_level || "",
+          );
+          const programYearLabel =
+            `${escapeHtml(currentProgramCode || "PROGRAM")} - ${yearLevel}`.toUpperCase();
+          const enrolledStudentCount = Number(c.enrolled_students) || 0;
 
           row.innerHTML = `
-              <td>${escapeHtml(c.block || "")}</td>
-              <td>${escapeHtml(c.year_level || "")}</td>
-              <td>${c.academic_year && c.period_semester ? `${escapeHtml(c.academic_year)} - ${escapeHtml(c.period_semester)}` : '<span class="status-badge inactive">Term not assigned</span>'}</td>
-          <td><span class="status-badge active">Loading...</span></td>
-          <td class="action-cell">
+              <td class="class-card-section">
+                <div class="class-card-top">
+                  <span class="class-card-block">${block}</span>
+                  <strong class="class-card-title">${programYearLabel}</strong>
+                  <span class="class-card-enrolled">
+                    <strong>${enrolledStudentCount}</strong>
+                    <small>Enrolled</small>
+                  </span>
+                </div>
+              </td>
+              <td class="class-card-year">${yearLevel}</td>
+              <td class="class-card-term">
+                <span class="class-card-info-label"><i class="ph ph-calendar-blank"></i> Academic Term</span>
+                ${academicTerm}
+              </td>
+              <td class="class-card-assigned">
+                <span class="class-card-info-label"><i class="ph ph-book-open"></i> Assigned</span>
+                <strong class="class-card-subject-count">Loading...</strong>
+                <small class="class-card-load-state">Subjects assigned</small>
+              </td>
+              <td class="action-cell class-card-actions">
             <div class="action-buttons">
-              <button class="action-icon-btn view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
-              <button class="action-icon-btn edit-btn" title="Edit Class"><i class="ph ph-note-pencil"></i></button>
-              <button class="action-icon-btn delete-btn" title="Delete Class"><i class="ph ph-trash"></i></button>
+              <button class="action-icon-btn view-subjects-btn" title="View Subjects" aria-label="View"><i class="ph ph-eye"></i><span>View</span></button>
+              <button class="action-icon-btn edit-btn" title="Edit Class" aria-label="Edit"><i class="ph ph-note-pencil"></i><span>Edit</span></button>
+              <button class="action-icon-btn delete-btn" title="Delete Class" aria-label="Delete"><i class="ph ph-trash"></i><span>Delete</span></button>
             </div>
           </td>
         `;
 
           // Fetch subject count for each class
           fetch(`classes_crud.php?action=get&class_id=${c.id}`)
-            .then(r => r.json())
-            .then(subjects => {
-              const subjectCount = Array.isArray(subjects) ? subjects.length : 0;
-              const statusCell = row.querySelector('.status-badge');
-              if (statusCell) {
-                statusCell.textContent = `${subjectCount} Subject${subjectCount !== 1 ? 's' : ''} Assigned`;
+            .then((r) => r.json())
+            .then((subjects) => {
+              const subjectCount = filterManageSubjectsByYear(
+                subjects,
+                c.year_level,
+              ).length;
+              const subjectCountLabel = row.querySelector(
+                ".class-card-subject-count",
+              );
+              if (subjectCountLabel) {
+                subjectCountLabel.textContent = `${subjectCount} Subject${subjectCount !== 1 ? "s" : ""}`;
               }
             })
-            .catch(err => {
+            .catch((err) => {
               console.error("Error fetching subject count:", err);
-              const statusCell = row.querySelector('.status-badge');
-              if (statusCell) {
-                statusCell.textContent = '0 Subjects Assigned';
+              const subjectCountLabel = row.querySelector(
+                ".class-card-subject-count",
+              );
+              if (subjectCountLabel) {
+                subjectCountLabel.textContent = "Unavailable";
               }
             });
 
           // VIEW CLASS SUBJECTS
-          row.querySelector(".view-subjects-btn").addEventListener("click", () => {
-            showClassSubjectsModal(c.id, c.block, c.year_level, c.academic_year && c.period_semester ? `${c.academic_year} - ${c.period_semester}` : "Term not assigned");
-          });
+          row
+            .querySelector(".view-subjects-btn")
+            .addEventListener("click", () => {
+              showClassSubjectsModal(
+                c.id,
+                c.block,
+                c.year_level,
+                c.academic_year && c.period_semester
+                  ? `${c.academic_year} - ${c.period_semester}`
+                  : "Term not assigned",
+              );
+            });
 
           // EDIT CLASS
           row.querySelector(".edit-btn").addEventListener("click", async () => {
@@ -2602,7 +3389,8 @@ document.addEventListener("DOMContentLoaded", () => {
             addClassModal.dataset.existingSubjectIds = "[]";
             document.getElementById("class-academic-year").value = "";
             document.getElementById("class-semester").value = "";
-            document.getElementById("subject-checkbox-list").innerHTML = classSubjectSearchHtml();
+            document.getElementById("subject-checkbox-list").innerHTML =
+              classSubjectSearchHtml();
 
             document.getElementById("class-year").value = c.year_level;
             document.getElementById("class-block").value = c.block || "";
@@ -2612,34 +3400,49 @@ document.addEventListener("DOMContentLoaded", () => {
             const facultyBox = document.getElementById("faculty-list");
             if (facultyBox) {
               facultyBox.dataset.facultyData = JSON.stringify({});
-              facultyBox.innerHTML = '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
+              facultyBox.innerHTML =
+                '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
             }
 
-            loadSubjectsByYear(c.year_level, () => {
-              fetch(`classes_crud.php?action=get&class_id=${c.id}`)
-                .then(res => res.json())
-                .then(subjects => {
-                  if (!Array.isArray(subjects)) return;
-                  const existingAssignments = {};
-                  const existingSubjectIds = [];
-                  subjects.forEach(subject => {
-                    const sid = String(subject.subject_id);
-                    existingSubjectIds.push(sid);
-                    existingAssignments[sid] = Number(subject.faculty_id) || 0;
-                    const checkbox = document.querySelector(`#subject-checkbox-list input[type='checkbox'][value='${subject.subject_id}']`);
-                    if (checkbox) {
-                      checkbox.checked = true;
-                      const labelText = `${subject.subject_code} - ${subject.subject_desc}`;
-                      loadFacultyBySubject(subject.subject_id, labelText, true, subject.faculty_id);
-                    }
+            loadSubjectsByYear(
+              c.year_level,
+              () => {
+                fetch(`classes_crud.php?action=get&class_id=${c.id}`)
+                  .then((res) => res.json())
+                  .then((subjects) => {
+                    if (!Array.isArray(subjects)) return;
+                    const existingAssignments = {};
+                    const existingSubjectIds = [];
+                    subjects.forEach((subject) => {
+                      const sid = String(subject.subject_id);
+                      existingSubjectIds.push(sid);
+                      existingAssignments[sid] =
+                        Number(subject.faculty_id) || 0;
+                      const checkbox = document.querySelector(
+                        `#subject-checkbox-list input[type='checkbox'][value='${subject.subject_id}']`,
+                      );
+                      if (checkbox) {
+                        checkbox.checked = true;
+                        const labelText = `${subject.subject_code} - ${subject.subject_desc}`;
+                        loadFacultyBySubject(
+                          subject.subject_id,
+                          labelText,
+                          true,
+                          subject.faculty_id,
+                        );
+                      }
+                    });
+                    addClassModal.dataset.existingAssignments =
+                      JSON.stringify(existingAssignments);
+                    addClassModal.dataset.existingSubjectIds =
+                      JSON.stringify(existingSubjectIds);
+                  })
+                  .catch((err) => {
+                    console.error("Error loading class edit subjects:", err);
                   });
-                  addClassModal.dataset.existingAssignments = JSON.stringify(existingAssignments);
-                  addClassModal.dataset.existingSubjectIds = JSON.stringify(existingSubjectIds);
-                })
-                .catch(err => {
-                  console.error("Error loading class edit subjects:", err);
-                });
-            }, getSelectedClassPeriod()?.semester || "");
+              },
+              getSelectedClassPeriod()?.semester || "",
+            );
           });
 
           row.querySelector(".delete-btn").addEventListener("click", () => {
@@ -2650,7 +3453,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         applyManageSearchFilter();
       })
-      .catch(err => {
+      .catch((err) => {
+        if (
+          requestId !== manageClassesLoadRequestId ||
+          requestedProgramId !== currentProgramId
+        )
+          return;
         console.error("Error loading classes:", err);
         if (classesTableBody) {
           classesTableBody.innerHTML = `<tr><td colspan='4'>Error loading classes: ${err.message}</td></tr>`;
@@ -2662,18 +3470,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const manageSearchInput = document.getElementById("manage-search");
   function applyManageSearchFilter() {
     const term = (manageSearchInput?.value || "").toLowerCase().trim();
-    const subjectsVisible = document.getElementById("subjects")?.style.display !== "none";
+    const subjectsVisible =
+      document.getElementById("subjects")?.style.display !== "none";
     const targetTbody = subjectsVisible ? subjectsTableBody : classesTableBody;
     if (!targetTbody) return;
-    if (subjectsVisible && (
-      document.getElementById("manage-subjects-search") ||
-      document.getElementById("manage-subjects-semester-filter") ||
-      document.getElementById("manage-subjects-year-filter")
-    )) {
+    if (
+      subjectsVisible &&
+      (document.getElementById("manage-subjects-search") ||
+        document.getElementById("manage-subjects-semester-filter") ||
+        document.getElementById("manage-subjects-year-filter"))
+    ) {
       applyManageSubjectFilters();
       return;
     }
     [...targetTbody.rows].forEach((row) => {
+      if (
+        !subjectsVisible &&
+        selectedManageYear &&
+        row.dataset.yearLevel !== normalizeManageYearLevel(selectedManageYear)
+      ) {
+        row.style.display = "none";
+        return;
+      }
       if (!term) {
         row.style.display = "";
         return;
@@ -2683,7 +3501,9 @@ document.addEventListener("DOMContentLoaded", () => {
         row.style.display = key.includes(term) ? "" : "none";
         return;
       }
-      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+      row.style.display = row.textContent.toLowerCase().includes(term)
+        ? ""
+        : "none";
     });
   }
 
@@ -2692,15 +3512,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ========================= CLOSE CLASS MODAL =========================
-  document.getElementById("addClassModal")?.querySelector(".close-btn")?.addEventListener("click", () => {
-    document.getElementById("addClassModal").style.display = "none";
-  });
+  document
+    .getElementById("addClassModal")
+    ?.querySelector(".close-btn")
+    ?.addEventListener("click", () => {
+      document.getElementById("addClassModal").style.display = "none";
+    });
 
   // ========================= SAVE CLASS =========================
   saveClassBtn?.addEventListener("click", () => {
     const year = document.getElementById("class-year").value.trim();
     const block = document.getElementById("class-block").value.trim();
-    const periodId = Number(document.getElementById("class-semester")?.value || 0);
+    const periodId = Number(
+      document.getElementById("class-semester")?.value || 0,
+    );
     const addClassModalEl = document.getElementById("addClassModal");
 
     if (!year || !block) {
@@ -2712,16 +3537,24 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     if (!periodId) {
-      showGlobalNotification("Please select an academic year, then a semester", "warning");
+      showGlobalNotification(
+        "Please select an academic year, then a semester",
+        "warning",
+      );
       return;
     }
 
     const isEditing = addClassModalEl.dataset.isEditing === "true";
     const editId = addClassModalEl.dataset.editId;
-    const existingAssignments = JSON.parse(addClassModalEl.dataset.existingAssignments || "{}");
-    const existingSubjectIds = JSON.parse(addClassModalEl.dataset.existingSubjectIds || "[]");
-    const checked = [...document.querySelectorAll("#subject-checkbox-list input:checked")]
-      .map(cb => String(cb.value));
+    const existingAssignments = JSON.parse(
+      addClassModalEl.dataset.existingAssignments || "{}",
+    );
+    const existingSubjectIds = JSON.parse(
+      addClassModalEl.dataset.existingSubjectIds || "[]",
+    );
+    const checked = [
+      ...document.querySelectorAll("#subject-checkbox-list input:checked"),
+    ].map((cb) => String(cb.value));
 
     // Preserve original subjects if edit screen still loading and user did not uncheck anything
     if (isEditing && checked.length === 0 && existingSubjectIds.length > 0) {
@@ -2734,11 +3567,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const assignments = {};
     const missingFacultySubjects = [];
-    checked.forEach(subjectId => {
-      const select = document.querySelector(`#faculty-list select[data-subject-id="${subjectId}"]`);
+    checked.forEach((subjectId) => {
+      const select = document.querySelector(
+        `#subject-checkbox-list select[data-subject-id="${subjectId}"]`,
+      );
       if (select && select.value) {
         assignments[subjectId] = select.value;
-      } else if (isEditing && Object.prototype.hasOwnProperty.call(existingAssignments, subjectId)) {
+      } else if (
+        isEditing &&
+        Object.prototype.hasOwnProperty.call(existingAssignments, subjectId)
+      ) {
         assignments[subjectId] = existingAssignments[subjectId];
       } else {
         missingFacultySubjects.push(subjectId);
@@ -2746,7 +3584,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (missingFacultySubjects.length > 0) {
-      showGlobalNotification("You must complete all required selections before adding a class subject.", "warning");
+      showGlobalNotification(
+        "You must complete all required selections before adding a class subject.",
+        "warning",
+      );
       return;
     }
 
@@ -2768,17 +3609,19 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("classes_crud.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body
+      body,
     })
-      .then(r => r.json())
-      .then(res => {
+      .then((r) => r.json())
+      .then((res) => {
         console.log("Class save response:", res);
         if (res.status === "success" || res === "success") {
           addClassModalEl.style.display = "none";
           loadClasses();
           showNotification(
-            isEditing ? "Class updated successfully!" : "Class added successfully!",
-            "#4caf50"
+            isEditing
+              ? "Class updated successfully!"
+              : "Class added successfully!",
+            "#4caf50",
           );
 
           // Clear editing state
@@ -2789,21 +3632,41 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           const msg = (res.message || "").toLowerCase();
           if (msg.includes("subject already exists in this section")) {
-            showNotification("The subject already exists in this section", "#f44336", 3500);
+            showNotification(
+              "The subject already exists in this section",
+              "#f44336",
+              3500,
+            );
           } else {
-            showNotification("Error " + (isEditing ? "updating" : "adding") + " class: " + (res.message || "Unknown error"), "#f44336", 5000);
+            showNotification(
+              "Error " +
+                (isEditing ? "updating" : "adding") +
+                " class: " +
+                (res.message || "Unknown error"),
+              "#f44336",
+              5000,
+            );
           }
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error saving class:", err);
-        alert("Something went wrong while " + (isEditing ? "updating" : "adding") + " class.");
+        alert(
+          "Something went wrong while " +
+            (isEditing ? "updating" : "adding") +
+            " class.",
+        );
       })
       .finally(() => setButtonLoading(saveClassBtn, false));
   });
 
   // ========================= SHOW CLASS SUBJECTS MODAL =========================
-  function showClassSubjectsModal(classId, sectionName, yearLevel, periodLabel = "") {
+  function showClassSubjectsModal(
+    classId,
+    sectionName,
+    yearLevel,
+    periodLabel = "",
+  ) {
     const modal = document.getElementById("viewClassSubjectsModal");
     const modalTitle = modal.querySelector("h3");
     const className = modal.querySelector("#viewClassName");
@@ -2816,42 +3679,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Fetch program information to get program code
     fetch(`getProgram.php`)
-      .then(r => r.json())
-      .then(programs => {
-        const currentProgram = programs.find(p => p.id == currentProgramId);
-        const programCode = currentProgram ? currentProgram.program_code : 'PROGRAM';
+      .then((r) => r.json())
+      .then((programs) => {
+        const currentProgram = programs.find((p) => p.id == currentProgramId);
+        const programCode = currentProgram
+          ? currentProgram.program_code
+          : "PROGRAM";
         const yearDigit = yearLevel.match(/\d+/);
-        className.textContent = `${programCode}- ${yearDigit ? yearDigit[0] : ''}${sectionName}${periodLabel ? ` · ${periodLabel}` : ''}`;
+        className.textContent = `${programCode}- ${yearDigit ? yearDigit[0] : ""}${sectionName}${periodLabel ? ` · ${periodLabel}` : ""}`;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error fetching program:", err);
         const yearDigit = yearLevel.match(/\d+/);
-        className.textContent = `${yearDigit ? yearDigit[0] : ''}${sectionName}${periodLabel ? ` · ${periodLabel}` : ''}`;
+        className.textContent = `${yearDigit ? yearDigit[0] : ""}${sectionName}${periodLabel ? ` · ${periodLabel}` : ""}`;
       });
 
     // Fetch subjects for this class
     fetch(`classes_crud.php?action=get&class_id=${classId}`)
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         console.log("Class subjects data:", data);
+        const matchingSubjects = filterManageSubjectsByYear(data, yearLevel);
 
-        if (!data || data.length === 0) {
-          subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this class</div>";
+        if (matchingSubjects.length === 0) {
+          subjectsList.innerHTML = `<div class='no-subjects'>No ${escapeHtml(normalizeManageYearLevel(yearLevel) || "class")} subjects assigned</div>`;
           return;
         }
 
         let html = "<div class='subjects-grid'>";
-        data.forEach(subject => {
+        matchingSubjects.forEach((subject) => {
           html += `
           <div class='subject-card' data-subject-id='${subject.subject_id}' data-class-id='${classId}'>
             <div class='subject-header'>
               <strong>${subject.subject_code}</strong>
-              <span class='year-badge'>${subject.year_level || ''}</span>
+              <span class='year-badge'>${subject.year_level || ""}</span>
             </div>
-            <p class='subject-desc'>${subject.subject_desc || ''}</p>
+            <p class='subject-desc'>${subject.subject_desc || ""}</p>
             <div style='margin:8px 0 0; font-size:0.95rem; color:#4b5563;'>
               <i class='ph ph-user' style='margin-right:5px; color:#1565c0; font-size:1rem; vertical-align:middle;'></i>
-              Instructor: ${subject.faculty_name || 'Unassigned'}
+              Instructor: ${subject.faculty_name || "Unassigned"}
             </div>
           </div>
         `;
@@ -2860,29 +3726,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
         subjectsList.innerHTML = html;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error fetching class subjects:", err);
-        subjectsList.innerHTML = "<div class='error'>Error loading subjects</div>";
+        subjectsList.innerHTML =
+          "<div class='error'>Error loading subjects</div>";
       });
   }
 
   // ========================= DELETE SUBJECT FROM CLASS MODAL =========================
-  function openDeleteSubjectFromClassModal(classId, subjectId, subjectCode, subjectCard) {
-    console.log("openDeleteSubjectFromClassModal called with:", { classId, subjectId, subjectCode });
+  function openDeleteSubjectFromClassModal(
+    classId,
+    subjectId,
+    subjectCode,
+    subjectCard,
+  ) {
+    console.log("openDeleteSubjectFromClassModal called with:", {
+      classId,
+      subjectId,
+      subjectCode,
+    });
 
     const modal = document.getElementById("deleteModal");
     const deleteMessage = document.getElementById("deleteMessage");
     const deleteWarning = document.getElementById("deleteWarning");
 
     deleteMessage.innerHTML = `Do you want to remove <strong>${subjectCode}</strong> from this class?`;
-    deleteWarning.textContent = "This subject will be removed from class but will not be deleted from the system.";
+    deleteWarning.textContent =
+      "This subject will be removed from class but will not be deleted from the system.";
 
     // Store data for deletion
     deleteTarget = {
       classId: classId,
       subjectId: subjectId,
       subjectCard: subjectCard,
-      type: "class_subject"
+      type: "class_subject",
     };
     deleteType = "class_subject";
 
@@ -2895,14 +3772,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ========================= EDIT SUBJECT IN CLASS MODAL =========================
-  function openEditSubjectInClassModal(classId, subjectId, currentFacultyId, subjectCode, subjectCard) {
+  function openEditSubjectInClassModal(
+    classId,
+    subjectId,
+    currentFacultyId,
+    subjectCode,
+    subjectCard,
+  ) {
     // For now, we'll show a simple faculty assignment modal
     // This could be expanded to a full modal later
     const modal = document.getElementById("editSubjectInClassModal");
     if (!modal) {
       // Create modal if it doesn't exist
       createEditSubjectInClassModal();
-      return openEditSubjectInClassModal(classId, subjectId, currentFacultyId, subjectCode, subjectCard);
+      return openEditSubjectInClassModal(
+        classId,
+        subjectId,
+        currentFacultyId,
+        subjectCode,
+        subjectCard,
+      );
     }
 
     const modalTitle = modal.querySelector("h3");
@@ -2914,12 +3803,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load available faculty for this subject
     facultySelect.innerHTML = '<option value="">Loading faculty...</option>';
-    fetch(`classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`)
-      .then(r => r.json())
-      .then(faculty => {
+    fetch(
+      `classes_crud.php?action=get_faculty_by_subject&subject_id=${subjectId}`,
+    )
+      .then((r) => r.json())
+      .then((faculty) => {
         facultySelect.innerHTML = '<option value="">Select faculty</option>';
-        faculty.forEach(f => {
-          const option = document.createElement('option');
+        faculty.forEach((f) => {
+          const option = document.createElement("option");
           option.value = f.id;
           option.textContent = f.name;
           if (f.id == currentFacultyId) {
@@ -2928,9 +3819,10 @@ document.addEventListener("DOMContentLoaded", () => {
           facultySelect.appendChild(option);
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading faculty:", err);
-        facultySelect.innerHTML = '<option value="">Error loading faculty</option>';
+        facultySelect.innerHTML =
+          '<option value="">Error loading faculty</option>';
       });
 
     // Store data for saving
@@ -2968,7 +3860,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   `;
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
 
     // Add event listeners
     const modal = document.getElementById("editSubjectInClassModal");
@@ -2976,7 +3868,9 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.style.display = "none";
     });
 
-    modal.querySelector("#saveSubjectAssignmentBtn").addEventListener("click", saveSubjectAssignment);
+    modal
+      .querySelector("#saveSubjectAssignmentBtn")
+      .addEventListener("click", saveSubjectAssignment);
   }
 
   async function saveSubjectAssignment() {
@@ -2986,42 +3880,64 @@ document.addEventListener("DOMContentLoaded", () => {
     const facultyId = document.getElementById("editFacultySelect").value;
 
     if (!classId || !subjectId || !facultyId || facultyId === "0") {
-      showNotification("You must complete all required selections before adding a class subject.", "#f59e0b", 3500);
+      showNotification(
+        "You must complete all required selections before adding a class subject.",
+        "#f59e0b",
+        3500,
+      );
       return;
     }
 
     const saveButton = modal.querySelector("#saveSubjectAssignmentBtn");
     setButtonLoading(saveButton, true, "Saving Assignment...");
     try {
-      const deleteResponse = await fetch("classes_crud.php?action=delete_subject", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `class_id=${classId}&subject_id=${subjectId}`
-      });
+      const deleteResponse = await fetch(
+        "classes_crud.php?action=delete_subject",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `class_id=${classId}&subject_id=${subjectId}`,
+        },
+      );
       const deleteRes = await deleteResponse.json();
       if (deleteRes.status !== "success") {
-        showNotification("Error updating assignment: " + (deleteRes.message || "Unknown error"), "#f44336");
+        showNotification(
+          "Error updating assignment: " +
+            (deleteRes.message || "Unknown error"),
+          "#f44336",
+        );
         return;
       }
 
-      const addResponse = await fetch("classes_crud.php?action=add_subject_to_class", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `class_id=${classId}&subject_id=${subjectId}&faculty_id=${facultyId}`
-      });
+      const addResponse = await fetch(
+        "classes_crud.php?action=add_subject_to_class",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `class_id=${classId}&subject_id=${subjectId}&faculty_id=${facultyId}`,
+        },
+      );
       const addRes = await addResponse.json();
       if (addRes.status === "success") {
         modal.style.display = "none";
         showNotification("Faculty assignment updated successfully!", "#4caf50");
         const classModal = document.getElementById("viewClassSubjectsModal");
-        const className = classModal.querySelector("#viewClassName").textContent;
+        const className =
+          classModal.querySelector("#viewClassName").textContent;
         showClassSubjectsModal(classId, className, "");
       } else {
         const assignMsg = (addRes.message || "").toLowerCase();
         if (assignMsg.includes("subject already exists in this section")) {
-          showNotification("The subject already exists in this section", "#f44336", 3500);
+          showNotification(
+            "The subject already exists in this section",
+            "#f44336",
+            3500,
+          );
         } else {
-          showNotification("Error updating assignment: " + (addRes.message || "Unknown error"), "#f44336");
+          showNotification(
+            "Error updating assignment: " + (addRes.message || "Unknown error"),
+            "#f44336",
+          );
         }
       }
     } catch (err) {
@@ -3037,42 +3953,63 @@ document.addEventListener("DOMContentLoaded", () => {
     m.querySelector("h3").innerText = h;
     m.querySelector(".submit-btn").innerText = b;
     m.style.display = "flex";
-    const fid = m.querySelector("#faculty-number"), fem = m.querySelector("#faculty-email"),
-      sid = m.querySelector("#student-number"), sem = m.querySelector("#student-email");
-    if (fid && fem) { fid.disabled = fem.disabled = h.includes("EDIT FACULTY"); }
-    if (sid && sem) { sid.disabled = sem.disabled = h.includes("EDIT STUDENT"); }
+    const fid = m.querySelector("#faculty-number"),
+      fem = m.querySelector("#faculty-email"),
+      sid = m.querySelector("#student-number"),
+      sem = m.querySelector("#student-email");
+    if (fid && fem) {
+      fid.disabled = fem.disabled = h.includes("EDIT FACULTY");
+    }
+    if (sid && sem) {
+      sid.disabled = sem.disabled = h.includes("EDIT STUDENT");
+    }
   };
-  const closeModal = m => {
+  const closeModal = (m) => {
     m.style.display = "none";
-    if (m.id === "addFacultyModal") document.body.classList.remove("faculty-modal-open");
+    if (m.id === "addFacultyModal")
+      document.body.classList.remove("faculty-modal-open");
   };
 
   function showYearSectionRow(row) {
     if (!row) return;
 
-    row.style.setProperty('display', 'grid', 'important');
-    row.style.setProperty('grid-template-columns', 'minmax(0, 1fr) minmax(0, 1fr)', 'important');
-    row.style.setProperty('gap', 'clamp(8px, 3vw, 20px)', 'important');
-    row.style.setProperty('align-items', 'start', 'important');
-    row.style.setProperty('width', '100%', 'important');
-    row.style.setProperty('min-width', '0', 'important');
+    row.style.setProperty("display", "grid", "important");
+    row.style.setProperty(
+      "grid-template-columns",
+      "minmax(0, 1fr) minmax(0, 1fr)",
+      "important",
+    );
+    row.style.setProperty("gap", "clamp(8px, 3vw, 20px)", "important");
+    row.style.setProperty("align-items", "start", "important");
+    row.style.setProperty("width", "100%", "important");
+    row.style.setProperty("min-width", "0", "important");
 
-    Array.from(row.children).forEach(field => {
-      field.style.setProperty('min-width', '0', 'important');
-      field.style.setProperty('width', '100%', 'important');
-      field.style.setProperty('margin', '0', 'important');
+    Array.from(row.children).forEach((field) => {
+      field.style.setProperty("min-width", "0", "important");
+      field.style.setProperty("width", "100%", "important");
+      field.style.setProperty("margin", "0", "important");
     });
   }
 
   // ================= Faculty ==========================================================================================
   const facultyTbody = document.querySelector("#faculties-section tbody");
-  const archivedFacultyTbody = document.querySelector(".archived-faculties-table tbody");
-  const facultyTableWrapper = document.querySelector("#faculties-section .table-wrapper");
-  const facultyToolbar = document.querySelector("#faculties-section .faculty-toolbar");
-  const archivedFacultySection = document.querySelector("#faculties-section .archived-faculty-section");
+  const archivedFacultyTbody = document.querySelector(
+    ".archived-faculties-table tbody",
+  );
+  const facultyTableWrapper = document.querySelector(
+    "#faculties-section .table-wrapper",
+  );
+  const facultyToolbar = document.querySelector(
+    "#faculties-section .faculty-toolbar",
+  );
+  const archivedFacultySection = document.querySelector(
+    "#faculties-section .archived-faculty-section",
+  );
 
   function normalizeStatusValue(status) {
-    return String(status || "active").trim().toLowerCase();
+    return String(status || "active")
+      .trim()
+      .toLowerCase();
   }
 
   function statusLabel(status) {
@@ -3089,24 +4026,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function statusMenuHtml(type, currentStatus) {
-    const options = type === "faculty" ? ["active", "inactive", "on leave"] : ["active", "inactive"];
+    const options =
+      type === "faculty"
+        ? ["active", "inactive", "on leave"]
+        : ["active", "inactive"];
     const current = normalizeStatusValue(currentStatus);
     return `
     <div class="status-action-menu">
       <button class="action-icon-btn settings-btn" title="Change Status"><i class="ph ph-gear-six"></i></button>
       <div class="status-dropdown-menu">
-        ${options.map(status => `
+        ${options
+          .map(
+            (status) => `
           <button type="button" class="status-option ${current === status ? "selected" : ""}" data-status="${status}">
             ${statusLabel(status)}
           </button>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
     </div>
   `;
   }
 
   function restoreStatusDropdown(menu) {
-    const dropdown = menu.querySelector(".status-dropdown-menu") || document.body.querySelector(`.status-dropdown-menu.floating[data-owner-menu="${menu.dataset.statusMenuId}"]`);
+    const dropdown =
+      menu.querySelector(".status-dropdown-menu") ||
+      document.body.querySelector(
+        `.status-dropdown-menu.floating[data-owner-menu="${menu.dataset.statusMenuId}"]`,
+      );
     if (!dropdown) return;
 
     dropdown.classList.remove("floating");
@@ -3122,7 +4070,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function closeStatusMenus(exceptMenu = null) {
-    document.querySelectorAll(".status-action-menu.open").forEach(menu => {
+    document.querySelectorAll(".status-action-menu.open").forEach((menu) => {
       if (menu !== exceptMenu) {
         restoreStatusDropdown(menu);
         menu.classList.remove("open");
@@ -3152,7 +4100,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const gutter = 8;
     const left = Math.min(
       Math.max(gutter, triggerRect.right - menuRect.width),
-      window.innerWidth - menuRect.width - gutter
+      window.innerWidth - menuRect.width - gutter,
     );
     let top = triggerRect.bottom + 6;
 
@@ -3166,7 +4114,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".status-action-menu") && !e.target.closest(".status-dropdown-menu")) {
+    if (
+      !e.target.closest(".status-action-menu") &&
+      !e.target.closest(".status-dropdown-menu")
+    ) {
       closeStatusMenus();
     }
   });
@@ -3191,7 +4142,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (archivedSearch) {
         archivedSearch.value = "";
         if (archivedFacultyTbody) {
-          [...archivedFacultyTbody.rows].forEach(row => row.style.display = "");
+          [...archivedFacultyTbody.rows].forEach(
+            (row) => (row.style.display = ""),
+          );
         }
       }
     }
@@ -3219,10 +4172,17 @@ document.addEventListener("DOMContentLoaded", () => {
         function runArchivedFacultyFilter() {
           const term = archivedSearch.value.toLowerCase().trim();
           if (!archivedFacultyTbody) return;
-          [...archivedFacultyTbody.rows].forEach(row => {
-            const idText = (row.querySelector("td:nth-child(2)")?.textContent || "").toLowerCase();
-            const nameText = (row.querySelector("td:nth-child(3)")?.textContent || "").toLowerCase();
-            row.style.display = (!term || idText.includes(term) || nameText.includes(term)) ? "" : "none";
+          [...archivedFacultyTbody.rows].forEach((row) => {
+            const idText = (
+              row.querySelector("td:nth-child(2)")?.textContent || ""
+            ).toLowerCase();
+            const nameText = (
+              row.querySelector("td:nth-child(3)")?.textContent || ""
+            ).toLowerCase();
+            row.style.display =
+              !term || idText.includes(term) || nameText.includes(term)
+                ? ""
+                : "none";
           });
         }
 
@@ -3241,8 +4201,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function refreshSectionStats() {
     fetch("get_section_stats.php?cb=" + Date.now(), { cache: "no-store" })
-      .then(r => r.json())
-      .then(res => {
+      .then((r) => r.json())
+      .then((res) => {
         if (!res.success || !res.data) return;
         const students = res.data.students || {};
 
@@ -3255,7 +4215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setText("#regularStudentsCount", students.regular_students);
         setText("#irregularStudentsCount", students.irregular_students);
       })
-      .catch(err => console.error("Error refreshing section stats:", err));
+      .catch((err) => console.error("Error refreshing section stats:", err));
   }
 
   async function updateStatus(type, id, status) {
@@ -3263,7 +4223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "update_status", id, status })
+      body: JSON.stringify({ action: "update_status", id, status }),
     });
     return response.json();
   }
@@ -3272,8 +4232,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadFaculty() {
     console.log("Loading faculty data...");
     fetch("../shared/getFaculty.php?t=" + Date.now(), { cache: "no-store" })
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         console.log("Raw faculty data received:", data);
         console.log("Data type:", typeof data);
         console.log("Data length:", data ? data.length : "null/undefined");
@@ -3288,15 +4248,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check if no data or empty array
         if (!data || data.length === 0) {
-          facultyTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
+          facultyTbody.innerHTML =
+            '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
           if (archivedFacultyTbody) {
-            archivedFacultyTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
+            archivedFacultyTbody.innerHTML =
+              '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
           }
           updateFacultyMemberCount();
           return;
         }
 
-        data.forEach(f => {
+        data.forEach((f) => {
           console.log("Processing faculty:", f);
           console.log("Photo data:", f.photo);
           console.log("Subjects data:", f.subjects);
@@ -3311,16 +4273,20 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("Faculty subjects data:", f.subjects);
           console.log("Faculty subject_codes:", f.subject_codes);
 
-          const subjectsDisplay = f.subject_codes && f.subject_codes.length > 0
-            ? `<div class="faculty-subject-grid">${f.subject_codes.map((code) =>
-              `<span class="subject-item">${code}</span>`
-            ).join('')}</div>`
-            : '<span class="no-subjects">No subjects yet</span>';
+          const subjectsDisplay =
+            f.subject_codes && f.subject_codes.length > 0
+              ? `<div class="faculty-subject-grid">${f.subject_codes
+                  .map((code) => `<span class="subject-item">${code}</span>`)
+                  .join("")}</div>`
+              : '<span class="no-subjects">No subjects yet</span>';
 
           console.log("Subjects display:", subjectsDisplay);
 
           // Build initials avatar fallback
-          const initials = ((f.firstname || "").charAt(0) + (f.lastname || "").charAt(0)).toUpperCase() || "?";
+          const initials =
+            (
+              (f.firstname || "").charAt(0) + (f.lastname || "").charAt(0)
+            ).toUpperCase() || "?";
           const avatarHtml = f.photo
             ? `<img src="${f.photo}" class="table-avatar" alt="${f.firstname} ${f.lastname}">`
             : `<div class="table-avatar placeholder faculty-placeholder-avatar" aria-label="No profile image for ${f.firstname} ${f.lastname}" title="No profile image">${initials}</div>`;
@@ -3368,7 +4334,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // EDIT ----------------------
           row.querySelector(".edit-btn").onclick = () => {
-            addFacultyModal.querySelectorAll("input").forEach(input => {
+            addFacultyModal.querySelectorAll("input").forEach((input) => {
               input.value = "";
               input.removeAttribute("aria-invalid");
             });
@@ -3383,8 +4349,10 @@ document.addEventListener("DOMContentLoaded", () => {
             emailInput.value = f.email || "";
             emailInput.disabled = false;
 
-            document.getElementById("faculty-firstname").value = f.firstname || "";
-            document.getElementById("faculty-lastname").value = f.lastname || "";
+            document.getElementById("faculty-firstname").value =
+              f.firstname || "";
+            document.getElementById("faculty-lastname").value =
+              f.lastname || "";
             document.getElementById("faculty-suffix").value = f.suffix || "";
 
             const preview = document.getElementById("faculty-photo-preview");
@@ -3393,9 +4361,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Load subjects and check faculty's existing subjects
             loadAllFacultySubjects().then(() => {
-              const assignedSubjectIds = new Set((f.subjects || [])
-                .map(subject => String(subject.subject_id || subject.id || "")));
-              selectedFacultySubjects = allFacultySubjects.filter(subject => assignedSubjectIds.has(String(subject.id)));
+              const assignedSubjectIds = new Set(
+                (f.subjects || []).map((subject) =>
+                  String(subject.subject_id || subject.id || ""),
+                ),
+              );
+              selectedFacultySubjects = allFacultySubjects.filter((subject) =>
+                assignedSubjectIds.has(String(subject.id)),
+              );
               renderSelectedFacultySubjects();
             });
 
@@ -3408,14 +4381,24 @@ document.addEventListener("DOMContentLoaded", () => {
             // Set faculty name in modal
             const facultyFirstName = String(f.firstname || "").trim();
             const facultyLastName = String(f.lastname || "").trim();
-            document.getElementById("viewFacultyName").textContent = `${facultyFirstName} ${facultyLastName} ${f.suffix || ""}`.trim();
-            document.getElementById("viewFacultyInitials").textContent = `${facultyFirstName.charAt(0)}${facultyLastName.charAt(0)}`.toUpperCase() || "FA";
-            document.querySelector("#viewFacultyMeta .faculty-header-id").textContent = f.faculty_id || f.id || "N/A";
-            document.getElementById("viewFacultySubjectCount").textContent = `${(f.subjects || []).length} ${(f.subjects || []).length === 1 ? "subject" : "subjects"}`;
+            document.getElementById("viewFacultyName").textContent =
+              `${facultyFirstName} ${facultyLastName} ${f.suffix || ""}`.trim();
+            document.getElementById("viewFacultyInitials").textContent =
+              `${facultyFirstName.charAt(0)}${facultyLastName.charAt(0)}`.toUpperCase() ||
+              "FA";
+            document.querySelector(
+              "#viewFacultyMeta .faculty-header-id",
+            ).textContent = f.faculty_id || f.id || "N/A";
+            document.getElementById("viewFacultySubjectCount").textContent =
+              `${(f.subjects || []).length} ${(f.subjects || []).length === 1 ? "subject" : "subjects"}`;
 
             // Show faculty subjects in modal
-            const subjectsList = document.getElementById("viewFacultySubjectsList");
-            subjectsList.innerHTML = renderGroupedFacultySubjects(f.subjects || []);
+            const subjectsList = document.getElementById(
+              "viewFacultySubjectsList",
+            );
+            subjectsList.innerHTML = renderGroupedFacultySubjects(
+              f.subjects || [],
+            );
 
             // Show modal
             viewFacultySubjectsModal.style.display = "flex";
@@ -3424,15 +4407,17 @@ document.addEventListener("DOMContentLoaded", () => {
           };
 
           const statusMenu = row.querySelector(".status-action-menu");
-          statusMenu.querySelector(".settings-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            const willOpen = !statusMenu.classList.contains("open");
-            closeStatusMenus(statusMenu);
-            statusMenu.classList.toggle("open", willOpen);
-            if (willOpen) positionStatusMenu(statusMenu);
-            else restoreStatusDropdown(statusMenu);
-          });
-          statusMenu.querySelectorAll(".status-option").forEach(option => {
+          statusMenu
+            .querySelector(".settings-btn")
+            .addEventListener("click", (e) => {
+              e.stopPropagation();
+              const willOpen = !statusMenu.classList.contains("open");
+              closeStatusMenus(statusMenu);
+              statusMenu.classList.toggle("open", willOpen);
+              if (willOpen) positionStatusMenu(statusMenu);
+              else restoreStatusDropdown(statusMenu);
+            });
+          statusMenu.querySelectorAll(".status-option").forEach((option) => {
             option.addEventListener("click", async (e) => {
               e.stopPropagation();
               const newStatus = option.dataset.status;
@@ -3440,18 +4425,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await updateStatus("faculty", f.id, newStatus);
                 if (result.success) {
                   row.dataset.status = newStatus;
-                  row.querySelector("td:nth-child(5)").innerHTML = statusPillHtml(newStatus);
-                  (option.closest(".status-dropdown-menu") || statusMenu).querySelectorAll(".status-option").forEach(btn => {
-                    btn.classList.toggle("selected", btn.dataset.status === newStatus);
-                  });
+                  row.querySelector("td:nth-child(5)").innerHTML =
+                    statusPillHtml(newStatus);
+                  (option.closest(".status-dropdown-menu") || statusMenu)
+                    .querySelectorAll(".status-option")
+                    .forEach((btn) => {
+                      btn.classList.toggle(
+                        "selected",
+                        btn.dataset.status === newStatus,
+                      );
+                    });
                   restoreStatusDropdown(statusMenu);
                   statusMenu.classList.remove("open");
                   closeStatusMenus();
-                  showNotification(`Faculty status updated to ${statusLabel(newStatus)}`, "#4caf50");
+                  showNotification(
+                    `Faculty status updated to ${statusLabel(newStatus)}`,
+                    "#4caf50",
+                  );
                   refreshSectionStats();
                   filterFaculty();
                 } else {
-                  showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
+                  showNotification(
+                    "Failed to update status: " +
+                      (result.message || "Unknown error"),
+                    "#f44336",
+                  );
                 }
               } catch (error) {
                 console.error("Status update error:", error);
@@ -3460,28 +4458,32 @@ document.addEventListener("DOMContentLoaded", () => {
             });
           });
 
-          row.querySelector(".archive-btn").addEventListener("click", async () => {
-            const currentStatus = normalizeStatusValue(row.dataset.status);
-            if (currentStatus === "archived") {
-              showNotification("Faculty is already archived", "#64748b");
-              return;
-            }
+          row
+            .querySelector(".archive-btn")
+            .addEventListener("click", async () => {
+              const currentStatus = normalizeStatusValue(row.dataset.status);
+              if (currentStatus === "archived") {
+                showNotification("Faculty is already archived", "#64748b");
+                return;
+              }
 
-            openArchiveModal(row, f, statusMenu);
-          });
+              openArchiveModal(row, f, statusMenu);
+            });
         });
       })
       .then(() => {
         if (facultyTbody && facultyTbody.rows.length === 0) {
-          facultyTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
+          facultyTbody.innerHTML =
+            '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
         }
         if (archivedFacultyTbody && archivedFacultyTbody.rows.length === 0) {
-          archivedFacultyTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
+          archivedFacultyTbody.innerHTML =
+            '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
         }
         filterFaculty();
       })
       .then(() => refreshSectionStats())
-      .catch(err => console.error("Load error:", err))
+      .catch((err) => console.error("Load error:", err))
       .finally(() => hideSectionSkeleton("faculties-section"));
   }
 
@@ -3496,8 +4498,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (facultyIdInput.dataset.formatListener !== "true") {
       facultyIdInput.addEventListener("input", () => {
         const uppercaseValue = facultyIdInput.value.toUpperCase();
-        if (facultyIdInput.value !== uppercaseValue) facultyIdInput.value = uppercaseValue;
-        if (/^FC-[0-9]{6}$/.test(facultyIdInput.value.trim())) facultyIdInput.removeAttribute("aria-invalid");
+        if (facultyIdInput.value !== uppercaseValue)
+          facultyIdInput.value = uppercaseValue;
+        if (/^FC-[0-9]{6}$/.test(facultyIdInput.value.trim()))
+          facultyIdInput.removeAttribute("aria-invalid");
       });
       facultyIdInput.dataset.formatListener = "true";
     }
@@ -3506,11 +4510,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailInput = document.getElementById("faculty-email");
     emailInput.disabled = false;
     emailInput.readOnly = false;
-    emailInput.removeAttribute('disabled');
-    emailInput.removeAttribute('readonly');
-    console.log("Email field enabled for add. Disabled state:", emailInput.disabled);
+    emailInput.removeAttribute("disabled");
+    emailInput.removeAttribute("readonly");
+    console.log(
+      "Email field enabled for add. Disabled state:",
+      emailInput.disabled,
+    );
 
-    addFacultyModal.querySelectorAll("input").forEach(i => {
+    addFacultyModal.querySelectorAll("input").forEach((i) => {
       if (i.id !== "faculty-number") i.value = "";
     });
 
@@ -3526,21 +4533,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const emailInput = document.getElementById("faculty-email");
       emailInput.disabled = false;
       emailInput.readOnly = false;
-      emailInput.style.pointerEvents = 'auto';
-      emailInput.style.userSelect = 'auto';
-      emailInput.style.opacity = '1';
-      emailInput.setAttribute('contenteditable', 'true');
+      emailInput.style.pointerEvents = "auto";
+      emailInput.style.userSelect = "auto";
+      emailInput.style.opacity = "1";
+      emailInput.setAttribute("contenteditable", "true");
       emailInput.focus();
-      console.log("Email field re-enabled after modal open. Disabled state:", emailInput.disabled);
+      console.log(
+        "Email field re-enabled after modal open. Disabled state:",
+        emailInput.disabled,
+      );
 
-      emailInput.addEventListener('input', function (e) {
+      emailInput.addEventListener("input", function (e) {
         e.target.disabled = false;
         e.target.readOnly = false;
       });
 
-      Object.defineProperty(emailInput, 'disabled', {
-        get: function () { return false; },
-        set: function (value) { return false; }
+      Object.defineProperty(emailInput, "disabled", {
+        get: function () {
+          return false;
+        },
+        set: function (value) {
+          return false;
+        },
       });
     }, 100);
   };
@@ -3558,13 +4572,20 @@ document.addEventListener("DOMContentLoaded", () => {
       f = document.getElementById("faculty-firstname").value.trim(),
       l = document.getElementById("faculty-lastname").value.trim(),
       s = document.getElementById("faculty-suffix").value.trim(),
-      photo = document.getElementById("faculty-photo-preview").hidden ? "" : document.getElementById("faculty-photo-preview").src;
+      photo = document.getElementById("faculty-photo-preview").hidden
+        ? ""
+        : document.getElementById("faculty-photo-preview").src;
 
     if (!/^FC-[0-9]{6}$/.test(n)) {
-      document.getElementById("faculty-number").setAttribute("aria-invalid", "true");
+      document
+        .getElementById("faculty-number")
+        .setAttribute("aria-invalid", "true");
       facultySaveInProgress = false;
       setButtonLoading(submitButton, false);
-      return showGlobalNotification("Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456).", "warning");
+      return showGlobalNotification(
+        "Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456).",
+        "warning",
+      );
     }
     document.getElementById("faculty-number").removeAttribute("aria-invalid");
 
@@ -3583,7 +4604,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lastname: l,
       suffix: s,
       photo: photo,
-      subjects: selectedFacultySubjects.map(subject => Number(subject.id))
+      subjects: selectedFacultySubjects.map((subject) => Number(subject.id)),
     };
 
     // Add ID for edit
@@ -3600,7 +4621,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(facultyData),
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -3611,11 +4632,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Faculty saved successfully, reloading faculty list...");
         await loadFaculty();
         closeModal(addFacultyModal);
-        if (result.temporary_password) {
-          showAlertModal(`${result.message}. Username: ${result.username}. Temporary password: ${result.temporary_password}. Share it securely.`);
-        } else {
-          showNotification(result.message, "#10b981");
-        }
+        showNotification(result.message, "#10b981");
       } else {
         showNotification(result.message, "#f44336");
       }
@@ -3629,11 +4646,11 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // PHOTO PREVIEW ----------------
-  document.getElementById("faculty-photo").onchange = e => {
+  document.getElementById("faculty-photo").onchange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = ev => {
+      reader.onload = (ev) => {
         const p = document.getElementById("faculty-photo-preview");
         p.src = ev.target.result;
         p.hidden = false;
@@ -3644,10 +4661,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // SEARCH AND STATUS FILTER -----------------------
   function filterFaculty() {
-    const searchTerm = (document.getElementById("faculty-search")?.value || "").toLowerCase();
-    const statusFilter = document.getElementById("faculty-status-filter")?.value || "";
+    const searchTerm = (
+      document.getElementById("faculty-search")?.value || ""
+    ).toLowerCase();
+    const statusFilter =
+      document.getElementById("faculty-status-filter")?.value || "";
 
-    [...(facultyTbody?.rows || [])].forEach(r => {
+    [...(facultyTbody?.rows || [])].forEach((r) => {
       const idCell = r.querySelector("td:nth-child(2)");
       const nameCell = r.querySelector("td:nth-child(3)");
 
@@ -3658,7 +4678,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (searchTerm) {
         const idText = idCell ? idCell.textContent.toLowerCase() : "";
         const nameText = nameCell ? nameCell.textContent.toLowerCase() : "";
-        matchesSearch = idText.includes(searchTerm) || nameText.includes(searchTerm);
+        matchesSearch =
+          idText.includes(searchTerm) || nameText.includes(searchTerm);
       }
 
       const statusText = normalizeStatusValue(r.dataset.status);
@@ -3671,7 +4692,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Show row only if both conditions are met
-      r.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+      r.style.display = matchesSearch && matchesStatus ? "" : "none";
     });
     updateFacultyMemberCount();
   }
@@ -3680,8 +4701,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const countEl = document.getElementById("facultyMemberCount");
     if (!countEl || !facultyTbody) return;
 
-    const visibleCount = [...facultyTbody.rows].filter(row =>
-      row.id.startsWith("faculty-") && row.style.display !== "none"
+    const visibleCount = [...facultyTbody.rows].filter(
+      (row) => row.id.startsWith("faculty-") && row.style.display !== "none",
     ).length;
     countEl.textContent = `${visibleCount} faculty member${visibleCount === 1 ? "" : "s"}`;
   }
@@ -3689,7 +4710,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("faculty-search").oninput = filterFaculty;
   document.getElementById("faculty-status-filter").onchange = filterFaculty;
 
-  const showArchivedFacultyBtn = document.querySelector(".show-archived-faculty-btn");
+  const showArchivedFacultyBtn = document.querySelector(
+    ".show-archived-faculty-btn",
+  );
   if (showArchivedFacultyBtn) {
     showArchivedFacultyBtn.addEventListener("click", () => {
       showArchivedFacultyView();
@@ -3703,7 +4726,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const showArchivedStudentBtn = document.querySelector(".show-archived-student-btn");
+  const showArchivedStudentBtn = document.querySelector(
+    ".show-archived-student-btn",
+  );
   if (showArchivedStudentBtn) {
     showArchivedStudentBtn.addEventListener("click", () => {
       showArchivedStudentView();
@@ -3722,7 +4747,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getReportPeriodParams() {
     const ay = document.getElementById("report-ay-filter")?.value || "";
-    const semester = document.getElementById("report-semester-filter")?.value || "";
+    const semester =
+      document.getElementById("report-semester-filter")?.value || "";
     const params = new URLSearchParams();
     if (ay) params.set("academic_year", ay);
     if (semester) params.set("semester", semester);
@@ -3751,15 +4777,27 @@ document.addEventListener("DOMContentLoaded", () => {
           defaultSemester = dashboardPeriod.current_semester || "";
         }
 
-        const res = await fetch("../shared/periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+        const res = await fetch("../shared/periods_api.php?action=list", {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
         const data = await res.json();
-        const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
-        const years = [...new Set([
-          ...periods.map(period => String(period.ay || "").trim()),
-          defaultYear
-        ].filter(Boolean))].sort().reverse();
+        const periods =
+          data && data.success && Array.isArray(data.periods)
+            ? data.periods
+            : [];
+        const years = [
+          ...new Set(
+            [
+              ...periods.map((period) => String(period.ay || "").trim()),
+              defaultYear,
+            ].filter(Boolean),
+          ),
+        ]
+          .sort()
+          .reverse();
 
-        years.forEach(year => {
+        years.forEach((year) => {
           const option = document.createElement("option");
           option.value = year;
           option.textContent = year;
@@ -3768,26 +4806,47 @@ document.addEventListener("DOMContentLoaded", () => {
         aySelect.value = years.includes(defaultYear) ? defaultYear : "";
 
         if (semesterSelect) {
-          const semesters = [...new Set([
-            ...periods.map(period => String(period.semester || "").trim()),
-            defaultSemester
-          ].filter(Boolean))];
-          semesterSelect.querySelectorAll("option:not(:first-child)").forEach(option => option.remove());
-          semesters.forEach(semester => {
+          const semesters = [
+            ...new Set(
+              [
+                ...periods.map((period) =>
+                  String(period.semester || "").trim(),
+                ),
+                defaultSemester,
+              ].filter(Boolean),
+            ),
+          ];
+          semesterSelect
+            .querySelectorAll("option:not(:first-child)")
+            .forEach((option) => option.remove());
+          semesters.forEach((semester) => {
             const option = document.createElement("option");
             option.value = semester;
             option.textContent = semester;
             semesterSelect.appendChild(option);
           });
-          semesterSelect.value = semesters.includes(defaultSemester) ? defaultSemester : "";
+          semesterSelect.value = semesters.includes(defaultSemester)
+            ? defaultSemester
+            : "";
         }
       } catch (err) {
         console.error("Failed to load report period filters:", err);
-        if (defaultYear && !Array.from(aySelect.options).some(option => option.value === defaultYear)) {
+        if (
+          defaultYear &&
+          !Array.from(aySelect.options).some(
+            (option) => option.value === defaultYear,
+          )
+        ) {
           aySelect.add(new Option(defaultYear, defaultYear));
         }
         aySelect.value = defaultYear;
-        if (semesterSelect && defaultSemester && !Array.from(semesterSelect.options).some(option => option.value === defaultSemester)) {
+        if (
+          semesterSelect &&
+          defaultSemester &&
+          !Array.from(semesterSelect.options).some(
+            (option) => option.value === defaultSemester,
+          )
+        ) {
           semesterSelect.add(new Option(defaultSemester, defaultSemester));
         }
         if (semesterSelect) semesterSelect.value = defaultSemester;
@@ -3805,10 +4864,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!searchInput || !tbody) return;
 
     const term = (searchInput.value || "").trim().toLowerCase();
-    const rows = Array.from(tbody.querySelectorAll("tr[data-evaluation-row='true']"));
+    const rows = Array.from(
+      tbody.querySelectorAll("tr[data-evaluation-row='true']"),
+    );
     let visibleRows = 0;
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const haystack = (row.dataset.searchText || "").toLowerCase();
       const matches = !term || haystack.includes(term);
       row.style.display = matches ? "" : "none";
@@ -3827,51 +4888,62 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (reportEvaluationsLoading) return Promise.resolve();
     reportEvaluationsLoading = true;
-    console.log('Loading evaluations...');
+    console.log("Loading evaluations...");
     const reportParams = getReportPeriodParams();
     const query = reportParams.toString();
     loadReportAnalytics(reportParams);
-    return fetch(`get_evaluations.php${query ? `?${query}` : ""}`, { cache: "no-store", credentials: "same-origin" })
-      .then(r => r.json())
-      .then(data => {
-        console.log('Evaluations data received:', data);
+    return fetch(`get_evaluations.php${query ? `?${query}` : ""}`, {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("Evaluations data received:", data);
         const tbody = document.getElementById("evaluationTableBody");
         tbody.innerHTML = "";
 
         if (data.success) {
           if (!data.data || data.data.length === 0) {
-            tbody.innerHTML = '<tr class="report-empty-row"><td colspan="6" class="report-empty-state">No evaluation data available</td></tr>';
+            tbody.innerHTML =
+              '<tr class="report-empty-row"><td colspan="6" class="report-empty-state">No evaluation data available</td></tr>';
             return;
           }
 
-          data.data.forEach(evaluation => {
+          data.data.forEach((evaluation) => {
             const pct = parseFloat(evaluation.percentage_score || 0);
-            const pctText = `${pct.toFixed(1)}%`;
-            const ratingClass = evaluation.rating_class || 'na';
-            const ratingText = evaluation.rating || 'N/A';
+            const privacySuppressed = Boolean(evaluation.privacy_suppressed);
+            const pctText = privacySuppressed
+              ? "Withheld"
+              : `${pct.toFixed(1)}%`;
+            const ratingClass = evaluation.rating_class || "na";
+            const ratingText = privacySuppressed
+              ? "Privacy protected"
+              : evaluation.rating || "N/A";
 
             const row = document.createElement("tr");
             row.dataset.evaluationRow = "true";
             row.dataset.searchText = [
               evaluation.name,
-              evaluation.period_label || 'Unassigned Period',
+              evaluation.period_label || "Unassigned Period",
               ratingText,
               evaluation.total_responses,
-              Number(evaluation.average_score).toFixed(2)
-            ].join(' ').toLowerCase();
+              Number(evaluation.average_score).toFixed(2),
+            ]
+              .join(" ")
+              .toLowerCase();
             row.innerHTML = `
             <td>
               <div class="report-faculty-cell">
                 <span class="report-faculty-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(evaluation.name))}</span>
                 <span class="report-faculty-details">
                   <strong>${escapeHtml(evaluation.name)}</strong>
-                  <small>${escapeHtml(evaluation.faculty_id || 'Faculty')}</small>
+                  <small>${escapeHtml(evaluation.faculty_id || "Faculty")}</small>
                 </span>
               </div>
             </td>
             <td>
-              <span class="report-period-year">${escapeHtml(evaluation.academic_year || 'Unassigned Year')}</span>
-              <small>${escapeHtml(evaluation.semester || 'Unassigned Semester')}</small>
+              <span class="report-period-year">${escapeHtml(evaluation.academic_year || "Unassigned Year")}</span>
+              <small>${escapeHtml(evaluation.semester || "Unassigned Semester")}</small>
             </td>
             <td>
               <div class="score-cell">
@@ -3879,10 +4951,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="score-mini-track">
                   <div class="score-mini-fill ${escapeHtml(ratingClass)}" style="width:${Math.min(pct, 100)}%"></div>
                 </div>
-                <span class="score-raw">${Number(evaluation.average_score).toFixed(2)} / 5.00</span>
+                <span class="score-raw">${privacySuppressed ? "Withheld" : `${Number(evaluation.average_score).toFixed(2)} / 5.00`}</span>
               </div>
             </td>
-            <td>${evaluation.total_responses}</td>
+            <td>${privacySuppressed ? "Withheld" : evaluation.total_responses}</td>
             <td>
               <span class="badge ${escapeHtml(ratingClass)}">${escapeHtml(ratingText)}</span>
             </td>
@@ -3895,9 +4967,14 @@ document.addEventListener("DOMContentLoaded", () => {
             </td>
           `;
 
-            const viewBtn = row.querySelector('.view-btn');
-            viewBtn.addEventListener('click', () => {
-              viewEvaluationDetails(evaluation.id, evaluation.subject_id || 0, evaluation.class_id || 0, evaluation.period_id || 0);
+            const viewBtn = row.querySelector(".view-btn");
+            viewBtn.addEventListener("click", () => {
+              viewEvaluationDetails(
+                evaluation.id,
+                evaluation.subject_id || 0,
+                evaluation.class_id || 0,
+                evaluation.period_id || 0,
+              );
             });
 
             tbody.appendChild(row);
@@ -3906,13 +4983,15 @@ document.addEventListener("DOMContentLoaded", () => {
           applyReportSearchFilter();
         } else {
           console.error("Error loading evaluations:", data.message);
-          tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Error loading evaluation data</td></tr>';
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="report-empty-state error-state">Error loading evaluation data</td></tr>';
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Network error:", err);
         const tbody = document.getElementById("evaluationTableBody");
-        tbody.innerHTML = '<tr><td colspan="6" class="report-empty-state error-state">Network error loading data</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="report-empty-state error-state">Network error loading data</td></tr>';
       })
       .finally(() => {
         reportEvaluationsLoading = false;
@@ -3923,9 +5002,13 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadReportAnalytics(reportParams) {
     try {
       const query = reportParams.toString();
-      const response = await fetch(`get_report_analytics.php${query ? `?${query}` : ""}`, { cache: "no-store", credentials: "same-origin" });
+      const response = await fetch(
+        `get_report_analytics.php${query ? `?${query}` : ""}`,
+        { cache: "no-store", credentials: "same-origin" },
+      );
       const result = await response.json();
-      if (!result.success) throw new Error(result.message || "Unable to load analytics");
+      if (!result.success)
+        throw new Error(result.message || "Unable to load analytics");
       renderReportAnalytics(result.data || {});
     } catch (error) {
       console.error("Failed to load report analytics:", error);
@@ -3937,19 +5020,53 @@ document.addEventListener("DOMContentLoaded", () => {
     const labels = ["Excellent", "Very Good", "Good", "Fair", "Poor"];
     const colors = ["#2563eb", "#16a34a", "#eab308", "#f97316", "#ef4444"];
     const distribution = data.distribution || {};
-    const values = labels.map(label => Number(distribution[label] || 0));
+    const values = labels.map((label) => Number(distribution[label] || 0));
     const total = Number(data.total || 0);
 
-    const donutCanvas = document.getElementById("reportRatingDistributionChart");
+    const donutCanvas = document.getElementById(
+      "reportRatingDistributionChart",
+    );
     if (donutCanvas) {
       window.reportRatingChart?.destroy();
-      window.reportRatingChart = new Chart(donutCanvas, { type: "doughnut", data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: "#fff", borderWidth: 3 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "66%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `${context.label}: ${context.parsed} (${total ? Math.round(context.parsed / total * 100) : 0}%)` } } } } });
+      window.reportRatingChart = new Chart(donutCanvas, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [
+            {
+              data: values,
+              backgroundColor: colors,
+              borderColor: "#fff",
+              borderWidth: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "66%",
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) =>
+                  `${context.label}: ${context.parsed} (${total ? Math.round((context.parsed / total) * 100) : 0}%)`,
+              },
+            },
+          },
+        },
+      });
     }
     const legend = document.getElementById("reportRatingLegend");
-    if (legend) legend.innerHTML = labels.map((label, index) => {
-      const percentage = total ? Math.round(values[index] / total * 100) : 0;
-      return `<div class="report-legend-item"><div class="report-legend-label"><span class="report-legend-dot" style="background:${colors[index]}"></span><span>${label}</span><strong>${percentage}%</strong></div><div class="report-legend-track"><span style="width:${percentage}%;background:${colors[index]}"></span></div></div>`;
-    }).join("");
+    if (legend)
+      legend.innerHTML = labels
+        .map((label, index) => {
+          const percentage = total
+            ? Math.round((values[index] / total) * 100)
+            : 0;
+          return `<div class="report-legend-item"><div class="report-legend-label"><span class="report-legend-dot" style="background:${colors[index]}"></span><span>${label}</span><strong>${percentage}%</strong></div><div class="report-legend-track"><span style="width:${percentage}%;background:${colors[index]}"></span></div></div>`;
+        })
+        .join("");
 
     const programs = data.programs || [];
     const programCanvas = document.getElementById("reportProgramRatingsChart");
@@ -3959,42 +5076,68 @@ document.addEventListener("DOMContentLoaded", () => {
       window.reportProgramChart = new Chart(programCanvas, {
         type: "bar",
         data: {
-          labels: topPrograms.map(item => item.label),
-          datasets: [{
-            label: "Average rating",
-            data: topPrograms.map(item => item.average),
-            backgroundColor: "#1296DC",
-            borderRadius: 5,
-            maxBarThickness: 34
-          }]
+          labels: topPrograms.map((item) => item.label),
+          datasets: [
+            {
+              label: "Average rating",
+              data: topPrograms.map((item) => item.average),
+              backgroundColor: "#9ac1e5",
+              borderRadius: 5,
+              maxBarThickness: 34,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: { min: 0, max: 5, ticks: { stepSize: 1 } },
-            x: { grid: { display: false }, ticks: { autoSkip: false } }
+            x: { grid: { display: false }, ticks: { autoSkip: false } },
           },
-          plugins: { legend: { display: false } }
-        }
+          plugins: { legend: { display: false } },
+        },
       });
     }
     const trend = data.trend || [];
     const trendCanvas = document.getElementById("reportRatingsTrendChart");
     if (trendCanvas) {
       window.reportTrendChart?.destroy();
-      window.reportTrendChart = new Chart(trendCanvas, { type: "line", data: { labels: trend.map(item => item.label), datasets: [{ label: "Average rating", data: trend.map(item => item.average), borderColor: "#0f766e", backgroundColor: "rgba(15, 118, 110, .12)", fill: true, tension: .3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+      window.reportTrendChart = new Chart(trendCanvas, {
+        type: "line",
+        data: {
+          labels: trend.map((item) => item.label),
+          datasets: [
+            {
+              label: "Average rating",
+              data: trend.map((item) => item.average),
+              borderColor: "#0f766e",
+              backgroundColor: "rgba(15, 118, 110, .12)",
+              fill: true,
+              tension: 0.3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+          plugins: { legend: { display: false } },
+        },
+      });
     }
     const rankings = document.getElementById("reportFacultyRankings");
     if (rankings) {
-      const reportRatings = (data.rankings || []).map(item => ({
+      const reportRatings = (data.rankings || []).map((item) => ({
         name: item.label,
         rating: Number(item.average) || 0,
-        percentage: Math.max(0, Math.min(100, (Number(item.average) || 0) / 5 * 100)),
-        responses: Number(item.responses) || 0
+        percentage: Math.max(
+          0,
+          Math.min(100, ((Number(item.average) || 0) / 5) * 100),
+        ),
+        responses: Number(item.responses) || 0,
       }));
       window.reportRankingRatings = reportRatings;
-      const handleReportRankingKeydown = event => {
+      const handleReportRankingKeydown = (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           openReportFacultyRankings(event);
@@ -4002,14 +5145,28 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       rankings.title = "Click here to view all report faculty rankings.";
       rankings.onkeydown = handleReportRankingKeydown;
-      document.getElementById("reportRankingClickTarget")?.setAttribute("title", "Click here to view all report faculty rankings.");
-      document.getElementById("reportRankingCard")?.setAttribute("title", "Click here to view all report faculty rankings.");
+      document
+        .getElementById("reportRankingClickTarget")
+        ?.setAttribute(
+          "title",
+          "Click here to view all report faculty rankings.",
+        );
+      document
+        .getElementById("reportRankingCard")
+        ?.setAttribute(
+          "title",
+          "Click here to view all report faculty rankings.",
+        );
       const chartSource = reportRatings.slice(0, 5);
-      rankings.innerHTML = chartSource.map((item, index) => {
-        const percentage = Number(item.percentage) || 0;
-        const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
-        return `<div class="top-performance-progress-item"><div class="top-performance-rank">${index + 1}.</div><div class="top-performance-avatar faculty-ranking-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(item.name))}</div><div class="top-performance-main"><div class="top-performance-progress-meta"><span class="top-performance-name">${escapeHtml(item.name)}</span><span class="top-performance-percent"><i class="ph ph-star"></i>${percentage.toFixed(1)}%</span></div><div class="top-performance-progress-track" aria-label="${escapeHtml(item.name)} performance ${percentage.toFixed(1)}%"><div class="top-performance-progress-fill ${progressColorClass}" style="width: ${Math.min(percentage, 100)}%;"></div></div></div></div>`;
-      }).join("") || '<div class="top-performance-empty">No faculty ratings available.</div>';
+      rankings.innerHTML =
+        chartSource
+          .map((item, index) => {
+            const percentage = Number(item.percentage) || 0;
+            const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
+            return `<div class="top-performance-progress-item"><div class="top-performance-rank">${index + 1}.</div><div class="top-performance-avatar faculty-ranking-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(item.name))}</div><div class="top-performance-main"><div class="top-performance-progress-meta"><span class="top-performance-name">${escapeHtml(item.name)}</span><span class="top-performance-percent"><i class="ph ph-star"></i>${percentage.toFixed(1)}%</span></div><div class="top-performance-progress-track" aria-label="${escapeHtml(item.name)} performance ${percentage.toFixed(1)}%"><div class="top-performance-progress-fill ${progressColorClass}" style="width: ${Math.min(percentage, 100)}%;"></div></div></div></div>`;
+          })
+          .join("") ||
+        '<div class="top-performance-empty">No faculty ratings available.</div>';
     }
   }
 
@@ -4042,7 +5199,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return res.blob();
       })
-      .then((blob) => {
+      .then(async (blob) => {
+        if (blob.size === 0 || (await blob.slice(0, 5).text()) !== "%PDF-") {
+          throw new Error(
+            "The report service returned an invalid or empty PDF.",
+          );
+        }
+
         const filename = `Faculty_Performance_Summary_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
         const downloadUrl = URL.createObjectURL(blob);
 
@@ -4057,7 +5220,11 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .catch((err) => {
         console.error("Generate report error:", err);
-        showNotification("Failed to generate PDF report: " + err.message, "#f44336", 5000);
+        showNotification(
+          "Failed to generate PDF report: " + err.message,
+          "#f44336",
+          5000,
+        );
       })
       .finally(() => setButtonLoading(reportBtn, false));
   }
@@ -4082,8 +5249,12 @@ document.addEventListener("DOMContentLoaded", () => {
     reportSearchInput.addEventListener("input", applyReportSearchFilter);
   }
 
-  document.getElementById("report-ay-filter")?.addEventListener("change", loadEvaluations);
-  document.getElementById("report-semester-filter")?.addEventListener("change", loadEvaluations);
+  document
+    .getElementById("report-ay-filter")
+    ?.addEventListener("change", loadEvaluations);
+  document
+    .getElementById("report-semester-filter")
+    ?.addEventListener("change", loadEvaluations);
 
   // Ensure admin Generate Report is callable from inline HTML and click bindings
   window.generateEvaluationReport = generateEvaluationReport;
@@ -4100,14 +5271,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function generateReportContent(rows) {
     let content = "Faculty Name,Faculty ID,Overall Rating,Responses,Status\n";
 
-    Array.from(rows).forEach(row => {
+    Array.from(rows).forEach((row) => {
       const cells = row.getElementsByTagName("td");
       if (cells.length >= 5) {
-        const facultyName = cells[0].textContent.replace(/\s+/g, ' ').trim();
-        const facultyId = cells[0].querySelector('small')?.textContent || '';
+        const facultyName = cells[0].textContent.replace(/\s+/g, " ").trim();
+        const facultyId = cells[0].querySelector("small")?.textContent || "";
         const overallRating = cells[1].textContent;
         const responses = cells[2].textContent;
-        const status = cells[3].querySelector('.badge')?.textContent || '';
+        const status = cells[3].querySelector(".badge")?.textContent || "";
 
         content += `"${facultyName}","${facultyId}","${overallRating}","${responses}","${status}"\n`;
       }
@@ -4117,13 +5288,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function downloadReport(content, filename) {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
 
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.display = 'none';
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.display = "none";
 
     document.body.appendChild(link);
     link.click();
@@ -4146,7 +5317,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getSubjectYearOrder(yearLevel) {
-    const value = String(yearLevel || "").trim().toLowerCase();
+    const value = String(yearLevel || "")
+      .trim()
+      .toLowerCase();
     if (value.startsWith("1")) return 1;
     if (value.startsWith("2")) return 2;
     if (value.startsWith("3")) return 3;
@@ -4170,7 +5343,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const grouped = subjects.reduce((groups, subject) => {
       const programCode = String(subject.program_code || "N/A").trim() || "N/A";
-      const programName = String(subject.program_name || "Unassigned Program").trim() || "Unassigned Program";
+      const programName =
+        String(subject.program_name || "Unassigned Program").trim() ||
+        "Unassigned Program";
       const key = `${programCode}__${programName}`;
 
       if (!groups[key]) {
@@ -4182,15 +5357,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }, {});
 
     return Object.values(grouped)
-      .sort((a, b) => a.programCode.localeCompare(b.programCode) || a.programName.localeCompare(b.programName))
-      .map(group => {
+      .sort(
+        (a, b) =>
+          a.programCode.localeCompare(b.programCode) ||
+          a.programName.localeCompare(b.programName),
+      )
+      .map((group) => {
         const rows = group.subjects
           .sort((a, b) => {
-            const yearDiff = getSubjectYearOrder(a.year_level) - getSubjectYearOrder(b.year_level);
+            const yearDiff =
+              getSubjectYearOrder(a.year_level) -
+              getSubjectYearOrder(b.year_level);
             if (yearDiff !== 0) return yearDiff;
-            return String(a.subject_code || "").localeCompare(String(b.subject_code || ""));
+            return String(a.subject_code || "").localeCompare(
+              String(b.subject_code || ""),
+            );
           })
-          .map(subject => `
+          .map(
+            (subject) => `
           <div class="faculty-subject-row">
             <span class="faculty-subject-code">${escapeHtml(subject.subject_code || "")}</span>
             <div class="faculty-subject-info">
@@ -4198,7 +5382,9 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>${escapeHtml(formatSubjectYearLevel(subject.year_level))}</span>
             </div>
           </div>
-        `).join("");
+        `,
+          )
+          .join("");
 
         return `
         <div class="faculty-program-group">
@@ -4209,12 +5395,23 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="faculty-subject-rows">${rows}</div>
         </div>
       `;
-      }).join("");
+      })
+      .join("");
   }
 
   function formatFeedbackForHtml(feedback) {
-    const text = String(feedback || "No feedback available").trim() || "No feedback available";
+    const text =
+      String(feedback || "No feedback available").trim() ||
+      "No feedback available";
     return escapeHtml(text).replace(/\n/g, "<br>");
+  }
+
+  function formatReportCategoryName(name) {
+    const categoryName = String(name || "Uncategorized").trim();
+    if (!categoryName || categoryName !== categoryName.toUpperCase())
+      return categoryName;
+    const sentenceCaseName = categoryName.toLowerCase();
+    return sentenceCaseName.charAt(0).toUpperCase() + sentenceCaseName.slice(1);
   }
 
   function renderFeedbackComments(reportData) {
@@ -4222,26 +5419,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const feedbackCountEl = document.getElementById("reportFeedbackCount");
     if (!feedbackEl) return;
 
-    const comments = Array.isArray(reportData.feedback_comments)
-      ? reportData.feedback_comments.map(item => String(item || "").trim()).filter(Boolean)
-      : String(reportData.all_feedback || reportData.feedback || "")
-        .split(/\n\s*\n/)
-        .map(item => item.trim())
-        .filter(Boolean);
+    const comments = reportData.privacy_suppressed
+      ? ["Hidden for privacy"]
+      : Array.isArray(reportData.feedback_comments)
+        ? reportData.feedback_comments
+            .map((item) => String(item || "").trim())
+            .filter(Boolean)
+        : String(reportData.all_feedback || reportData.feedback || "")
+            .split(/\n\s*\n/)
+            .map((item) => item.trim())
+            .filter(Boolean);
 
-    const hasComments = comments.length > 0 && !(comments.length === 1 && comments[0] === "No feedback available");
+    const hasComments =
+      comments.length > 0 &&
+      !(comments.length === 1 && comments[0] === "No feedback available");
     if (feedbackCountEl) {
       feedbackCountEl.textContent = `${hasComments ? comments.length : 0} ${hasComments && comments.length === 1 ? "comment" : "comments"}`;
     }
 
     if (!hasComments) {
-      feedbackEl.innerHTML = '<div class="feedback-loading">No feedback given by students yet.</div>';
+      feedbackEl.innerHTML =
+        '<div class="feedback-loading">No feedback given by students yet.</div>';
       return;
     }
 
-    feedbackEl.innerHTML = comments.map(comment => `
+    feedbackEl.innerHTML = comments
+      .map(
+        (comment) => `
     <div class="feedback-comment">${formatFeedbackForHtml(comment)}</div>
-  `).join("");
+  `,
+      )
+      .join("");
   }
 
   function renderEvaluationDetailsTable(reportData) {
@@ -4257,24 +5465,48 @@ document.addEventListener("DOMContentLoaded", () => {
         : [];
 
     // Check if weights are present
-    const hasWeights = details.some(d => parseFloat(d.normalised_weight || d.weight || 0) > 0);
+    const hasWeights = details.some(
+      (d) => parseFloat(d.normalised_weight || d.weight || 0) > 0,
+    );
 
     if (categoryCountEl) {
       categoryCountEl.textContent = `${details.length} ${details.length === 1 ? "category" : "categories"}`;
     }
     if (categoryListEl) {
       categoryListEl.innerHTML = details.length
-        ? details.map((detail) => {
-          const categoryName = detail.category || detail.category_name || "Uncategorized";
-          const rawScore = parseFloat(detail.average_score ?? detail.overall_rating ?? detail.score ?? 0);
-          const scoreValue = Number.isFinite(rawScore) ? rawScore.toFixed(2) : String(detail.average_score ?? detail.overall_rating ?? "0.00");
-          const scorePercent = Number.isFinite(rawScore) ? Math.min(100, Math.max(0, rawScore * 20)) : 0;
-          const percentText = `${scorePercent.toFixed(0)}%`;
-          const ratingText = detail.rating || detail.status || "N/A";
-          const ratingClass = String((detail.rating_class || ratingText || "poor")).toLowerCase().replace(/\s+/g, "-");
-          const normW = parseFloat(detail.normalised_weight || detail.weight || 0);
-          const weightTag = hasWeights ? `<span class="category-weight-tag" title="Category weight">${normW.toFixed(1)}%</span>` : '';
-          return `
+        ? details
+            .map((detail) => {
+              const categoryName = formatReportCategoryName(
+                detail.category || detail.category_name,
+              );
+              const rawScore = parseFloat(
+                detail.average_score ??
+                  detail.overall_rating ??
+                  detail.score ??
+                  0,
+              );
+              const scoreValue = Number.isFinite(rawScore)
+                ? rawScore.toFixed(2)
+                : String(
+                    detail.average_score ?? detail.overall_rating ?? "0.00",
+                  );
+              const scorePercent = Number.isFinite(rawScore)
+                ? Math.min(100, Math.max(0, rawScore * 20))
+                : 0;
+              const percentText = `${scorePercent.toFixed(0)}%`;
+              const ratingText = detail.rating || detail.status || "N/A";
+              const ratingClass = String(
+                detail.rating_class || ratingText || "poor",
+              )
+                .toLowerCase()
+                .replace(/\s+/g, "-");
+              const normW = parseFloat(
+                detail.normalised_weight || detail.weight || 0,
+              );
+              const weightTag = hasWeights
+                ? `<span class="category-weight-tag" title="Category weight">${normW.toFixed(1)}%</span>`
+                : "";
+              return `
             <div class="category-pill ${escapeHtml(ratingClass)}">
               <div class="category-pill-name">${escapeHtml(categoryName)} ${weightTag}</div>
               <div class="category-pill-meter" aria-label="${escapeHtml(categoryName)} ${percentText}">
@@ -4284,7 +5516,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="category-pill-rating">${escapeHtml(scoreValue)} / 5.00</div>
             </div>
           `;
-        }).join("")
+            })
+            .join("")
         : '<span class="category-list-empty">No categories available</span>';
     }
 
@@ -4298,28 +5531,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Update thead if weight column needed
-    const thead = tbody.closest('table')?.querySelector('thead tr');
-    if (thead && hasWeights && !thead.querySelector('.weight-th')) {
-      const weightTh = document.createElement('th');
-      weightTh.className = 'weight-th';
-      weightTh.textContent = 'Weight';
+    const thead = tbody.closest("table")?.querySelector("thead tr");
+    if (thead && hasWeights && !thead.querySelector(".weight-th")) {
+      const weightTh = document.createElement("th");
+      weightTh.className = "weight-th";
+      weightTh.textContent = "Weight";
       thead.insertBefore(weightTh, thead.children[1]); // after Category name
     }
 
-    const rowsHtml = details.map((detail) => {
-      const categoryName = detail.category || detail.category_name || 'Uncategorized';
-      const rawScore = parseFloat(detail.average_score ?? detail.overall_rating ?? detail.score ?? 0);
-      const scoreValue = Number.isFinite(rawScore) ? rawScore.toFixed(2) : String(detail.average_score ?? detail.overall_rating ?? '0.00');
-      const scorePercent = Number.isFinite(rawScore) ? Math.min(100, Math.max(0, rawScore * 20)) : 0;
-      const ratingText = detail.rating || detail.status || 'N/A';
-      const ratingClass = String((detail.rating_class || ratingText || 'poor')).toLowerCase().replace(/\s+/g, '-');
-      const responses = Number.parseInt(detail.responses ?? detail.total_responses ?? 0, 10) || 0;
-      const normW = parseFloat(detail.normalised_weight || detail.weight || 0);
-      const weightCell = hasWeights
-        ? `<td class="category-weight-cell"><span class="category-weight-tag">${normW.toFixed(1)}%</span></td>`
-        : '';
+    const rowsHtml = details
+      .map((detail) => {
+        const categoryName = formatReportCategoryName(
+          detail.category || detail.category_name,
+        );
+        const rawScore = parseFloat(
+          detail.average_score ?? detail.overall_rating ?? detail.score ?? 0,
+        );
+        const scoreValue = Number.isFinite(rawScore)
+          ? rawScore.toFixed(2)
+          : String(detail.average_score ?? detail.overall_rating ?? "0.00");
+        const scorePercent = Number.isFinite(rawScore)
+          ? Math.min(100, Math.max(0, rawScore * 20))
+          : 0;
+        const ratingText = detail.rating || detail.status || "N/A";
+        const ratingClass = String(detail.rating_class || ratingText || "poor")
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+        const responses =
+          Number.parseInt(
+            detail.responses ?? detail.total_responses ?? 0,
+            10,
+          ) || 0;
+        const normW = parseFloat(
+          detail.normalised_weight || detail.weight || 0,
+        );
+        const weightCell = hasWeights
+          ? `<td class="category-weight-cell"><span class="category-weight-tag">${normW.toFixed(1)}%</span></td>`
+          : "";
 
-      return `
+        return `
       <tr>
         <td class="category-name-cell">${escapeHtml(categoryName)}</td>
         ${weightCell}
@@ -4333,101 +5583,149 @@ document.addEventListener("DOMContentLoaded", () => {
         <td class="category-status-cell"><span class="report-badge ${escapeHtml(ratingClass)}">${escapeHtml(ratingText)}</span></td>
       </tr>
     `;
-    }).join("");
+      })
+      .join("");
 
     tbody.innerHTML = rowsHtml;
   }
 
   // Add event listener for PDF button when DOM is loaded
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener("DOMContentLoaded", function () {
     // Add click event listener to PDF button
-    const pdfButton = document.querySelector('.download-pdf-btn');
+    const pdfButton = document.querySelector(".download-pdf-btn");
     if (pdfButton) {
-      console.log('PDF button found, adding click listener');
-      pdfButton.addEventListener('click', function (e) {
+      console.log("PDF button found, adding click listener");
+      pdfButton.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('PDF button clicked!');
+        console.log("PDF button clicked!");
         downloadFacultyReportPDF();
       });
     } else {
-      console.log('PDF button not found on page load');
+      console.log("PDF button not found on page load");
     }
   });
 
-  function viewEvaluationDetails(facultyId, subjectId = 0, classId = 0, periodId = 0) {
-    console.log('View button clicked for faculty ID:', facultyId);
+  function viewEvaluationDetails(
+    facultyId,
+    subjectId = 0,
+    classId = 0,
+    periodId = 0,
+  ) {
+    console.log("View button clicked for faculty ID:", facultyId);
 
-    const modal = document.getElementById('facultyReportModal');
+    const modal = document.getElementById("facultyReportModal");
     const detailsBody = document.getElementById("reportEvaluationDetailsBody");
     const feedbackEl = document.getElementById("reportFeedbackText");
-    const statusElement = document.getElementById('reportOverallStatus');
-    const overallPercentElement = document.getElementById('reportOverallPercentage');
-    const overallProgressFill = document.getElementById('reportOverallProgressFill');
+    const statusElement = document.getElementById("reportOverallStatus");
+    const overallPercentElement = document.getElementById(
+      "reportOverallPercentage",
+    );
+    const overallProgressFill = document.getElementById(
+      "reportOverallProgressFill",
+    );
     const categoryCountEl = document.getElementById("reportCategoryCount");
     const feedbackCountEl = document.getElementById("reportFeedbackCount");
     const categoryListEl = document.getElementById("reportCategoryList");
 
     if (detailsBody) {
-      detailsBody.innerHTML = '<tr><td colspan="4" class="empty-report-cell">Loading categories...</td></tr>';
+      detailsBody.innerHTML =
+        '<tr><td colspan="4" class="empty-report-cell">Loading categories...</td></tr>';
     }
     if (feedbackEl) {
-      feedbackEl.innerHTML = '<div class="feedback-loading">Loading feedback...</div>';
+      feedbackEl.innerHTML =
+        '<div class="feedback-loading">Loading feedback...</div>';
     }
     if (statusElement) {
-      statusElement.textContent = '-';
+      statusElement.textContent = "-";
     }
-    if (overallPercentElement) overallPercentElement.textContent = '0%';
-    if (overallProgressFill) overallProgressFill.style.width = '0%';
-    if (categoryCountEl) categoryCountEl.textContent = '0 categories';
-    if (feedbackCountEl) feedbackCountEl.textContent = '0 comments';
-    if (categoryListEl) categoryListEl.innerHTML = '<span class="category-list-empty">Loading categories...</span>';
+    if (overallPercentElement) overallPercentElement.textContent = "0%";
+    if (overallProgressFill) overallProgressFill.style.width = "0%";
+    if (categoryCountEl) categoryCountEl.textContent = "0 categories";
+    if (feedbackCountEl) feedbackCountEl.textContent = "0 comments";
+    if (categoryListEl)
+      categoryListEl.innerHTML =
+        '<span class="category-list-empty">Loading categories...</span>';
 
     const reportParams = new URLSearchParams({
       faculty_id: facultyId,
       subject_id: subjectId || 0,
       class_id: classId || 0,
-      period_id: periodId || 0
+      period_id: periodId || 0,
+      admin_privacy_preview: 1,
     });
 
     fetch(`../shared/get_faculty_report.php?${reportParams.toString()}`)
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (data.success) {
           // Store faculty data globally for PDF use
           currentFacultyData = data.data;
 
           // Populate modal with faculty data
-          const nameElement = document.getElementById('reportFacultyName');
-          const idElement = document.getElementById('reportFacultyId');
-          const initialsElement = document.getElementById('reportFacultyInitials');
-          const ratingElement = document.getElementById('reportOverallRating');
-          const overallPercentElement = document.getElementById('reportOverallPercentage');
-          const overallProgressFill = document.getElementById('reportOverallProgressFill');
-          const responsesElement = document.getElementById('reportTotalResponses');
-          const periodElement = document.getElementById('reportEvaluationPeriod');
+          const nameElement = document.getElementById("reportFacultyName");
+          const idElement = document.getElementById("reportFacultyId");
+          const initialsElement = document.getElementById(
+            "reportFacultyInitials",
+          );
+          const ratingElement = document.getElementById("reportOverallRating");
+          const overallPercentElement = document.getElementById(
+            "reportOverallPercentage",
+          );
+          const overallProgressFill = document.getElementById(
+            "reportOverallProgressFill",
+          );
+          const responsesElement = document.getElementById(
+            "reportTotalResponses",
+          );
+          const periodElement = document.getElementById(
+            "reportEvaluationPeriod",
+          );
           const overallScore = parseFloat(data.data.overall_rating || 0);
           const pctScore = data.data.percentage_score
             ? parseFloat(data.data.percentage_score)
             : Math.min(100, Math.max(0, overallScore * 20));
           const overallPercent = pctScore;
+          const privacySuppressed = Boolean(data.data.privacy_suppressed);
 
           if (nameElement) nameElement.textContent = data.data.name;
-          if (initialsElement) initialsElement.textContent = getFacultyInitials(data.data.name);
+          if (initialsElement)
+            initialsElement.textContent = getFacultyInitials(data.data.name);
           if (idElement) {
             const subjectSuffix = data.data.subject_label
               ? ` | ${data.data.subject_label}`
-              : '';
-            idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || '-'}${subjectSuffix}`;
+              : "";
+            idElement.textContent = `ID: ${data.data.faculty_id || data.data.id || "-"}${subjectSuffix}`;
           }
-          if (ratingElement) ratingElement.textContent = `${data.data.overall_rating || '0.00'}`;
-          if (overallPercentElement) overallPercentElement.textContent = `${pctScore.toFixed(1)}%`;
-          if (overallProgressFill) overallProgressFill.style.width = `${Math.min(pctScore, 100)}%`;
-          if (responsesElement) responsesElement.textContent = data.data.total_responses || 0;
-          if (periodElement) periodElement.textContent = data.data.evaluation_period || 'All evaluation periods';
+          if (ratingElement)
+            ratingElement.textContent = privacySuppressed
+              ? "Withheld"
+              : `${data.data.overall_rating || "0.00"}`;
+          if (overallPercentElement)
+            overallPercentElement.textContent = privacySuppressed
+              ? "Withheld"
+              : `${pctScore.toFixed(1)}%`;
+          if (overallProgressFill)
+            overallProgressFill.style.width = `${Math.min(pctScore, 100)}%`;
+          if (responsesElement)
+            responsesElement.textContent = privacySuppressed
+              ? "Withheld"
+              : data.data.total_responses || 0;
+          if (periodElement) {
+            periodElement.textContent = privacySuppressed
+              ? ""
+              : data.data.evaluation_period || "All evaluation periods";
+            periodElement.hidden = privacySuppressed;
+          }
           if (statusElement) {
-            const statusText = data.data.overall_status || data.data.rating || 'No Responses';
-            const statusClass = String(data.data.overall_status_class || statusText).toLowerCase().replace(/\s+/g, '-');
+            const statusText = privacySuppressed
+              ? "Privacy protected"
+              : data.data.overall_status || data.data.rating || "No Responses";
+            const statusClass = String(
+              data.data.overall_status_class || statusText,
+            )
+              .toLowerCase()
+              .replace(/\s+/g, "-");
             statusElement.innerHTML = `<span class="report-badge ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</span>`;
           }
 
@@ -4435,49 +5733,57 @@ document.addEventListener("DOMContentLoaded", () => {
           renderFeedbackComments(data.data);
 
           // Show modal
-          console.log('Modal element found:', modal);
+          console.log("Modal element found:", modal);
           if (modal) {
-            modal.style.display = 'flex';
-            modal.style.zIndex = '10001';
-            modal.style.position = 'fixed';
-            console.log('Modal should be visible now');
+            modal.style.display = "flex";
+            modal.style.zIndex = "10001";
+            modal.style.position = "fixed";
+            console.log("Modal should be visible now");
 
             // Add click event listener to PDF button after modal is shown
             setTimeout(() => {
-              const pdfButton = modal.querySelector('.download-pdf-btn');
+              const pdfButton = modal.querySelector(".download-pdf-btn");
               if (pdfButton) {
-                console.log('PDF button found in modal, adding click listener');
+                console.log("PDF button found in modal, adding click listener");
                 // Remove existing listeners to avoid duplicates
                 pdfButton.replaceWith(pdfButton.cloneNode(true));
-                const newPdfButton = modal.querySelector('.download-pdf-btn');
-                newPdfButton.addEventListener('click', function (e) {
+                const newPdfButton = modal.querySelector(".download-pdf-btn");
+                newPdfButton.addEventListener("click", function (e) {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('PDF button clicked from modal!');
+                  console.log("PDF button clicked from modal!");
                   downloadFacultyReportPDF();
                 });
-                console.log('PDF button listener added');
+                console.log("PDF button listener added");
               } else {
-                console.log('PDF button not found in modal');
+                console.log("PDF button not found in modal");
               }
             }, 100);
           } else {
-            console.error('Modal element not found!');
+            console.error("Modal element not found!");
           }
         } else {
-          showNotification('Error loading faculty report: ' + data.message, '#f44336', 5000);
+          showNotification(
+            "Error loading faculty report: " + data.message,
+            "#f44336",
+            5000,
+          );
         }
       })
-      .catch(err => {
-        console.error('Error fetching faculty report:', err);
-        console.error('Error details:', err.message);
-        showNotification('Network error while loading faculty report: ' + err.message, '#f44336', 5000);
+      .catch((err) => {
+        console.error("Error fetching faculty report:", err);
+        console.error("Error details:", err.message);
+        showNotification(
+          "Network error while loading faculty report: " + err.message,
+          "#f44336",
+          5000,
+        );
       });
   }
 
   function closeFacultyReportModal() {
-    const modal = document.getElementById('facultyReportModal');
-    modal.style.display = 'none';
+    const modal = document.getElementById("facultyReportModal");
+    modal.style.display = "none";
   }
 
   function printReport() {
@@ -4486,20 +5792,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Test function to verify modal works
   function testModal() {
-    console.log('Testing modal display...');
-    const modal = document.getElementById('facultyReportModal');
+    console.log("Testing modal display...");
+    const modal = document.getElementById("facultyReportModal");
     if (modal) {
-      modal.style.display = 'flex';
-      console.log('Modal should be visible now');
+      modal.style.display = "flex";
+      console.log("Modal should be visible now");
     } else {
-      console.error('Modal not found!');
+      console.error("Modal not found!");
     }
   }
 
   function downloadFacultyReportPDF() {
     // Check if we have faculty data available
     if (!currentFacultyData) {
-      showNotification('No faculty data available. Please try again.', '#f44336', 3000);
+      showNotification(
+        "No faculty data available. Please try again.",
+        "#f44336",
+        3000,
+      );
       return;
     }
 
@@ -4507,51 +5817,59 @@ document.addEventListener("DOMContentLoaded", () => {
     const pdfContent = {
       facultyName: currentFacultyData.name,
       facultyId: currentFacultyData.id, // Use database ID, not faculty_id
-      subjectLabel: currentFacultyData.subject_label || '',
-      evaluationPeriod: currentFacultyData.evaluation_period || '',
+      subjectLabel: currentFacultyData.subject_label || "",
+      evaluationPeriod: currentFacultyData.evaluation_period || "",
       overallRating: currentFacultyData.overall_rating,
+      overallStatus: currentFacultyData.overall_status || "",
       totalResponses: currentFacultyData.total_responses,
+      privacySuppressed: Boolean(currentFacultyData.privacy_suppressed),
       evaluationDetails: currentFacultyData.evaluation_details || [],
-      feedback: '',
-      allFeedback: currentFacultyData.all_feedback || 'No feedback available'
+      feedback: "",
+      allFeedback: currentFacultyData.all_feedback || "No feedback available",
     };
 
     // Send to server for PDF generation
-    console.log('Sending PDF request with data:', pdfContent);
+    console.log("Sending PDF request with data:", pdfContent);
 
-    fetch('../shared/generate_evaluation_pdf.php', {
-      method: 'POST',
+    fetch("../shared/generate_evaluation_pdf.php", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(pdfContent)
+      body: JSON.stringify(pdfContent),
     })
-      .then(async response => {
-        console.log('PDF response status:', response.status);
-        console.log('PDF response headers:', response.headers);
+      .then(async (response) => {
+        console.log("PDF response status:", response.status);
+        console.log("PDF response headers:", response.headers);
 
-        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        const contentType = (
+          response.headers.get("content-type") || ""
+        ).toLowerCase();
         if (!response.ok) {
           const text = await response.text();
-          console.error('PDF generation error:', text);
-          throw new Error(text || 'Server did not return a PDF file.');
+          console.error("PDF generation error:", text);
+          throw new Error(text || "Server did not return a PDF file.");
         }
 
-        if (!contentType.includes('application/pdf')) {
+        if (!contentType.includes("application/pdf")) {
           const text = await response.text();
-          console.error('Invalid PDF content type:', contentType, text.slice(0, 250));
-          throw new Error('Server returned a non-PDF response.');
+          console.error(
+            "Invalid PDF content type:",
+            contentType,
+            text.slice(0, 250),
+          );
+          throw new Error("Server returned a non-PDF response.");
         }
 
         return response.arrayBuffer();
       })
-      .then(buffer => {
-        const blob = new Blob([buffer], { type: 'application/pdf' });
+      .then((buffer) => {
+        const blob = new Blob([buffer], { type: "application/pdf" });
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
+        const a = document.createElement("a");
+        a.style.display = "none";
         a.href = url;
-        a.download = `Individual_Performance_Report_${currentFacultyData.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        a.download = `Individual_Performance_Report_${currentFacultyData.name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
         document.body.appendChild(a);
         a.click();
 
@@ -4560,16 +5878,24 @@ document.addEventListener("DOMContentLoaded", () => {
           document.body.removeChild(a);
         }, 1000);
 
-        showNotification('PDF downloaded successfully!', '#4caf50', 3000);
+        showNotification("PDF downloaded successfully!", "#4caf50", 3000);
       })
-      .catch(err => {
-        console.error('Error generating PDF:', err);
-        showNotification('Error generating PDF: ' + err.message, '#f44336', 5000);
+      .catch((err) => {
+        console.error("Error generating PDF:", err);
+        showNotification(
+          "Error generating PDF: " + err.message,
+          "#f44336",
+          5000,
+        );
       });
   }
 
   // ========================= Dashboard Statistics ======================================================================================================================================================
-  window.topPerformanceState = { allRatings: [], sortedRatings: [], modalOpen: false };
+  window.topPerformanceState = {
+    allRatings: [],
+    sortedRatings: [],
+    modalOpen: false,
+  };
   window.reportRankingRatings = [];
 
   function openReportFacultyRankings(event) {
@@ -4577,16 +5903,21 @@ document.addEventListener("DOMContentLoaded", () => {
     event.stopImmediatePropagation();
     const reportRatings = window.reportRankingRatings || [];
     window.topPerformanceState.allRatings = reportRatings;
-    window.topPerformanceState.sortedRatings = [...reportRatings].sort((a, b) => Number(b.rating) - Number(a.rating));
+    window.topPerformanceState.sortedRatings = [...reportRatings].sort(
+      (a, b) => Number(b.rating) - Number(a.rating),
+    );
     showAllFacultyPerformance();
   }
 
   window.openReportFacultyRankings = openReportFacultyRankings;
 
-  document.addEventListener("click", event => {
-    const target = event.target instanceof Element
-      ? event.target.closest("#reportRankingCard, #reportRankingClickTarget, #reportFacultyRankings")
-      : null;
+  document.addEventListener("click", (event) => {
+    const target =
+      event.target instanceof Element
+        ? event.target.closest(
+            "#reportRankingCard, #reportRankingClickTarget, #reportFacultyRankings",
+          )
+        : null;
     if (target) openReportFacultyRankings(event);
   });
 
@@ -4598,47 +5929,89 @@ document.addEventListener("DOMContentLoaded", () => {
       showSectionSkeleton("dashboard-section");
       initialDashboardSkeletonPending = false;
     }
-    return fetch("get_dashboard_stats.php?cb=" + Date.now(), { cache: "no-store" })
-      .then(r => {
+    return fetch("get_dashboard_stats.php?cb=" + Date.now(), {
+      cache: "no-store",
+    })
+      .then((r) => {
         console.log("Response status:", r.status);
         if (!r.ok) {
           throw new Error(`HTTP error! status: ${r.status}`);
         }
         return r.json();
       })
-      .then(data => {
+      .then((data) => {
         console.log("Dashboard data received:", data);
         if (data.success) {
-          console.log("totalStudents element:", document.getElementById("totalStudents"));
+          console.log(
+            "totalStudents element:",
+            document.getElementById("totalStudents"),
+          );
           // Update dashboard cards
           const totalFacultyEl = document.getElementById("totalFaculty");
           const totalStudentsEl = document.getElementById("totalStudents");
-          const totalEvaluationsEl = document.getElementById("totalEvaluations");
+          const totalEvaluationsEl =
+            document.getElementById("totalEvaluations");
 
-          console.log("Elements found:", { totalFacultyEl, totalStudentsEl, totalEvaluationsEl });
+          console.log("Elements found:", {
+            totalFacultyEl,
+            totalStudentsEl,
+            totalEvaluationsEl,
+          });
 
-          if (totalFacultyEl) totalFacultyEl.textContent = data.data.totalFaculty;
-          if (totalStudentsEl) totalStudentsEl.textContent = data.data.totalStudents;
-          if (totalEvaluationsEl) totalEvaluationsEl.textContent = data.data.activeStudents;
+          if (totalFacultyEl)
+            totalFacultyEl.textContent = data.data.totalFaculty;
+          if (totalStudentsEl)
+            totalStudentsEl.textContent = data.data.totalStudents;
+          if (totalEvaluationsEl)
+            totalEvaluationsEl.textContent = data.data.activeStudents;
 
           // Count only students who have completed all assigned evaluations.
-          const progressFillEl = document.getElementById("evaluationProgressFill");
-          const progressTextEl = document.getElementById("evaluationProgressText");
+          const progressFillEl = document.getElementById(
+            "evaluationProgressFill",
+          );
+          const progressTextEl = document.getElementById(
+            "evaluationProgressText",
+          );
           if (progressFillEl && progressTextEl) {
-            const submittedEvaluations = Number(data.data.completedStudents ?? data.data.totalEvaluationsSubmitted) || 0;
-            const expectedEvaluations = Math.max(0, Number(data.data.expectedStudents ?? data.data.expectedEvaluations) || 0);
-            const pendingEvaluations = Number.isFinite(Number(data.data.pendingEvaluations))
+            const submittedEvaluations =
+              Number(
+                data.data.completedStudents ??
+                  data.data.totalEvaluationsSubmitted,
+              ) || 0;
+            const expectedEvaluations = Math.max(
+              0,
+              Number(
+                data.data.expectedStudents ?? data.data.expectedEvaluations,
+              ) || 0,
+            );
+            const pendingEvaluations = Number.isFinite(
+              Number(data.data.pendingEvaluations),
+            )
               ? Number(data.data.pendingEvaluations)
               : Math.max(expectedEvaluations - submittedEvaluations, 0);
-            const completionPercent = expectedEvaluations > 0
-              ? Math.min(100, (submittedEvaluations / expectedEvaluations) * 100)
-              : 0;
-            const completionRateEl = document.getElementById("evaluationCompletionRate");
-            const submissionCountEl = document.getElementById("evaluationSubmissionCount");
-            const pendingCountEl = document.getElementById("evaluationPendingCount");
-            if (completionRateEl) completionRateEl.textContent = `${completionPercent.toFixed(1)}%`;
-            if (submissionCountEl) submissionCountEl.textContent = submittedEvaluations.toLocaleString();
-            if (pendingCountEl) pendingCountEl.textContent = pendingEvaluations.toLocaleString();
+            const completionPercent =
+              expectedEvaluations > 0
+                ? Math.min(
+                    100,
+                    (submittedEvaluations / expectedEvaluations) * 100,
+                  )
+                : 0;
+            const completionRateEl = document.getElementById(
+              "evaluationCompletionRate",
+            );
+            const submissionCountEl = document.getElementById(
+              "evaluationSubmissionCount",
+            );
+            const pendingCountEl = document.getElementById(
+              "evaluationPendingCount",
+            );
+            if (completionRateEl)
+              completionRateEl.textContent = `${completionPercent.toFixed(1)}%`;
+            if (submissionCountEl)
+              submissionCountEl.textContent =
+                submittedEvaluations.toLocaleString();
+            if (pendingCountEl)
+              pendingCountEl.textContent = pendingEvaluations.toLocaleString();
 
             if (!Number(data.data.activePeriodId)) {
               progressFillEl.style.width = "0%";
@@ -4652,7 +6025,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
               const progressPercent = Math.min(
                 100,
-                Math.round((submittedEvaluations / expectedEvaluations) * 100)
+                Math.round((submittedEvaluations / expectedEvaluations) * 100),
               );
               progressFillEl.style.width = `${progressPercent}%`;
               progressTextEl.textContent = `${submittedEvaluations} of ${expectedEvaluations} students finished`;
@@ -4661,11 +6034,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Update overall faculty rating
           const overallRatingEl = document.getElementById("overallRating");
-          if (overallRatingEl && data?.data && data.data.overallRating !== undefined && data.data.overallRating !== null) {
+          if (
+            overallRatingEl &&
+            data?.data &&
+            data.data.overallRating !== undefined &&
+            data.data.overallRating !== null
+          ) {
             const oldValue = overallRatingEl.textContent;
             const numericRating = Number(data.data.overallRating);
-            overallRatingEl.textContent = Number.isFinite(numericRating) ? numericRating.toFixed(2) : String(data.data.overallRating);
-            console.log("Updated overallRating from", oldValue, "to:", data.data.overallRating);
+            overallRatingEl.textContent = Number.isFinite(numericRating)
+              ? numericRating.toFixed(2)
+              : String(data.data.overallRating);
+            console.log(
+              "Updated overallRating from",
+              oldValue,
+              "to:",
+              data.data.overallRating,
+            );
             // Add visual feedback for rating change
             overallRatingEl.style.transition = "color 0.5s, transform 0.3s";
             overallRatingEl.style.color = "var(--rating-excellent)";
@@ -4680,7 +6065,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const ratingsBody = document.getElementById("ratings-body");
           if (ratingsBody) {
             ratingsBody.innerHTML = "";
-            data.data.ratings.forEach(rating => {
+            data.data.ratings.forEach((rating) => {
               const row = document.createElement("tr");
               row.innerHTML = `
               <td>${rating.name}</td>
@@ -4707,7 +6092,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Update Top 5 Faculty Performance bar chart
           window.topPerformanceState.allRatings = data.data.ratings || [];
-          window.topPerformanceState.sortedRatings = [...window.topPerformanceState.allRatings].sort((a, b) => Number(b.rating) - Number(a.rating));
+          window.topPerformanceState.sortedRatings = [
+            ...window.topPerformanceState.allRatings,
+          ].sort((a, b) => Number(b.rating) - Number(a.rating));
           updateTopPerformanceChart();
 
           // If detailed modal is open, refresh it to reflect latest ranks
@@ -4720,12 +6107,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Update rating distribution donut without changing the legend layout
           initRatingDistributionChart(data.data.ratingDistribution);
-
         } else {
           console.error("Error loading dashboard stats:", data.message);
         }
       })
-      .catch(err => console.error("Network error:", err))
+      .catch((err) => console.error("Network error:", err))
       .finally(() => {
         dashboardStatsLoading = false;
         if (!silent) hideSectionSkeleton("dashboard-section");
@@ -4744,7 +6130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (departments.length === 0) return;
 
     // Simple bar chart
-    const maxValue = Math.max(...departments.map(d => d.count));
+    const maxValue = Math.max(...departments.map((d) => d.count));
     const barWidth = canvas.width / (departments.length * 1.5);
     const barSpacing = barWidth * 0.5;
     const chartHeight = canvas.height - 40;
@@ -4787,13 +6173,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getFacultyInitials(name) {
-    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    const parts = String(name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
     if (parts.length === 0) return "FA";
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    const suffixes = new Set(["jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"]);
-    const lastName = suffixes.has(parts[parts.length - 1].toLowerCase()) && parts.length > 2
-      ? parts[parts.length - 2]
-      : parts[parts.length - 1];
+    const suffixes = new Set([
+      "jr",
+      "jr.",
+      "sr",
+      "sr.",
+      "ii",
+      "iii",
+      "iv",
+      "v",
+    ]);
+    const lastName =
+      suffixes.has(parts[parts.length - 1].toLowerCase()) && parts.length > 2
+        ? parts[parts.length - 2]
+        : parts[parts.length - 1];
     return `${parts[0][0]}${lastName[0]}`.toUpperCase();
   }
 
@@ -4811,14 +6210,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (wrapper && !wrapper.querySelector("#topPerformanceChart")) {
-      wrapper.innerHTML = '<div id="topPerformanceChart" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all faculty performance rankings"></div>';
+      wrapper.innerHTML =
+        '<div id="topPerformanceChart" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all faculty performance rankings"></div>';
     }
 
     const currentProgressList = document.getElementById("topPerformanceChart");
     if (!currentProgressList) return;
 
-    currentProgressList.title = "Open the Evaluation Report for all faculty rankings.";
-    currentProgressList.onclick = event => {
+    currentProgressList.title =
+      "Open the Evaluation Report for all faculty rankings.";
+    currentProgressList.onclick = (event) => {
       event.preventDefault();
       showSection("report-section");
     };
@@ -4830,18 +6231,21 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (chartSource.length === 0) {
-      currentProgressList.innerHTML = '<div class="top-performance-empty">No faculty ratings available.</div>';
+      currentProgressList.innerHTML =
+        '<div class="top-performance-empty">No faculty ratings available.</div>';
       return;
     }
 
-    currentProgressList.innerHTML = chartSource.map((item, index) => {
-      const pct = item.percentage !== undefined
-        ? parseFloat(item.percentage)
-        : getRatingPercentageValue(item.rating);
-      const displayPct = `${pct.toFixed(1)}%`;
-      const facultyName = item.name || "Unknown Faculty";
-      const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
-      return `
+    currentProgressList.innerHTML = chartSource
+      .map((item, index) => {
+        const pct =
+          item.percentage !== undefined
+            ? parseFloat(item.percentage)
+            : getRatingPercentageValue(item.rating);
+        const displayPct = `${pct.toFixed(1)}%`;
+        const facultyName = item.name || "Unknown Faculty";
+        const progressColorClass = index % 2 === 0 ? "is-blue" : "is-green";
+        return `
       <div class="top-performance-progress-item">
         <div class="top-performance-rank">${index + 1}.</div>
         <div class="top-performance-avatar faculty-ranking-avatar" aria-hidden="true">${escapeHtml(getFacultyInitials(facultyName))}</div>
@@ -4856,7 +6260,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
-    }).join("");
+      })
+      .join("");
   }
 
   function showAllFacultyPerformance() {
@@ -4869,7 +6274,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function populateTopPerformanceModal() {
     const tableBody = document.getElementById("top-performance-modal-body");
-    const summaryText = document.getElementById("top-performance-modal-summary");
+    const summaryText = document.getElementById(
+      "top-performance-modal-summary",
+    );
     if (!tableBody || !summaryText) return;
 
     const sorted = window.topPerformanceState.sortedRatings || [];
@@ -4877,7 +6284,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (sorted.length === 0) {
       const emptyRow = document.createElement("tr");
-      emptyRow.innerHTML = '<td colspan="3" class="admin-empty-state">No faculty ratings available.</td>';
+      emptyRow.innerHTML =
+        '<td colspan="3" class="admin-empty-state">No faculty ratings available.</td>';
       tableBody.appendChild(emptyRow);
       summaryText.textContent = "No ranked faculty data available.";
       return;
@@ -4886,9 +6294,10 @@ document.addEventListener("DOMContentLoaded", () => {
     summaryText.textContent = `Showing ${sorted.length} ranked faculty members in descending order.`;
 
     sorted.forEach((item, index) => {
-      const pct = item.percentage !== undefined
-        ? parseFloat(item.percentage)
-        : getRatingPercentageValue(item.rating);
+      const pct =
+        item.percentage !== undefined
+          ? parseFloat(item.percentage)
+          : getRatingPercentageValue(item.rating);
       const row = document.createElement("tr");
       row.innerHTML = `
       <td>${index + 1}</td>
@@ -4932,7 +6341,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!rankingCard || rankingCard.dataset.clickBound === "true") return;
     rankingCard.dataset.clickBound = "true";
     rankingCard.addEventListener("click", openReportFacultyRankings);
-    rankingCard.addEventListener("keydown", event => {
+    rankingCard.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         openReportFacultyRankings(event);
       }
@@ -4942,9 +6351,11 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDashboardStats();
   initializeReportRankingClickTarget();
   // Only load evaluations if report section is initially visible
-  const currentSection = document.querySelector('.section:not([style*="display: none"])');
+  const currentSection = document.querySelector(
+    '.section:not([style*="display: none"])',
+  );
   if (currentSection?.id) activeAdminSection = currentSection.id;
-  if (currentSection && currentSection.id === 'report-section') {
+  if (currentSection && currentSection.id === "report-section") {
     loadEvaluations();
   }
   startAdminRealtimeRefresh();
@@ -4952,10 +6363,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // ========================= Students  ==========================================================================================
   const studentTbody = document.querySelector("#students-section table tbody"),
     programSelect = document.getElementById("student-program");
-  const archivedStudentTbody = document.querySelector(".archived-students-table tbody");
-  const studentTableWrapper = document.querySelector("#students-section .table-wrapper");
-  const studentToolbarBox = document.querySelector("#students-section .student-toolbar-box");
-  const archivedStudentSection = document.querySelector("#students-section .archived-student-section");
+  const archivedStudentTbody = document.querySelector(
+    ".archived-students-table tbody",
+  );
+  const studentTableWrapper = document.querySelector(
+    "#students-section .table-wrapper",
+  );
+  const studentToolbarBox = document.querySelector(
+    "#students-section .student-toolbar-box",
+  );
+  const archivedStudentSection = document.querySelector(
+    "#students-section .archived-student-section",
+  );
 
   function updateStudentCountSummary() {
     if (!studentTbody) return;
@@ -4963,7 +6382,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let total = 0;
     let regular = 0;
     let irregular = 0;
-    [...studentTbody.rows].forEach(row => {
+    [...studentTbody.rows].forEach((row) => {
       if (!row.dataset.id || row.style.display === "none") return;
       total++;
       if (row.dataset.studentType === "irregular") irregular++;
@@ -4996,7 +6415,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (archivedSearch) {
         archivedSearch.value = "";
         if (archivedStudentTbody) {
-          [...archivedStudentTbody.rows].forEach(row => row.style.display = "");
+          [...archivedStudentTbody.rows].forEach(
+            (row) => (row.style.display = ""),
+          );
         }
       }
     }
@@ -5024,10 +6445,17 @@ document.addEventListener("DOMContentLoaded", () => {
         function runArchivedFilter() {
           const term = archivedSearch.value.toLowerCase().trim();
           if (!archivedStudentTbody) return;
-          [...archivedStudentTbody.rows].forEach(row => {
-            const idText = (row.querySelector("td:nth-child(1)")?.textContent || "").toLowerCase();
-            const nameText = (row.querySelector("td:nth-child(2)")?.textContent || "").toLowerCase();
-            row.style.display = (!term || idText.includes(term) || nameText.includes(term)) ? "" : "none";
+          [...archivedStudentTbody.rows].forEach((row) => {
+            const idText = (
+              row.querySelector("td:nth-child(1)")?.textContent || ""
+            ).toLowerCase();
+            const nameText = (
+              row.querySelector("td:nth-child(2)")?.textContent || ""
+            ).toLowerCase();
+            row.style.display =
+              !term || idText.includes(term) || nameText.includes(term)
+                ? ""
+                : "none";
           });
         }
 
@@ -5045,16 +6473,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------- Helpers -------------------
-  function val(id) { return document.getElementById("student-" + id).value.trim(); }
+  function val(id) {
+    return document.getElementById("student-" + id).value.trim();
+  }
 
   // Function to format year level (1 -> 1st Year, 2 -> 2nd Year, etc.)
   function getFormattedYearLevel(yearLevel) {
-    if (!yearLevel) return '';
+    if (!yearLevel) return "";
 
     const year = parseInt(yearLevel);
     if (isNaN(year)) return yearLevel;
 
-    const suffix = year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th';
+    const suffix =
+      year === 1 ? "st" : year === 2 ? "nd" : year === 3 ? "rd" : "th";
     return `${year}${suffix} Year`;
   }
 
@@ -5083,19 +6514,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const value = (programValue || "").toString().trim();
     if (!value || !Array.isArray(programs)) return null;
 
-    return programs.find(program =>
-      String(program.id) === value ||
-      normalizeFilterText(program.name) === normalizeFilterText(value) ||
-      normalizeFilterText(program.program_name) === normalizeFilterText(value)
-    ) || null;
+    return (
+      programs.find(
+        (program) =>
+          String(program.id) === value ||
+          normalizeFilterText(program.name) === normalizeFilterText(value) ||
+          normalizeFilterText(program.program_name) ===
+            normalizeFilterText(value),
+      ) || null
+    );
   }
 
   // Function to get program name from program ID
   function getProgramName(programId) {
-    if (!programId) return '';
+    if (!programId) return "";
 
     const program = getProgramByStudentValue(programId);
-    return program ? (program.name || program.program_name || programId) : programId;
+    return program
+      ? program.name || program.program_name || programId
+      : programId;
   }
 
   function resetSubmitBtn(text) {
@@ -5122,14 +6559,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add programs to dropdown
     if (programs && Array.isArray(programs)) {
-      programs.forEach(program => {
+      programs.forEach((program) => {
         const option = document.createElement("option");
-        option.value = String(program.id || '');
-        option.textContent = program.name || program.program_name || '';
+        option.value = String(program.id || "");
+        option.textContent = program.name || program.program_name || "";
         dropdown.appendChild(option);
-        console.log("Added program to dropdown:", program.name || program.program_name);
+        console.log(
+          "Added program to dropdown:",
+          program.name || program.program_name,
+        );
       });
-      if ([...dropdown.options].some(option => option.value === currentValue)) {
+      if (
+        [...dropdown.options].some((option) => option.value === currentValue)
+      ) {
         dropdown.value = currentValue;
       }
     } else {
@@ -5137,13 +6579,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
   //  Dynamic Program -------------------
   let programs = [];
   function addProgramToDropdown(programName) {
     if (programName && !programs.includes(programName)) {
       programs.push(programName);
-      programSelect.insertAdjacentHTML("beforeend", `<option value="${programName}">${programName}</option>`);
+      programSelect.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${programName}">${programName}</option>`,
+      );
     }
   }
 
@@ -5151,21 +6595,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadStudentPrograms() {
     console.log("Loading student programs...");
     return fetch("get_StudentProgram.php")
-      .then(r => {
+      .then((r) => {
         console.log("Response status:", r.status);
         return r.json();
       })
-      .then(data => {
+      .then((data) => {
         console.log("Programs data received:", data);
         programs = data; // Store full program objects with id and name
         programSelect.innerHTML = `<option value="" disabled selected>-- Select Program --</option>`;
-        data.forEach(program => {
-          programSelect.insertAdjacentHTML("beforeend", `<option value="${program.id}">${program.name}</option>`);
+        data.forEach((program) => {
+          programSelect.insertAdjacentHTML(
+            "beforeend",
+            `<option value="${program.id}">${program.name}</option>`,
+          );
         });
         console.log("Programs stored in variable:", programs);
         return data; // Return data for chaining
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading programs:", err);
         throw err; // Re-throw to maintain Promise rejection
       });
@@ -5188,7 +6635,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function groupSubjectsByProgram(subjects) {
     return subjects.reduce((groups, subject) => {
       const programCode = String(subject.program_code || "N/A").trim() || "N/A";
-      const programName = String(subject.program_name || "Unassigned Program").trim() || "Unassigned Program";
+      const programName =
+        String(subject.program_name || "Unassigned Program").trim() ||
+        "Unassigned Program";
       const key = `${programCode}__${programName}`;
 
       if (!groups[key]) {
@@ -5205,16 +6654,28 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tbody) return;
 
     if (!subjects || subjects.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No subjects available</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="6" class="admin-empty-state">No subjects available</td></tr>';
       return;
     }
 
-    const selectedIds = new Set(selectedFacultySubjects.map(subject => String(subject.id)));
+    const selectedIds = new Set(
+      selectedFacultySubjects.map((subject) => String(subject.id)),
+    );
     tbody.innerHTML = subjects
       .slice()
-      .sort((a, b) => String(a.subject_code || "").localeCompare(String(b.subject_code || "")))
-      .map(subject => `
-        <tr class="faculty-subject-selection-row" data-search="${escapeHtml(facultySubjectSearchText(subject))}" data-year="${getSubjectYearOrder(subject.year_level)}" data-semester="${escapeHtml(String(subject.semester || "").trim().toLowerCase())}" data-program="${escapeHtml(subject.program_code || subject.program_name || "N/A")}">
+      .sort((a, b) =>
+        String(a.subject_code || "").localeCompare(
+          String(b.subject_code || ""),
+        ),
+      )
+      .map(
+        (subject) => `
+        <tr class="faculty-subject-selection-row" data-search="${escapeHtml(facultySubjectSearchText(subject))}" data-year="${getSubjectYearOrder(subject.year_level)}" data-semester="${escapeHtml(
+          String(subject.semester || "")
+            .trim()
+            .toLowerCase(),
+        )}" data-program="${escapeHtml(subject.program_code || subject.program_name || "N/A")}">
           <td><input type="checkbox" class="faculty-subject-selection-checkbox" value="${subject.id}" ${selectedIds.has(String(subject.id)) ? "checked" : ""}></td>
           <td>${escapeHtml(subject.subject_code || "")}</td>
           <td>${escapeHtml(subject.subject_desc || "")}</td>
@@ -5222,16 +6683,34 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${escapeHtml(formatSubjectYearLevel(subject.year_level))}</td>
           <td>${escapeHtml(subject.program_code || subject.program_name || "N/A")}</td>
         </tr>
-      `).join("");
+      `,
+      )
+      .join("");
   }
 
   function attachFacultySubjectSearch() {
-    const searchInput = document.getElementById("faculty-subject-selection-search");
+    const searchInput = document.getElementById(
+      "faculty-subject-selection-search",
+    );
     const yearFilter = document.getElementById("faculty-subject-year-filter");
-    const semesterFilter = document.getElementById("faculty-subject-semester-filter");
-    const programFilter = document.getElementById("faculty-subject-program-filter");
-    const subjectsList = document.getElementById("faculty-subject-selection-tbody");
-    if (!searchInput || !yearFilter || !semesterFilter || !programFilter || !subjectsList || searchInput.dataset.bound === "true") return;
+    const semesterFilter = document.getElementById(
+      "faculty-subject-semester-filter",
+    );
+    const programFilter = document.getElementById(
+      "faculty-subject-program-filter",
+    );
+    const subjectsList = document.getElementById(
+      "faculty-subject-selection-tbody",
+    );
+    if (
+      !searchInput ||
+      !yearFilter ||
+      !semesterFilter ||
+      !programFilter ||
+      !subjectsList ||
+      searchInput.dataset.bound === "true"
+    )
+      return;
 
     searchInput.dataset.bound = "true";
 
@@ -5240,13 +6719,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedYear = yearFilter.value;
       const selectedSemester = semesterFilter.value;
       const selectedProgram = programFilter.value;
-      subjectsList.querySelectorAll(".faculty-subject-selection-row").forEach(item => {
-        const matchesSearch = !term || item.dataset.search.includes(term);
-        const matchesYear = selectedYear === "all" || item.dataset.year === selectedYear;
-        const matchesSemester = selectedSemester === "all" || item.dataset.semester === selectedSemester;
-        const matchesProgram = selectedProgram === "all" || item.dataset.program === selectedProgram;
-        item.hidden = !(matchesSearch && matchesYear && matchesSemester && matchesProgram);
-      });
+      subjectsList
+        .querySelectorAll(".faculty-subject-selection-row")
+        .forEach((item) => {
+          const matchesSearch = !term || item.dataset.search.includes(term);
+          const matchesYear =
+            selectedYear === "all" || item.dataset.year === selectedYear;
+          const matchesSemester =
+            selectedSemester === "all" ||
+            item.dataset.semester === selectedSemester;
+          const matchesProgram =
+            selectedProgram === "all" ||
+            item.dataset.program === selectedProgram;
+          item.hidden = !(
+            matchesSearch &&
+            matchesYear &&
+            matchesSemester &&
+            matchesProgram
+          );
+        });
     };
 
     searchInput.addEventListener("input", applyFacultySubjectFilters);
@@ -5256,7 +6747,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (subjectsList.dataset.rowSelectionBound !== "true") {
       subjectsList.dataset.rowSelectionBound = "true";
-      subjectsList.addEventListener("click", event => {
+      subjectsList.addEventListener("click", (event) => {
         if (event.target.closest("input[type='checkbox']")) return;
 
         const row = event.target.closest(".faculty-subject-selection-row");
@@ -5267,15 +6758,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function populateFacultyProgramFilter(subjects) {
-    const programFilter = document.getElementById("faculty-subject-program-filter");
+    const programFilter = document.getElementById(
+      "faculty-subject-program-filter",
+    );
     if (!programFilter) return;
 
     const programs = new Map();
-    (subjects || []).forEach(subject => {
-      const value = String(subject.program_code || subject.program_name || "N/A").trim() || "N/A";
-      const label = subject.program_code && subject.program_name
-        ? `${subject.program_code} - ${subject.program_name}`
-        : value;
+    (subjects || []).forEach((subject) => {
+      const value =
+        String(subject.program_code || subject.program_name || "N/A").trim() ||
+        "N/A";
+      const label =
+        subject.program_code && subject.program_name
+          ? `${subject.program_code} - ${subject.program_name}`
+          : value;
       programs.set(value, label);
     });
 
@@ -5283,7 +6779,10 @@ document.addEventListener("DOMContentLoaded", () => {
     Array.from(programs.entries())
       .sort((a, b) => a[1].localeCompare(b[1]))
       .forEach(([value, label]) => {
-        programFilter.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`);
+        programFilter.insertAdjacentHTML(
+          "beforeend",
+          `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`,
+        );
       });
   }
 
@@ -5292,11 +6791,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) return;
 
     if (selectedFacultySubjects.length === 0) {
-      container.innerHTML = '<p class="empty-subject-message">No subjects selected</p>';
+      container.innerHTML =
+        '<p class="empty-subject-message">No subjects selected</p>';
       return;
     }
 
-    container.innerHTML = selectedFacultySubjects.map(subject => `
+    container.innerHTML = selectedFacultySubjects
+      .map(
+        (subject) => `
       <div class="selected-subject-item">
         <span>
           <strong>${escapeHtml(subject.subject_code || "")}</strong>
@@ -5307,11 +6809,15 @@ document.addEventListener("DOMContentLoaded", () => {
           <i class="ph ph-x"></i>
         </button>
       </div>
-    `).join("");
+    `,
+      )
+      .join("");
 
-    container.querySelectorAll(".remove-faculty-subject").forEach(button => {
+    container.querySelectorAll(".remove-faculty-subject").forEach((button) => {
       button.addEventListener("click", () => {
-        selectedFacultySubjects = selectedFacultySubjects.filter(subject => String(subject.id) !== String(button.dataset.id));
+        selectedFacultySubjects = selectedFacultySubjects.filter(
+          (subject) => String(subject.id) !== String(button.dataset.id),
+        );
         renderSelectedFacultySubjects();
       });
     });
@@ -5319,10 +6825,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openFacultySubjectSelection() {
     if (!facultySubjectSelectionModal) return;
-    const searchInput = document.getElementById("faculty-subject-selection-search");
+    const searchInput = document.getElementById(
+      "faculty-subject-selection-search",
+    );
     const yearFilter = document.getElementById("faculty-subject-year-filter");
-    const semesterFilter = document.getElementById("faculty-subject-semester-filter");
-    const programFilter = document.getElementById("faculty-subject-program-filter");
+    const semesterFilter = document.getElementById(
+      "faculty-subject-semester-filter",
+    );
+    const programFilter = document.getElementById(
+      "faculty-subject-program-filter",
+    );
     if (searchInput) searchInput.value = "";
     if (yearFilter) yearFilter.value = "all";
     if (semesterFilter) semesterFilter.value = "all";
@@ -5333,46 +6845,65 @@ document.addEventListener("DOMContentLoaded", () => {
     facultySubjectSelectionModal.style.zIndex = "100001";
   }
 
-  document.getElementById("open-faculty-subject-selection")?.addEventListener("click", openFacultySubjectSelection);
-  document.getElementById("cancel-faculty-subject-selection")?.addEventListener("click", () => {
-    if (facultySubjectSelectionModal) facultySubjectSelectionModal.style.display = "none";
-  });
-  facultySubjectSelectionModal?.querySelector(".close-btn")?.addEventListener("click", () => {
-    facultySubjectSelectionModal.style.display = "none";
-  });
-  document.getElementById("confirm-faculty-subject-selection")?.addEventListener("click", () => {
-    const selectedIds = new Set(Array.from(document.querySelectorAll("#faculty-subject-selection-tbody input:checked"))
-      .map(input => String(input.value)));
-    selectedFacultySubjects = allFacultySubjects.filter(subject => selectedIds.has(String(subject.id)));
-    renderSelectedFacultySubjects();
-    facultySubjectSelectionModal.style.display = "none";
-  });
+  document
+    .getElementById("open-faculty-subject-selection")
+    ?.addEventListener("click", openFacultySubjectSelection);
+  document
+    .getElementById("cancel-faculty-subject-selection")
+    ?.addEventListener("click", () => {
+      if (facultySubjectSelectionModal)
+        facultySubjectSelectionModal.style.display = "none";
+    });
+  facultySubjectSelectionModal
+    ?.querySelector(".close-btn")
+    ?.addEventListener("click", () => {
+      facultySubjectSelectionModal.style.display = "none";
+    });
+  document
+    .getElementById("confirm-faculty-subject-selection")
+    ?.addEventListener("click", () => {
+      const selectedIds = new Set(
+        Array.from(
+          document.querySelectorAll(
+            "#faculty-subject-selection-tbody input:checked",
+          ),
+        ).map((input) => String(input.value)),
+      );
+      selectedFacultySubjects = allFacultySubjects.filter((subject) =>
+        selectedIds.has(String(subject.id)),
+      );
+      renderSelectedFacultySubjects();
+      facultySubjectSelectionModal.style.display = "none";
+    });
 
   function loadAllFacultySubjects() {
     return fetch("subject_crud.php?action=get_all")
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         allFacultySubjects = Array.isArray(data) ? data : [];
         populateFacultyProgramFilter(allFacultySubjects);
         renderFacultySubjectList(allFacultySubjects);
         renderSelectedFacultySubjects();
         return data;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading faculty subjects:", err);
         throw err;
       });
   }
 
   const subjectsList = document.getElementById("faculty-subjects-list");
-  loadAllFacultySubjects().then(data => {
-    renderFacultySubjectList(data);
-    renderSelectedFacultySubjects();
-  })
-    .catch(err => {
+  loadAllFacultySubjects()
+    .then((data) => {
+      renderFacultySubjectList(data);
+      renderSelectedFacultySubjects();
+    })
+    .catch((err) => {
       console.error("Error fetching faculty subjects:", err);
       const tbody = document.getElementById("faculty-subject-selection-tbody");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#dc2626;">Error loading subjects</td></tr>';
+      if (tbody)
+        tbody.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;padding:20px;color:#dc2626;">Error loading subjects</td></tr>';
     });
 
   //  Load Students -------------------
@@ -5380,81 +6911,94 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Loading students...");
 
     // First load programs, then load students
-    loadStudentPrograms().then(() => {
-      // Populate program dropdown
-      populateProgramDropdown();
+    loadStudentPrograms()
+      .then(() => {
+        // Populate program dropdown
+        populateProgramDropdown();
 
-      return fetch("get_students.php")
-        .then(r => {
-          console.log("Response status:", r.status);
-          if (!r.ok) {
-            throw new Error(`HTTP error! status: ${r.status}`);
-          }
-          return r.json();
-        })
-        .then(data => {
-          console.log("Students data received:", data);
-
-          // Check for error response from PHP
-          if (data.error) {
-            console.error("Database error:", data.error);
-            studentTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Error loading students</td></tr>';
-            return;
-          }
-
-          studentTbody.innerHTML = "";
-          if (archivedStudentTbody) archivedStudentTbody.innerHTML = "";
-
-          // Check if data is empty or not an array
-          if (!data || !Array.isArray(data) || data.length === 0) {
-            console.log("No students found");
-            studentTbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No students found</td></tr>';
-            if (archivedStudentTbody) {
-              archivedStudentTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No archived students found</td></tr>';
+        return fetch("get_students.php")
+          .then((r) => {
+            console.log("Response status:", r.status);
+            if (!r.ok) {
+              throw new Error(`HTTP error! status: ${r.status}`);
             }
-            updateStudentCountSummary();
-            return;
-          }
+            return r.json();
+          })
+          .then((data) => {
+            console.log("Students data received:", data);
 
-          data.forEach(stu => {
-            console.log("Processing student:", stu);
-            console.log("Student subjects:", stu.subjects);
-            const row = document.createElement("tr");
-            row.dataset.id = stu.id;
-            row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
-            row.dataset.studentType = String(stu.student_type || stu.yearlevel || "").trim().toLowerCase() === "irregular"
-              ? "irregular"
-              : "regular";
-            const studentProgram = getProgramByStudentValue(stu.program);
-            row.dataset.programId = studentProgram ? String(studentProgram.id) : String(stu.program || "");
-            row.dataset.programName = normalizeFilterText(studentProgram ? (studentProgram.name || studentProgram.program_name) : stu.program);
-            row.dataset.status = (stu.status || "active").toLowerCase();
+            // Check for error response from PHP
+            if (data.error) {
+              console.error("Database error:", data.error);
+              studentTbody.innerHTML =
+                '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Error loading students</td></tr>';
+              return;
+            }
 
-            if (normalizeStatusValue(stu.status) === "archived") {
-              row.innerHTML = `
-            <td><span class="person-id-badge">${stu.student_number || ''}</span></td>
-            <td><div class="student-name-cell"><strong>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix || ""}</strong>
-                <small>${stu.email || ''}</small></div>
+            studentTbody.innerHTML = "";
+            if (archivedStudentTbody) archivedStudentTbody.innerHTML = "";
+
+            // Check if data is empty or not an array
+            if (!data || !Array.isArray(data) || data.length === 0) {
+              console.log("No students found");
+              studentTbody.innerHTML =
+                '<tr><td colspan="6" class="admin-empty-state">No students found</td></tr>';
+              if (archivedStudentTbody) {
+                archivedStudentTbody.innerHTML =
+                  '<tr><td colspan="5" class="admin-empty-state">No archived students found</td></tr>';
+              }
+              updateStudentCountSummary();
+              return;
+            }
+
+            data.forEach((stu) => {
+              console.log("Processing student:", stu);
+              console.log("Student subjects:", stu.subjects);
+              const row = document.createElement("tr");
+              row.dataset.id = stu.id;
+              row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
+              row.dataset.studentType =
+                String(stu.student_type || stu.yearlevel || "")
+                  .trim()
+                  .toLowerCase() === "irregular"
+                  ? "irregular"
+                  : "regular";
+              const studentProgram = getProgramByStudentValue(stu.program);
+              row.dataset.programId = studentProgram
+                ? String(studentProgram.id)
+                : String(stu.program || "");
+              row.dataset.programName = normalizeFilterText(
+                studentProgram
+                  ? studentProgram.name || studentProgram.program_name
+                  : stu.program,
+              );
+              row.dataset.status = (stu.status || "active").toLowerCase();
+
+              if (normalizeStatusValue(stu.status) === "archived") {
+                row.innerHTML = `
+            <td><span class="person-id-badge">${stu.student_number || ""}</span></td>
+            <td><div class="student-name-cell"><strong>${stu.firstname || ""} ${stu.lastname || ""} ${stu.suffix || ""}</strong>
+                <small>${stu.email || ""}</small></div>
             </td>
             <td><div class="student-program-cell"><strong>${formatStudentYearSection(stu.yearlevel, stu.section)}</strong>
                 <small>${getProgramName(stu.program)}</small></div>
             </td>
             <td>${statusPillHtml(stu.status)}</td>
-            <td><span class="student-type-badge ${stu.yearlevel === 'irregular' ? 'irregular' : 'regular'}">${stu.yearlevel === 'irregular' ? 'Irregular' : 'Regular'}</span></td>`;
-              if (archivedStudentTbody) archivedStudentTbody.appendChild(row);
-              return;
-            }
+            <td><span class="student-type-badge ${stu.yearlevel === "irregular" ? "irregular" : "regular"}">${stu.yearlevel === "irregular" ? "Irregular" : "Regular"}</span></td>`;
+                if (archivedStudentTbody) archivedStudentTbody.appendChild(row);
+                return;
+              }
 
-            row.innerHTML = `
-          <td><span class="person-id-badge">${stu.student_number || ''}</span></td>
-          <td><div class="student-name-cell"><strong>${stu.firstname || ''} ${stu.lastname || ''} ${stu.suffix || ""}</strong>
-              <small>${stu.email || ''}</small></div>
+              row.innerHTML = `
+          <td><span class="person-id-badge">${stu.student_number || ""}</span></td>
+          <td><div class="student-name-cell"><strong>${stu.firstname || ""} ${stu.lastname || ""} ${stu.suffix || ""}</strong>
+              <small>${stu.email || ""}</small></div>
           </td>
           <td><div class="student-program-cell"><strong>${formatStudentYearSection(stu.yearlevel, stu.section)}</strong>
               <small>${getProgramName(stu.program)}</small></div>
           </td>
           <td>${statusPillHtml(stu.status)}</td>
-          <td><span class="student-type-badge ${stu.yearlevel === 'irregular' ? 'irregular' : 'regular'}">${stu.yearlevel === 'irregular' ? 'Irregular' : 'Regular'}</span></td>
+          <td><span class="student-type-badge ${stu.yearlevel === "irregular" ? "irregular" : "regular"}">${stu.yearlevel === "irregular" ? "Irregular" : "Regular"}</span></td>
           <td class="action-cell">
             <div class="action-buttons">
               <button class="action-icon-btn view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
@@ -5464,340 +7008,479 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </td>`;
 
-            // Edit button event
-            const editBtn = row.querySelector(".edit-btn");
-            if (editBtn) {
-              editBtn.onclick = () => {
-                console.log("Edit button clicked for student:", stu);
-                selectedSubjects = [];
-                updateSelectedSubjectsDisplay();
-                delete addStudentModal.dataset.editId;
-                delete addStudentModal.dataset.studentData;
-                openModal(addStudentModal, "EDIT STUDENT", "UPDATE STUDENT");
+              // Edit button event
+              const editBtn = row.querySelector(".edit-btn");
+              if (editBtn) {
+                editBtn.onclick = () => {
+                  console.log("Edit button clicked for student:", stu);
+                  selectedSubjects = [];
+                  updateSelectedSubjectsDisplay();
+                  delete addStudentModal.dataset.editId;
+                  delete addStudentModal.dataset.studentData;
+                  openModal(addStudentModal, "EDIT STUDENT", "UPDATE STUDENT");
 
-                const numberInput = document.getElementById("student-number");
-                numberInput.value = stu.student_number || "";
-                numberInput.disabled = true;
-                numberInput.removeAttribute("aria-invalid");
+                  const numberInput = document.getElementById("student-number");
+                  numberInput.value = stu.student_number || "";
+                  numberInput.disabled = true;
+                  numberInput.removeAttribute("aria-invalid");
 
-                const emailInput = document.getElementById("student-email");
-                emailInput.value = stu.email || "";
-                emailInput.disabled = false;
+                  const emailInput = document.getElementById("student-email");
+                  emailInput.value = stu.email || "";
+                  emailInput.disabled = false;
 
-                // Other fields
-                document.getElementById("student-firstname").value = stu.firstname || "";
-                document.getElementById("student-lastname").value = stu.lastname || "";
-                document.getElementById("student-suffix").value = stu.suffix || "";
-                document.getElementById("student-section").value = stu.section || "";
+                  // Other fields
+                  document.getElementById("student-firstname").value =
+                    stu.firstname || "";
+                  document.getElementById("student-lastname").value =
+                    stu.lastname || "";
+                  document.getElementById("student-suffix").value =
+                    stu.suffix || "";
+                  document.getElementById("student-section").value =
+                    stu.section || "";
 
-                // Handle student type and year level
-                const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
-                const yearlevelRow = document.getElementById('yearlevel-row');
-                const yearlevelSelect = document.getElementById('student-yearlevel');
-                const sectionSelect = document.getElementById('student-section');
-                const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
+                  // Handle student type and year level
+                  const studentTypeRadios = document.querySelectorAll(
+                    'input[name="student-type"]',
+                  );
+                  const yearlevelRow = document.getElementById("yearlevel-row");
+                  const yearlevelSelect =
+                    document.getElementById("student-yearlevel");
+                  const sectionSelect =
+                    document.getElementById("student-section");
+                  const subjectsSection = document.querySelector(
+                    ".section-box:has(#add-subject-btn)",
+                  );
 
-                if (stu.yearlevel === 'irregular') {
-                  document.querySelector('input[name="student-type"][value="irregular"]').checked = true;
-                  yearlevelRow.style.setProperty('display', 'none', 'important');
-                  yearlevelSelect.required = false;
-                  yearlevelSelect.value = "";
-                  sectionSelect.required = false;
-                  sectionSelect.value = "";
-                  if (subjectsSection) subjectsSection.style.display = 'block';
-                } else {
-                  document.querySelector('input[name="student-type"][value="regular"]').checked = true;
-                  showYearSectionRow(yearlevelRow);
-                  yearlevelSelect.required = true;
-                  sectionSelect.required = true;
-                  document.getElementById("student-yearlevel").value = stu.yearlevel || "";
-                  document.getElementById("student-section").value = stu.section || "";
-                  if (subjectsSection) subjectsSection.style.display = 'none';
-                }
+                  if (stu.yearlevel === "irregular") {
+                    document.querySelector(
+                      'input[name="student-type"][value="irregular"]',
+                    ).checked = true;
+                    yearlevelRow.style.setProperty(
+                      "display",
+                      "none",
+                      "important",
+                    );
+                    yearlevelSelect.required = false;
+                    yearlevelSelect.value = "";
+                    sectionSelect.required = false;
+                    sectionSelect.value = "";
+                    if (subjectsSection)
+                      subjectsSection.style.display = "block";
+                  } else {
+                    document.querySelector(
+                      'input[name="student-type"][value="regular"]',
+                    ).checked = true;
+                    showYearSectionRow(yearlevelRow);
+                    yearlevelSelect.required = true;
+                    sectionSelect.required = true;
+                    document.getElementById("student-yearlevel").value =
+                      stu.yearlevel || "";
+                    document.getElementById("student-section").value =
+                      stu.section || "";
+                    if (subjectsSection) subjectsSection.style.display = "none";
+                  }
 
-                // Store student data for update
-                addStudentModal.dataset.editId = stu.id;
-                addStudentModal.dataset.studentData = JSON.stringify(stu);
+                  // Store student data for update
+                  addStudentModal.dataset.editId = stu.id;
+                  addStudentModal.dataset.studentData = JSON.stringify(stu);
 
-                // Load existing subjects for this student
-                selectedSubjects = [];
-                if (stu.subjects && Array.isArray(stu.subjects)) {
-                  selectedSubjects = stu.subjects.map(s => ({
-                    ...s,
-                    id: parseInt(s.id, 10),
-                    class_id: s.class_id ? parseInt(s.class_id, 10) : 0,
-                    class_year_level: s.class_year_level || "",
-                    class_section: s.class_section || "",
-                    instructor_name: s.instructor_name || "Unassigned"
-                  }));
-                  console.log("Loading subjects for edit:", selectedSubjects);
-                  console.log("Number of subjects loaded:", selectedSubjects.length);
-                } else {
-                  console.log("No subjects found for this student or subjects is not an array");
-                }
-                updateSelectedSubjectsDisplay();
+                  // Load existing subjects for this student
+                  selectedSubjects = [];
+                  if (stu.subjects && Array.isArray(stu.subjects)) {
+                    selectedSubjects = stu.subjects.map((s) => ({
+                      ...s,
+                      id: parseInt(s.id, 10),
+                      class_id: s.class_id ? parseInt(s.class_id, 10) : 0,
+                      class_year_level: s.class_year_level || "",
+                      class_section: s.class_section || "",
+                      instructor_name: s.instructor_name || "Unassigned",
+                    }));
+                    console.log("Loading subjects for edit:", selectedSubjects);
+                    console.log(
+                      "Number of subjects loaded:",
+                      selectedSubjects.length,
+                    );
+                  } else {
+                    console.log(
+                      "No subjects found for this student or subjects is not an array",
+                    );
+                  }
+                  updateSelectedSubjectsDisplay();
 
-                // Set program value immediately after loading programs
-                loadStudentPrograms().then(() => {
-                  console.log("Programs loaded, setting program to:", stu.program);
+                  // Set program value immediately after loading programs
+                  loadStudentPrograms().then(() => {
+                    console.log(
+                      "Programs loaded, setting program to:",
+                      stu.program,
+                    );
 
-                  // Re-attach student type radio button event listeners after edit form setup
-                  const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
-                  const yearlevelRow = document.getElementById('yearlevel-row');
-                  const yearlevelSelect = document.getElementById('student-yearlevel');
-                  const sectionSelect = document.getElementById('student-section');
-                  const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
+                    // Re-attach student type radio button event listeners after edit form setup
+                    const studentTypeRadios = document.querySelectorAll(
+                      'input[name="student-type"]',
+                    );
+                    const yearlevelRow =
+                      document.getElementById("yearlevel-row");
+                    const yearlevelSelect =
+                      document.getElementById("student-yearlevel");
+                    const sectionSelect =
+                      document.getElementById("student-section");
+                    const subjectsSection = document.querySelector(
+                      ".section-box:has(#add-subject-btn)",
+                    );
 
-                  // Remove existing listeners to avoid duplicates
-                  studentTypeRadios.forEach(radio => {
-                    radio.replaceWith(radio.cloneNode(true));
+                    // Remove existing listeners to avoid duplicates
+                    studentTypeRadios.forEach((radio) => {
+                      radio.replaceWith(radio.cloneNode(true));
+                    });
+
+                    // Get fresh reference after cloning and attach new listeners
+                    const freshRadios = document.querySelectorAll(
+                      'input[name="student-type"]',
+                    );
+                    freshRadios.forEach((radio) => {
+                      radio.addEventListener("change", function () {
+                        console.log("Edit form radio changed to:", this.value);
+
+                        if (
+                          !yearlevelRow ||
+                          !yearlevelSelect ||
+                          !sectionSelect
+                        ) {
+                          console.error(
+                            "Required elements not found in edit form",
+                          );
+                          return;
+                        }
+
+                        if (this.value === "irregular") {
+                          console.log(
+                            "Hiding year level and section for irregular in edit form",
+                          );
+                          yearlevelRow.style.setProperty(
+                            "display",
+                            "none",
+                            "important",
+                          );
+                          yearlevelSelect.required = false;
+                          yearlevelSelect.value = "";
+                          sectionSelect.required = false;
+                          sectionSelect.value = "";
+                          if (subjectsSection)
+                            subjectsSection.style.display = "block";
+                        } else {
+                          console.log(
+                            "Showing year level and section for regular in edit form",
+                          );
+                          showYearSectionRow(yearlevelRow);
+                          yearlevelSelect.required = true;
+                          sectionSelect.required = true;
+                          if (subjectsSection)
+                            subjectsSection.style.display = "none";
+                        }
+                      });
+                    });
+                    programSelect.value = stu.program || "";
+                    console.log("Program set to:", programSelect.value);
                   });
 
-                  // Get fresh reference after cloning and attach new listeners
-                  const freshRadios = document.querySelectorAll('input[name="student-type"]');
-                  freshRadios.forEach(radio => {
-                    radio.addEventListener('change', function () {
-                      console.log('Edit form radio changed to:', this.value);
+                  let submitBtn = resetSubmitBtn("UPDATE STUDENT");
+                  submitBtn.onclick = async (e) => {
+                    e.preventDefault();
+                    submitBtn.disabled = true;
 
-                      if (!yearlevelRow || !yearlevelSelect || !sectionSelect) {
-                        console.error('Required elements not found in edit form');
+                    const studentData = JSON.parse(
+                      addStudentModal.dataset.studentData || "{}",
+                    );
+
+                    const studentType = document.querySelector(
+                      'input[name="student-type"]:checked',
+                    ).value;
+                    // Clear subjects for regular students, keep only for irregular
+                    const subjectIds =
+                      studentType === "irregular"
+                        ? selectedSubjects.map((s) => ({
+                            id: s.id,
+                            class_id: s.class_id || 0,
+                            class_year_level: s.class_year_level || "",
+                            class_section: s.class_section || "",
+                          }))
+                        : [];
+                    let yearlevelValue;
+                    if (studentType === "irregular") {
+                      yearlevelValue = "irregular";
+                    } else {
+                      yearlevelValue =
+                        document.getElementById("student-yearlevel").value;
+                      if (!yearlevelValue) {
+                        showGlobalNotification(
+                          "Please select year level for regular student",
+                          "warning",
+                        );
+                        submitBtn.disabled = false;
                         return;
                       }
+                    }
 
-                      if (this.value === 'irregular') {
-                        console.log('Hiding year level and section for irregular in edit form');
-                        yearlevelRow.style.setProperty('display', 'none', 'important');
-                        yearlevelSelect.required = false;
-                        yearlevelSelect.value = '';
-                        sectionSelect.required = false;
-                        sectionSelect.value = '';
-                        if (subjectsSection) subjectsSection.style.display = 'block';
-                      } else {
-                        console.log('Showing year level and section for regular in edit form');
-                        showYearSectionRow(yearlevelRow);
-                        yearlevelSelect.required = true;
-                        sectionSelect.required = true;
-                        if (subjectsSection) subjectsSection.style.display = 'none';
-                      }
+                    const res = await fetch("student_crud.php", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        action: "edit",
+                        id: studentData.id,
+                        student_number: studentData.student_number,
+                        email: document
+                          .getElementById("student-email")
+                          .value.trim(),
+                        firstname: document
+                          .getElementById("student-firstname")
+                          .value.trim(),
+                        lastname: document
+                          .getElementById("student-lastname")
+                          .value.trim(),
+                        suffix: document
+                          .getElementById("student-suffix")
+                          .value.trim(),
+                        yearlevel: yearlevelValue,
+                        program:
+                          document.getElementById("student-program").value,
+                        section: document
+                          .getElementById("student-section")
+                          .value.trim(),
+                        subjects: subjectIds,
+                        student_type:
+                          document.querySelector(
+                            'input[name="student-type"]:checked',
+                          )?.value || "regular",
+                      }),
                     });
+
+                    const d = await res.json();
+                    if (d.success) {
+                      loadStudents();
+                      closeModal(addStudentModal);
+                      addProgramToDropdown(val("program"));
+                      showNotification(
+                        "Student edited successfully!",
+                        "#4caf50",
+                      );
+                      loadDashboardStats(); // Update dashboard stats in real-time
+                    } else {
+                      showNotification(
+                        d.message || "Error updating student.",
+                        "#f44336",
+                      );
+                    }
+                    submitBtn.disabled = false;
+                  };
+                };
+              } else {
+                console.error("Edit button not found for student row:", stu);
+              }
+
+              const statusMenu = row.querySelector(".status-action-menu");
+              statusMenu
+                .querySelector(".settings-btn")
+                .addEventListener("click", (e) => {
+                  e.stopPropagation();
+                  const willOpen = !statusMenu.classList.contains("open");
+                  closeStatusMenus(statusMenu);
+                  statusMenu.classList.toggle("open", willOpen);
+                  if (willOpen) positionStatusMenu(statusMenu);
+                  else restoreStatusDropdown(statusMenu);
+                });
+              statusMenu
+                .querySelectorAll(".status-option")
+                .forEach((option) => {
+                  option.addEventListener("click", async (e) => {
+                    e.stopPropagation();
+                    const newStatus = option.dataset.status;
+                    try {
+                      const result = await updateStatus(
+                        "student",
+                        stu.id,
+                        newStatus,
+                      );
+                      if (result.success) {
+                        row.dataset.status = newStatus;
+                        row.querySelector("td:nth-child(4)").innerHTML =
+                          statusPillHtml(newStatus);
+                        (option.closest(".status-dropdown-menu") || statusMenu)
+                          .querySelectorAll(".status-option")
+                          .forEach((btn) => {
+                            btn.classList.toggle(
+                              "selected",
+                              btn.dataset.status === newStatus,
+                            );
+                          });
+                        restoreStatusDropdown(statusMenu);
+                        statusMenu.classList.remove("open");
+                        closeStatusMenus();
+                        showNotification(
+                          `Student status updated to ${statusLabel(newStatus)}`,
+                          "#4caf50",
+                        );
+                        refreshSectionStats();
+                      } else {
+                        showNotification(
+                          "Failed to update status: " +
+                            (result.message || "Unknown error"),
+                          "#f44336",
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Student status update error:", error);
+                      showNotification(
+                        "Error updating student status",
+                        "#f44336",
+                      );
+                    }
                   });
-                  programSelect.value = stu.program || "";
-                  console.log("Program set to:", programSelect.value);
                 });
 
-                let submitBtn = resetSubmitBtn("UPDATE STUDENT");
-                submitBtn.onclick = async e => {
-                  e.preventDefault();
-                  submitBtn.disabled = true;
-
-                  const studentData = JSON.parse(addStudentModal.dataset.studentData || "{}");
-
-                  const studentType = document.querySelector('input[name="student-type"]:checked').value;
-                  // Clear subjects for regular students, keep only for irregular
-                  const subjectIds = (studentType === 'irregular')
-                    ? selectedSubjects.map(s => ({
-                      id: s.id,
-                      class_id: s.class_id || 0,
-                      class_year_level: s.class_year_level || "",
-                      class_section: s.class_section || ""
-                    }))
-                    : [];
-                  let yearlevelValue;
-                  if (studentType === 'irregular') {
-                    yearlevelValue = 'irregular';
-                  } else {
-                    yearlevelValue = document.getElementById("student-yearlevel").value;
-                    if (!yearlevelValue) {
-                      showGlobalNotification("Please select year level for regular student", "warning");
-                      submitBtn.disabled = false;
-                      return;
-                    }
+              row
+                .querySelector(".archive-btn")
+                .addEventListener("click", async () => {
+                  const currentStatus = normalizeStatusValue(
+                    row.dataset.status,
+                  );
+                  if (currentStatus === "archived") {
+                    showNotification("Student is already archived", "#64748b");
+                    return;
                   }
 
-                  const res = await fetch("student_crud.php", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      action: "edit",
-                      id: studentData.id,
-                      student_number: studentData.student_number,
-                      email: document.getElementById("student-email").value.trim(),
-                      firstname: document.getElementById("student-firstname").value.trim(),
-                      lastname: document.getElementById("student-lastname").value.trim(),
-                      suffix: document.getElementById("student-suffix").value.trim(),
-                      yearlevel: yearlevelValue,
-                      program: document.getElementById("student-program").value,
-                      section: document.getElementById("student-section").value.trim(),
-                      subjects: subjectIds,
-                      student_type: document.querySelector('input[name="student-type"]:checked')?.value || 'regular'
-                    })
-                  });
+                  openArchiveModal(row, stu, statusMenu, "student");
+                });
 
-                  const d = await res.json();
-                  if (d.success) {
-                    loadStudents();
-                    closeModal(addStudentModal);
-                    addProgramToDropdown(val("program"));
-                    showNotification("Student edited successfully!", "#4caf50");
-                    loadDashboardStats(); // Update dashboard stats in real-time
-                  } else {
-                    showNotification(d.message || "Error updating student.", "#f44336");
-                  }
-                  submitBtn.disabled = false;
+              // View Subjects
+              const viewBtn = row.querySelector(".view-subjects-btn");
+              if (viewBtn) {
+                viewBtn.onclick = () => {
+                  console.log("View subjects button clicked for student:", stu);
+                  viewStudentSubjects(stu);
                 };
+              } else {
+                console.error(
+                  "View subjects button not found for student row:",
+                  stu,
+                );
+              }
+              studentTbody.appendChild(row);
+            });
+            if (studentTbody.rows.length === 0) {
+              studentTbody.innerHTML =
+                '<tr><td colspan="5" class="admin-empty-state">No students found</td></tr>';
+            }
+            if (
+              archivedStudentTbody &&
+              archivedStudentTbody.rows.length === 0
+            ) {
+              archivedStudentTbody.innerHTML =
+                '<tr><td colspan="4" class="admin-empty-state">No archived students found</td></tr>';
+            }
+            // Search functionality
+            const searchInput = document.getElementById("student-search");
+            const programFilter = document.getElementById(
+              "student-program-filter",
+            );
+            const yearlevelFilter = document.getElementById(
+              "student-yearlevel-filter",
+            );
+
+            if (searchInput) {
+              searchInput.oninput = (e) => {
+                filterStudents();
               };
-            } else {
-              console.error("Edit button not found for student row:", stu);
             }
 
-            const statusMenu = row.querySelector(".status-action-menu");
-            statusMenu.querySelector(".settings-btn").addEventListener("click", (e) => {
-              e.stopPropagation();
-              const willOpen = !statusMenu.classList.contains("open");
-              closeStatusMenus(statusMenu);
-              statusMenu.classList.toggle("open", willOpen);
-              if (willOpen) positionStatusMenu(statusMenu);
-              else restoreStatusDropdown(statusMenu);
-            });
-            statusMenu.querySelectorAll(".status-option").forEach(option => {
-              option.addEventListener("click", async (e) => {
-                e.stopPropagation();
-                const newStatus = option.dataset.status;
-                try {
-                  const result = await updateStatus("student", stu.id, newStatus);
-                  if (result.success) {
-                    row.dataset.status = newStatus;
-                    row.querySelector("td:nth-child(4)").innerHTML = statusPillHtml(newStatus);
-                    (option.closest(".status-dropdown-menu") || statusMenu).querySelectorAll(".status-option").forEach(btn => {
-                      btn.classList.toggle("selected", btn.dataset.status === newStatus);
-                    });
-                    restoreStatusDropdown(statusMenu);
-                    statusMenu.classList.remove("open");
-                    closeStatusMenus();
-                    showNotification(`Student status updated to ${statusLabel(newStatus)}`, "#4caf50");
-                    refreshSectionStats();
-                  } else {
-                    showNotification("Failed to update status: " + (result.message || "Unknown error"), "#f44336");
-                  }
-                } catch (error) {
-                  console.error("Student status update error:", error);
-                  showNotification("Error updating student status", "#f44336");
-                }
+            if (programFilter) {
+              programFilter.onchange = (e) => {
+                setStudentFilterActiveStates();
+                filterStudents();
+              };
+            }
+
+            if (yearlevelFilter) {
+              yearlevelFilter.onchange = (e) => {
+                setStudentFilterActiveStates();
+                filterStudents();
+              };
+            }
+
+            setStudentFilterActiveStates();
+            filterStudents();
+
+            function setStudentFilterActiveStates() {
+              [programFilter, yearlevelFilter].forEach((filter) => {
+                if (!filter) return;
+
+                const wrapper = filter.closest(".program-filter-wrapper");
+                if (!wrapper) return;
+
+                wrapper.classList.toggle("is-active", filter.value !== "");
               });
-            });
-
-            row.querySelector(".archive-btn").addEventListener("click", async () => {
-              const currentStatus = normalizeStatusValue(row.dataset.status);
-              if (currentStatus === "archived") {
-                showNotification("Student is already archived", "#64748b");
-                return;
-              }
-
-              openArchiveModal(row, stu, statusMenu, "student");
-            });
-
-            // View Subjects
-            const viewBtn = row.querySelector(".view-subjects-btn");
-            if (viewBtn) {
-              viewBtn.onclick = () => {
-                console.log("View subjects button clicked for student:", stu);
-                viewStudentSubjects(stu);
-              };
-            } else {
-              console.error("View subjects button not found for student row:", stu);
             }
-            studentTbody.appendChild(row);
-          });
-          if (studentTbody.rows.length === 0) {
-            studentTbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No students found</td></tr>';
-          }
-          if (archivedStudentTbody && archivedStudentTbody.rows.length === 0) {
-            archivedStudentTbody.innerHTML = '<tr><td colspan="4" class="admin-empty-state">No archived students found</td></tr>';
-          }
-          // Search functionality
-          const searchInput = document.getElementById("student-search");
-          const programFilter = document.getElementById("student-program-filter");
-          const yearlevelFilter = document.getElementById("student-yearlevel-filter");
 
-          if (searchInput) {
-            searchInput.oninput = e => {
-              filterStudents();
-            };
-          }
+            // Combined filter function
+            function filterStudents() {
+              const searchTerm = searchInput
+                ? searchInput.value.toLowerCase()
+                : "";
+              const selectedProgram = programFilter ? programFilter.value : "";
+              const selectedYearlevel = yearlevelFilter
+                ? yearlevelFilter.value.toLowerCase()
+                : "";
 
-          if (programFilter) {
-            programFilter.onchange = e => {
-              setStudentFilterActiveStates();
-              filterStudents();
-            };
-          }
+              [...studentTbody.rows].forEach((row) => {
+                // Get ID and name only (columns 1 and 2)
+                const idCell = row.querySelector("td:nth-child(1)");
+                const nameCell = row.querySelector("td:nth-child(2)");
+                const programCell = row.querySelector("td:nth-child(3) small");
 
-          if (yearlevelFilter) {
-            yearlevelFilter.onchange = e => {
-              setStudentFilterActiveStates();
-              filterStudents();
-            };
-          }
+                let matchesSearch = true;
+                let matchesProgram = true;
+                let matchesYearlevel = true;
 
-          setStudentFilterActiveStates();
-          filterStudents();
+                // Check search term against ID and name only
+                if (searchTerm) {
+                  const idText = idCell ? idCell.textContent.toLowerCase() : "";
+                  const nameText = nameCell
+                    ? nameCell.textContent.toLowerCase()
+                    : "";
+                  matchesSearch =
+                    idText.includes(searchTerm) ||
+                    nameText.includes(searchTerm);
+                }
 
-          function setStudentFilterActiveStates() {
-            [programFilter, yearlevelFilter].forEach(filter => {
-              if (!filter) return;
+                // Check program filter
+                if (selectedProgram && selectedProgram !== "") {
+                  const programText = programCell
+                    ? normalizeFilterText(programCell.textContent)
+                    : "";
+                  matchesProgram =
+                    row.dataset.programId === selectedProgram ||
+                    row.dataset.programName ===
+                      normalizeFilterText(selectedProgram) ||
+                    programText === normalizeFilterText(selectedProgram);
+                }
 
-              const wrapper = filter.closest(".program-filter-wrapper");
-              if (!wrapper) return;
+                if (selectedYearlevel && selectedYearlevel !== "") {
+                  matchesYearlevel =
+                    (row.dataset.yearlevel || "") === selectedYearlevel;
+                }
 
-              wrapper.classList.toggle("is-active", filter.value !== "");
-            });
-          }
-
-          // Combined filter function
-          function filterStudents() {
-            const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
-            const selectedProgram = programFilter ? programFilter.value : "";
-            const selectedYearlevel = yearlevelFilter ? yearlevelFilter.value.toLowerCase() : "";
-
-            [...studentTbody.rows].forEach(row => {
-              // Get ID and name only (columns 1 and 2)
-              const idCell = row.querySelector("td:nth-child(1)");
-              const nameCell = row.querySelector("td:nth-child(2)");
-              const programCell = row.querySelector("td:nth-child(3) small");
-
-              let matchesSearch = true;
-              let matchesProgram = true;
-              let matchesYearlevel = true;
-
-              // Check search term against ID and name only
-              if (searchTerm) {
-                const idText = idCell ? idCell.textContent.toLowerCase() : "";
-                const nameText = nameCell ? nameCell.textContent.toLowerCase() : "";
-                matchesSearch = idText.includes(searchTerm) || nameText.includes(searchTerm);
-              }
-
-              // Check program filter
-              if (selectedProgram && selectedProgram !== "") {
-                const programText = programCell ? normalizeFilterText(programCell.textContent) : "";
-                matchesProgram = row.dataset.programId === selectedProgram ||
-                  row.dataset.programName === normalizeFilterText(selectedProgram) ||
-                  programText === normalizeFilterText(selectedProgram);
-              }
-
-              if (selectedYearlevel && selectedYearlevel !== "") {
-                matchesYearlevel = (row.dataset.yearlevel || "") === selectedYearlevel;
-              }
-
-              // Show row only if all conditions are met
-              row.style.display = (matchesSearch && matchesProgram && matchesYearlevel) ? "" : "none";
-            });
-            updateStudentCountSummary();
-          }
-        })
-        .then(() => refreshSectionStats())
-        .catch(err => console.error("Error loading students:", err));
-    })
-      .catch(err => console.error("Error preparing student list:", err))
+                // Show row only if all conditions are met
+                row.style.display =
+                  matchesSearch && matchesProgram && matchesYearlevel
+                    ? ""
+                    : "none";
+              });
+              updateStudentCountSummary();
+            }
+          })
+          .then(() => refreshSectionStats())
+          .catch((err) => console.error("Error loading students:", err));
+      })
+      .catch((err) => console.error("Error preparing student list:", err))
       .finally(() => hideSectionSkeleton("students-section"));
   }
 
@@ -5805,18 +7488,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedSubjects = [];
   let allSubjects = [];
   let subjectClassOptions = {};
+  let subjectSelectionCurrentPage = 1;
+  const SUBJECT_SELECTION_PAGE_SIZE = 5;
+  const subjectSelectionDraft = new Map();
 
   async function loadClassOptionsForSubjects(programId, subjects) {
     subjectClassOptions = {};
-    const requests = subjects.map(subject =>
-      fetch(`classes_crud.php?action=get_subject_class_options&program_id=${programId}&subject_id=${subject.id}`)
-        .then(r => r.json())
-        .then(rows => {
+    const requests = subjects.map((subject) =>
+      fetch(
+        `classes_crud.php?action=get_subject_class_options&program_id=${programId}&subject_id=${subject.id}`,
+      )
+        .then((r) => r.json())
+        .then((rows) => {
           subjectClassOptions[subject.id] = Array.isArray(rows) ? rows : [];
         })
         .catch(() => {
           subjectClassOptions[subject.id] = [];
-        })
+        }),
     );
     await Promise.all(requests);
   }
@@ -5824,26 +7512,35 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load all subjects for selection
   function loadAllSubjects() {
     fetch("subject_crud.php?action=get_all")
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         allSubjects = data;
         renderSubjectsTable();
       })
-      .catch(err => console.error("Error loading subjects:", err));
+      .catch((err) => console.error("Error loading subjects:", err));
   }
 
   // Render subjects table with filters
   function renderSubjectsTable() {
     const tbody = document.getElementById("subjects-selection-tbody");
-    const searchTerm = document.getElementById("subject-search").value.toLowerCase();
-    const semesterFilter = document.getElementById("subject-semester-filter").value.toLowerCase();
+    const searchTerm = document
+      .getElementById("subject-search")
+      .value.toLowerCase();
+    const semesterFilter = document
+      .getElementById("subject-semester-filter")
+      .value.toLowerCase();
+    const pagination = document.getElementById("student-subject-pagination");
 
-    let filteredSubjects = allSubjects.filter(subject => {
-      const matchesSearch = !searchTerm ||
+    const filteredSubjects = allSubjects.filter((subject) => {
+      const matchesSearch =
+        !searchTerm ||
         subject.subject_code.toLowerCase().includes(searchTerm) ||
         subject.subject_desc.toLowerCase().includes(searchTerm);
-      const subjectSemester = String(subject.semester || "").trim().toLowerCase();
-      const matchesSemester = semesterFilter === "all" || subjectSemester === semesterFilter;
+      const subjectSemester = String(subject.semester || "")
+        .trim()
+        .toLowerCase();
+      const matchesSemester =
+        semesterFilter === "all" || subjectSemester === semesterFilter;
 
       return matchesSearch && matchesSemester;
     });
@@ -5851,57 +7548,117 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.innerHTML = "";
 
     if (filteredSubjects.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">No subjects found</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="5" class="admin-empty-state">No subjects found</td></tr>';
+      if (pagination) pagination.innerHTML = "";
       return;
     }
 
-    filteredSubjects.forEach(subject => {
+    const totalPages = Math.ceil(
+      filteredSubjects.length / SUBJECT_SELECTION_PAGE_SIZE,
+    );
+    subjectSelectionCurrentPage = Math.min(
+      subjectSelectionCurrentPage,
+      totalPages,
+    );
+    const firstIndex =
+      (subjectSelectionCurrentPage - 1) * SUBJECT_SELECTION_PAGE_SIZE;
+    const pageSubjects = filteredSubjects.slice(
+      firstIndex,
+      firstIndex + SUBJECT_SELECTION_PAGE_SIZE,
+    );
+
+    pageSubjects.forEach((subject) => {
       const row = document.createElement("tr");
-      const selectedSubject = selectedSubjects.find(s => s.id === subject.id);
-      const isSelected = !!selectedSubject;
+      const selectedSubject = selectedSubjects.find(
+        (s) => String(s.id) === String(subject.id),
+      );
+      const draft = subjectSelectionDraft.get(String(subject.id));
+      const isSelected = draft ? draft.checked : !!selectedSubject;
       const options = subjectClassOptions[subject.id] || [];
-      let selectedClassId = selectedSubject?.class_id ? String(selectedSubject.class_id) : "";
+      let selectedClassId =
+        draft?.classId ||
+        (selectedSubject?.class_id ? String(selectedSubject.class_id) : "");
 
       // Recover existing class selection during edit if class_id is missing but class year/section exists.
       if (!selectedClassId && selectedSubject && options.length > 0) {
-        const matched = options.find(opt =>
-          String(opt.year_level || "").trim().toLowerCase() === String(selectedSubject.class_year_level || "").trim().toLowerCase() &&
-          String(opt.section || "").trim().toLowerCase() === String(selectedSubject.class_section || "").trim().toLowerCase()
+        const matched = options.find(
+          (opt) =>
+            String(opt.year_level || "")
+              .trim()
+              .toLowerCase() ===
+              String(selectedSubject.class_year_level || "")
+                .trim()
+                .toLowerCase() &&
+            String(opt.section || "")
+              .trim()
+              .toLowerCase() ===
+              String(selectedSubject.class_section || "")
+                .trim()
+                .toLowerCase(),
         );
         if (matched) {
           selectedClassId = String(matched.class_id);
           selectedSubject.class_id = parseInt(matched.class_id, 10);
           selectedSubject.class_year_level = matched.year_level;
           selectedSubject.class_section = matched.section;
-          selectedSubject.instructor_name = matched.instructor_name || selectedSubject.instructor_name || "Unassigned";
+          selectedSubject.instructor_name =
+            matched.instructor_name ||
+            selectedSubject.instructor_name ||
+            "Unassigned";
         }
       }
+      subjectSelectionDraft.set(String(subject.id), {
+        checked: isSelected,
+        classId: selectedClassId,
+      });
       const hasClassOptions = options.length > 0;
       const optionHtml = hasClassOptions
-        ? options.map(opt => {
-          const label = `${opt.year_level} - ${opt.section}`;
-          const sel = selectedClassId && selectedClassId === String(opt.class_id) ? "selected" : "";
-          return `<option value="${opt.class_id}" ${sel}>${label}</option>`;
-        }).join("")
+        ? options
+            .map((opt) => {
+              const label = `${opt.year_level} - ${opt.section}`;
+              const sel =
+                selectedClassId && selectedClassId === String(opt.class_id)
+                  ? "selected"
+                  : "";
+              return `<option value="${opt.class_id}" ${sel}>${label}</option>`;
+            })
+            .join("")
         : "";
 
       row.innerHTML = `
-      <td><input type="checkbox" value="${subject.id}" ${isSelected && hasClassOptions ? 'checked' : ''} ${hasClassOptions ? '' : 'disabled'}></td>
+      <td><input type="checkbox" value="${subject.id}" ${isSelected && hasClassOptions ? "checked" : ""} ${hasClassOptions ? "" : "disabled"}></td>
       <td>${subject.subject_code}</td>
       <td>${subject.subject_desc}</td>
       <td>${subject.semester || "N/A"}</td>
       <td>
-        ${hasClassOptions ? `
+        ${
+          hasClassOptions
+            ? `
           <select class="subject-class-select" data-subject-id="${subject.id}">
             <option value="">Select Year & Section</option>
             ${optionHtml}
           </select>
-        ` : `<div class="subject-class-empty">No class found</div>`}
+        `
+            : `<div class="subject-class-empty">No class found</div>`
+        }
       </td>
     `;
 
       tbody.appendChild(row);
     });
+
+    if (pagination) {
+      const lastIndex = Math.min(
+        firstIndex + SUBJECT_SELECTION_PAGE_SIZE,
+        filteredSubjects.length,
+      );
+      pagination.innerHTML = `
+        <button type="button" class="subject-page-btn" data-page="${subjectSelectionCurrentPage - 1}" ${subjectSelectionCurrentPage === 1 ? "disabled" : ""} aria-label="Previous page">Previous</button>
+        <span class="subject-page-info" aria-live="polite">Page ${subjectSelectionCurrentPage} of ${totalPages} · Showing ${firstIndex + 1}-${lastIndex} of ${filteredSubjects.length}</span>
+        <button type="button" class="subject-page-btn" data-page="${subjectSelectionCurrentPage + 1}" ${subjectSelectionCurrentPage === totalPages ? "disabled" : ""} aria-label="Next page">Next</button>
+      `;
+    }
   }
 
   // Function to load subjects for program popup modal
@@ -5909,15 +7666,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clear search input
     document.getElementById("subject-search").value = "";
     document.getElementById("subject-semester-filter").value = "all";
+    subjectSelectionCurrentPage = 1;
 
     fetch(`subject_crud.php?action=get_all_by_program&program_id=${programId}`)
-      .then(r => r.json())
-      .then(async data => {
+      .then((r) => r.json())
+      .then(async (data) => {
         allSubjects = data;
         await loadClassOptionsForSubjects(programId, allSubjects);
         renderSubjectsTable();
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading subjects for program:", err);
         allSubjects = [];
         renderSubjectsTable();
@@ -5929,9 +7687,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const program = document.getElementById("student-program").value;
 
     if (!program) {
-      showGlobalNotification("Please select a program first to view available subjects", "warning");
+      showGlobalNotification(
+        "Please select a program first to view available subjects",
+        "warning",
+      );
       return;
     }
+
+    subjectSelectionDraft.clear();
+    selectedSubjects.forEach((subject) => {
+      subjectSelectionDraft.set(String(subject.id), {
+        checked: true,
+        classId: subject.class_id ? String(subject.class_id) : "",
+      });
+    });
 
     // Load subjects for the selected program and open popup
     loadSubjectsForProgramPopup(program);
@@ -5948,7 +7717,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add close button event listeners directly when modal opens
     setTimeout(() => {
-      const closeBtn = document.querySelector("#subjectSelectionModal .close-btn");
+      const closeBtn = document.querySelector(
+        "#subjectSelectionModal .close-btn",
+      );
       const cancelBtn = document.getElementById("cancel-subject-selection");
 
       console.log("Adding close handlers directly");
@@ -5958,29 +7729,37 @@ document.addEventListener("DOMContentLoaded", () => {
       // Remove existing listeners to avoid duplicates
       if (closeBtn) {
         closeBtn.replaceWith(closeBtn.cloneNode(true));
-        const newCloseBtn = document.querySelector("#subjectSelectionModal .close-btn");
+        const newCloseBtn = document.querySelector(
+          "#subjectSelectionModal .close-btn",
+        );
         newCloseBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
           console.log("Close X clicked directly");
           subjectSelectionModal.style.display = "none";
           // Clear checkboxes to prevent repeated clicking issue
-          const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
-          allCheckboxes.forEach(cb => cb.checked = false);
+          const allCheckboxes = document.querySelectorAll(
+            "#subjects-selection-tbody input[type='checkbox']",
+          );
+          allCheckboxes.forEach((cb) => (cb.checked = false));
         });
       }
 
       if (cancelBtn) {
         cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-        const newCancelBtn = document.getElementById("cancel-subject-selection");
+        const newCancelBtn = document.getElementById(
+          "cancel-subject-selection",
+        );
         newCancelBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
           console.log("Cancel clicked directly");
           subjectSelectionModal.style.display = "none";
           // Clear checkboxes to prevent repeated clicking issue
-          const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
-          allCheckboxes.forEach(cb => cb.checked = false);
+          const allCheckboxes = document.querySelectorAll(
+            "#subjects-selection-tbody input[type='checkbox']",
+          );
+          allCheckboxes.forEach((cb) => (cb.checked = false));
         });
       }
     }, 100);
@@ -5989,7 +7768,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Close modal handlers
   document.addEventListener("DOMContentLoaded", () => {
     // Subject Selection Modal close handlers
-    const closeBtn = document.querySelector("#subjectSelectionModal .close-btn");
+    const closeBtn = document.querySelector(
+      "#subjectSelectionModal .close-btn",
+    );
     const cancelBtn = document.getElementById("cancel-subject-selection");
 
     console.log("Setting up subject modal close handlers");
@@ -6002,8 +7783,10 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Close X button clicked");
         subjectSelectionModal.style.display = "none";
         // Clear checkboxes to prevent repeated clicking issue
-        const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
-        allCheckboxes.forEach(cb => cb.checked = false);
+        const allCheckboxes = document.querySelectorAll(
+          "#subjects-selection-tbody input[type='checkbox']",
+        );
+        allCheckboxes.forEach((cb) => (cb.checked = false));
       });
     }
 
@@ -6013,32 +7796,41 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Cancel button clicked");
         subjectSelectionModal.style.display = "none";
         // Clear checkboxes to prevent repeated clicking issue
-        const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
-        allCheckboxes.forEach(cb => cb.checked = false);
+        const allCheckboxes = document.querySelectorAll(
+          "#subjects-selection-tbody input[type='checkbox']",
+        );
+        allCheckboxes.forEach((cb) => (cb.checked = false));
       });
     }
 
     // Student modal close button
-    document.querySelector("#addStudentModal .close-btn")?.addEventListener("click", () => {
-      addStudentModal.style.display = "none";
-      // Clear selected subjects when closing modal to prevent carryover
-      selectedSubjects = [];
-      updateSelectedSubjectsDisplay();
-    });
+    document
+      .querySelector("#addStudentModal .close-btn")
+      ?.addEventListener("click", () => {
+        addStudentModal.style.display = "none";
+        // Clear selected subjects when closing modal to prevent carryover
+        selectedSubjects = [];
+        updateSelectedSubjectsDisplay();
+      });
 
     // View student subjects modal close button
-    document.querySelector("#viewStudentSubjectsModal .close-btn")?.addEventListener("click", () => {
-      viewStudentSubjectsModal.style.display = "none";
-    });
+    document
+      .querySelector("#viewStudentSubjectsModal .close-btn")
+      ?.addEventListener("click", () => {
+        viewStudentSubjectsModal.style.display = "none";
+      });
 
     // View faculty subjects modal close button
-    document.querySelector("#viewFacultySubjectsModal .close-btn")?.addEventListener("click", () => {
-      viewFacultySubjectsModal.style.display = "none";
-    });
-
+    document
+      .querySelector("#viewFacultySubjectsModal .close-btn")
+      ?.addEventListener("click", () => {
+        viewFacultySubjectsModal.style.display = "none";
+      });
 
     // Add Faculty modal close button
-    const facultyCloseBtn = document.querySelector("#addFacultyModal .close-btn");
+    const facultyCloseBtn = document.querySelector(
+      "#addFacultyModal .close-btn",
+    );
     if (facultyCloseBtn) {
       facultyCloseBtn.onclick = function (e) {
         e.preventDefault();
@@ -6050,7 +7842,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add Program modal close button
-    const programCloseBtn = document.querySelector("#addProgramModal .close-btn");
+    const programCloseBtn = document.querySelector(
+      "#addProgramModal .close-btn",
+    );
     if (programCloseBtn) {
       programCloseBtn.onclick = function (e) {
         e.preventDefault();
@@ -6061,7 +7855,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add Category modal close button
-    const categoryCloseBtn = document.querySelector("#addCategoryModal .close-btn");
+    const categoryCloseBtn = document.querySelector(
+      "#addCategoryModal .close-btn",
+    );
     if (categoryCloseBtn) {
       categoryCloseBtn.onclick = function (e) {
         e.preventDefault();
@@ -6072,7 +7868,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add Question modal close button
-    const questionCloseBtn = document.querySelector("#addQuestionModal .close-btn");
+    const questionCloseBtn = document.querySelector(
+      "#addQuestionModal .close-btn",
+    );
     if (questionCloseBtn) {
       questionCloseBtn.onclick = function (e) {
         e.preventDefault();
@@ -6094,7 +7892,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add Subject modal close button
-    const subjectCloseBtn = document.querySelector("#addSubjectModal .close-btn");
+    const subjectCloseBtn = document.querySelector(
+      "#addSubjectModal .close-btn",
+    );
     if (subjectCloseBtn) {
       subjectCloseBtn.onclick = function (e) {
         e.preventDefault();
@@ -6105,7 +7905,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add Subject Main modal close button
-    const subjectMainCloseBtn = document.querySelector("#addSubjectMainModal .close-btn");
+    const subjectMainCloseBtn = document.querySelector(
+      "#addSubjectMainModal .close-btn",
+    );
     if (subjectMainCloseBtn) {
       subjectMainCloseBtn.onclick = function (e) {
         e.preventDefault();
@@ -6155,75 +7957,136 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Filter handlers
-  document.getElementById("subject-search")?.addEventListener("input", renderSubjectsTable);
-  document.getElementById("subject-semester-filter")?.addEventListener("change", renderSubjectsTable);
+  document.getElementById("subject-search")?.addEventListener("input", () => {
+    subjectSelectionCurrentPage = 1;
+    renderSubjectsTable();
+  });
+  document
+    .getElementById("subject-semester-filter")
+    ?.addEventListener("change", () => {
+      subjectSelectionCurrentPage = 1;
+      renderSubjectsTable();
+    });
+
+  document
+    .getElementById("student-subject-pagination")
+    ?.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-page]");
+      if (!button || button.disabled) return;
+      subjectSelectionCurrentPage = Number(button.dataset.page);
+      renderSubjectsTable();
+    });
+
+  document
+    .getElementById("subjects-selection-tbody")
+    ?.addEventListener("change", (event) => {
+      const control = event.target;
+      const row = control.closest("tr");
+      const checkbox = row?.querySelector('input[type="checkbox"]');
+      if (!checkbox) return;
+
+      const key = String(checkbox.value);
+      const draft = subjectSelectionDraft.get(key) || {
+        checked: false,
+        classId: "",
+      };
+      if (control === checkbox) {
+        draft.checked = checkbox.checked;
+      } else if (control.matches(".subject-class-select")) {
+        draft.classId = control.value;
+      }
+      subjectSelectionDraft.set(key, draft);
+    });
 
   // ... (rest of the code remains the same)
   // Select all checkbox
-  document.getElementById("select-all-subjects")?.addEventListener("change", (e) => {
-    const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:not(:disabled)");
-    checkboxes.forEach(cb => cb.checked = e.target.checked);
-  });
-
-  // Confirm subject selection
-  document.getElementById("confirm-subject-selection")?.addEventListener("click", () => {
-    const checkboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']:checked:not(:disabled)");
-    let hasMissingClass = false;
-
-    console.log("Confirming subject selection. Checked checkboxes:", checkboxes.length);
-
-    checkboxes.forEach(cb => {
-      const subject = allSubjects.find(s => s.id == cb.value);
-      if (subject) {
-        const classSelect = document.querySelector(`.subject-class-select[data-subject-id="${subject.id}"]`);
-        const classId = classSelect ? parseInt(classSelect.value || "0", 10) : 0;
-        const classOptions = subjectClassOptions[subject.id] || [];
-        const selectedClass = classOptions.find(opt => parseInt(opt.class_id, 10) === classId);
-
-        if (!classId || !selectedClass) {
-          showGlobalNotification(`Please select year level and section for subject ${subject.subject_code}`, "warning");
-          hasMissingClass = true;
-          return;
-        }
-
-        const subjectWithClass = {
-          ...subject,
-          class_id: parseInt(selectedClass.class_id, 10),
-          class_year_level: selectedClass.year_level,
-          class_section: selectedClass.section,
-          instructor_name: selectedClass.instructor_name || "Unassigned"
-        };
-
-        // Check if subject is already in selectedSubjects to avoid duplicates
-        const existingIndex = selectedSubjects.findIndex(s => s.id === subject.id);
-        if (existingIndex === -1) {
-          selectedSubjects.push(subjectWithClass);
-          console.log("Added subject:", subjectWithClass);
-        } else {
-          selectedSubjects[existingIndex] = subjectWithClass;
-          console.log("Updated subject class selection:", subjectWithClass);
-        }
-      }
+  document
+    .getElementById("select-all-subjects")
+    ?.addEventListener("change", (e) => {
+      const checkboxes = document.querySelectorAll(
+        "#subjects-selection-tbody input[type='checkbox']:not(:disabled)",
+      );
+      checkboxes.forEach((cb) => (cb.checked = e.target.checked));
     });
 
-    if (hasMissingClass) return;
+  // Confirm subject selection
+  document
+    .getElementById("confirm-subject-selection")
+    ?.addEventListener("click", () => {
+      const checkedSubjects = [...subjectSelectionDraft.entries()].filter(
+        ([, draft]) => draft.checked,
+      );
+      let hasMissingClass = false;
 
-    console.log("Final selectedSubjects:", selectedSubjects);
-    updateSelectedSubjectsDisplay();
-    subjectSelectionModal.style.display = "none";
+      console.log(
+        "Confirming subject selection. Checked checkboxes:",
+        checkedSubjects.length,
+      );
 
-    // Clear all checkboxes to prevent repeated clicking issue
-    setTimeout(() => {
-      const allCheckboxes = document.querySelectorAll("#subjects-selection-tbody input[type='checkbox']");
-      allCheckboxes.forEach(cb => cb.checked = false);
-    }, 100);
-  });
+      checkedSubjects.forEach(([subjectId, draft]) => {
+        const subject = allSubjects.find((s) => String(s.id) === subjectId);
+        if (subject) {
+          const classId = parseInt(draft.classId || "0", 10);
+          const classOptions = subjectClassOptions[subject.id] || [];
+          const selectedClass = classOptions.find(
+            (opt) => parseInt(opt.class_id, 10) === classId,
+          );
+
+          if (!classId || !selectedClass) {
+            showGlobalNotification(
+              `Please select year level and section for subject ${subject.subject_code}`,
+              "warning",
+            );
+            hasMissingClass = true;
+            return;
+          }
+
+          const subjectWithClass = {
+            ...subject,
+            class_id: parseInt(selectedClass.class_id, 10),
+            class_year_level: selectedClass.year_level,
+            class_section: selectedClass.section,
+            instructor_name: selectedClass.instructor_name || "Unassigned",
+          };
+
+          // Check if subject is already in selectedSubjects to avoid duplicates
+          const existingIndex = selectedSubjects.findIndex(
+            (s) => s.id === subject.id,
+          );
+          if (existingIndex === -1) {
+            selectedSubjects.push(subjectWithClass);
+            console.log("Added subject:", subjectWithClass);
+          } else {
+            selectedSubjects[existingIndex] = subjectWithClass;
+            console.log("Updated subject class selection:", subjectWithClass);
+          }
+        }
+      });
+
+      if (hasMissingClass) return;
+
+      console.log("Final selectedSubjects:", selectedSubjects);
+      updateSelectedSubjectsDisplay();
+      subjectSelectionModal.style.display = "none";
+      subjectSelectionDraft.clear();
+
+      // Clear all checkboxes to prevent repeated clicking issue
+      setTimeout(() => {
+        const allCheckboxes = document.querySelectorAll(
+          "#subjects-selection-tbody input[type='checkbox']",
+        );
+        allCheckboxes.forEach((cb) => (cb.checked = false));
+      }, 100);
+    });
 
   // Update selected subjects display
   function updateSelectedSubjectsDisplay() {
     const container = document.getElementById("selected-subjects");
 
-    console.log("Updating selected subjects display. selectedSubjects:", selectedSubjects);
+    console.log(
+      "Updating selected subjects display. selectedSubjects:",
+      selectedSubjects,
+    );
     console.log("Container found:", container);
 
     if (!container) {
@@ -6232,12 +8095,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (selectedSubjects.length === 0) {
-      container.innerHTML = '<p class="admin-empty-state">No subjects selected</p>';
+      container.innerHTML =
+        '<p class="admin-empty-state">No subjects selected</p>';
       console.log("No subjects selected, showing default message");
     } else {
       console.log(`Displaying ${selectedSubjects.length} subjects`);
       let html = '<div class="selected-subjects-list">';
-      selectedSubjects.forEach(subject => {
+      selectedSubjects.forEach((subject) => {
         console.log("Adding subject to display:", subject);
         html += `
         <div class="selected-subject-item">
@@ -6252,15 +8116,15 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       });
-      html += '</div>';
+      html += "</div>";
       container.innerHTML = html;
 
       // Add remove handlers
-      container.querySelectorAll(".remove-subject").forEach(btn => {
+      container.querySelectorAll(".remove-subject").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           const subjectId = parseInt(e.currentTarget.dataset.id);
           console.log("Removing subject with ID:", subjectId);
-          selectedSubjects = selectedSubjects.filter(s => s.id !== subjectId);
+          selectedSubjects = selectedSubjects.filter((s) => s.id !== subjectId);
           updateSelectedSubjectsDisplay();
         });
       });
@@ -6272,32 +8136,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("selected-subjects");
 
     if (availableSubjects.length === 0) {
-      container.innerHTML = '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
+      container.innerHTML =
+        '<p style="color: #6b7280; font-size: 0.9em;">Select both program and year level to see available subjects</p>';
     } else {
       let html = '<div class="available-subjects-section">';
-      html += '<h5 style="margin-bottom: 10px; color: #374151;">Available Subjects:</h5>';
-      html += '<div class="available-subjects-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;">';
+      html +=
+        '<h5 style="margin-bottom: 10px; color: #374151;">Available Subjects:</h5>';
+      html +=
+        '<div class="available-subjects-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;">';
 
-      availableSubjects.forEach(subject => {
-        const isSelected = selectedSubjects.some(s => s.id === subject.id);
+      availableSubjects.forEach((subject) => {
+        const isSelected = selectedSubjects.some((s) => s.id === subject.id);
         html += `
-        <div class="available-subject-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; margin-bottom: 5px; background: ${isSelected ? '#dbeafe' : '#f9fafb'}; border-radius: 4px; border: 1px solid ${isSelected ? '#bfdbfe' : '#e5e7eb'};">
+        <div class="available-subject-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; margin-bottom: 5px; background: ${isSelected ? "#dbeafe" : "#f9fafb"}; border-radius: 4px; border: 1px solid ${isSelected ? "#bfdbfe" : "#e5e7eb"};">
           <div style="flex: 1;">
             <strong>${subject.subject_code}</strong> - ${subject.subject_desc}
           </div>
-          <button type="button" class="select-subject-btn" data-id="${subject.id}" data-code="${subject.subject_code}" data-desc="${subject.subject_desc}" data-year="${subject.year_level}" style="background: ${isSelected ? '#dc2626' : '#2563eb'}; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-            ${isSelected ? 'Remove' : 'Add'}
+          <button type="button" class="select-subject-btn" data-id="${subject.id}" data-code="${subject.subject_code}" data-desc="${subject.subject_desc}" data-year="${subject.year_level}" style="background: ${isSelected ? "#dc2626" : "#2563eb"}; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            ${isSelected ? "Remove" : "Add"}
           </button>
         </div>
       `;
       });
 
-      html += '</div>';
+      html += "</div>";
 
       if (selectedSubjects.length > 0) {
-        html += '<h5 style="margin-top: 15px; margin-bottom: 10px; color: #374151;">Selected Subjects:</h5>';
+        html +=
+          '<h5 style="margin-top: 15px; margin-bottom: 10px; color: #374151;">Selected Subjects:</h5>';
         html += '<div class="selected-subjects-list">';
-        selectedSubjects.forEach(subject => {
+        selectedSubjects.forEach((subject) => {
           html += `
           <div class="selected-subject-item">
             <span>
@@ -6311,23 +8179,30 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
         });
-        html += '</div>';
+        html += "</div>";
       }
 
-      html += '</div>';
+      html += "</div>";
       container.innerHTML = html;
 
       // Add event listeners for select/remove buttons
-      container.querySelectorAll(".select-subject-btn").forEach(btn => {
+      container.querySelectorAll(".select-subject-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           const subjectId = parseInt(e.currentTarget.dataset.id);
           const subjectCode = e.currentTarget.dataset.code;
           const subjectDesc = e.currentTarget.dataset.desc;
           const subjectYear = e.currentTarget.dataset.year;
 
-          const subject = { id: subjectId, subject_code: subjectCode, subject_desc: subjectDesc, year_level: subjectYear };
+          const subject = {
+            id: subjectId,
+            subject_code: subjectCode,
+            subject_desc: subjectDesc,
+            year_level: subjectYear,
+          };
 
-          const existingIndex = selectedSubjects.findIndex(s => s.id === subjectId);
+          const existingIndex = selectedSubjects.findIndex(
+            (s) => s.id === subjectId,
+          );
           if (existingIndex >= 0) {
             // Remove from selected
             selectedSubjects.splice(existingIndex, 1);
@@ -6342,10 +8217,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Add remove handlers for selected subjects
-      container.querySelectorAll(".remove-subject").forEach(btn => {
+      container.querySelectorAll(".remove-subject").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           const subjectId = parseInt(e.currentTarget.dataset.id);
-          selectedSubjects = selectedSubjects.filter(s => s.id !== subjectId);
+          selectedSubjects = selectedSubjects.filter((s) => s.id !== subjectId);
           updateAvailableSubjectsDisplay(availableSubjects);
         });
       });
@@ -6370,13 +8245,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // All per-category and per-question add/edit/delete buttons
-    document.querySelectorAll(
-      ".criteria-category .add-btn, .criteria-category .edit-btn, .criteria-category .delete-btn, " +
-      ".question-item .edit-btn, .question-item .delete-btn"
-    ).forEach(b => {
-      b.disabled = locked;
-      b.classList.toggle("criteria-btn-locked", locked);
-    });
+    document
+      .querySelectorAll(
+        ".criteria-category .add-btn, .criteria-category .edit-btn, .criteria-category .delete-btn, " +
+          ".question-item .edit-btn, .question-item .delete-btn",
+      )
+      .forEach((b) => {
+        b.disabled = locked;
+        b.classList.toggle("criteria-btn-locked", locked);
+      });
   }
 
   /**
@@ -6385,7 +8262,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function getCurrentWeightSum(excludeCatId = null) {
     let sum = 0;
-    document.querySelectorAll(".criteria-category").forEach(c => {
+    document.querySelectorAll(".criteria-category").forEach((c) => {
       if (excludeCatId && c.id === `cat-${excludeCatId}`) return;
       sum += parseFloat(c.dataset.weight || 0);
     });
@@ -6401,8 +8278,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (usedWeight >= 100) {
       showNotification(
         `Cannot add a new category — existing categories already use ${usedWeight}% (100%). ` +
-        `Edit existing category weights to free up percentage first.`,
-        "#ef4444", 6000
+          `Edit existing category weights to free up percentage first.`,
+        "#ef4444",
+        6000,
       );
       return;
     }
@@ -6410,7 +8288,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addCategoryModal.style.display = "flex";
     delete addCategoryModal.dataset.editId;
     document.getElementById("categoryModalTitle").innerText = "ADD CATEGORY";
-    ["category-name", "section-number", "category-weight"].forEach(id => {
+    ["category-name", "section-number", "category-weight"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = "";
     });
@@ -6438,10 +8316,8 @@ document.addEventListener("DOMContentLoaded", () => {
       ? addCategoryModal.dataset.editId.replace("cat-", "")
       : null;
 
-    const usedWeight = getCurrentWeightSum(editId);   // sum excluding self when editing
+    const usedWeight = getCurrentWeightSum(editId); // sum excluding self when editing
     const newTotal = Math.round((usedWeight + weight) * 100) / 100;
-    const catCount = document.querySelectorAll(".criteria-category").length;
-    const isNew = !editId;
 
     // Allow weight = 0 (means "equal split, no fixed percentage")
     if (weight > 0) {
@@ -6449,23 +8325,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const available = Math.round((100 - usedWeight) * 100) / 100;
         showNotification(
           `Weight too high — other categories already use ${usedWeight}%. ` +
-          `Maximum you can assign here is ${available}%.`,
-          "#ef4444", 6000
+            `Maximum you can assign here is ${available}%.`,
+          "#ef4444",
+          6000,
         );
         return;
       }
-      if (newTotal < 100) {
-        // Warn but allow — they may plan to set the rest later
-        const remaining = Math.round((100 - newTotal) * 100) / 100;
-        showNotification(
-          `Note: Total weight will be ${newTotal}% after this save (${remaining}% unassigned). ` +
-          `Scores will be auto-normalised until all categories sum to 100%.`,
-          "#f59e0b", 5000
-        );
-      }
     }
 
-    const payload = { category_name: name, section_number: sec, weight: weight };
+    const payload = {
+      category_name: name,
+      section_number: sec,
+      weight: weight,
+    };
     let url = "add_category.php";
 
     if (editId) {
@@ -6474,29 +8346,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setButtonLoading(saveCategoryBtn, true, "Saving Category...");
-  const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
+    const minimumLoadingTime = new Promise((resolve) =>
+      setTimeout(resolve, 400),
+    );
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     })
-      .then(r => r.json())
-      .then(async d => {
+      .then((r) => r.json())
+      .then(async (d) => {
         await minimumLoadingTime;
         if (d.success) {
-          const isEditing = !!editId;
           loadCategories();
           addCategoryModal.style.display = "none";
           delete addCategoryModal.dataset.editId;
-          if (newTotal === 100 || weight === 0) {
-            showNotification(isEditing ? "Category updated successfully!" : "Category added successfully!", "#10b981");
-          }
-          // else the yellow warning above already showed
+          showNotification("Category successfully save", "#10b981");
         } else {
-          showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
+          showNotification(
+            "Failed: " + (d.message || "Unknown error"),
+            "#ef4444",
+          );
         }
       })
-      .catch(async err => {
+      .catch(async (err) => {
         await minimumLoadingTime;
         console.error("Error saving category:", err);
         showNotification("Network error occurred", "#ef4444");
@@ -6533,18 +8406,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
     setButtonLoading(saveQuestionBtn, true, "Saving Question...");
-    const minimumLoadingTime = new Promise(resolve => setTimeout(resolve, 400));
+    const minimumLoadingTime = new Promise((resolve) =>
+      setTimeout(resolve, 400),
+    );
 
     // Check if this is a new question (not editing)
     if (!addQuestionModal.dataset.editId) {
       // Count existing questions for this category
       fetch(`../shared/get_question.php?category_id=${catId}`)
-        .then(r => r.json())
-        .then(async questions => {
+        .then((r) => r.json())
+        .then(async (questions) => {
           await minimumLoadingTime;
           if (questions.length >= 5) {
             // Close the add question modal first
-            const addQuestionModal = document.getElementById("addQuestionModal");
+            const addQuestionModal =
+              document.getElementById("addQuestionModal");
             if (addQuestionModal) {
               addQuestionModal.style.display = "none";
             }
@@ -6552,7 +8428,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Show notification after a short delay so user can see it
             setTimeout(() => {
-              showGlobalNotification("Maximum of 5 questions per category reached!", "warning");
+              showGlobalNotification(
+                "Maximum of 5 questions per category reached!",
+                "warning",
+              );
             }, 100);
             return;
           }
@@ -6560,7 +8439,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Proceed with adding the question
           proceedToAddQuestion(catId, q, minimumLoadingTime);
         })
-        .catch(async err => {
+        .catch(async (err) => {
           await minimumLoadingTime;
           console.error("Error checking question count:", err);
           // Still proceed if there's an error checking count
@@ -6574,17 +8453,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function proceedToAddQuestion(catId, q, minimumLoadingTime) {
     const payload = { category_id: catId, question_text: q };
-    let url = addQuestionModal.dataset.editId ? "edit_question.php" : "add_question.php";
+    let url = addQuestionModal.dataset.editId
+      ? "edit_question.php"
+      : "add_question.php";
 
-    if (addQuestionModal.dataset.editId) payload.id = addQuestionModal.dataset.editId.replace("q-", "");
+    if (addQuestionModal.dataset.editId)
+      payload.id = addQuestionModal.dataset.editId.replace("q-", "");
 
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     })
-      .then(r => r.json())
-      .then(async d => {
+      .then((r) => r.json())
+      .then(async (d) => {
         await minimumLoadingTime;
         if (d.success) {
           const isEditing = addQuestionModal.dataset.editId ? true : false;
@@ -6592,12 +8474,20 @@ document.addEventListener("DOMContentLoaded", () => {
           addQuestionModal.style.display = "none";
           delete addQuestionModal.dataset.editId;
           document.getElementById("question-text").value = "";
-          showNotification(isEditing ? "Question edited successfully!" : "Question added successfully!", "#10b981");
+          showNotification(
+            isEditing
+              ? "Question edited successfully!"
+              : "Question added successfully!",
+            "#10b981",
+          );
         } else {
-          showNotification("Failed: " + (d.message || "Unknown error"), "#ef4444");
+          showNotification(
+            "Failed: " + (d.message || "Unknown error"),
+            "#ef4444",
+          );
         }
       })
-      .catch(async err => {
+      .catch(async (err) => {
         await minimumLoadingTime;
         console.error("Error saving question:", err);
         showNotification("Network error occurred", "#ef4444");
@@ -6609,7 +8499,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function bindCategoryActions(cat) {
     cat.querySelector(".add-btn").onclick = () => {
       if (window.hasActivePeriod) return;
-      questionCategoryName.innerText = cat.querySelector(".category-name").innerText;
+      questionCategoryName.innerText =
+        cat.querySelector(".category-name").innerText;
 
       // Clear error message and input field when opening modal
       const errorMsg = document.getElementById("questionErrorMsg");
@@ -6624,8 +8515,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cat.querySelector(".edit-btn").onclick = () => {
       if (window.hasActivePeriod) return;
-      document.getElementById("category-name").value = cat.querySelector(".category-name").innerText;
-      document.getElementById("section-number").value = cat.querySelector(".section-number").innerText.replace("SECTION ", "");
+      document.getElementById("category-name").value =
+        cat.querySelector(".category-name").innerText;
+      document.getElementById("section-number").value = cat
+        .querySelector(".section-number")
+        .innerText.replace("SECTION ", "");
       const wInput = document.getElementById("category-weight");
       if (wInput) wInput.value = parseFloat(cat.dataset.weight || 0).toFixed(2);
       addCategoryModal.style.display = "flex";
@@ -6636,7 +8530,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cat.querySelector(".delete-btn").onclick = () => {
       if (window.hasActivePeriod) return;
-      openDeleteModal("category", cat.querySelector(".category-name").innerText, cat);
+      openDeleteModal(
+        "category",
+        cat.querySelector(".category-name").innerText,
+        cat,
+      );
     };
   }
 
@@ -6646,7 +8544,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .trim()
       .replace(/\s+/g, " ")
       .toLowerCase()
-      .replace(/\b\w/g, char => char.toUpperCase());
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
   function bindQuestionActions(item) {
@@ -6659,8 +8557,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const errorMsg = document.getElementById("questionErrorMsg");
       if (errorMsg) errorMsg.style.display = "none";
 
-      document.getElementById("question-text").value = item.querySelector(".question-text").innerText;
-      questionCategoryName.innerText = cat.querySelector(".category-name").innerText;
+      document.getElementById("question-text").value =
+        item.querySelector(".question-text").innerText;
+      questionCategoryName.innerText =
+        cat.querySelector(".category-name").innerText;
       addQuestionModal.style.display = "flex";
       addQuestionModal.dataset.targetId = cat.id;
       addQuestionModal.dataset.editId = item.id;
@@ -6669,14 +8569,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     item.querySelector(".delete-btn").onclick = () => {
       if (window.hasActivePeriod) return;
-      openDeleteModal("question", item.querySelector(".question-text").innerText, item);
+      openDeleteModal(
+        "question",
+        item.querySelector(".question-text").innerText,
+        item,
+      );
     };
   }
   //  LOAD CATEGORIES ========================= //
   function loadCategories() {
     fetch("../shared/get_category.php")
-      .then(r => r.json())
-      .then(cats => {
+      .then((r) => r.json())
+      .then((cats) => {
         const container = document.getElementById("categoriesColumn");
         container.innerHTML = "";
         document.getElementById("total-categories").innerText = cats.length;
@@ -6685,7 +8589,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Normalise weights for display (same logic as PHP helper)
         const totalW = cats.reduce((s, c) => s + parseFloat(c.weight || 0), 0);
         const useEqual = totalW <= 0;
-        const equalW = cats.length > 0 ? (100 / cats.length) : 0;
+        const equalW = cats.length > 0 ? 100 / cats.length : 0;
 
         // Update summary panel weight row
         const weightSumRow = document.getElementById("weight-sum-row");
@@ -6711,10 +8615,12 @@ document.addEventListener("DOMContentLoaded", () => {
           weightSumRow.style.display = "none";
         }
 
-        cats.forEach(c => {
+        cats.forEach((c) => {
           const normW = useEqual
             ? parseFloat(equalW.toFixed(2))
-            : parseFloat(((parseFloat(c.weight || 0) / totalW) * 100).toFixed(2));
+            : parseFloat(
+                ((parseFloat(c.weight || 0) / totalW) * 100).toFixed(2),
+              );
 
           const cat = document.createElement("div");
           cat.className = "criteria-category";
@@ -6727,7 +8633,7 @@ document.addEventListener("DOMContentLoaded", () => {
           cat.innerHTML = `
           <div class="category-header">
             <div class="title-block">
-              <i class="ph ph-folder-open"></i>
+              <i class="ph-fill ph-folder-open"></i>
               <div class="text-block">
                 <div class="section-number">SECTION ${c.section_number}</div>
                 <div class="category-name" style="text-transform: none !important; letter-spacing: normal !important;">${displayCategoryName}</div>
@@ -6748,10 +8654,10 @@ document.addEventListener("DOMContentLoaded", () => {
           bindCategoryActions(cat);
 
           fetch(`../shared/get_question.php?category_id=${c.id}`)
-            .then(r => r.json())
-            .then(qs => {
+            .then((r) => r.json())
+            .then((qs) => {
               const list = cat.querySelector(".questions-list");
-              qs.forEach(q => {
+              qs.forEach((q) => {
                 const item = document.createElement("div");
                 item.className = "question-item";
                 item.id = `q-${q.id}`;
@@ -6767,18 +8673,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 bindQuestionActions(item);
               });
               totalQuestions += qs.length;
-              document.getElementById("total-questions").innerText = totalQuestions;
+              document.getElementById("total-questions").innerText =
+                totalQuestions;
             })
-            .catch(err => console.error("Failed to load questions:", err));
+            .catch((err) => console.error("Failed to load questions:", err));
         });
         document.getElementById("criteria-section").style.display = "block";
         updateCriteriaLockUI();
         hideSectionSkeleton("criteria-section");
-        
+
         // Update weight distribution visualization
         setTimeout(updateWeightDistribution, 300);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Failed to load categories:", err);
         hideSectionSkeleton("criteria-section");
       });
@@ -6796,7 +8703,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const usedWeight = getCurrentWeightSum(editCatId);
     const remaining = Math.max(0, Math.round((100 - usedWeight) * 100) / 100);
-    const enteredWeight = wInput ? (parseFloat(wInput.value) || 0) : 0;
+    const enteredWeight = wInput ? parseFloat(wInput.value) || 0 : 0;
     const newTotal = Math.round((usedWeight + enteredWeight) * 100) / 100;
 
     // Hint text
@@ -6804,8 +8711,11 @@ document.addEventListener("DOMContentLoaded", () => {
       hintEl.textContent = `⚠ All 100% is already allocated to other categories. Edit existing weights first.`;
       hintEl.style.color = "#ef4444";
     } else {
-      hintEl.textContent = `Other categories use ${usedWeight}% — ${remaining}% available. ` +
-        (remaining === 100 ? "Set 0 to split equally." : `Set 0 to auto-split.`);
+      hintEl.textContent =
+        `Other categories use ${usedWeight}% — ${remaining}% available. ` +
+        (remaining === 100
+          ? "Set 0 to split equally."
+          : `Set 0 to auto-split.`);
       hintEl.style.color = newTotal > 100 ? "#ef4444" : "#64748b";
     }
 
@@ -6835,7 +8745,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Update hint as admin types in weight field
-  document.addEventListener("input", e => {
+  document.addEventListener("input", (e) => {
     if (e.target.id === "category-weight") {
       const editId = addCategoryModal.dataset.editId
         ? addCategoryModal.dataset.editId.replace("cat-", "")
@@ -6845,22 +8755,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ========================= Criteria Search Functionality =========================
-  const criteriaSearchInput = document.getElementById('criteria-search-input');
-  const criteriaSearchClear = document.getElementById('criteria-search-clear');
+  const criteriaSearchInput = document.getElementById("criteria-search-input");
+  const criteriaSearchClear = document.getElementById("criteria-search-clear");
   if (criteriaSearchInput) {
     const filterCriteria = () => {
       const searchTerm = criteriaSearchInput.value.toLowerCase().trim();
-      const categories = document.querySelectorAll('.criteria-category');
-      
-      categories.forEach(category => {
-        const categoryName = category.querySelector('.category-name')?.textContent.toLowerCase() || '';
-        category.style.display = searchTerm === '' || categoryName.includes(searchTerm) ? '' : 'none';
+      const categories = document.querySelectorAll(".criteria-category");
+
+      categories.forEach((category) => {
+        const categoryName =
+          category.querySelector(".category-name")?.textContent.toLowerCase() ||
+          "";
+        category.style.display =
+          searchTerm === "" || categoryName.includes(searchTerm) ? "" : "none";
       });
     };
 
-    criteriaSearchInput.addEventListener('input', filterCriteria);
-    criteriaSearchClear?.addEventListener('click', () => {
-      criteriaSearchInput.value = '';
+    criteriaSearchInput.addEventListener("input", filterCriteria);
+    criteriaSearchClear?.addEventListener("click", () => {
+      criteriaSearchInput.value = "";
       filterCriteria();
       criteriaSearchInput.focus();
     });
@@ -6868,42 +8781,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ========================= Weight Distribution Visualization =========================
   function updateWeightDistribution() {
-    const categories = document.querySelectorAll('.criteria-category');
-    const weightListContainer = document.getElementById('weight-list-container');
-    const weightDistributionSection = document.getElementById('weight-distribution-section');
-    
+    const categories = document.querySelectorAll(".criteria-category");
+    const weightListContainer = document.getElementById(
+      "weight-list-container",
+    );
+    const weightDistributionSection = document.getElementById(
+      "weight-distribution-section",
+    );
+
     if (!weightListContainer || categories.length === 0) {
-      if (weightDistributionSection) weightDistributionSection.style.display = 'none';
+      if (weightDistributionSection)
+        weightDistributionSection.style.display = "none";
       return;
     }
-    
+
     // Calculate total weight
     let totalWeight = 0;
     const categoryData = [];
-    
+
     categories.forEach((cat) => {
       const weight = parseFloat(cat.dataset.weight || 0);
-      const name = cat.querySelector('.category-name')?.textContent || '';
+      const name = cat.querySelector(".category-name")?.textContent || "";
       totalWeight += weight;
       categoryData.push({ name, weight });
     });
-    
+
     // Determine if using equal split
     const useEqualSplit = totalWeight <= 0;
-    const equalWeight = categories.length > 0 ? (100 / categories.length) : 0;
-    
+    const equalWeight = categories.length > 0 ? 100 / categories.length : 0;
+
     // Show weight distribution section
     if (weightDistributionSection) {
-      weightDistributionSection.style.display = 'block';
-      weightListContainer.innerHTML = '';
-      
-      categoryData.forEach(cat => {
-        const normalizedWeight = useEqualSplit 
-          ? equalWeight 
+      weightDistributionSection.style.display = "block";
+      weightListContainer.innerHTML = "";
+
+      categoryData.forEach((cat) => {
+        const normalizedWeight = useEqualSplit
+          ? equalWeight
           : (cat.weight / totalWeight) * 100;
-        
-        const listItem = document.createElement('div');
-        listItem.className = 'weight-list-item';
+
+        const listItem = document.createElement("div");
+        listItem.className = "weight-list-item";
         listItem.innerHTML = `
           <span class="weight-category-name" title="${cat.name}">${cat.name}</span>
           <span class="weight-percentage">${normalizedWeight.toFixed(2)}%</span>
@@ -6921,17 +8839,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const subjectsList = document.getElementById("studentSubjectRows");
     const studentNameElement = document.getElementById("viewStudentName");
     const studentMetaElement = document.getElementById("viewStudentMeta");
-    const subjectCountElement = document.getElementById("viewStudentSubjectCount");
-    const studentInitialsElement = document.getElementById("viewStudentInitials");
+    const subjectCountElement = document.getElementById(
+      "viewStudentSubjectCount",
+    );
+    const studentInitialsElement = document.getElementById(
+      "viewStudentInitials",
+    );
 
     // Set student name in header
     const firstName = String(student.firstname || "").trim();
     const lastName = String(student.lastname || "").trim();
-    studentNameElement.textContent = `${firstName} ${lastName} ${student.suffix || ""}`.trim();
-    studentInitialsElement.textContent = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "ST";
+    studentNameElement.textContent =
+      `${firstName} ${lastName} ${student.suffix || ""}`.trim();
+    studentInitialsElement.textContent =
+      `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "ST";
     studentMetaElement.textContent = `${student.student_number || "No student number"} · ${getProgramName(student.program)}`;
-    const isIrregularStudent = [student.student_type, student.yearlevel]
-      .some(value => String(value || "").trim().toLowerCase() === "irregular");
+    const isIrregularStudent = [student.student_type, student.yearlevel].some(
+      (value) =>
+        String(value || "")
+          .trim()
+          .toLowerCase() === "irregular",
+    );
 
     subjectsList.innerHTML = "<div class='loading'>Loading subjects...</div>";
     modal.style.display = "flex";
@@ -6943,17 +8871,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (student.subjects && Array.isArray(student.subjects)) {
       subjectCountElement.textContent = `${student.subjects.length} ${student.subjects.length === 1 ? "subject" : "subjects"}`;
       if (student.subjects.length === 0) {
-        subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
+        subjectsList.innerHTML =
+          "<div class='no-subjects'>No subjects assigned to this student</div>";
       } else {
         let html = "";
-        student.subjects.forEach(subject => {
-          const subjectYearLevel = subject.year_level || subject.class_year_level || "";
+        student.subjects.forEach((subject) => {
+          const subjectYearLevel =
+            subject.year_level || subject.class_year_level || "";
           html += `
           <div class='student-subject-row'>
             <span class='student-subject-code'>${subject.subject_code}</span>
             <div class='student-subject-info'>
               <strong>${subject.subject_code} - ${subject.subject_desc}</strong>
-              <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
+              <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || "Unassigned"}</span>
             </div>
             ${isIrregularStudent ? `<span class='student-subject-year'>${subjectYearLevel}</span>` : ""}
           </div>
@@ -6965,31 +8895,44 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Subjects not preloaded, fetching from server...");
       // If subjects aren't preloaded, fetch them
       fetch(`get_students.php`)
-        .then(r => r.json())
-        .then(students => {
+        .then((r) => r.json())
+        .then((students) => {
           console.log("Fetched students:", students);
-          const currentStudent = students.find(s => s.id == student.id);
+          const currentStudent = students.find((s) => s.id == student.id);
           console.log("Found current student:", currentStudent);
 
           if (currentStudent && currentStudent.subjects) {
-            const currentStudentIsIrregular = [currentStudent.student_type, currentStudent.yearlevel]
-              .some(value => String(value || "").trim().toLowerCase() === "irregular");
+            const currentStudentIsIrregular = [
+              currentStudent.student_type,
+              currentStudent.yearlevel,
+            ].some(
+              (value) =>
+                String(value || "")
+                  .trim()
+                  .toLowerCase() === "irregular",
+            );
             console.log("Current student subjects:", currentStudent.subjects);
             if (currentStudent.subjects.length === 0) {
-              subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
+              subjectsList.innerHTML =
+                "<div class='no-subjects'>No subjects assigned to this student</div>";
             } else {
-              console.log("Displaying", currentStudent.subjects.length, "subjects");
+              console.log(
+                "Displaying",
+                currentStudent.subjects.length,
+                "subjects",
+              );
               subjectCountElement.textContent = `${currentStudent.subjects.length} ${currentStudent.subjects.length === 1 ? "subject" : "subjects"}`;
               let html = "";
-              currentStudent.subjects.forEach(subject => {
+              currentStudent.subjects.forEach((subject) => {
                 console.log("Adding subject to display:", subject);
-                const subjectYearLevel = subject.year_level || subject.class_year_level || "";
+                const subjectYearLevel =
+                  subject.year_level || subject.class_year_level || "";
                 html += `
                 <div class='student-subject-row'>
                   <span class='student-subject-code'>${subject.subject_code}</span>
                   <div class='student-subject-info'>
                     <strong>${subject.subject_code} - ${subject.subject_desc}</strong>
-                    <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || 'Unassigned'}</span>
+                    <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || "Unassigned"}</span>
                   </div>
                   ${currentStudentIsIrregular ? `<span class='student-subject-year'>${subjectYearLevel}</span>` : ""}
                 </div>
@@ -6999,12 +8942,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           } else {
             console.log("No current student found or no subjects");
-            subjectsList.innerHTML = "<div class='no-subjects'>No subjects assigned to this student</div>";
+            subjectsList.innerHTML =
+              "<div class='no-subjects'>No subjects assigned to this student</div>";
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching student subjects:", err);
-          subjectsList.innerHTML = "<div class='error'>Error loading subjects</div>";
+          subjectsList.innerHTML =
+            "<div class='error'>Error loading subjects</div>";
         });
     }
   }
@@ -7041,13 +8986,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Add close button event listener directly for Add Students modal
         setTimeout(() => {
-          const closeBtn = document.querySelector("#addStudentModal .close-btn");
+          const closeBtn = document.querySelector(
+            "#addStudentModal .close-btn",
+          );
           console.log("Adding close handler for Add Students modal");
           console.log("Add Students close button:", closeBtn);
 
           if (closeBtn) {
             closeBtn.replaceWith(closeBtn.cloneNode(true));
-            const newCloseBtn = document.querySelector("#addStudentModal .close-btn");
+            const newCloseBtn = document.querySelector(
+              "#addStudentModal .close-btn",
+            );
             newCloseBtn.addEventListener("click", (e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -7060,9 +9009,18 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Modal forced display - current styles:", {
           display: addStudentModal.style.display,
           zIndex: addStudentModal.style.zIndex,
-          position: addStudentModal.style.position
+          position: addStudentModal.style.position,
         });
-        ["number", "email", "firstname", "lastname", "suffix", "yearlevel", "program", "section"].forEach(f => {
+        [
+          "number",
+          "email",
+          "firstname",
+          "lastname",
+          "suffix",
+          "yearlevel",
+          "program",
+          "section",
+        ].forEach((f) => {
           const el = document.getElementById("student-" + f);
           if (el) {
             el.value = "";
@@ -7073,17 +9031,24 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
         const studentNumberInput = document.getElementById("student-number");
-        if (studentNumberInput && studentNumberInput.dataset.formatListener !== "true") {
+        if (
+          studentNumberInput &&
+          studentNumberInput.dataset.formatListener !== "true"
+        ) {
           studentNumberInput.addEventListener("input", () => {
             const uppercaseValue = studentNumberInput.value.toUpperCase();
-            if (studentNumberInput.value !== uppercaseValue) studentNumberInput.value = uppercaseValue;
-            if (/^GC-[0-9]{6}$/.test(studentNumberInput.value.trim())) studentNumberInput.removeAttribute("aria-invalid");
+            if (studentNumberInput.value !== uppercaseValue)
+              studentNumberInput.value = uppercaseValue;
+            if (/^GC-[0-9]{6}$/.test(studentNumberInput.value.trim()))
+              studentNumberInput.removeAttribute("aria-invalid");
           });
           studentNumberInput.dataset.formatListener = "true";
         }
 
         // Reset student type to regular
-        const regularRadio = document.querySelector('input[name="student-type"][value="regular"]');
+        const regularRadio = document.querySelector(
+          'input[name="student-type"][value="regular"]',
+        );
         if (regularRadio) {
           regularRadio.checked = true;
         }
@@ -7092,50 +9057,56 @@ document.addEventListener("DOMContentLoaded", () => {
         loadStudentPrograms();
 
         // Handle student type radio buttons
-        const studentTypeRadios = document.querySelectorAll('input[name="student-type"]');
-        const yearlevelRow = document.getElementById('yearlevel-row');
-        const yearlevelSelect = document.getElementById('student-yearlevel');
-        const sectionSelect = document.getElementById('student-section');
-        const subjectsSection = document.querySelector('.section-box:has(#add-subject-btn)');
+        const studentTypeRadios = document.querySelectorAll(
+          'input[name="student-type"]',
+        );
+        const yearlevelRow = document.getElementById("yearlevel-row");
+        const yearlevelSelect = document.getElementById("student-yearlevel");
+        const sectionSelect = document.getElementById("student-section");
+        const subjectsSection = document.querySelector(
+          ".section-box:has(#add-subject-btn)",
+        );
 
-        console.log('Found radio buttons:', studentTypeRadios.length);
-        console.log('Found yearlevel row:', yearlevelRow);
-        console.log('Found section select:', sectionSelect);
+        console.log("Found radio buttons:", studentTypeRadios.length);
+        console.log("Found yearlevel row:", yearlevelRow);
+        console.log("Found section select:", sectionSelect);
 
         // Remove existing listeners to avoid duplicates
-        studentTypeRadios.forEach(radio => {
+        studentTypeRadios.forEach((radio) => {
           radio.replaceWith(radio.cloneNode(true));
         });
 
         // Get fresh reference after cloning
-        const freshRadios = document.querySelectorAll('input[name="student-type"]');
+        const freshRadios = document.querySelectorAll(
+          'input[name="student-type"]',
+        );
 
-        freshRadios.forEach(radio => {
-          radio.addEventListener('change', function () {
-            console.log('Radio changed to:', this.value);
+        freshRadios.forEach((radio) => {
+          radio.addEventListener("change", function () {
+            console.log("Radio changed to:", this.value);
 
             // Ensure elements exist before trying to manipulate them
             if (!yearlevelRow || !yearlevelSelect || !sectionSelect) {
-              console.error('Required elements not found');
+              console.error("Required elements not found");
               return;
             }
 
-            if (this.value === 'irregular') {
+            if (this.value === "irregular") {
               // Hide both year level and section for irregular students
-              console.log('Hiding year level and section for irregular');
-              yearlevelRow.style.setProperty('display', 'none', 'important');
+              console.log("Hiding year level and section for irregular");
+              yearlevelRow.style.setProperty("display", "none", "important");
               yearlevelSelect.required = false;
-              yearlevelSelect.value = '';
+              yearlevelSelect.value = "";
               sectionSelect.required = false;
-              sectionSelect.value = '';
-              if (subjectsSection) subjectsSection.style.display = 'block';
+              sectionSelect.value = "";
+              if (subjectsSection) subjectsSection.style.display = "block";
             } else {
               // Show both year level and section for regular students
-              console.log('Showing year level and section for regular');
+              console.log("Showing year level and section for regular");
               showYearSectionRow(yearlevelRow);
               yearlevelSelect.required = true;
               sectionSelect.required = true;
-              if (subjectsSection) subjectsSection.style.display = 'none';
+              if (subjectsSection) subjectsSection.style.display = "none";
             }
           });
         });
@@ -7144,62 +9115,79 @@ document.addEventListener("DOMContentLoaded", () => {
         showYearSectionRow(yearlevelRow);
         yearlevelSelect.required = true;
         sectionSelect.required = true;
-        if (subjectsSection) subjectsSection.style.display = 'none';
+        if (subjectsSection) subjectsSection.style.display = "none";
 
         // Clear selected subjects to prevent edit checking issue
         selectedSubjects = [];
         updateSelectedSubjectsDisplay();
 
         let submitBtn = resetSubmitBtn("SAVE STUDENT");
-        submitBtn.onclick = async e => {
+        submitBtn.onclick = async (e) => {
           e.preventDefault();
           setButtonLoading(submitBtn, true, "Saving Student...");
 
           const numberVal = val("number").trim();
           if (!/^GC-[0-9]{6}$/.test(numberVal)) {
             studentNumberInput.setAttribute("aria-invalid", "true");
-            showGlobalNotification("Student ID must be GC- followed by exactly 6 digits (example: GC-123456).", "warning");
+            showGlobalNotification(
+              "Student ID must be GC- followed by exactly 6 digits (example: GC-123456).",
+              "warning",
+            );
             setButtonLoading(submitBtn, false);
             return;
           } else {
             studentNumberInput.removeAttribute("aria-invalid");
           }
 
-          const n = val("number"), eMail = val("email"), fName = val("firstname"), lName = val("lastname"),
-            p = val("program"), section = val("section");
+          const n = val("number"),
+            eMail = val("email"),
+            fName = val("firstname"),
+            lName = val("lastname"),
+            p = val("program"),
+            section = val("section");
 
-          const studentType = document.querySelector('input[name="student-type"]:checked').value;
+          const studentType = document.querySelector(
+            'input[name="student-type"]:checked',
+          ).value;
           let y;
-          if (studentType === 'irregular') {
-            y = 'irregular';
+          if (studentType === "irregular") {
+            y = "irregular";
           } else {
             y = val("yearlevel");
             if (!y) {
-              showGlobalNotification("Please select year level for regular student", "warning");
+              showGlobalNotification(
+                "Please select year level for regular student",
+                "warning",
+              );
               setButtonLoading(submitBtn, false);
               return;
             }
           }
 
           if (!n || !eMail || !fName || !lName || !p) {
-            showGlobalNotification("Please fill all required fields", "warning");
+            showGlobalNotification(
+              "Please fill all required fields",
+              "warning",
+            );
             setButtonLoading(submitBtn, false);
             return;
           }
 
           // Clear subjects for regular students, keep only for irregular
-          const subjectIds = (studentType === 'irregular')
-            ? selectedSubjects.map(s => ({
-              id: s.id,
-              class_id: s.class_id || 0,
-              class_year_level: s.class_year_level || "",
-              class_section: s.class_section || ""
-            }))
-            : [];
+          const subjectIds =
+            studentType === "irregular"
+              ? selectedSubjects.map((s) => ({
+                  id: s.id,
+                  class_id: s.class_id || 0,
+                  class_year_level: s.class_year_level || "",
+                  class_section: s.class_section || "",
+                }))
+              : [];
 
           try {
             const res = await fetch("student_crud.php", {
-              method: "POST", headers: { "Content-Type": "application/json" },
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 action: "add",
                 student_number: n,
@@ -7211,8 +9199,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 program: p,
                 section: section,
                 subjects: subjectIds,
-                student_type: studentType
-              })
+                student_type: studentType,
+              }),
             });
             const d = await res.json();
             if (d.success) {
@@ -7222,11 +9210,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("Dashboard stats updated after student add");
               }, 500);
               closeModal(addStudentModal);
-              if (d.temporary_password) {
-                showAlertModal(`${d.message}. Student ID: ${n}. Temporary password: ${d.temporary_password}. Share it securely.`);
-              } else {
-                showNotification(d.message || "Student added successfully. Password sent to email.", "#4caf50");
-              }
+              showNotification(
+                d.message ||
+                  "Student added successfully. Password sent to email.",
+                "#4caf50",
+              );
               addProgramToDropdown(p);
             } else if ((d.message || "").startsWith("Student ID must be GC-")) {
               showGlobalNotification(d.message, "warning");
@@ -7235,7 +9223,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           } catch (err) {
             console.error("Error saving student:", err);
-            showGlobalNotification("Unable to save student. Please try again.", "error");
+            showGlobalNotification(
+              "Unable to save student. Please try again.",
+              "error",
+            );
           } finally {
             setButtonLoading(submitBtn, false);
           }
@@ -7278,7 +9269,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseDateOnly(dateString) {
-    const [year, month, day] = String(dateString || "").split("-").map(Number);
+    const [year, month, day] = String(dateString || "")
+      .split("-")
+      .map(Number);
     if (!year || !month || !day) return null;
     return new Date(year, month - 1, day);
   }
@@ -7302,10 +9295,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function resetPeriodForm(periodDefaults = null) {
     editingPeriodId = Number(periodDefaults?.id || 0) || null;
-    document.getElementById("period-ay").value = periodDefaults?.ay || selectedAcademicYear || defaultAcademicYear();
-    document.getElementById("period-sem").value = periodDefaults?.semester || selectedClassSemester || "";
-    document.getElementById("period-start").value = periodDefaults?.start_date || "";
-    document.getElementById("period-end").value = periodDefaults?.end_date || "";
+    document.getElementById("period-ay").value =
+      periodDefaults?.ay || selectedAcademicYear || defaultAcademicYear();
+    document.getElementById("period-sem").value =
+      periodDefaults?.semester || selectedClassSemester || "";
+    document.getElementById("period-start").value =
+      periodDefaults?.start_date || "";
+    document.getElementById("period-end").value =
+      periodDefaults?.end_date || "";
     setPeriodSubmitMode(editingPeriodId ? "edit" : "add");
   }
 
@@ -7330,20 +9327,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function formatRange(startDate, endDate) {
     // Handle NULL or empty dates
-    if (!startDate || !endDate || startDate === 'null' || endDate === 'null') {
+    if (!startDate || !endDate || startDate === "null" || endDate === "null") {
       return '<span style="color: #f59e0b; font-style: italic;">No dates set</span>';
     }
-    
+
     const start = parseDateOnly(startDate);
     const end = parseDateOnly(endDate);
-    const startStr = start.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-    const endStr = end.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+    const startStr = start.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+    const endStr = end.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
     return `${startStr} - ${endStr}`;
   }
 
   async function refreshPeriodCard() {
     try {
-      const res = await fetch("../shared/periods_api.php?action=status", { cache: "no-store", credentials: "same-origin" });
+      const res = await fetch("../shared/periods_api.php?action=status", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
       const data = await res.json();
       if (!data || !data.success) return null;
 
@@ -7371,13 +9379,16 @@ document.addEventListener("DOMContentLoaded", () => {
           ready: "Ready to open",
           setup: "Dates needed",
           expired: "Expired",
-          closed: "Closed"
+          closed: "Closed",
         };
-        statusText.textContent = statusLabels[data.active_period_status] || "Closed";
+        statusText.textContent =
+          statusLabels[data.active_period_status] || "Closed";
       }
       if (btnClose) {
-        btnClose.style.display = (data.evaluation_open || hasActivePeriod) ? "inline-block" : "none";
-        if (!hasActivePeriod && !data.evaluation_open) btnClose.style.display = "none";
+        btnClose.style.display =
+          data.evaluation_open || hasActivePeriod ? "inline-block" : "none";
+        if (!hasActivePeriod && !data.evaluation_open)
+          btnClose.style.display = "none";
       }
 
       // Store active period state globally for criteria lock
@@ -7397,33 +9408,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btnClose) {
       btnClose.addEventListener("click", async () => {
-        const activePeriod = cachedEvaluationPeriods.find(period => period.is_active);
+        const activePeriod = cachedEvaluationPeriods.find(
+          (period) => period.is_active,
+        );
         const periodName = activePeriod
           ? `${activePeriod.semester} ${activePeriod.ay}`
           : "the active evaluation period";
-        const duration = activePeriod?.start_date && activePeriod?.end_date
-          ? `${activePeriod.start_date} to ${activePeriod.end_date}`
-          : "";
-        if (!await confirmPeriodAction({ opening: false, periodName, duration })) {
+        const duration =
+          activePeriod?.start_date && activePeriod?.end_date
+            ? `${activePeriod.start_date} to ${activePeriod.end_date}`
+            : "";
+        if (
+          !(await confirmPeriodAction({ opening: false, periodName, duration }))
+        ) {
           return;
         }
 
         setButtonLoading(btnClose, true, "Closing...");
         try {
-          const response = await fetch("../shared/periods_api.php?action=deactivate", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({})
-          });
+          const response = await fetch(
+            "../shared/periods_api.php?action=deactivate",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            },
+          );
           const result = await response.json().catch(() => null);
           if (!response.ok || !result?.success) {
-            throw new Error(result?.message || "Unable to close the evaluation period.");
+            throw new Error(
+              result?.message || "Unable to close the evaluation period.",
+            );
           }
           showNotification("Evaluation period closed.", "#10b981", 7000);
         } catch (error) {
           console.error("Failed to close evaluation period:", error);
-          showNotification(error.message || "Unable to close the evaluation period.", "#ef4444", 5000);
+          showNotification(
+            error.message || "Unable to close the evaluation period.",
+            "#ef4444",
+            5000,
+          );
         } finally {
           setButtonLoading(btnClose, false);
           await refreshPeriodCard();
@@ -7468,9 +9493,13 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
 
     try {
-      const res = await fetch("../shared/periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" });
+      const res = await fetch("../shared/periods_api.php?action=list", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
       const data = await res.json();
-      const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+      const periods =
+        data && data.success && Array.isArray(data.periods) ? data.periods : [];
       cachedEvaluationPeriods = periods;
       renderPeriodsTable();
     } catch (err) {
@@ -7487,9 +9516,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("periods-tbody");
     if (!tbody) return;
 
-    const selectedSemester = document.getElementById("period-sem")?.value.trim().toLowerCase() || "";
+    const selectedSemester =
+      document.getElementById("period-sem")?.value.trim().toLowerCase() || "";
     const periods = selectedSemester
-      ? cachedEvaluationPeriods.filter(period => String(period.semester || "").trim().toLowerCase() === selectedSemester)
+      ? cachedEvaluationPeriods.filter(
+          (period) =>
+            String(period.semester || "")
+              .trim()
+              .toLowerCase() === selectedSemester,
+        )
       : cachedEvaluationPeriods;
 
     if (periods.length === 0) {
@@ -7504,9 +9539,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     tbody.innerHTML = "";
-    periods.forEach(p => {
+    periods.forEach((p) => {
       const tr = document.createElement("tr");
-      const periodName = escapeHtml(p.semester || formatPeriodName(p.semester, p.ay));
+      const periodName = escapeHtml(
+        p.semester || formatPeriodName(p.semester, p.ay),
+      );
       const ay = escapeHtml(p.ay);
       const duration = formatRange(p.start_date, p.end_date);
 
@@ -7515,12 +9552,13 @@ document.addEventListener("DOMContentLoaded", () => {
         expired: { label: "Expired", className: "expired" },
         scheduled: { label: "Scheduled", className: "scheduled" },
         open: { label: "Open", className: "open" },
-        ready: { label: "Ready to open", className: "ready" }
+        ready: { label: "Ready to open", className: "ready" },
       };
       const state = states[p.status] || states.setup;
       const action = p.is_active ? "deactivate" : "set-active";
       const actionLabel = p.is_active ? "Close" : "Open";
-      const actionDisabled = !p.is_active && ["setup", "expired"].includes(p.status);
+      const actionDisabled =
+        !p.is_active && ["setup", "expired"].includes(p.status);
       const actionTitle = actionDisabled
         ? !p.start_date || !p.end_date
           ? "Set start and end dates before opening this period"
@@ -7547,11 +9585,15 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${statusHtml}</td>
         <td class="action-cell">
           <div class="action-buttons">
-            ${!p.is_active ? `
+            ${
+              !p.is_active
+                ? `
               <button type="button" class="action-icon-btn send-reports-btn" data-id="${p.id}" title="Generate and send both faculty report PDFs">
                 <i class="ph ph-envelope-simple"></i>
               </button>
-            ` : ""}
+            `
+                : ""
+            }
             <button class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period">
               <i class="ph ph-note-pencil"></i>
             </button>
@@ -7563,14 +9605,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  document.getElementById("period-sem")?.addEventListener("change", renderPeriodsTable);
+  document
+    .getElementById("period-sem")
+    ?.addEventListener("change", renderPeriodsTable);
 
   function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   }
 
@@ -7588,7 +9632,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("period-end").value = period.end_date || "";
     editingPeriodId = Number(period.id);
     setPeriodSubmitMode("edit");
-    document.querySelector("#managePeriodsModal .period-creation-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .querySelector("#managePeriodsModal .period-creation-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function addPeriod() {
@@ -7627,13 +9673,24 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ay, semester: sem, start_date: start, end_date: end })
+      body: JSON.stringify({
+        ay,
+        semester: sem,
+        start_date: start,
+        end_date: end,
+      }),
     })
-      .then(r => r.json())
-      .then(async d => {
+      .then((r) => r.json())
+      .then(async (d) => {
         if (d && d.success) {
           showNotification("Period added successfully!", "#4caf50");
-          resetPeriodForm({ id: d.id, ay, semester: sem, start_date: start, end_date: end });
+          resetPeriodForm({
+            id: d.id,
+            ay,
+            semester: sem,
+            start_date: start,
+            end_date: end,
+          });
           await loadPeriods();
           // Refresh dashboard dropdowns to show the newly added period
           await syncDashboardPeriodSetting();
@@ -7672,13 +9729,25 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: periodId, ay, semester: sem, start_date: start, end_date: end })
+      body: JSON.stringify({
+        id: periodId,
+        ay,
+        semester: sem,
+        start_date: start,
+        end_date: end,
+      }),
     })
-      .then(r => r.json())
-      .then(async d => {
+      .then((r) => r.json())
+      .then(async (d) => {
         if (d && d.success) {
           showNotification("Period updated successfully!", "#4caf50");
-          resetPeriodForm({ id: periodId, ay, semester: sem, start_date: start, end_date: end });
+          resetPeriodForm({
+            id: periodId,
+            ay,
+            semester: sem,
+            start_date: start,
+            end_date: end,
+          });
           await loadPeriods();
           // Refresh dashboard dropdowns to show the updated period
           await syncDashboardPeriodSetting();
@@ -7691,12 +9760,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Add period button event
-  document.getElementById("add-period-btn")?.addEventListener("click", addPeriod);
+  document
+    .getElementById("add-period-btn")
+    ?.addEventListener("click", addPeriod);
 
   // Close modal event
-  managePeriodsModal?.querySelector(".close-btn")?.addEventListener("click", () => {
-    managePeriodsModal.style.display = "none";
-  });
+  managePeriodsModal
+    ?.querySelector(".close-btn")
+    ?.addEventListener("click", () => {
+      managePeriodsModal.style.display = "none";
+    });
 
   // Event delegation for status buttons in periods table
   const periodsTbody = document.getElementById("periods-tbody");
@@ -7708,39 +9781,62 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       e.stopPropagation();
       const id = Number(sendReportsBtn.dataset.id);
-      const period = cachedEvaluationPeriods.find(item => Number(item.id) === id);
+      const period = cachedEvaluationPeriods.find(
+        (item) => Number(item.id) === id,
+      );
       if (!id || !period) return;
 
       const periodName = `${period.semester} ${period.ay}`;
-      if (!window.confirm(`Generate and email the evaluation report and per-subject report to each active instructor for ${periodName}? This may resend reports previously delivered.`)) {
+      if (
+        !window.confirm(
+          `Generate and email the evaluation report and per-subject report to each active instructor for ${periodName}? This may resend reports previously delivered.`,
+        )
+      ) {
         return;
       }
 
       setButtonLoading(sendReportsBtn, true, "Sending...");
       try {
-        const res = await fetch("../shared/periods_api.php?action=send_reports", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id })
-        });
+        const res = await fetch(
+          "../shared/periods_api.php?action=send_reports",
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          },
+        );
         const result = await res.json().catch(() => null);
         if (!res.ok || !result?.success) {
-          const detail = Array.isArray(result?.report_email_errors) ? result.report_email_errors[0] : "";
-          showNotification(detail || result?.message || "Unable to generate or send evaluation reports.", "#f59e0b", 7000);
+          const detail = Array.isArray(result?.report_email_errors)
+            ? result.report_email_errors[0]
+            : "";
+          showNotification(
+            detail ||
+              result?.message ||
+              "Unable to generate or send evaluation reports.",
+            "#f59e0b",
+            7000,
+          );
         } else {
           const sent = Number(result.report_emails_sent) || 0;
           const failed = Number(result.report_emails_failed) || 0;
-          const detail = Array.isArray(result.report_email_errors) ? result.report_email_errors[0] : "";
+          const detail = Array.isArray(result.report_email_errors)
+            ? result.report_email_errors[0]
+            : "";
           showNotification(
             `Report emails sent (2 PDFs each): ${sent}${failed ? `; ${failed} failed${detail ? `: ${detail}` : ". Check the server error log for details."}` : "."}`,
             failed ? "#f59e0b" : "#10b981",
-            7000
+            7000,
           );
         }
       } catch (error) {
         console.error("Failed to send evaluation reports:", error);
-        showNotification("Unable to generate or send evaluation reports.", "#f59e0b", 5000);
+        showNotification(
+          "Unable to generate or send evaluation reports.",
+          "#f59e0b",
+          5000,
+        );
       } finally {
         setButtonLoading(sendReportsBtn, false);
       }
@@ -7759,30 +9855,50 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!action || !id || statusBtn.disabled) return;
 
       if (action === "set-active") {
-        const period = cachedEvaluationPeriods.find(item => Number(item.id) === id);
+        const period = cachedEvaluationPeriods.find(
+          (item) => Number(item.id) === id,
+        );
         if (!period) {
-          showNotification("Unable to find the selected period. Refresh and try again.", "#ef4444", 4000);
+          showNotification(
+            "Unable to find the selected period. Refresh and try again.",
+            "#ef4444",
+            4000,
+          );
           return;
         }
         const name = `${period.semester} ${period.ay}`;
-        const duration = period.start_date && period.end_date
-          ? `${period.start_date} to ${period.end_date}`
-          : "";
-        if (!await confirmPeriodAction({ opening: true, periodName: name, duration })) {
+        const duration =
+          period.start_date && period.end_date
+            ? `${period.start_date} to ${period.end_date}`
+            : "";
+        if (
+          !(await confirmPeriodAction({
+            opening: true,
+            periodName: name,
+            duration,
+          }))
+        ) {
           return;
         }
 
         setButtonLoading(statusBtn, true, "Opening...");
         try {
-          const res = await fetch("../shared/periods_api.php?action=set_active", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id })
-          });
+          const res = await fetch(
+            "../shared/periods_api.php?action=set_active",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id }),
+            },
+          );
           const result = await res.json().catch(() => null);
           if (!result || !result.success) {
-            showNotification((result && result.message) || "Unable to activate period.", "#f59e0b", 4000);
+            showNotification(
+              (result && result.message) || "Unable to activate period.",
+              "#f59e0b",
+              4000,
+            );
           } else {
             showNotification("Evaluation opened.", "#10b981", 6000);
           }
@@ -7797,32 +9913,55 @@ document.addEventListener("DOMContentLoaded", () => {
           setButtonLoading(statusBtn, false);
         }
       } else if (action === "deactivate") {
-        const period = cachedEvaluationPeriods.find(item => Number(item.id) === id);
-        const name = period ? `${period.semester} ${period.ay}` : "this evaluation period";
-        const duration = period?.start_date && period?.end_date
-          ? `${period.start_date} to ${period.end_date}`
-          : "";
-        if (!await confirmPeriodAction({ opening: false, periodName: name, duration })) {
+        const period = cachedEvaluationPeriods.find(
+          (item) => Number(item.id) === id,
+        );
+        const name = period
+          ? `${period.semester} ${period.ay}`
+          : "this evaluation period";
+        const duration =
+          period?.start_date && period?.end_date
+            ? `${period.start_date} to ${period.end_date}`
+            : "";
+        if (
+          !(await confirmPeriodAction({
+            opening: false,
+            periodName: name,
+            duration,
+          }))
+        ) {
           return;
         }
 
         setButtonLoading(statusBtn, true, "Closing...");
         try {
-          const res = await fetch("../shared/periods_api.php?action=deactivate", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({})
-          });
+          const res = await fetch(
+            "../shared/periods_api.php?action=deactivate",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            },
+          );
           const result = await res.json().catch(() => null);
           if (!res.ok || !result?.success) {
-            showNotification((result && result.message) || "Unable to close evaluation period.", "#f59e0b", 4000);
+            showNotification(
+              (result && result.message) ||
+                "Unable to close evaluation period.",
+              "#f59e0b",
+              4000,
+            );
           } else {
             showNotification("Evaluation period closed.", "#10b981", 6000);
           }
         } catch (error) {
           console.error("Failed to close evaluation period:", error);
-          showNotification("Unable to close evaluation period.", "#f59e0b", 4000);
+          showNotification(
+            "Unable to close evaluation period.",
+            "#f59e0b",
+            4000,
+          );
         } finally {
           setButtonLoading(statusBtn, false);
           await loadPeriods();
@@ -7845,28 +9984,34 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!id) return;
 
       // We need access to the periods array, so let's store it globally
-      fetch("../shared/periods_api.php?action=list", { cache: "no-store", credentials: "same-origin" })
-        .then(res => res.json())
-        .then(data => {
-          const periods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
-          const period = periods.find(item => Number(item.id) === id);
+      fetch("../shared/periods_api.php?action=list", {
+        cache: "no-store",
+        credentials: "same-origin",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const periods =
+            data && data.success && Array.isArray(data.periods)
+              ? data.periods
+              : [];
+          const period = periods.find((item) => Number(item.id) === id);
           if (period) editPeriod(period);
         })
-        .catch(err => console.error("Failed to fetch period for edit:", err));
+        .catch((err) => console.error("Failed to fetch period for edit:", err));
     });
   }
 
   // Simple Calendar Click Handler
   function initCalendarClickHandlers() {
     const hideCalendars = () => {
-      document.querySelectorAll('.calendar-picker').forEach(cal => {
-        cal.style.display = 'none';
-        cal.classList.remove('active');
+      document.querySelectorAll(".calendar-picker").forEach((cal) => {
+        cal.style.display = "none";
+        cal.classList.remove("active");
       });
     };
 
     const openCalendar = (targetId) => {
-      const calendar = document.getElementById(targetId + '-calendar');
+      const calendar = document.getElementById(targetId + "-calendar");
       const input = document.getElementById(targetId);
       if (!calendar || !input) return;
 
@@ -7879,16 +10024,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const inputRect = input.getBoundingClientRect();
       const pickerWidth = 292;
-      const left = Math.min(inputRect.left, window.innerWidth - pickerWidth - 12);
+      const left = Math.min(
+        inputRect.left,
+        window.innerWidth - pickerWidth - 12,
+      );
       const top = inputRect.bottom + 8;
 
-      calendar.style.position = 'fixed';
+      calendar.style.position = "fixed";
       calendar.style.top = `${top}px`;
       calendar.style.left = `${Math.max(12, left)}px`;
-      calendar.style.right = 'auto';
-      calendar.style.zIndex = '100000';
-      calendar.style.display = 'block';
-      calendar.classList.add('active');
+      calendar.style.right = "auto";
+      calendar.style.zIndex = "100000";
+      calendar.style.display = "block";
+      calendar.classList.add("active");
 
       const now = new Date();
       calendar.dataset.year = now.getFullYear();
@@ -7896,34 +10044,38 @@ document.addEventListener("DOMContentLoaded", () => {
       generateCalendarDays(calendar, targetId);
     };
 
-    document.querySelectorAll('.calendar-icon').forEach(icon => {
-      icon.addEventListener('click', (e) => {
+    document.querySelectorAll(".calendar-icon").forEach((icon) => {
+      icon.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         openCalendar(icon.dataset.target);
       });
     });
 
-    document.querySelectorAll('#period-start, #period-end').forEach(input => {
-      input.addEventListener('click', (e) => {
+    document.querySelectorAll("#period-start, #period-end").forEach((input) => {
+      input.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         openCalendar(input.id);
       });
     });
 
-    document.querySelectorAll('.calendar-nav').forEach(button => {
-      button.addEventListener('click', (e) => {
+    document.querySelectorAll(".calendar-nav").forEach((button) => {
+      button.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const calendar = button.closest('.calendar-picker');
+        const calendar = button.closest(".calendar-picker");
         if (!calendar) return;
 
-        const targetId = calendar.id.replace('-calendar', '');
-        const direction = button.dataset.direction === 'next' ? 1 : -1;
-        const currentYear = Number(calendar.dataset.year || new Date().getFullYear());
-        const currentMonth = Number(calendar.dataset.month || new Date().getMonth());
+        const targetId = calendar.id.replace("-calendar", "");
+        const direction = button.dataset.direction === "next" ? 1 : -1;
+        const currentYear = Number(
+          calendar.dataset.year || new Date().getFullYear(),
+        );
+        const currentMonth = Number(
+          calendar.dataset.month || new Date().getMonth(),
+        );
         const nextDate = new Date(currentYear, currentMonth + direction, 1);
 
         calendar.dataset.year = nextDate.getFullYear();
@@ -7933,9 +10085,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Close calendar when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.classList.contains('calendar-icon') &&
-        !e.target.closest('.calendar-picker')) {
+    document.addEventListener("click", (e) => {
+      if (
+        !e.target.classList.contains("calendar-icon") &&
+        !e.target.closest(".calendar-picker")
+      ) {
         hideCalendars();
       }
     });
@@ -7943,20 +10097,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Generate calendar days
   function generateCalendarDays(calendar, targetId) {
-    const grid = calendar.querySelector('.calendar-grid');
-    const monthYear = calendar.querySelector('.calendar-month-year');
+    const grid = calendar.querySelector(".calendar-grid");
+    const monthYear = calendar.querySelector(".calendar-month-year");
 
     // Clear existing days (keep headers)
-    const existingDays = grid.querySelectorAll('.calendar-day');
-    existingDays.forEach(day => day.remove());
+    const existingDays = grid.querySelectorAll(".calendar-day");
+    existingDays.forEach((day) => day.remove());
 
     const now = new Date();
     const year = Number(calendar.dataset.year || now.getFullYear());
     const month = Number(calendar.dataset.month || now.getMonth());
 
     // Update header
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     monthYear.textContent = `${monthNames[month]} ${year}`;
 
     // Get first day and days in month
@@ -7965,37 +10131,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add empty cells
     for (let i = 0; i < firstDay; i++) {
-      const emptyDay = document.createElement('div');
-      emptyDay.className = 'calendar-day disabled';
+      const emptyDay = document.createElement("div");
+      emptyDay.className = "calendar-day disabled";
       grid.appendChild(emptyDay);
     }
 
     // Add days
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayElement = document.createElement('div');
-      dayElement.className = 'calendar-day';
+      const dayElement = document.createElement("div");
+      dayElement.className = "calendar-day";
       dayElement.textContent = day;
-      const formattedDate = year + '-' +
-        String(month + 1).padStart(2, '0') + '-' +
-        String(day).padStart(2, '0');
-      const isPastStartDate = targetId === "period-start" && isPastDate(formattedDate);
+      const formattedDate =
+        year +
+        "-" +
+        String(month + 1).padStart(2, "0") +
+        "-" +
+        String(day).padStart(2, "0");
+      const isPastStartDate =
+        targetId === "period-start" && isPastDate(formattedDate);
 
       // Highlight today
-      if (day === now.getDate() && month === now.getMonth() && year === now.getFullYear()) {
-        dayElement.classList.add('today');
+      if (
+        day === now.getDate() &&
+        month === now.getMonth() &&
+        year === now.getFullYear()
+      ) {
+        dayElement.classList.add("today");
       }
 
       if (isPastStartDate) {
-        dayElement.classList.add('disabled');
+        dayElement.classList.add("disabled");
         grid.appendChild(dayElement);
         continue;
       }
 
       // Add click event
-      dayElement.addEventListener('click', () => {
+      dayElement.addEventListener("click", () => {
         document.getElementById(targetId).value = formattedDate;
-        calendar.style.display = 'none';
-        calendar.classList.remove('active');
+        calendar.style.display = "none";
+        calendar.classList.remove("active");
       });
 
       grid.appendChild(dayElement);
@@ -8014,29 +10188,85 @@ document.addEventListener("DOMContentLoaded", () => {
       loadPeriods();
     }
   }, 60000);
-
 });
 
 // Rating Distribution Donut Chart
+const doughnutPercentageLabels = {
+  id: "doughnutPercentageLabels",
+  afterDatasetsDraw(chart) {
+    const dataset = chart.data.datasets[0];
+    if (!dataset) return;
+
+    const values = dataset.data.map((value) => Number(value) || 0);
+    const total = values.reduce((sum, value) => sum + value, 0);
+    if (total <= 0) return;
+
+    const arcs = chart.getDatasetMeta(0).data;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 10px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(15, 23, 42, .35)";
+    ctx.shadowBlur = 2;
+
+    arcs.forEach((arc, index) => {
+      const value = values[index];
+      if (value <= 0) return;
+
+      const percentage = Math.round((value / total) * 100);
+      const angle = (arc.startAngle + arc.endAngle) / 2;
+      const radius = (arc.innerRadius + arc.outerRadius) / 2;
+      const x = arc.x + Math.cos(angle) * radius;
+      const y = arc.y + Math.sin(angle) * radius;
+      ctx.fillText(`${percentage}%`, x, y);
+    });
+
+    ctx.restore();
+  },
+};
+Chart.register(doughnutPercentageLabels);
+
 function initRatingDistributionChart(ratingDistribution = {}) {
-  const canvas = document.getElementById('ratingDistributionChart');
-  const chartWrapper = document.querySelector('.rating-chart-wrapper');
-  const legendContainer = document.getElementById('ratingLegend');
+  const canvas = document.getElementById("ratingDistributionChart");
+  const chartWrapper = document.querySelector(".rating-chart-wrapper");
+  const legendContainer = document.getElementById("ratingLegend");
   const ratingData = [
-    { label: 'Excellent', value: Number(ratingDistribution.Excellent) || 0, color: '#2563eb' },
-    { label: 'Very Good', value: Number(ratingDistribution['Very Good']) || 0, color: '#16a34a' },
-    { label: 'Good', value: Number(ratingDistribution.Good) || 0, color: '#eab308' },
-    { label: 'Fair', value: Number(ratingDistribution.Fair) || 0, color: '#f97316' },
-    { label: 'Poor', value: Number(ratingDistribution.Poor) || 0, color: '#ef4444' }
+    {
+      label: "Excellent",
+      value: Number(ratingDistribution.Excellent) || 0,
+      color: "#2563eb",
+    },
+    {
+      label: "Very Good",
+      value: Number(ratingDistribution["Very Good"]) || 0,
+      color: "#16a34a",
+    },
+    {
+      label: "Good",
+      value: Number(ratingDistribution.Good) || 0,
+      color: "#eab308",
+    },
+    {
+      label: "Fair",
+      value: Number(ratingDistribution.Fair) || 0,
+      color: "#f97316",
+    },
+    {
+      label: "Poor",
+      value: Number(ratingDistribution.Poor) || 0,
+      color: "#ef4444",
+    },
   ];
-  const hasRatings = ratingData.some(item => item.value > 0);
+  const hasRatings = ratingData.some((item) => item.value > 0);
 
   if (chartWrapper) {
-    chartWrapper.style.display = 'flex';
-    chartWrapper.style.visibility = hasRatings ? 'visible' : 'hidden';
+    chartWrapper.style.display = "flex";
+    chartWrapper.style.visibility = hasRatings ? "visible" : "hidden";
   }
   if (legendContainer) {
-    legendContainer.style.display = 'flex';
+    legendContainer.style.display = "flex";
   }
 
   if (window.ratingChartInstance) {
@@ -8050,66 +10280,70 @@ function initRatingDistributionChart(ratingDistribution = {}) {
 }
 
 function drawRatingDonutChart(canvas, data) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
   // Prepare data for Chart.js
   const chartData = {
-    labels: data.map(item => item.label),
-    datasets: [{
-      data: data.map(item => item.value),
-      backgroundColor: data.map(item => item.color),
-      borderWidth: 2,
-      borderColor: '#ffffff'
-    }]
+    labels: data.map((item) => item.label),
+    datasets: [
+      {
+        data: data.map((item) => item.value),
+        backgroundColor: data.map((item) => item.color),
+        borderWidth: 2,
+        borderColor: "#ffffff",
+      },
+    ],
   };
 
   // Create new Chart.js donut chart
   window.ratingChartInstance = new Chart(ctx, {
-    type: 'doughnut',
+    type: "doughnut",
     data: chartData,
     options: {
       responsive: false,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false // Hide default legend as we have custom legend
+          display: false, // Hide default legend as we have custom legend
         },
         tooltip: {
           callbacks: {
             label: function (context) {
-              const label = context.label || '';
+              const label = context.label || "";
               const value = context.parsed || 0;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
               const percentage = Math.round((value / total) * 100);
               return `${label}: ${value} (${percentage}%)`;
-            }
-          }
-        }
+            },
+          },
+        },
       },
-      cutout: '60%', // Creates the donut effect
+      cutout: "60%", // Creates the donut effect
       animation: {
         animateRotate: true,
-        animateScale: false
-      }
-    }
+        animateScale: false,
+      },
+    },
   });
 }
 
 // Initialize rating chart when page loads
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
   setTimeout(initRatingDistributionChart, 100);
 });
 
 // ========================= ACADEMIC YEAR MODAL =========================
-document.addEventListener('DOMContentLoaded', function () {
-  const addAcademicYearBtn = document.getElementById('addAcademicYearBtn');
-  const addAcademicYearModal = document.getElementById('addAcademicYearModal');
-  const closeBtn = addAcademicYearModal?.querySelector('.close-btn');
-  const saveBtn = document.getElementById('save-academic-year-btn');
-  const academicYearInput = document.getElementById('academic-year');
-  const semesterSelect = document.getElementById('semester');
-  const duplicateMessage = document.getElementById('academic-year-duplicate-message');
-  const tableBody = document.getElementById('academicYearTableBody');
+document.addEventListener("DOMContentLoaded", function () {
+  const addAcademicYearBtn = document.getElementById("addAcademicYearBtn");
+  const addAcademicYearModal = document.getElementById("addAcademicYearModal");
+  const closeBtn = addAcademicYearModal?.querySelector(".close-btn");
+  const saveBtn = document.getElementById("save-academic-year-btn");
+  const academicYearInput = document.getElementById("academic-year");
+  const semesterSelect = document.getElementById("semester");
+  const duplicateMessage = document.getElementById(
+    "academic-year-duplicate-message",
+  );
+  const tableBody = document.getElementById("academicYearTableBody");
   let academicPeriods = [];
 
   function hideAcademicYearDuplicateMessage() {
@@ -8120,10 +10354,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (duplicateMessage) duplicateMessage.hidden = false;
   }
 
-  academicYearInput?.addEventListener('input', hideAcademicYearDuplicateMessage);
-  semesterSelect?.addEventListener('change', hideAcademicYearDuplicateMessage);
+  academicYearInput?.addEventListener(
+    "input",
+    hideAcademicYearDuplicateMessage,
+  );
+  semesterSelect?.addEventListener("change", hideAcademicYearDuplicateMessage);
 
-  function showAcademicYearEmpty(message = 'No academic years have been added yet.') {
+  function showAcademicYearEmpty(
+    message = "No academic years have been added yet.",
+  ) {
     if (!tableBody) return;
     tableBody.innerHTML = `
       <tr>
@@ -8144,8 +10383,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function resetAcademicYearModal() {
-    if (academicYearInput) academicYearInput.value = '';
-    if (semesterSelect) semesterSelect.value = '';
+    if (academicYearInput) academicYearInput.value = "";
+    if (semesterSelect) semesterSelect.value = "";
     hideAcademicYearDuplicateMessage();
     if (!addAcademicYearModal) return;
     delete addAcademicYearModal.dataset.editingId;
@@ -8155,44 +10394,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function closeAcademicYearModal() {
     resetAcademicYearModal();
-    if (addAcademicYearModal) addAcademicYearModal.style.display = 'none';
+    if (addAcademicYearModal) addAcademicYearModal.style.display = "none";
   }
 
   // Open modal
-  addAcademicYearBtn?.addEventListener('click', function () {
+  addAcademicYearBtn?.addEventListener("click", function () {
     resetAcademicYearModal();
-    addAcademicYearModal.style.display = 'flex';
+    addAcademicYearModal.style.display = "flex";
   });
 
   // Close modal
-  closeBtn?.addEventListener('click', function () {
+  closeBtn?.addEventListener("click", function () {
     closeAcademicYearModal();
   });
 
   // Close modal when clicking outside
-  addAcademicYearModal?.addEventListener('click', function (e) {
+  addAcademicYearModal?.addEventListener("click", function (e) {
     if (e.target === addAcademicYearModal) {
       closeAcademicYearModal();
     }
   });
 
   // Save button handler
-  saveBtn?.addEventListener('click', async function () {
+  saveBtn?.addEventListener("click", async function () {
     const academicYear = academicYearInput.value.trim();
     const semester = semesterSelect.value;
 
     if (!academicYear) {
-      alert('Please enter an academic year');
+      alert("Please enter an academic year");
       return;
     }
 
     if (!semester) {
-      alert('Please select a semester');
+      alert("Please select a semester");
       return;
     }
 
     const editingId = Number(addAcademicYearModal.dataset.editingId || 0);
-    
+
     // When creating, send only ay and semester (no dates)
     // When updating, preserve the original dates
     const payload = editingId
@@ -8200,55 +10439,60 @@ document.addEventListener('DOMContentLoaded', function () {
           id: editingId,
           ay: academicYear,
           semester,
-          start_date: addAcademicYearModal.dataset.originalStartDate || '',
-          end_date: addAcademicYearModal.dataset.originalEndDate || ''
+          start_date: addAcademicYearModal.dataset.originalStartDate || "",
+          end_date: addAcademicYearModal.dataset.originalEndDate || "",
         }
-      : { 
-          ay: academicYear, 
-          semester 
+      : {
+          ay: academicYear,
+          semester,
           // No dates - will be NULL in database
         };
 
     setButtonLoading(saveBtn, true, "Saving Academic Year...");
     try {
-      const res = await fetch(`../shared/periods_api.php?action=${editingId ? 'update' : 'create'}`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const res = await fetch(
+        `../shared/periods_api.php?action=${editingId ? "update" : "create"}`,
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const result = await res.json().catch(() => null);
       if (!result || !result.success) {
-        if (result?.message === 'This academic year and semester already exists.') {
+        if (
+          result?.message === "This academic year and semester already exists."
+        ) {
           showAcademicYearDuplicateMessage();
           return;
         }
-        alert((result && result.message) || 'Unable to save academic year.');
+        alert((result && result.message) || "Unable to save academic year.");
         return;
       }
 
       closeAcademicYearModal();
       await loadAcademicYearSection();
-      if (typeof syncDashboardPeriodSetting === 'function') {
+      if (typeof syncDashboardPeriodSetting === "function") {
         await syncDashboardPeriodSetting();
       }
     } catch (err) {
-      console.error('Failed to save academic year:', err);
-      alert('Unable to save academic year.');
+      console.error("Failed to save academic year:", err);
+      alert("Unable to save academic year.");
     } finally {
       setButtonLoading(saveBtn, false);
     }
   });
 
   function renderAcademicYearRow(period) {
-    const row = document.createElement('tr');
-    row.setAttribute('data-id', period.id);
-    row.setAttribute('data-academic-year', period.ay);
-    row.setAttribute('data-semester', period.semester);
+    const row = document.createElement("tr");
+    row.setAttribute("data-id", period.id);
+    row.setAttribute("data-academic-year", period.ay);
+    row.setAttribute("data-semester", period.semester);
     row.innerHTML = `
       <td>${escapeAcademicHtml(period.ay)}</td>
       <td>${escapeAcademicHtml(period.semester)}</td>
-      <td><span class="status-badge ${period.is_active ? 'active' : 'inactive'}">${period.is_active ? 'Active' : 'Inactive'}</span></td>
+      <td><span class="status-badge ${period.is_active ? "active" : "inactive"}">${period.is_active ? "Active" : "Inactive"}</span></td>
       <td class="action-cell">
         <div class="action-buttons">
           <button class="manage-period-btn" title="Manage Period" aria-label="Manage Period">
@@ -8264,28 +10508,32 @@ document.addEventListener('DOMContentLoaded', function () {
       </td>
     `;
 
-    const managePeriodBtn = row.querySelector('.manage-period-btn');
-    const editBtn = row.querySelector('.edit-btn');
-    const deleteBtn = row.querySelector('.delete-btn');
+    const managePeriodBtn = row.querySelector(".manage-period-btn");
+    const editBtn = row.querySelector(".edit-btn");
+    const deleteBtn = row.querySelector(".delete-btn");
 
-    managePeriodBtn?.addEventListener('click', function (e) {
+    managePeriodBtn?.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       window.openManagePeriodsModal(period);
     });
 
-    editBtn?.addEventListener('click', function () {
-      academicYearInput.value = period.ay || '';
-      semesterSelect.value = period.semester || '';
-      addAcademicYearModal.dataset.editingId = String(period.id || '');
-      addAcademicYearModal.dataset.originalStartDate = period.start_date || '';
-      addAcademicYearModal.dataset.originalEndDate = period.end_date || '';
-      addAcademicYearModal.style.display = 'flex';
+    editBtn?.addEventListener("click", function () {
+      academicYearInput.value = period.ay || "";
+      semesterSelect.value = period.semester || "";
+      addAcademicYearModal.dataset.editingId = String(period.id || "");
+      addAcademicYearModal.dataset.originalStartDate = period.start_date || "";
+      addAcademicYearModal.dataset.originalEndDate = period.end_date || "";
+      addAcademicYearModal.style.display = "flex";
     });
 
-    deleteBtn?.addEventListener('click', function () {
-      if (typeof window.openDeleteModal === 'function') {
-        window.openDeleteModal('period', `${period.ay} - ${period.semester}`, row);
+    deleteBtn?.addEventListener("click", function () {
+      if (typeof window.openDeleteModal === "function") {
+        window.openDeleteModal(
+          "period",
+          `${period.ay} - ${period.semester}`,
+          row,
+        );
       }
     });
 
@@ -8293,88 +10541,88 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function escapeAcademicHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   // Function to update academic year filter dropdown
   function updateAcademicYearFilter() {
-    const filterSelect = document.getElementById('academic-year-filter');
+    const filterSelect = document.getElementById("academic-year-filter");
     if (!filterSelect) return;
 
     const academicYears = new Set();
-    academicPeriods.forEach(period => {
-      const ay = String(period?.ay ?? '').trim();
+    academicPeriods.forEach((period) => {
+      const ay = String(period?.ay ?? "").trim();
       if (ay) academicYears.add(ay);
     });
 
-    const previousValue = String(filterSelect.value || '').trim();
+    const previousValue = String(filterSelect.value || "").trim();
     filterSelect.innerHTML = '<option value="">Academic Year</option>';
 
     const sortedYears = Array.from(academicYears).sort((a, b) => {
       const getStartYear = (value) => {
-        const match = String(value || '').match(/(\d{4})/);
+        const match = String(value || "").match(/(\d{4})/);
         return match ? Number(match[1]) : 0;
       };
       return getStartYear(b) - getStartYear(a);
     });
 
-    sortedYears.forEach(ay => {
-      const option = document.createElement('option');
+    sortedYears.forEach((ay) => {
+      const option = document.createElement("option");
       option.value = ay;
       option.textContent = ay;
       filterSelect.appendChild(option);
     });
 
-    filterSelect.value = sortedYears.includes(previousValue) ? previousValue : '';
+    filterSelect.value = sortedYears.includes(previousValue)
+      ? previousValue
+      : "";
   }
 
   // Filter functionality
-  const searchInput = document.getElementById('academic-year-search');
-  const ayFilter = document.getElementById('academic-year-filter');
-  const semesterFilter = document.getElementById('semester-filter');
+  const ayFilter = document.getElementById("academic-year-filter");
+  const semesterFilter = document.getElementById("semester-filter");
 
   function filterTable() {
-    const searchTerm = searchInput?.value.toLowerCase() || '';
-    const selectedAY = ayFilter?.value || '';
-    const selectedSemester = semesterFilter?.value || '';
+    const selectedAY = ayFilter?.value || "";
+    const selectedSemester = semesterFilter?.value || "";
     if (!tableBody) return;
 
-    tableBody.querySelectorAll('tr[data-academic-year]').forEach(row => {
-      const ay = row.getAttribute('data-academic-year').toLowerCase();
-      const semester = row.getAttribute('data-semester');
+    tableBody.querySelectorAll("tr[data-academic-year]").forEach((row) => {
+      const semester = row.getAttribute("data-semester");
 
-      const matchesSearch = ay.includes(searchTerm);
-      const matchesAY = !selectedAY || row.getAttribute('data-academic-year') === selectedAY;
-      const matchesSemester = !selectedSemester || semester === selectedSemester;
+      const matchesAY =
+        !selectedAY || row.getAttribute("data-academic-year") === selectedAY;
+      const matchesSemester =
+        !selectedSemester || semester === selectedSemester;
 
-      if (matchesSearch && matchesAY && matchesSemester) {
-        row.style.display = '';
+      if (matchesAY && matchesSemester) {
+        row.style.display = "";
       } else {
-        row.style.display = 'none';
+        row.style.display = "none";
       }
     });
   }
 
-  searchInput?.addEventListener('input', filterTable);
-  ayFilter?.addEventListener('change', filterTable);
-  semesterFilter?.addEventListener('change', filterTable);
+  ayFilter?.addEventListener("change", filterTable);
+  semesterFilter?.addEventListener("change", filterTable);
 
   async function loadAcademicYearSection() {
     if (!tableBody) return;
     setAcademicYearLoading();
 
     try {
-      const res = await fetch('../shared/periods_api.php?action=list', {
-        cache: 'no-store',
-        credentials: 'same-origin'
+      const res = await fetch("../shared/periods_api.php?action=list", {
+        cache: "no-store",
+        credentials: "same-origin",
       });
       const data = await res.json().catch(() => null);
-      academicPeriods = (data && data.success && Array.isArray(data.periods)) ? data.periods : [];
+      academicPeriods =
+        data && data.success && Array.isArray(data.periods) ? data.periods : [];
 
       if (academicPeriods.length === 0) {
         updateAcademicYearFilter();
@@ -8382,24 +10630,20 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      tableBody.innerHTML = '';
-      academicPeriods.forEach(period => tableBody.appendChild(renderAcademicYearRow(period)));
+      tableBody.innerHTML = "";
+      academicPeriods.forEach((period) =>
+        tableBody.appendChild(renderAcademicYearRow(period)),
+      );
       updateAcademicYearFilter();
       filterTable();
     } catch (err) {
-      console.error('Failed to load academic years:', err);
-      showAcademicYearEmpty('Failed to load academic years. Please refresh and try again.');
+      console.error("Failed to load academic years:", err);
+      showAcademicYearEmpty(
+        "Failed to load academic years. Please refresh and try again.",
+      );
     }
   }
 
   window.loadAcademicYearSection = loadAcademicYearSection;
   loadAcademicYearSection();
-
-  // Clear search button
-  document.querySelector('.clear-search-btn[data-clear-targets*="academic-year-search"]')?.addEventListener('click', function() {
-    if (searchInput) searchInput.value = '';
-    if (ayFilter) ayFilter.value = '';
-    if (semesterFilter) semesterFilter.value = '';
-    filterTable();
-  });
 });

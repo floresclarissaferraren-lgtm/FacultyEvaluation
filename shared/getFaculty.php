@@ -1,59 +1,84 @@
 <?php
 header("Content-Type: application/json");
-include __DIR__ . '/connect.php';
-require_once __DIR__ . '/evaluation_schema.php';
-require_once __DIR__ . '/ensure_schema_column.php';
-require_once __DIR__ . '/evaluation_period_helper.php';
-require_once __DIR__ . '/class_period_helper.php';
+include __DIR__ . "/connect.php";
+require_once __DIR__ . "/evaluation_schema.php";
+require_once __DIR__ . "/ensure_schema_column.php";
+require_once __DIR__ . "/evaluation_period_helper.php";
+require_once __DIR__ . "/class_period_helper.php";
 
 try {
-    ensureColumnExists($conn, 'add_faculties', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"');
+    ensureColumnExists(
+        $conn,
+        "add_faculties",
+        "status",
+        'VARCHAR(20) NOT NULL DEFAULT "active"',
+    );
 
     ensureEvaluationsSchema($conn);
     ensureClassPeriodColumn($conn);
 
-    $student_id = intval($_GET['student_id'] ?? 0);
-    $year_level = trim($_GET['year_level'] ?? '');
+    $student_id = intval($_GET["student_id"] ?? 0);
+    $year_level = trim($_GET["year_level"] ?? "");
 
     if ($student_id > 0 && !isEvaluationOngoing($conn)) {
         echo json_encode([]);
         $conn->close();
-        exit;
+        exit();
     }
 
-    $student_year_raw = '';
-    $student_year_formatted = '';
+    $student_year_raw = "";
+    $student_year_formatted = "";
 
     // Function to resolve program ID from program name/code
-    function resolveProgramId(mysqli $conn, string $program): int {
+    function resolveProgramId(mysqli $conn, string $program): int
+    {
         $program = trim($program);
-        if ($program === '') return 0;
-        if (ctype_digit($program)) return intval($program);
-        $stmt = $conn->prepare("SELECT id FROM add_programs WHERE program_code = ? OR program_name = ? LIMIT 1");
-        if (!$stmt) return 0;
+        if ($program === "") {
+            return 0;
+        }
+        if (ctype_digit($program)) {
+            return intval($program);
+        }
+        $stmt = $conn->prepare(
+            "SELECT id FROM add_programs WHERE program_code = ? OR program_name = ? LIMIT 1",
+        );
+        if (!$stmt) {
+            return 0;
+        }
         $stmt->bind_param("ss", $program, $program);
         $stmt->execute();
         $res = $stmt->get_result();
         $row = $res ? $res->fetch_assoc() : null;
         $stmt->close();
-        return $row ? intval($row['id']) : 0;
+        return $row ? intval($row["id"]) : 0;
     }
 
     if ($student_id > 0) {
-        $student_meta_stmt = $conn->prepare("SELECT yearlevel, program, section FROM add_students WHERE id = ? LIMIT 1");
+        $student_meta_stmt = $conn->prepare(
+            "SELECT yearlevel, program, section FROM add_students WHERE id = ? LIMIT 1",
+        );
         $student_meta_stmt->bind_param("i", $student_id);
         $student_meta_stmt->execute();
         $student_meta_result = $student_meta_stmt->get_result();
         if ($student_meta = $student_meta_result->fetch_assoc()) {
-            $student_year_raw = trim((string)($student_meta['yearlevel'] ?? ''));
+            $student_year_raw = trim(
+                (string) ($student_meta["yearlevel"] ?? ""),
+            );
             $student_year_formatted = $student_year_raw;
             if (ctype_digit($student_year_raw)) {
                 $y = intval($student_year_raw);
-                $suffix = $y === 1 ? 'st' : ($y === 2 ? 'nd' : ($y === 3 ? 'rd' : 'th'));
-                $student_year_formatted = $y . $suffix . ' Year';
+                $suffix =
+                    $y === 1
+                        ? "st"
+                        : ($y === 2
+                            ? "nd"
+                            : ($y === 3
+                                ? "rd"
+                                : "th"));
+                $student_year_formatted = $y . $suffix . " Year";
             }
-            $student_program = $student_meta['program'] ?? '';
-            $student_section = trim((string)($student_meta['section'] ?? ''));
+            $student_program = $student_meta["program"] ?? "";
+            $student_section = trim((string) ($student_meta["section"] ?? ""));
         }
         $student_meta_stmt->close();
 
@@ -104,7 +129,14 @@ try {
         ";
 
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("isssi", $program_id, $student_year_raw, $student_year_formatted, $student_section, $student_id);
+        $stmt->bind_param(
+            "isssi",
+            $program_id,
+            $student_year_raw,
+            $student_year_formatted,
+            $student_section,
+            $student_id,
+        );
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -123,16 +155,24 @@ try {
                 LIMIT 1
             ");
             if ($classCheck) {
-                $classCheck->bind_param("isss", $program_id, $student_year_raw, $student_year_formatted, $student_section);
+                $classCheck->bind_param(
+                    "isss",
+                    $program_id,
+                    $student_year_raw,
+                    $student_year_formatted,
+                    $student_section,
+                );
                 $classCheck->execute();
-                $hasClassAssignments = (bool)$classCheck->get_result()->fetch_assoc();
+                $hasClassAssignments = (bool) $classCheck
+                    ->get_result()
+                    ->fetch_assoc();
                 $classCheck->close();
             }
 
             if ($hasClassAssignments) {
                 echo json_encode([]);
                 $conn->close();
-                exit;
+                exit();
             }
 
             $query = "
@@ -186,7 +226,7 @@ try {
             $stmt->execute();
             $result = $stmt->get_result();
         }
-    } elseif ($year_level !== '') {
+    } elseif ($year_level !== "") {
         $query = "
             SELECT 
                 f.id,
@@ -249,9 +289,9 @@ try {
 
     if (!$result) {
         echo json_encode([
-            "error" => "Query failed: " . $conn->error
+            "error" => "Query failed: " . $conn->error,
         ]);
-        exit;
+        exit();
     }
 
     if ($student_id > 0) {
@@ -264,98 +304,97 @@ try {
         $data = [];
         while ($row = $result->fetch_assoc()) {
             $subject = [
-                'subject_id'      => intval($row['subject_id'] ?? 0),
-                'class_id'        => intval($row['class_id']   ?? 0),
-                'class_year_level'=> $row['class_year_level']  ?? '',
-                'class_section'   => $row['class_section']     ?? '',
-                'subject_code'    => $row['subject_code']      ?? '',
-                'subject_desc'    => $row['subject_desc']      ?? '',
-                'year_level'      => $row['year_level']        ?? '',
-                'program_code'    => $row['program_code']      ?? '',
-                'program_name'    => $row['program_name']      ?? '',
+                "subject_id" => intval($row["subject_id"] ?? 0),
+                "class_id" => intval($row["class_id"] ?? 0),
+                "class_year_level" => $row["class_year_level"] ?? "",
+                "class_section" => $row["class_section"] ?? "",
+                "subject_code" => $row["subject_code"] ?? "",
+                "subject_desc" => $row["subject_desc"] ?? "",
+                "year_level" => $row["year_level"] ?? "",
+                "program_code" => $row["program_code"] ?? "",
+                "program_name" => $row["program_name"] ?? "",
             ];
             $data[] = [
-                'id'            => intval($row['id']),
-                'faculty_id'    => $row['faculty_id'],
-                'email'         => $row['email'],
-                'firstname'     => $row['firstname'],
-                'lastname'      => $row['lastname'],
-                'suffix'        => $row['suffix']  ?? '',
-                'photo'         => $row['photo']   ?? '',
-                'status'        => $row['status']  ?? 'active',
-                'evaluation_id' => intval($row['evaluation_id'] ?? 0),
+                "id" => intval($row["id"]),
+                "faculty_id" => $row["faculty_id"],
+                "email" => $row["email"],
+                "firstname" => $row["firstname"],
+                "lastname" => $row["lastname"],
+                "suffix" => $row["suffix"] ?? "",
+                "photo" => $row["photo"] ?? "",
+                "status" => $row["status"] ?? "active",
+                "evaluation_id" => intval($row["evaluation_id"] ?? 0),
                 // subjects array keeps the same shape the JS already reads
-                'subjects'      => [$subject],
-                'subject_codes' => [$subject['subject_code']],
+                "subjects" => [$subject],
+                "subject_codes" => [$subject["subject_code"]],
                 // flat copies for legacy JS that reads top-level keys directly
-                'subject_id'    => $subject['subject_id'],
-                'class_id'      => $subject['class_id'],
-                'subject_code'  => $subject['subject_code'],
-                'subject_desc'  => $subject['subject_desc'],
-                'class_year_level' => $subject['class_year_level'],
-                'class_section'    => $subject['class_section'],
+                "subject_id" => $subject["subject_id"],
+                "class_id" => $subject["class_id"],
+                "subject_code" => $subject["subject_code"],
+                "subject_desc" => $subject["subject_desc"],
+                "class_year_level" => $subject["class_year_level"],
+                "class_section" => $subject["class_section"],
             ];
         }
         echo json_encode($data);
-
     } else {
         // ── ADMIN / YEAR-LEVEL PATH ──────────────────────────────────────────
         // Group every subject under its faculty so each faculty appears exactly
         // once in the Faculty Management table.
         $byId = [];
         while ($row = $result->fetch_assoc()) {
-            $fid        = intval($row['id']);
-            $subjectCode = $row['subject_code'] ?? '';
+            $fid = intval($row["id"]);
+            $subjectCode = $row["subject_code"] ?? "";
             $subject = [
-                'subject_id'      => intval($row['subject_id'] ?? 0),
-                'class_id'        => intval($row['class_id']   ?? 0),
-                'class_year_level'=> $row['class_year_level']  ?? '',
-                'class_section'   => $row['class_section']     ?? '',
-                'subject_code'    => $subjectCode,
-                'subject_desc'    => $row['subject_desc']      ?? '',
-                'year_level'      => $row['year_level']        ?? '',
-                'program_code'    => $row['program_code']      ?? '',
-                'program_name'    => $row['program_name']      ?? '',
+                "subject_id" => intval($row["subject_id"] ?? 0),
+                "class_id" => intval($row["class_id"] ?? 0),
+                "class_year_level" => $row["class_year_level"] ?? "",
+                "class_section" => $row["class_section"] ?? "",
+                "subject_code" => $subjectCode,
+                "subject_desc" => $row["subject_desc"] ?? "",
+                "year_level" => $row["year_level"] ?? "",
+                "program_code" => $row["program_code"] ?? "",
+                "program_name" => $row["program_name"] ?? "",
             ];
 
             if (!isset($byId[$fid])) {
                 $byId[$fid] = [
-                    'id'            => $fid,
-                    'faculty_id'    => $row['faculty_id'],
-                    'email'         => $row['email'],
-                    'firstname'     => $row['firstname'],
-                    'lastname'      => $row['lastname'],
-                    'suffix'        => $row['suffix']  ?? '',
-                    'photo'         => $row['photo']   ?? '',
-                    'status'        => $row['status']  ?? 'active',
-                    'subjects'      => [],
-                    'subject_codes' => [],
+                    "id" => $fid,
+                    "faculty_id" => $row["faculty_id"],
+                    "email" => $row["email"],
+                    "firstname" => $row["firstname"],
+                    "lastname" => $row["lastname"],
+                    "suffix" => $row["suffix"] ?? "",
+                    "photo" => $row["photo"] ?? "",
+                    "status" => $row["status"] ?? "active",
+                    "subjects" => [],
+                    "subject_codes" => [],
                 ];
             }
 
-            if ($subjectCode !== '') {
+            if ($subjectCode !== "") {
                 // Guard against duplicate subject+class entries in the result.
                 $alreadyAdded = false;
-                foreach ($byId[$fid]['subjects'] as $existing) {
-                    if ($existing['subject_id'] === $subject['subject_id']
-                        && $existing['class_id']   === $subject['class_id']) {
+                foreach ($byId[$fid]["subjects"] as $existing) {
+                    if (
+                        $existing["subject_id"] === $subject["subject_id"] &&
+                        $existing["class_id"] === $subject["class_id"]
+                    ) {
                         $alreadyAdded = true;
                         break;
                     }
                 }
                 if (!$alreadyAdded) {
-                    $byId[$fid]['subjects'][]      = $subject;
-                    $byId[$fid]['subject_codes'][] = $subjectCode;
+                    $byId[$fid]["subjects"][] = $subject;
+                    $byId[$fid]["subject_codes"][] = $subjectCode;
                 }
             }
         }
         echo json_encode(array_values($byId));
     }
-
 } catch (Exception $e) {
-
     echo json_encode([
-        "error" => $e->getMessage()
+        "error" => $e->getMessage(),
     ]);
 }
 

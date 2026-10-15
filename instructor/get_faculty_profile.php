@@ -1,12 +1,12 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('faculty');
-requireMethod('POST');
-include __DIR__ . '/../shared/connect.php';
+require_once __DIR__ . "/../shared/security.php";
+requireRole("faculty");
+requireMethod("POST");
+include __DIR__ . "/../shared/connect.php";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
-    $faculty_id = $_POST['faculty_id'];
-    
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["faculty_id"])) {
+    $faculty_id = $_POST["faculty_id"];
+
     try {
         // Fetch comprehensive faculty profile data
         $stmt = $conn->prepare("
@@ -28,45 +28,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
             LEFT JOIN add_programs p ON f.department = p.id
             WHERE f.faculty_id = ? OR f.id = ?
         ");
-        
+
         $stmt->bind_param("si", $faculty_id, $faculty_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         if ($result->num_rows > 0) {
             $faculty_data = $result->fetch_assoc();
-            
+
             // Prepare response data
             $response = [
-                'success' => true,
-                'data' => [
-                    'id' => $faculty_data['id'],
-                    'faculty_id' => $faculty_data['faculty_id'],
-                    'firstname' => $faculty_data['firstname'],
-                    'lastname' => $faculty_data['lastname'],
-                    'suffix' => $faculty_data['suffix'],
-                    'email' => $faculty_data['email'],
-                    'phone' => $faculty_data['phone'] ?: 'Not provided',
-                    'address' => $faculty_data['address'] ?: 'Not provided',
-                    'specialization' => $faculty_data['specialization'] ?: 'Not specified',
-                    'educational_background' => $faculty_data['educational_background'] ?: 'Not provided',
-                    'employment_status' => $faculty_data['employment_status'] ?: 'Active',
-                    'date_hired' => $faculty_data['date_hired'] ? date('F d, Y', strtotime($faculty_data['date_hired'])) : 'Not specified',
-                    'program_name' => $faculty_data['program_name'] ?: 'Not assigned'
-                ]
+                "success" => true,
+                "data" => [
+                    "id" => $faculty_data["id"],
+                    "faculty_id" => $faculty_data["faculty_id"],
+                    "firstname" => $faculty_data["firstname"],
+                    "lastname" => $faculty_data["lastname"],
+                    "suffix" => $faculty_data["suffix"],
+                    "email" => $faculty_data["email"],
+                    "phone" => $faculty_data["phone"] ?: "Not provided",
+                    "address" => $faculty_data["address"] ?: "Not provided",
+                    "specialization" =>
+                        $faculty_data["specialization"] ?: "Not specified",
+                    "educational_background" =>
+                        $faculty_data["educational_background"] ?:
+                        "Not provided",
+                    "employment_status" =>
+                        $faculty_data["employment_status"] ?: "Active",
+                    "date_hired" => $faculty_data["date_hired"]
+                        ? date("F d, Y", strtotime($faculty_data["date_hired"]))
+                        : "Not specified",
+                    "program_name" =>
+                        $faculty_data["program_name"] ?: "Not assigned",
+                ],
             ];
-            
+
             // Fetch subjects assigned to this faculty — check both tables
-            $numeric_id = intval($faculty_data['id']);
-            $faculty_key = (string)($faculty_data['faculty_id'] ?? '');
-            $subjects   = [];
+            $numeric_id = intval($faculty_data["id"]);
+            $faculty_key = (string) ($faculty_data["faculty_id"] ?? "");
+            $subjects = [];
 
             $assignmentQueries = [
                 "SELECT cs.subject_id
                  FROM class_subjects cs
-                 WHERE UPPER(TRIM(CAST(cs.faculty_id AS CHAR))) IN (UPPER(TRIM(?)), UPPER(TRIM(?)))"
+                 WHERE UPPER(TRIM(CAST(cs.faculty_id AS CHAR))) IN (UPPER(TRIM(?)), UPPER(TRIM(?)))",
             ];
-            $facultySubjectsTable = $conn->query("SHOW TABLES LIKE 'faculty_subjects'");
+            $facultySubjectsTable = $conn->query(
+                "SHOW TABLES LIKE 'faculty_subjects'",
+            );
             if ($facultySubjectsTable && $facultySubjectsTable->num_rows > 0) {
                 $assignmentQueries[] = "SELECT fs.subject_id
                     FROM faculty_subjects fs
@@ -97,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
             ";
             $subj_stmt = $conn->prepare($subj_sql);
             if ($subj_stmt) {
-                $numeric_key = (string)$numeric_id;
-                $bindTypes = str_repeat('s', count($assignmentQueries) * 2);
+                $numeric_key = (string) $numeric_id;
+                $bindTypes = str_repeat("s", count($assignmentQueries) * 2);
                 $bindValues = [];
                 foreach ($assignmentQueries as $_) {
                     $bindValues[] = $numeric_key;
@@ -109,38 +118,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faculty_id'])) {
                     $bindRefs[$key] = &$bindValues[$key];
                 }
                 array_unshift($bindRefs, $bindTypes);
-                call_user_func_array([$subj_stmt, 'bind_param'], $bindRefs);
+                call_user_func_array([$subj_stmt, "bind_param"], $bindRefs);
                 $subj_stmt->execute();
                 $subj_result = $subj_stmt->get_result();
                 while ($srow = $subj_result->fetch_assoc()) {
                     $subjects[] = [
-                        'code' => $srow['subject_code'],
-                        'name' => $srow['subject_desc'],
-                        'year_level' => $srow['year_level'],
-                        'program_code' => $srow['program_code'] ?: 'N/A',
-                        'program_name' => $srow['program_name'] ?: 'Unassigned Program',
+                        "code" => $srow["subject_code"],
+                        "name" => $srow["subject_desc"],
+                        "year_level" => $srow["year_level"],
+                        "program_code" => $srow["program_code"] ?: "N/A",
+                        "program_name" =>
+                            $srow["program_name"] ?: "Unassigned Program",
                     ];
                 }
                 $subj_stmt->close();
             }
 
-            $response['data']['subjects'] = $subjects;
-            header('Content-Type: application/json');
+            $response["data"]["subjects"] = $subjects;
+            header("Content-Type: application/json");
             echo json_encode($response);
-
         } else {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Faculty not found']);
+            header("Content-Type: application/json");
+            echo json_encode([
+                "success" => false,
+                "error" => "Faculty not found",
+            ]);
         }
-        
+
         $stmt->close();
     } catch (Exception $e) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        header("Content-Type: application/json");
+        echo json_encode([
+            "success" => false,
+            "error" => "Database error: " . $e->getMessage(),
+        ]);
     }
 } else {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'error' => 'Invalid request']);
+    header("Content-Type: application/json");
+    echo json_encode(["success" => false, "error" => "Invalid request"]);
 }
 
 $conn->close();

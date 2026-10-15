@@ -1,22 +1,34 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('admin');
-requireMethod('POST');
-include __DIR__ . '/../shared/connect.php';
-header('Content-Type: application/json');
+require_once __DIR__ . "/../shared/security.php";
+requireRole("admin");
+requireMethod("POST");
+include __DIR__ . "/../shared/connect.php";
+header("Content-Type: application/json");
 
 // Block if a period is active
-$periodCheck = $conn->query("SELECT id FROM evaluation_periods WHERE is_active = 1 LIMIT 1");
+$periodCheck = $conn->query(
+    "SELECT id FROM evaluation_periods WHERE is_active = 1 LIMIT 1",
+);
 if ($periodCheck && $periodCheck->num_rows > 0) {
-    echo json_encode(["success" => false, "message" => "Cannot delete categories while an evaluation period is active."]);
-    exit;
+    echo json_encode([
+        "success" => false,
+        "message" =>
+            "Cannot delete categories while an evaluation period is active.",
+    ]);
+    exit();
 }
 
-$id = isset($_POST['category_id']) && is_numeric($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+$id =
+    isset($_POST["category_id"]) && is_numeric($_POST["category_id"])
+        ? (int) $_POST["category_id"]
+        : null;
 
 if (!$id) {
-    echo json_encode(['success'=>false,'error'=>'Invalid or missing category_id']);
-    exit;
+    echo json_encode([
+        "success" => false,
+        "error" => "Invalid or missing category_id",
+    ]);
+    exit();
 }
 
 $conn->begin_transaction();
@@ -34,13 +46,16 @@ try {
 
     if ($stmtC->affected_rows > 0) {
         $conn->commit();
-        echo json_encode(['success'=>true,'deleted_id'=>$id]);
+        echo json_encode(["success" => true, "deleted_id" => $id]);
     } else {
         $conn->rollback();
-        echo json_encode(['success'=>false,'error'=>'Category not found']);
+        echo json_encode(["success" => false, "error" => "Category not found"]);
     }
 } catch (Exception $e) {
     $conn->rollback();
-    echo json_encode(['success'=>false,'error'=>'Transaction failed: '.$e->getMessage()]);
+    echo json_encode([
+        "success" => false,
+        "error" => "Transaction failed: " . $e->getMessage(),
+    ]);
 }
 ?>

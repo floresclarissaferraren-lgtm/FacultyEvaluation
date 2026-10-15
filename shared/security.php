@@ -93,6 +93,36 @@ function rotateSessionSecurityState(): void
     $_SESSION['last_activity'] = time();
 }
 
+function generateTemporaryPassword(int $length = 24): string
+{
+    if ($length < 4) {
+        throw new InvalidArgumentException('Temporary passwords must contain at least four characters.');
+    }
+
+    $characterSets = [
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        'abcdefghijklmnopqrstuvwxyz',
+        '0123456789',
+        '!#$%&()*+,-./:;<=>?@[]^_{|}~',
+    ];
+    $allCharacters = implode('', $characterSets);
+    $characters = [];
+
+    foreach ($characterSets as $characterSet) {
+        $characters[] = $characterSet[random_int(0, strlen($characterSet) - 1)];
+    }
+    while (count($characters) < $length) {
+        $characters[] = $allCharacters[random_int(0, strlen($allCharacters) - 1)];
+    }
+
+    for ($index = count($characters) - 1; $index > 0; $index--) {
+        $swapIndex = random_int(0, $index);
+        [$characters[$index], $characters[$swapIndex]] = [$characters[$swapIndex], $characters[$index]];
+    }
+
+    return implode('', $characters);
+}
+
 function expireSession(): void
 {
     $_SESSION = [];
