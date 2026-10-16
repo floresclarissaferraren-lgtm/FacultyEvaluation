@@ -15021,22 +15021,22 @@ main,
 
 #dashboard-section .dashboard-card.faculty {
   background: #ffffff;
-  border: 2px solid #bfd3f2;
+  border: none;
 }
 
 #dashboard-section .dashboard-card.students {
   background: #ffffff;
-  border: 2px solid #bee3ca;
+  border: none;
 }
 
 #dashboard-section .dashboard-card.evaluations {
   background: #ffffff;
-  border: 2px solid #d4cbef;
+  border: none;
 }
 
 #dashboard-section .dashboard-card.overall-ratings {
   background: #ffffff;
-  border: 2px solid #f1d3b6;
+  border: none;
 }
 
 #dashboard-section .dashboard-card.faculty .icon-box,
@@ -15336,16 +15336,18 @@ main,
 
 .students-table .student-name-cell strong,
 .faculties-table .faculty-name-cell strong {
-  font-weight: 500;
+  font-weight: 600;
   color: #2563eb;
   font-size: 0.875rem;
 }
 
 .students-table .student-name-cell small,
-.faculties-table .faculty-name-cell small {
-  color: #94a3b8;
-  font-size: 0.8125rem;
-  font-weight: 400;
+.faculties-table .faculty-name-cell small,
+.students-table .student-program-cell small,
+.faculties-table tbody td:nth-child(3) small {
+  color: var(--neutral-500);
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 #students-section .student-name-cell strong,
@@ -15389,12 +15391,6 @@ main,
   font-weight: 500;
   color: #1e293b;
   font-size: 0.875rem;
-}
-
-.students-table .student-program-cell small {
-  color: #94a3b8;
-  font-size: 0.8125rem;
-  font-weight: 400;
 }
 
 /* Status Badge Styling - All Tables */
@@ -17030,8 +17026,8 @@ table thead th {
 }
 
 #dashboard-section .admin-welcome-box {
-  background: #27699C;
-  border: 1px solid #27699C;
+  background: #2979b3;
+  border: 1px solid #2979b3;
   border-radius: 8px;
   box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
 }
@@ -19110,13 +19106,31 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   grid-row: auto !important;
 }
 
+#manage-section.manage-subjects-view #subjects {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dce7f7;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(30, 64, 110, .06);
+}
+
+#manage-section.manage-subjects-view #subjects > .manage-subject-control-box {
+  margin: 0;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: #fff;
+  box-shadow: none;
+}
+
 #manage-section .manage-subjects-results {
   display: flex;
   min-width: 0;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 0 8px;
+  margin: 0;
+  padding: 0 16px 10px;
+  background: #fff;
   color: #8392aa;
   font-size: .72rem;
 }
@@ -19129,12 +19143,12 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
 #manage-section #subjects > .table-scroll-container {
   max-height: none;
   height: auto;
-  min-height: 180px;
+  min-height: 0;
   overflow: auto;
-  border: 1px solid #dce7f7;
-  border-radius: 14px;
+  border: 0;
+  border-radius: 0 0 14px 14px;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(30, 64, 110, .06);
+  box-shadow: none;
 }
 
 @media (max-width: 760px) {
@@ -21015,4 +21029,121 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   color: #64748b;
   font-size: clamp(.68rem, .8vw, .82rem);
   line-height: 1.45;
+}
+
+body table[class] tbody td,
+body table:not([class]) tbody td {
+  padding: 9px 12px;
+  font-size: 0.76rem !important;
+  line-height: 1.4;
+}
+
+#students-section .student-table-box .inline-status,
+#students-section .student-table-box .student-type-badge {
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 0.68rem;
+}
+
+#students-section .student-table-box .status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+#faculties-section .faculties-table .inline-status {
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+}
+
+#faculties-section .faculties-table .status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+#students-section .student-table-box .table-scroll-container {
+  padding: 0;
+}
+
+#students-section .student-table-box .students-table {
+  width: 100%;
+  min-width: 900px;
+  margin: 0;
+}
+
+#students-section .student-table-box .students-table th:nth-child(1),
+#students-section .student-table-box .students-table td:nth-child(1) {
+  width: 12%;
+}
+
+#students-section .student-table-box .students-table th:nth-child(2),
+#students-section .student-table-box .students-table td:nth-child(2) {
+  width: 24%;
+}
+
+#students-section .student-table-box .students-table th:nth-child(3),
+#students-section .student-table-box .students-table td:nth-child(3) {
+  width: 28%;
+}
+
+#students-section .student-table-box .students-table th:nth-child(4),
+#students-section .student-table-box .students-table td:nth-child(4) {
+  width: 12%;
+}
+
+#students-section .student-table-box .students-table th:nth-child(5),
+#students-section .student-table-box .students-table td:nth-child(5) {
+  width: 10%;
+}
+
+#students-section .student-table-box .students-table th:nth-child(6),
+#students-section .student-table-box .students-table td:nth-child(6) {
+  width: 14%;
+  min-width: 126px;
+}
+
+#students-section .student-table-box .student-name-cell strong,
+#students-section .student-table-box .student-name-cell small,
+#students-section .student-table-box .student-program-cell strong,
+#students-section .student-table-box .student-program-cell small {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  #students-section .student-table-box .students-table {
+    min-width: 820px;
+  }
+}
+
+@media (max-width: 380px) {
+  #students-section .student-table-box .students-table {
+    min-width: 760px;
+  }
+}
+
+body table[class] thead th,
+body table:not([class]) thead th {
+  font-size: 0.65rem !important;
+}
+
+#manage-section.manage-subjects-view #subjects .subjects-table tbody td {
+  padding: 6px 12px;
+  line-height: 1.3;
+}
+
+#subjects-section .subjects-table thead th,
+#manage-section #subjects .subjects-table thead th {
+  font-size: 0.6875rem !important;
+}
+
+#subjects-section .subjects-table tbody td,
+#manage-section #subjects .subjects-table tbody td {
+  font-size: 0.78rem !important;
+}
+
+#academic-year-section .academic-year-table tbody td {
+  font-size: 0.78rem !important;
 }

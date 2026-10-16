@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let deleteType = "";
   let allFacultySubjects = [];
   let selectedFacultySubjects = [];
-  const REALTIME_REFRESH_MS = 5000;
+  const REALTIME_REFRESH_MS = 1000;
   let activeAdminSection = "dashboard-section";
   let adminRealtimeTimer = null;
   let dashboardStatsLoading = false;
@@ -4632,7 +4632,10 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Faculty saved successfully, reloading faculty list...");
         await loadFaculty();
         closeModal(addFacultyModal);
-        showNotification(result.message, "#10b981");
+        showNotification(
+          action === "add" ? "Faculty added succesfully" : result.message,
+          "#10b981",
+        );
       } else {
         showNotification(result.message, "#f44336");
       }
@@ -9210,11 +9213,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("Dashboard stats updated after student add");
               }, 500);
               closeModal(addStudentModal);
-              showNotification(
-                d.message ||
-                  "Student added successfully. Password sent to email.",
-                "#4caf50",
-              );
+              showNotification("Student added sucessfully", "#4caf50");
               addProgramToDropdown(p);
             } else if ((d.message || "").startsWith("Student ID must be GC-")) {
               showGlobalNotification(d.message, "warning");
