@@ -13,6 +13,9 @@
     if (window.matchMedia("(max-width: 768px)").matches) {
       current = index;
       document.body.classList.toggle("about-view", current === 1);
+      document.body.classList.toggle("how-view", current === 2);
+      document.body.classList.toggle("contact-view", current === 3);
+      document.body.classList.toggle("home-view", current === 0);
       pages.forEach((page, i) =>
         page.classList.toggle("active", i === current),
       );
@@ -22,6 +25,9 @@
     if (index === current || animating) return;
     animating = true;
     document.body.classList.toggle("about-view", index === 1);
+    document.body.classList.toggle("how-view", index === 2);
+    document.body.classList.toggle("contact-view", index === 3);
+    document.body.classList.toggle("home-view", index === 0);
 
     const dir = index > current ? "up" : "down";
     pages[current].classList.add(dir === "up" ? "exit-up" : "exit-down");
@@ -46,6 +52,7 @@
   }
 
   // Init first page
+  document.body.classList.add("home-view");
   pages[0].classList.add("active");
 
   // Dot clicks
@@ -192,6 +199,13 @@ if (loginBtn)
 const loginBtn2 = document.getElementById("loginBtn2");
 if (loginBtn2)
   loginBtn2.addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal(modals.login);
+  });
+
+const contactLoginBtn = document.getElementById("contactLoginBtn");
+if (contactLoginBtn)
+  contactLoginBtn.addEventListener("click", (e) => {
     e.preventDefault();
     openModal(modals.login);
   });

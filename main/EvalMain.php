@@ -30,14 +30,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 </head>
 <body>
 
-<div class="contact-strip" aria-label="School contact information">
-  <div class="contact-strip-inner">
-    <span><i class="ph ph-map-pin" aria-hidden="true"></i> Granby Colleges of Science and Technology</span>
-    <a href="tel:+639123456789"><i class="ph ph-phone" aria-hidden="true"></i> +63 912 345 6789</a>
-    <a href="mailto:support@granbycollege.edu"><i class="ph ph-envelope" aria-hidden="true"></i> support@granbycollege.edu</a>
-  </div>
-</div>
-
 <!-- NAVBAR -->
 <nav>
   <div class="logo-container">
@@ -102,35 +94,17 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
   <div class="page" id="about">
     <div class="page-inner about-inner">
       <div class="about-layout">
-        <img class="about-school-logo" src="../assets/images/schoollogo.png" alt="Granby Colleges of Science and Technology logo">
         <div class="about-content">
-      <div class="section-label"><i class="ph ph-info"></i> About the System</div>
-      <h2 class="section-heading">Built for Academic Excellence</h2>
-      <p class="section-sub">The Faculty Evaluation System replaces paper evaluations with a centralized digital platform — faster, fairer, and more transparent.</p>
-
-      <div class="about-vmg">
-        <div class="vmg-card">
-          <div class="vmg-icon blue"><i class="ph ph-eye"></i></div>
-          <h3>Vision</h3>
-          <p>To be a leading platform recognized for excellence in teaching and evaluation.</p>
-        </div>
-        <div class="vmg-card">
-          <div class="vmg-icon green"><i class="ph ph-target"></i></div>
-          <h3>Mission</h3>
-          <p>To provide a transparent system that improves teaching quality and supports academic growth.</p>
-        </div>
-        <div class="vmg-card">
-          <div class="vmg-icon amber"><i class="ph ph-flag"></i></div>
-          <h3>Goal</h3>
-          <p>Empower students, faculty, and admins through clear feedback and actionable insights.</p>
-        </div>
-      </div>
+      <img class="about-logo" src="../assets/images/schoollogo.png" alt="Granby Colleges of Science and Technology logo">
+      <div class="section-label"><i class="ph ph-info"></i> About Us</div>
+      <h2 class="section-heading">Feedback That Supports Better Teaching</h2>
+      <p class="section-sub">The Faculty Evaluation System gives students a convenient way to share feedback about their learning experience. It helps faculty and administrators review evaluation results and identify opportunities to strengthen teaching and learning.</p>
 
       <div class="about-grid">
-        <div class="about-card"><div class="about-icon"><i class="ph ph-note-pencil"></i></div><h3>Student Evaluation</h3><p>Students evaluate instructors online anytime during the evaluation period.</p></div>
-        <div class="about-card"><div class="about-icon"><i class="ph ph-layout"></i></div><h3>Instructor Dashboard</h3><p>Faculty members view their evaluation results and performance analytics.</p></div>
-        <div class="about-card"><div class="about-icon"><i class="ph ph-chart-bar"></i></div><h3>Performance Reports</h3><p>Evaluation scores are calculated automatically and available instantly.</p></div>
-        <div class="about-card"><div class="about-icon"><i class="ph ph-shield-check"></i></div><h3>Administrative Control</h3><p>Admins manage records, evaluation criteria, and system settings.</p></div>
+        <div class="about-card"><div class="about-icon"><i class="ph ph-note-pencil"></i></div><h3>Student Feedback</h3><p>Students can submit faculty evaluations online while an evaluation period is open.</p></div>
+        <div class="about-card"><div class="about-icon"><i class="ph ph-layout"></i></div><h3>Faculty Results</h3><p>Faculty members can review their evaluation results and available performance analytics.</p></div>
+        <div class="about-card"><div class="about-icon"><i class="ph ph-chart-bar"></i></div><h3>Evaluation Reports</h3><p>Evaluation results are organized into reports to help users review performance and trends.</p></div>
+        <div class="about-card"><div class="about-icon"><i class="ph ph-shield-check"></i></div><h3>System Administration</h3><p>Administrators manage student and faculty records, evaluation criteria, and system settings.</p></div>
       </div>
         </div>
       </div>
@@ -141,6 +115,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
   <!-- ── PAGE 2 : HOW IT WORKS ── -->
   <div class="page" id="how-it-works">
     <div class="page-inner how-inner">
+      <img class="section-logo" src="../assets/images/schoollogo.png" alt="Granby Colleges of Science and Technology logo">
       <div class="section-label"><i class="ph ph-steps"></i> Process</div>
       <h2 class="section-heading">How It Works</h2>
       <p class="section-sub">Follow the steps based on your role in the evaluation process.</p>
@@ -170,22 +145,52 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
   <!-- ── PAGE 3 : CONTACT ── -->
   <div class="page" id="contact">
     <div class="page-inner contact-inner">
-      <div class="contact-main">
-        <div class="contact-intro">
+      <main class="contact-content">
+        <header class="contact-intro">
           <div class="section-label"><i class="ph ph-envelope"></i> Contact</div>
           <h2 class="section-heading">Get in Touch</h2>
           <p class="section-sub">Questions? Reach out to us and we'll get back to you</p>
+        </header>
+        <div class="contact-cards">
+          <article class="contact-card">
+            <i class="ph ph-map-pin" aria-hidden="true"></i>
+            <div><h3>Visit Us</h3><p>Granby Colleges of Science and Technology</p></div>
+          </article>
+          <article class="contact-card">
+            <i class="ph ph-phone" aria-hidden="true"></i>
+            <div><h3>Call Us</h3><p>+63 912 345 6789</p></div>
+          </article>
+          <article class="contact-card">
+            <i class="ph ph-envelope" aria-hidden="true"></i>
+            <div><h3>Email Us</h3><p>support@granbycollege.edu</p></div>
+          </article>
         </div>
-        <div class="contact-info">
-          <div class="info-box"><i class="ph ph-map-pin"></i><div><h3>Visit</h3><p>Granby Colleges of Science and Technology</p></div></div>
-          <div class="info-box"><i class="ph ph-phone"></i><div><h3>Call</h3><p>+63 912 345 6789</p></div></div>
-          <div class="info-box"><i class="ph ph-envelope"></i><div><h3>Email</h3><p>support@granbycollege.edu</p></div></div>
-          <div class="info-box"><i class="ph ph-clock"></i><div><h3>Office Hours</h3><p>Mon–Sat · 8:00 AM–5:00 PM</p></div></div>
+        <img class="contact-map" src="../assets/images/map.jpg" alt="Map showing the location of Granby Colleges of Science and Technology">
+      </main>
+      <footer class="contact-footer">
+        <div class="contact-footer-main">
+          <div class="contact-brand">
+            <img src="../assets/images/schoollogo.png" alt="" aria-hidden="true">
+            <div class="contact-brand-copy">
+              <h3>FaculRate</h3>
+              <p>Granby Colleges of Science and Technology</p>
+            </div>
+          </div>
+          <div class="contact-footer-links" role="navigation" aria-label="Navigation links">
+            <h3>Navigation</h3>
+            <a href="#home" data-page="0">Home</a>
+            <a href="#about" data-page="1">About Us</a>
+            <a href="#how-it-works" data-page="2">How It Works</a>
+          </div>
+          <div class="contact-footer-links" role="navigation" aria-label="Quick links">
+            <h3>Quick Links</h3>
+            <a href="#" id="contactLoginBtn">Login</a>
+          </div>
         </div>
-      </div>
-      <footer class="contact-copy">
-        <span>© 2026 Granby Colleges of Science and Technology</span>
-        <span>Faculty Evaluation System · All rights reserved</span>
+        <div class="contact-copy">
+          <span>© 2026 Granby Colleges of Science and Technology</span>
+          <span>FaculRate · All rights reserved</span>
+        </div>
       </footer>
     </div>
   </div>
