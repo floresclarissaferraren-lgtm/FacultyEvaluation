@@ -935,32 +935,6 @@ function onProgramFilterChange(program) {
   loadFacultyStats(program);
 }
 
-function renderFacultyReportPeriod(period) {
-  const academicYearEl = document.getElementById("instructorAcademicPeriod");
-  const periodLabelEl = academicYearEl?.querySelector(".welcome-period-label");
-
-  if (!period) {
-    if (academicYearEl) {
-      academicYearEl.hidden = true;
-      academicYearEl.setAttribute("aria-busy", "false");
-    }
-    if (periodLabelEl) periodLabelEl.textContent = "";
-    return;
-  }
-
-  if (academicYearEl) {
-    academicYearEl.hidden = false;
-    academicYearEl.setAttribute("aria-busy", "false");
-  }
-  const semester = String(period.semester || "")
-    .replace(/\s+semester$/i, "")
-    .trim();
-  const academicYear = String(period.academic_year || "").trim();
-  if (periodLabelEl) {
-    periodLabelEl.textContent = `${semester || "Semester not specified"} | ${academicYear || "Academic year not specified"}`;
-  }
-}
-
 async function loadFacultyReportPeriods() {
   try {
     const response = await fetch(
@@ -978,7 +952,6 @@ async function loadFacultyReportPeriods() {
 
     if (periods.length === 0) {
       selectedFacultyReportPeriod = null;
-      renderFacultyReportPeriod(null);
       updateFacultyResultAccess(isEvaluationOngoing());
       return;
     }
@@ -990,7 +963,6 @@ async function loadFacultyReportPeriods() {
     selectedFacultyReportPeriod = selectedPeriod
       ? Number(selectedPeriod.id)
       : null;
-    renderFacultyReportPeriod(selectedPeriod || null);
     updateFacultyResultAccess(isEvaluationOngoing());
     loadFacultyStats(
       document.getElementById("programFilterSelect")?.value || "all",
@@ -998,7 +970,6 @@ async function loadFacultyReportPeriods() {
   } catch (error) {
     console.error("Failed to load faculty evaluation periods:", error);
     selectedFacultyReportPeriod = null;
-    renderFacultyReportPeriod(null);
     updateFacultyResultAccess(isEvaluationOngoing());
   }
 }
@@ -1417,6 +1388,28 @@ function renderInstructorEvaluationStatus(status) {
 
 function updateInstructorAcademicPeriodDisplay(status) {
   renderInstructorEvaluationStatus(status);
+  const periodEl = document.getElementById("instructorAcademicPeriod");
+  const periodLabelEl = periodEl?.querySelector(".welcome-period-label");
+  const academicYear = String(
+    status?.active_academic_year || status?.current_academic_year || "",
+  ).trim();
+  const semester = String(
+    status?.active_semester || status?.current_semester || "",
+  )
+    .replace(/\s+semester$/i, "")
+    .trim();
+  const hasPeriod = !!(academicYear && semester);
+
+  if (periodEl) {
+    periodEl.hidden = !hasPeriod;
+    periodEl.setAttribute("aria-busy", "false");
+  }
+  if (periodLabelEl) {
+    periodLabelEl.textContent = hasPeriod
+      ? `${semester} | ${academicYear}`
+      : "";
+  }
+
   updateFacultyResultAccess(!!status?.evaluation_open);
 }
 
@@ -1427,16 +1420,19 @@ async function loadInstructorAcademicPeriod() {
       credentials: "same-origin",
     });
     const status = await statusRes.json();
-    if (status && status.success) {
-      const wasOngoing = isEvaluationOngoing();
-      updateInstructorAcademicPeriodDisplay(status);
-      if (wasOngoing && !status.evaluation_open && !isFacultyInactive()) {
-        loadFacultyReportPeriods();
-      }
+    const wasOngoing = isEvaluationOngoing();
+    updateInstructorAcademicPeriodDisplay(status);
+    if (
+      status?.success &&
+      wasOngoing &&
+      !status.evaluation_open &&
+      !isFacultyInactive()
+    ) {
+      loadFacultyReportPeriods();
     }
   } catch (err) {
     console.error("Failed to load academic period:", err);
-    renderInstructorEvaluationStatus(null);
+    updateInstructorAcademicPeriodDisplay(null);
   }
 }
 

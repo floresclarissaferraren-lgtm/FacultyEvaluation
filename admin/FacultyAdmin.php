@@ -222,22 +222,19 @@ include __DIR__ . '/totalstudents_dashcount.php';
       <p>Here's an overview of the Faculty Evaluation System.</p>
     </div>
     <div class="admin-period-summary" aria-label="Selected academic period">
-      <div class="admin-period-item">
-        <i class="ph ph-calendar-blank" aria-hidden="true"></i>
+      <div class="admin-period-item academic-year-item">
         <div>
-          <span>Selected Academic Year</span>
+          <span>Academic Year</span>
           <strong id="dashboardAcademicYear">Not set</strong>
         </div>
       </div>
-      <div class="admin-period-item">
-        <i class="ph ph-book-open" aria-hidden="true"></i>
+      <div class="admin-period-item semester-item">
         <div>
-          <span>Selected Semester</span>
+          <span>Semester</span>
           <strong id="dashboardSemester">Not set</strong>
         </div>
       </div>
-      <div class="admin-period-item">
-        <i class="ph ph-check-circle" aria-hidden="true"></i>
+      <div class="admin-period-item evaluation-status-item">
         <div>
           <span>Evaluation Status</span>
           <strong id="evaluationStatusText">Closed</strong>
@@ -456,7 +453,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="program-search" placeholder="Search program..."/>
         </div>
-        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add Program</button>
+        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add New Program</button>
       </div>
     </div>
 
@@ -469,7 +466,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <!-- Add Program Modal -->
 <div id="addProgramModal" class="modal" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header"><h3>ADD PROGRAM</h3><span class="close-btn">&times;</span></div>
+    <div class="modal-header"><h3>ADD NEW PROGRAM</h3><span class="close-btn">&times;</span></div>
     <div class="modal-body">
       <label for="program-code">Program Code</label>
       <input type="text" id="program-code" placeholder="eg. BSIT">
@@ -549,7 +546,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
       <button type="button" id="manageDetailBack" class="manage-detail-back-btn" hidden>
         <i class="ph ph-arrow-left"></i> Back to year levels
       </button>
-      <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add Subject</button>
+      <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add New Subject</button>
     </div>
   </div>
 
@@ -627,7 +624,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="addSubjectModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>ADD SUBJECT</h3>
+      <h3>ADD NEW SUBJECT</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -655,7 +652,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="addClassModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>ADD CLASS</h3>
+      <h3>ADD NEW CLASS</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -705,7 +702,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
   <div class="section-header">
     <h2>Subjects Management</h2>
     <div class="header-actions">
-      <button class="add-subject-main-btn button-gradient"><i class="ph ph-plus"></i> Add Subject</button>
+      <button class="add-subject-main-btn button-gradient"><i class="ph ph-plus"></i> Add New Subject</button>
     </div>
   </div>
   <div class="subject-control-box">
@@ -744,6 +741,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         </tbody>
       </table>
     </div>
+    <div id="subjects-main-pagination" class="subjects-main-pagination" aria-label="Subject pages"></div>
   </div>
 </div>
 
@@ -751,7 +749,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="addSubjectMainModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>ADD SUBJECT</h3>
+      <h3>ADD NEW SUBJECT</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -824,8 +822,8 @@ include __DIR__ . '/totalstudents_dashcount.php';
       </div>
     </div>
     <div class="header-actions">
-      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add Faculty</button>
-      <button class="show-archived-faculty-btn">Show Archived</button>
+      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
+      <button class="show-archived-faculty-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
     </div>
   </div>
 
@@ -877,7 +875,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
   <div class="modal-content">
     
     <div class="modal-header">
-      <h3>ADD FACULTY</h3>
+      <h3>ADD NEW FACULTY</h3>
       <span class="close-btn">&times;</span>
     </div>
         <div class="modal-body">
@@ -993,8 +991,8 @@ include __DIR__ . '/totalstudents_dashcount.php';
     <div class="student-toolbar-box">
     <div class="student-toolbar">
       <div class="student-header-actions">
-        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add Student</button>
-        <button class="show-archived-student-btn">Show Archived</button>
+        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
+        <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
       </div>
       <div class="student-filter-row">
         <button type="button" class="clear-search-btn" data-clear-targets="student-search,student-program-filter,student-yearlevel-filter" title="Clear search" aria-label="Clear student search">
@@ -1074,7 +1072,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="addStudentModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>ADD STUDENT</h3>
+      <h3>ADD NEW STUDENT</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -1224,11 +1222,10 @@ include __DIR__ . '/totalstudents_dashcount.php';
       <div class="header-title-section">
         <h2 class="section-title">
           <i class="ph ph-clipboard-text"></i>
-          Evaluation Criteria List
+          <span>Criteria Management</span>
         </h2>
         <p class="section-subtitle">
-          <i class="ph ph-info"></i>
-          Manage the criteria used for evaluating faculty performance.
+          Manage the standards used to evaluate faculty performance.
         </p>
       </div>
       <div class="criteria-header-controls">
@@ -1243,7 +1240,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         </div>
         <div class="header-actions">
           <button id="addCategoryBtn" class="add-program-btn button-gradient">
-            <i class="ph ph-plus"></i> Add Category
+            <i class="ph ph-plus"></i> Add New Category
           </button>
         </div>
       </div>
@@ -1312,7 +1309,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="addCategoryModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:850px; width: 92%;">
     <div class="modal-header">
-      <h3 id="categoryModalTitle">ADD CATEGORY</h3>
+      <h3 id="categoryModalTitle">ADD NEW CATEGORY</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -1424,7 +1421,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="addAcademicYearModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>ADD ACADEMIC YEAR</h3>
+      <h3 id="academicYearModalTitle">ADD NEW ACADEMIC YEAR</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -1443,7 +1440,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <span>This academic year and semester already exists.</span>
       </div>
       
-      <button id="save-academic-year-btn" class="submit-btn">SAVE</button>
+      <button id="save-academic-year-btn" class="submit-btn">SAVE ACADEMIC YEAR</button>
     </div>
   </div>
 </div>
@@ -1531,16 +1528,22 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
 <!-- View Faculty Subjects Modal -->
 <div id="viewFacultySubjectsModal" class="modal" style="display:none;">
-  <div class="modal-content faculty-profile-modal-content" style="max-width:700px;">
+  <div class="modal-content faculty-profile-modal-content">
     <div class="faculty-profile-header">
-      <div id="viewFacultyInitials" class="faculty-profile-avatar">FA</div>
-      <div class="faculty-profile-details">
-        <h3 id="viewFacultyName">Faculty Name</h3>
-        <p id="viewFacultyMeta"><span class="faculty-header-id">Faculty ID</span></p>
+      <div class="faculty-profile-heading">
+        <span class="faculty-profile-kicker">Faculty Profile</span>
       </div>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
+      <div class="faculty-profile-summary">
+        <div id="viewFacultyInitials" class="faculty-profile-avatar">FA</div>
+        <div class="faculty-profile-details">
+          <h3 id="viewFacultyName">Faculty Name</h3>
+          <p id="viewFacultyMeta"><span class="faculty-header-id">Faculty ID</span></p>
+        </div>
+        <span id="viewFacultyStatus" class="profile-status-badge">Active</span>
+      </div>
       <div class="faculty-subject-list">
         <div class="faculty-subjects-heading">
           <h4>Assigned Subjects</h4>
@@ -1556,16 +1559,22 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
 <!-- View Student Subjects Modal -->
 <div id="viewStudentSubjectsModal" class="modal" style="display:none;">
-  <div class="modal-content student-profile-modal-content" style="max-width:700px;">
+  <div class="modal-content student-profile-modal-content">
     <div class="student-profile-header">
-      <div id="viewStudentInitials" class="student-profile-avatar">ST</div>
-      <div class="student-profile-details">
-        <h3 id="viewStudentName">Student Name</h3>
-        <p id="viewStudentMeta">Student information</p>
+      <div class="student-profile-heading">
+        <span class="student-profile-kicker">Student Profile</span>
       </div>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
+      <div class="student-profile-summary">
+        <div id="viewStudentInitials" class="student-profile-avatar">ST</div>
+        <div class="student-profile-details">
+          <h3 id="viewStudentName">Student Name</h3>
+          <p id="viewStudentMeta">Student information</p>
+        </div>
+        <span id="viewStudentStatus" class="profile-status-badge">Active</span>
+      </div>
       <div id="viewStudentSubjectsList" class="subjects-container student-subject-list">
         <div class="student-subjects-heading">
           <h4>Enrolled Subjects</h4>
@@ -1696,7 +1705,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
         <div class="period-form-footer">
           <button id="add-period-btn" class="period-add-btn">
-            <i class="ph ph-plus"></i>Add Period
+            <i class="ph ph-plus"></i>Add New Period
           </button>
         </div>
       </div>

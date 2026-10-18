@@ -197,7 +197,6 @@ $conn->close();
   <!-- Welcome Card -->
   <div class="welcome-card student-dashboard-loading" id="mainPage" aria-busy="true">
     <div class="student-dashboard-skeleton" aria-hidden="true">
-      <div class="student-dashboard-skeleton-avatar"></div>
       <div class="student-dashboard-skeleton-content">
         <div class="student-dashboard-skeleton-header">
           <span class="student-dashboard-skeleton-line name"></span>
@@ -214,18 +213,6 @@ $conn->close();
       Checking evaluation status
     </span>
     <div class="welcome-content">
-      <div class="welcome-left">
-        <div class="avatar-section">
-          <div class="large-avatar">
-            <span class="avatar-initials-large"><?php 
-              $names = explode(' ', $studentName);
-              echo strtoupper(substr($names[0] ?? 'S', 0, 1) . substr($names[1] ?? 'T', 0, 1));
-            ?></span>
-          </div>
-          <div class="status-indicator <?php echo $studentStatus === 'active' ? 'active' : 'inactive'; ?>"></div>
-        </div>
-      </div>
-      
       <div class="welcome-right">
         <div class="welcome-header-inline">
           <h1 class="student-name-title" style="font-family: Arial, Helvetica, sans-serif; font-weight: 800;">Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?>!</h1>
@@ -239,11 +226,10 @@ $conn->close();
 
         <p id="evaluation-period-access-message" class="evaluation-period-access-message" role="status" aria-live="polite" hidden></p>
         
-        <p class="welcome-message">
-          Your feedback is essential in improving teaching and learning. Your honest evaluation helps us recognize our instructors’ strengths and identify areas for improvement.<br><br>
-          Together, we can promote academic excellence and create a better learning experience for everyone.<br><br>
-          Thank you for your time and participation!
-        </p>
+        <div class="welcome-message">
+          <p>Your feedback is essential in improving teaching and learning. Your honest evaluation helps us recognize our instructors&rsquo; strengths and identify areas for improvement.</p>
+          <p>Thank you for your time and participation!</p>
+        </div>
         
         <?php if ($studentStatus !== 'active'): ?>
         <div class="inactive-account-message">

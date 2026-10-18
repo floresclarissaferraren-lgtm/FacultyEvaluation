@@ -125,7 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let dashboardStatsLoading = false;
   let initialDashboardSkeletonPending = true;
   let reportEvaluationsLoading = false;
-  const sectionScrollState = {};
 
   function getSectionScrollableElements(section) {
     if (!section) return [];
@@ -147,113 +146,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function saveSectionScrollState(sectionId) {
-    if (!sectionId) return;
-    const section = document.getElementById(sectionId);
-    if (!section) return;
-
-    const state = {
-      windowY: window.scrollY,
-      documentY: document.documentElement.scrollTop,
-      bodyY: document.body.scrollTop,
-      mainY: document.querySelector("main")?.scrollTop || 0,
-      elements: {},
-    };
-
-    getSectionScrollableElements(section).forEach((el, index) => {
-      state.elements[`node-${index}`] = {
-        top: el.scrollTop,
-        left: el.scrollLeft,
-        tag: el.tagName,
-        className: el.className,
-      };
-    });
-
-    sectionScrollState[sectionId] = state;
-  }
-
-  function restoreSectionScrollState(sectionId) {
-    const state = sectionScrollState[sectionId];
-    if (!state) return;
-
-    const section = document.getElementById(sectionId);
-    if (!section) return;
-
-    const main = document.querySelector("main");
-    if (main) main.scrollTop = state.mainY || 0;
-    window.scrollTo({ top: state.windowY || 0, left: 0, behavior: "auto" });
-    document.documentElement.scrollTop = state.documentY || 0;
-    document.body.scrollTop = state.bodyY || 0;
-
-    const elements = getSectionScrollableElements(section);
-    elements.forEach((el, index) => {
-      const key = `node-${index}`;
-      const saved = state.elements?.[key];
-      if (!saved) return;
-      el.scrollTop = saved.top || 0;
-      el.scrollLeft = saved.left || 0;
-    });
-  }
-
   function resetSectionScrollPosition(sectionId) {
     const section = document.getElementById(sectionId);
     if (!section) return;
 
     const reset = () => {
-      const state = {
-        windowY: 0,
-        documentY: 0,
-        bodyY: 0,
-        mainY: 0,
-        elements: {},
-      };
-
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       const main = document.querySelector("main");
       if (main) main.scrollTop = 0;
 
-      getSectionScrollableElements(section).forEach((el, index) => {
+      getSectionScrollableElements(section).forEach((el) => {
         el.scrollTop = 0;
         el.scrollLeft = 0;
-        state.elements[`node-${index}`] = {
-          top: 0,
-          left: 0,
-          tag: el.tagName,
-          className: el.className,
-        };
       });
-
-      sectionScrollState[sectionId] = state;
     };
 
     reset();
     requestAnimationFrame(reset);
   }
-
-  function attachSectionScrollPersistence(sectionId) {
-    const section = document.getElementById(sectionId);
-    if (!section) return;
-
-    getSectionScrollableElements(section).forEach((el) => {
-      el.addEventListener("scroll", () => saveSectionScrollState(sectionId), {
-        passive: true,
-      });
-    });
-
-    const observer = new MutationObserver(() => {
-      if (section.style.display !== "none" && sectionScrollState[sectionId]) {
-        requestAnimationFrame(() => restoreSectionScrollState(sectionId));
-      }
-    });
-
-    observer.observe(section, { childList: true, subtree: true });
-  }
-
-  document
-    .querySelectorAll(".section")
-    .forEach((section) => attachSectionScrollPersistence(section.id));
 
   const sectionSkeletons = {
     "dashboard-section": `
@@ -769,7 +681,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ).find((section) => section.style.display !== "none")?.id;
 
     if (currentSection && currentSection !== id) {
-      saveSectionScrollState(currentSection);
       clearSearchControls();
     }
 
@@ -781,9 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const target = document.getElementById(id);
     if (target) {
       target.style.display = "block";
-      requestAnimationFrame(() => restoreSectionScrollState(id));
-      setTimeout(() => restoreSectionScrollState(id), 120);
-      setTimeout(() => restoreSectionScrollState(id), 320);
+      resetSectionScrollPosition(id);
     }
 
     // sidebar active state
@@ -825,7 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "students-section":
         "This section shows all students with their basic details and records for easy management",
       "criteria-section":
-        "This section shows the list of criteria used for evaluating faculty performance",
+        "Manage the standards used to evaluate faculty performance.",
       "academic-year-section":
         "Manage evaluation periods and academic year settings",
       "report-section":
@@ -1332,7 +1241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // OPEN ADD MODAL
   document.querySelector(".add-program-btn")?.addEventListener("click", () => {
-    programHeader.innerText = "ADD PROGRAM";
+    programHeader.innerText = "ADD NEW PROGRAM";
     programSubmitBtn.innerText = "SAVE PROGRAM";
     programCodeInput.value = "";
     programNameInput.value = "";
@@ -1732,6 +1641,8 @@ document.addEventListener("DOMContentLoaded", () => {
     saveMainSubjectBtn = document.getElementById("save-main-subject-btn"),
     subjectsMainTbody = document.getElementById("subjects-main-tbody");
   let subjectsMainData = [];
+  let subjectsMainCurrentPage = 1;
+  const MAIN_SUBJECTS_ROWS_PER_PAGE = 5;
   let editingMainSubjectId = null;
   let selectedClassSemester = "";
   let selectedAcademicYear = "";
@@ -1914,6 +1825,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((r) => r.json())
       .then((data) => {
         subjectsMainData = Array.isArray(data) ? data : [];
+        subjectsMainCurrentPage = 1;
         renderSubjectsMainTable();
       })
       .catch((err) => {
@@ -1953,10 +1865,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!data || data.length === 0) {
       subjectsMainTbody.innerHTML =
         '<tr><td colspan="6" class="admin-empty-state">No subjects found</td></tr>';
+      renderMainSubjectsPagination(0, 0);
       return;
     }
 
-    data.forEach((s) => {
+    const totalPages = Math.ceil(data.length / MAIN_SUBJECTS_ROWS_PER_PAGE);
+    subjectsMainCurrentPage = Math.min(
+      Math.max(1, subjectsMainCurrentPage),
+      Math.max(1, totalPages),
+    );
+    const pageData = data.slice(
+      (subjectsMainCurrentPage - 1) * MAIN_SUBJECTS_ROWS_PER_PAGE,
+      subjectsMainCurrentPage * MAIN_SUBJECTS_ROWS_PER_PAGE,
+    );
+
+    pageData.forEach((s) => {
       const row = document.createElement("tr");
       row.dataset.id = s.id;
       row.innerHTML = `
@@ -2003,15 +1926,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
       subjectsMainTbody.appendChild(row);
     });
+
+    renderMainSubjectsPagination(data.length, totalPages);
+  }
+
+  function renderMainSubjectsPagination(total, totalPages) {
+    const pager = document.getElementById("subjects-main-pagination");
+    if (!pager) return;
+    if (totalPages <= 1) {
+      pager.innerHTML = "";
+      pager.style.display = "none";
+      return;
+    }
+
+    const current = subjectsMainCurrentPage;
+    pager.style.display = "flex";
+    pager.innerHTML = `
+      <button type="button" class="spager-btn" data-page="${current - 1}" ${current === 1 ? "disabled" : ""}>
+        <i class="ph ph-caret-left"></i> Prev
+      </button>
+      <span class="spager-info">Page ${current} of ${totalPages} (${total} subjects)</span>
+      <button type="button" class="spager-btn" data-page="${current + 1}" ${current === totalPages ? "disabled" : ""}>
+        Next <i class="ph ph-caret-right"></i>
+      </button>`;
+
+    pager.querySelectorAll(".spager-btn:not(:disabled)").forEach((button) => {
+      button.addEventListener("click", () => {
+        subjectsMainCurrentPage = Number(button.dataset.page);
+        renderSubjectsMainTable();
+        document
+          .querySelector("#subjects-section .table-scroll-container")
+          ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
   }
 
   ["subjects-search", "subjects-year-filter"].forEach((id) => {
     document
       .getElementById(id)
-      ?.addEventListener("input", renderSubjectsMainTable);
+      ?.addEventListener("input", () => {
+        subjectsMainCurrentPage = 1;
+        renderSubjectsMainTable();
+      });
     document
       .getElementById(id)
-      ?.addEventListener("change", renderSubjectsMainTable);
+      ?.addEventListener("change", () => {
+        subjectsMainCurrentPage = 1;
+        renderSubjectsMainTable();
+      });
   });
 
   function defaultAcademicYear() {
@@ -2249,7 +2211,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let subjectsAllData = []; // full fetched list for current program
   let subjectsFilteredData = []; // after search/filter
   let subjectsCurrentPage = 1;
-  const SUBJECTS_ROWS_PER_PAGE = 50; // rows before pagination kicks in
+  const SUBJECTS_ROWS_PER_PAGE = 5; // show a short page without an inner scroll bar
   const SUBJECTS_VISIBLE_ROWS = 5; // rows visible at once inside scroll window
 
   // ========================= ELEMENTS =========================
@@ -2309,7 +2271,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mw) mw.style.display = "none";
       if (mc) mc.style.display = "none";
       if (manageAddButton) {
-        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Subject';
+        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add New Subject';
       }
       if (detailTitle) {
         detailTitle.textContent = "All Subjects";
@@ -2327,7 +2289,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mw) mw.style.display = "flex";
       if (mc) mc.style.display = "inline-flex";
       if (manageAddButton) {
-        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add Class';
+        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add New Class';
       }
       if (detailTitle) {
         detailTitle.textContent = "Class Sections";
@@ -2397,7 +2359,7 @@ document.addEventListener("DOMContentLoaded", () => {
     subjectsTab?.classList.add("active");
     classesTab?.classList.remove("active");
     if (addButton)
-      addButton.innerHTML = '<i class="ph ph-plus"></i> Add Subject';
+      addButton.innerHTML = '<i class="ph ph-plus"></i> Add New Subject';
     renderManageYearLevelCards();
   }
 
@@ -2503,7 +2465,7 @@ document.addEventListener("DOMContentLoaded", () => {
       editSubjectId = null;
       editingSubjectYear = "";
       addSubjectModal.querySelector(".modal-header h3").textContent =
-        "ADD SUBJECT";
+        "ADD NEW SUBJECT";
       saveSubjectBtn.textContent = "SAVE SUBJECT";
     } else if (classesTab) {
       // Open class modal
@@ -2512,6 +2474,9 @@ document.addEventListener("DOMContentLoaded", () => {
       addClassModal.style.zIndex = "10001";
       addClassModal.style.position = "fixed";
       addClassModal.dataset.isEditing = "false";
+      addClassModal.querySelector(".modal-header h3").textContent =
+        "ADD NEW CLASS";
+      document.getElementById("save-class-btn").textContent = "SAVE CLASS";
       delete addClassModal.dataset.editId;
       delete addClassModal.dataset.existingAssignments;
       delete addClassModal.dataset.existingSubjectIds;
@@ -2893,7 +2858,7 @@ document.addEventListener("DOMContentLoaded", () => {
           editingSubjectYear = "";
           addSubjectModal.style.display = "none";
           addSubjectModal.querySelector(".modal-header h3").textContent =
-            "ADD SUBJECT";
+            "ADD NEW SUBJECT";
           saveSubjectBtn.textContent = "SAVE SUBJECT";
           loadSubjects();
           showNotification("Subject saved successfully!", "#4caf50");
@@ -3384,6 +3349,10 @@ document.addEventListener("DOMContentLoaded", () => {
             addClassModal.style.zIndex = "10001";
             addClassModal.style.position = "fixed";
             addClassModal.dataset.isEditing = "true";
+            addClassModal.querySelector(".modal-header h3").textContent =
+              "EDIT CLASS";
+            document.getElementById("save-class-btn").textContent =
+              "UPDATE CLASS";
             addClassModal.dataset.editId = c.id;
             addClassModal.dataset.existingAssignments = "{}";
             addClassModal.dataset.existingSubjectIds = "[]";
@@ -3629,6 +3598,9 @@ document.addEventListener("DOMContentLoaded", () => {
           delete addClassModalEl.dataset.isEditing;
           delete addClassModalEl.dataset.existingAssignments;
           delete addClassModalEl.dataset.existingSubjectIds;
+          addClassModalEl.querySelector(".modal-header h3").textContent =
+            "ADD NEW CLASS";
+          saveClassBtn.textContent = "SAVE CLASS";
         } else {
           const msg = (res.message || "").toLowerCase();
           if (msg.includes("subject already exists in this section")) {
@@ -4025,6 +3997,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return `<span class="inline-status ${cssStatus}"><span class="status-dot"></span><span>${statusLabel(normalized)}</span></span>`;
   }
 
+  function setProfileStatusBadge(element, status) {
+    const normalized = normalizeStatusValue(status);
+    element.textContent = statusLabel(normalized);
+    element.classList.toggle("is-inactive", normalized === "inactive");
+    element.classList.toggle("is-on-leave", normalized === "on leave");
+    element.classList.toggle("is-archived", normalized === "archived");
+  }
+
   function statusMenuHtml(type, currentStatus) {
     const options =
       type === "faculty"
@@ -4077,6 +4057,91 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  function closeRowActionMenus(exceptMenu = null) {
+    document
+      .querySelectorAll(".table-row-actions-menu.open")
+      .forEach((menu) => {
+        if (menu === exceptMenu) return;
+
+        const wrapper = document.querySelector(
+          `.table-row-actions[data-menu-id="${menu.id}"]`,
+        );
+        const trigger = wrapper?.querySelector(".table-row-actions-trigger");
+        menu.classList.remove("open");
+        menu.style.left = "";
+        menu.style.top = "";
+        trigger?.setAttribute("aria-expanded", "false");
+        if (wrapper && menu.parentElement !== wrapper) wrapper.appendChild(menu);
+      });
+  }
+
+  function openRowActionMenu(trigger) {
+    const wrapper = trigger.closest(".table-row-actions");
+    const menu = wrapper?.querySelector(".table-row-actions-menu");
+    if (!wrapper || !menu) return;
+
+    closeRowActionMenus();
+    closeStatusMenus();
+    if (!menu.id) {
+      menu.id = `student-actions-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+    wrapper.dataset.menuId = menu.id;
+    document.body.appendChild(menu);
+    menu.classList.add("open");
+    trigger.setAttribute("aria-expanded", "true");
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+    const gutter = 8;
+    const left = Math.min(
+      Math.max(gutter, triggerRect.right - menuRect.width),
+      window.innerWidth - menuRect.width - gutter,
+    );
+    let top = triggerRect.bottom + 6;
+    if (top + menuRect.height > window.innerHeight - gutter) {
+      top = Math.max(gutter, triggerRect.top - menuRect.height - 6);
+    }
+
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  }
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest(".table-row-actions-trigger");
+    if (trigger) {
+      event.stopPropagation();
+      const menu = trigger
+        .closest(".table-row-actions")
+        ?.querySelector(".table-row-actions-menu");
+      if (menu?.classList.contains("open")) {
+        closeRowActionMenus();
+      } else {
+        openRowActionMenu(trigger);
+      }
+      return;
+    }
+
+    const menu = event.target.closest(".table-row-actions-menu");
+    const clickedAction = event.target.closest(
+      ".table-row-actions-menu .action-icon-btn",
+    );
+    if (
+      (clickedAction && !clickedAction.classList.contains("settings-btn")) ||
+      event.target.closest(".table-row-actions-menu .status-option")
+    ) {
+      closeRowActionMenus();
+    } else if (!menu) {
+      closeRowActionMenus();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeRowActionMenus();
+  });
+
+  window.addEventListener("scroll", () => closeRowActionMenus(), true);
+  window.addEventListener("resize", () => closeRowActionMenus());
 
   function positionStatusMenu(statusMenu) {
     const dropdown = statusMenu.querySelector(".status-dropdown-menu");
@@ -4323,12 +4388,21 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="subject-count-badge">${f.subjects ? f.subjects.length : 0}</span>
           </td>
           <td>${statusPillHtml(f.status)}</td>
-          <td class="action-cell"><div class="action-buttons">
-            <button class="action-icon-btn view-btn"><i class="ph ph-eye"></i></button>
-            <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
-            ${statusMenuHtml("faculty", f.status)}
-            <button class="action-icon-btn archive-btn" title="Archive Faculty" aria-label="Archive Faculty"><i class="ph ph-archive"></i></button>
-          </div></td>`;
+          <td class="action-cell">
+            <div class="table-row-actions">
+              <button type="button" class="table-row-actions-trigger" aria-label="More faculty actions" aria-haspopup="true" aria-expanded="false" title="More actions">
+                <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
+              </button>
+              <div class="table-row-actions-menu" role="group" aria-label="Faculty actions">
+                <div class="action-buttons">
+                  <button type="button" class="action-icon-btn view-btn" title="View Subjects" aria-label="View Subjects"><i class="ph ph-eye"></i></button>
+                  <button type="button" class="action-icon-btn edit-btn" title="Edit Faculty" aria-label="Edit Faculty"><i class="ph ph-note-pencil"></i></button>
+                  ${statusMenuHtml("faculty", f.status)}
+                  <button type="button" class="action-icon-btn archive-btn" title="Archive Faculty" aria-label="Archive Faculty"><i class="ph ph-archive"></i></button>
+                </div>
+              </div>
+            </div>
+          </td>`;
 
           facultyTbody.appendChild(row);
 
@@ -4389,6 +4463,10 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector(
               "#viewFacultyMeta .faculty-header-id",
             ).textContent = f.faculty_id || f.id || "N/A";
+            setProfileStatusBadge(
+              document.getElementById("viewFacultyStatus"),
+              f.status,
+            );
             document.getElementById("viewFacultySubjectCount").textContent =
               `${(f.subjects || []).length} ${(f.subjects || []).length === 1 ? "subject" : "subjects"}`;
 
@@ -4438,6 +4516,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   restoreStatusDropdown(statusMenu);
                   statusMenu.classList.remove("open");
                   closeStatusMenus();
+                  closeRowActionMenus();
                   showNotification(
                     `Faculty status updated to ${statusLabel(newStatus)}`,
                     "#4caf50",
@@ -4527,7 +4606,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("faculty-photo-preview").hidden = true;
     delete addFacultyModal.dataset.editRow;
-    openModal(addFacultyModal, "ADD FACULTY", "SAVE FACULTY");
+    openModal(addFacultyModal, "ADD NEW FACULTY", "SAVE FACULTY");
 
     setTimeout(() => {
       const emailInput = document.getElementById("faculty-email");
@@ -5094,7 +5173,13 @@ document.addEventListener("DOMContentLoaded", () => {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { min: 0, max: 5, ticks: { stepSize: 1 } },
+            y: {
+              min: 0,
+              max: 5,
+              ticks: { stepSize: 1 },
+              grid: { color: "#f1f5f9", drawBorder: false },
+              border: { color: "#f1f5f9" },
+            },
             x: { grid: { display: false }, ticks: { autoSkip: false } },
           },
           plugins: { legend: { display: false } },
@@ -5123,7 +5208,15 @@ document.addEventListener("DOMContentLoaded", () => {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+          scales: {
+            y: {
+              min: 0,
+              max: 5,
+              ticks: { stepSize: 1 },
+              grid: { color: "#f1f5f9", drawBorder: false },
+              border: { color: "#f1f5f9" },
+            },
+          },
           plugins: { legend: { display: false } },
         },
       });
@@ -7003,11 +7096,18 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${statusPillHtml(stu.status)}</td>
           <td><span class="student-type-badge ${stu.yearlevel === "irregular" ? "irregular" : "regular"}">${stu.yearlevel === "irregular" ? "Irregular" : "Regular"}</span></td>
           <td class="action-cell">
-            <div class="action-buttons">
-              <button class="action-icon-btn view-subjects-btn" title="View Subjects"><i class="ph ph-eye"></i></button>
-              <button class="action-icon-btn edit-btn"><i class="ph ph-note-pencil"></i></button>
-              ${statusMenuHtml("student", stu.status)}
-              <button class="action-icon-btn archive-btn" title="Archive Student" aria-label="Archive Student"><i class="ph ph-archive"></i></button>
+            <div class="table-row-actions">
+              <button type="button" class="table-row-actions-trigger" aria-label="More student actions" aria-haspopup="true" aria-expanded="false" title="More actions">
+                <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
+              </button>
+              <div class="table-row-actions-menu" role="group" aria-label="Student actions">
+                <div class="action-buttons">
+                  <button type="button" class="action-icon-btn view-subjects-btn" title="View Subjects" aria-label="View Subjects"><i class="ph ph-eye"></i></button>
+                  <button type="button" class="action-icon-btn edit-btn" title="Edit Student" aria-label="Edit Student"><i class="ph ph-note-pencil"></i></button>
+                  ${statusMenuHtml("student", stu.status)}
+                  <button type="button" class="action-icon-btn archive-btn" title="Archive Student" aria-label="Archive Student"><i class="ph ph-archive"></i></button>
+                </div>
+              </div>
             </div>
           </td>`;
 
@@ -7318,6 +7418,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         restoreStatusDropdown(statusMenu);
                         statusMenu.classList.remove("open");
                         closeStatusMenus();
+                        closeRowActionMenus();
                         showNotification(
                           `Student status updated to ${statusLabel(newStatus)}`,
                           "#4caf50",
@@ -8290,7 +8391,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     addCategoryModal.style.display = "flex";
     delete addCategoryModal.dataset.editId;
-    document.getElementById("categoryModalTitle").innerText = "ADD CATEGORY";
+    document.getElementById("categoryModalTitle").innerText = "ADD NEW CATEGORY";
     ["category-name", "section-number", "category-weight"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = "";
@@ -8857,6 +8958,10 @@ document.addEventListener("DOMContentLoaded", () => {
     studentInitialsElement.textContent =
       `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "ST";
     studentMetaElement.textContent = `${student.student_number || "No student number"} · ${getProgramName(student.program)}`;
+    setProfileStatusBadge(
+      document.getElementById("viewStudentStatus"),
+      student.status,
+    );
     const isIrregularStudent = [student.student_type, student.yearlevel].some(
       (value) =>
         String(value || "")
@@ -8972,7 +9077,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("addStudentModal:", addStudentModal);
         delete addStudentModal.dataset.editId;
         delete addStudentModal.dataset.studentData;
-        openModal(addStudentModal, "ADD STUDENT", "SAVE STUDENT");
+        openModal(addStudentModal, "ADD NEW STUDENT", "SAVE STUDENT");
         console.log("Modal display style:", addStudentModal.style.display);
 
         // Force modal to be visible with higher z-index
@@ -9289,7 +9394,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const addBtn = document.getElementById("add-period-btn");
     if (!addBtn) return;
     const isEdit = mode === "edit";
-    addBtn.innerHTML = `<i class="ph ${isEdit ? "ph-floppy-disk" : "ph-plus"}"></i>${isEdit ? "Update Period" : "Add Period"}`;
+    addBtn.innerHTML = `<i class="ph ${isEdit ? "ph-floppy-disk" : "ph-plus"}"></i>${isEdit ? "Update Period" : "Add New Period"}`;
   }
 
   function resetPeriodForm(periodDefaults = null) {
@@ -9382,6 +9487,12 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         statusText.textContent =
           statusLabels[data.active_period_status] || "Closed";
+        statusText
+          .closest(".evaluation-status-item")
+          ?.classList.toggle(
+            "is-open",
+            String(data.active_period_status || "").toLowerCase() === "open",
+          );
       }
       if (btnClose) {
         btnClose.style.display =
@@ -10146,8 +10257,9 @@ document.addEventListener("DOMContentLoaded", () => {
         String(month + 1).padStart(2, "0") +
         "-" +
         String(day).padStart(2, "0");
-      const isPastStartDate =
-        targetId === "period-start" && isPastDate(formattedDate);
+      const isPastPeriodDate =
+        (targetId === "period-start" || targetId === "period-end") &&
+        isPastDate(formattedDate);
 
       // Highlight today
       if (
@@ -10158,7 +10270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dayElement.classList.add("today");
       }
 
-      if (isPastStartDate) {
+      if (isPastPeriodDate) {
         dayElement.classList.add("disabled");
         grid.appendChild(dayElement);
         continue;
@@ -10389,6 +10501,9 @@ document.addEventListener("DOMContentLoaded", function () {
     delete addAcademicYearModal.dataset.editingId;
     delete addAcademicYearModal.dataset.originalStartDate;
     delete addAcademicYearModal.dataset.originalEndDate;
+    document.getElementById("academicYearModalTitle").textContent =
+      "ADD NEW ACADEMIC YEAR";
+    saveBtn.textContent = "SAVE ACADEMIC YEAR";
   }
 
   function closeAcademicYearModal() {
@@ -10523,6 +10638,9 @@ document.addEventListener("DOMContentLoaded", function () {
       addAcademicYearModal.dataset.editingId = String(period.id || "");
       addAcademicYearModal.dataset.originalStartDate = period.start_date || "";
       addAcademicYearModal.dataset.originalEndDate = period.end_date || "";
+      document.getElementById("academicYearModalTitle").textContent =
+        "EDIT ACADEMIC YEAR";
+      saveBtn.textContent = "UPDATE ACADEMIC YEAR";
       addAcademicYearModal.style.display = "flex";
     });
 
@@ -10646,3 +10764,139 @@ document.addEventListener("DOMContentLoaded", function () {
   window.loadAcademicYearSection = loadAcademicYearSection;
   loadAcademicYearSection();
 });
+
+// Paginate admin data tables so rows stay readable without an inner vertical
+// scrollbar. Subject tables have their own pagination and are excluded here.
+(function initializeAdminTablePagination() {
+  const rowsPerPage = 5;
+  const initialized = new WeakSet();
+
+  function bindTable(table) {
+    if (
+      initialized.has(table) ||
+      table.matches("#manage-section #subjects .subjects-table") ||
+      table.tBodies[0]?.id === "subjects-main-tbody" ||
+      table.closest("#subjectSelectionModal")
+    ) {
+      return;
+    }
+
+    const tbody = table.tBodies[0];
+    if (!tbody) return;
+
+    const host = table.closest(
+      ".table-scroll-container, .table-scroll, .performance-modal-table-wrapper, .table-wrapper, .evaluation-details-table-wrap, .periods-table-section",
+    ) || table.parentElement;
+    if (!host) return;
+
+    const pager = document.createElement("div");
+    pager.className = "admin-table-pagination";
+    pager.setAttribute("aria-label", "Table pages");
+    host.insertAdjacentElement("afterend", pager);
+
+    let currentPage = 1;
+    let rendering = false;
+
+    function getRows() {
+      return Array.from(tbody.rows);
+    }
+
+    function getDataRows() {
+      return getRows().filter((row) => {
+        if (row.hidden || row.style.display === "none") return false;
+        if (row.classList.contains("admin-empty-state")) return false;
+        if (row.querySelector("td[colspan], th[colspan]")) return false;
+        return true;
+      });
+    }
+
+    function render() {
+      if (rendering) return;
+      rendering = true;
+
+      const allRows = getRows();
+      const dataRows = getDataRows();
+      const pageCount = Math.ceil(dataRows.length / rowsPerPage);
+
+      if (pageCount <= 1) {
+        allRows.forEach((row) => row.classList.remove("admin-table-page-hidden"));
+        pager.innerHTML = "";
+        pager.style.display = "none";
+        rendering = false;
+        return;
+      }
+
+      currentPage = Math.min(Math.max(1, currentPage), pageCount);
+      const firstRow = (currentPage - 1) * rowsPerPage;
+      const visibleRows = new Set(dataRows.slice(firstRow, firstRow + rowsPerPage));
+      allRows.forEach((row) => {
+        row.classList.toggle(
+          "admin-table-page-hidden",
+          dataRows.includes(row) && !visibleRows.has(row),
+        );
+      });
+
+      pager.style.display = "flex";
+      pager.innerHTML = `
+        <button type="button" class="admin-table-page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? "disabled" : ""}>
+          <i class="ph ph-caret-left" aria-hidden="true"></i> Prev
+        </button>
+        <span class="admin-table-page-info">Page ${currentPage} of ${pageCount} (${dataRows.length} rows)</span>
+        <button type="button" class="admin-table-page-btn" data-page="${currentPage + 1}" ${currentPage === pageCount ? "disabled" : ""}>
+          Next <i class="ph ph-caret-right" aria-hidden="true"></i>
+        </button>`;
+
+      pager.querySelectorAll(".admin-table-page-btn:not(:disabled)").forEach((button) => {
+        button.addEventListener("click", () => {
+          currentPage = Number(button.dataset.page);
+          render();
+        });
+      });
+      rendering = false;
+    }
+
+    const tbodyObserver = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => mutation.type === "childList")) {
+        currentPage = 1;
+      } else {
+        currentPage = 1;
+      }
+      render();
+    });
+    tbodyObserver.observe(tbody, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["style", "hidden"],
+    });
+
+    initialized.add(table);
+    render();
+  }
+
+  function scan(root) {
+    if (!root) return;
+    if (root.nodeType === Node.ELEMENT_NODE && root.matches("table")) {
+      bindTable(root);
+    }
+    root.querySelectorAll?.("table").forEach(bindTable);
+  }
+
+  function start() {
+    scan(document);
+    const bodyObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) =>
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) scan(node);
+        }),
+      );
+    });
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
+  }
+})();

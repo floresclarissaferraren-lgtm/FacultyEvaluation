@@ -30,6 +30,14 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 </head>
 <body>
 
+<div class="contact-strip" aria-label="School contact information">
+  <div class="contact-strip-inner">
+    <span><i class="ph ph-map-pin" aria-hidden="true"></i> Granby Colleges of Science and Technology</span>
+    <a href="tel:+639123456789"><i class="ph ph-phone" aria-hidden="true"></i> +63 912 345 6789</a>
+    <a href="mailto:support@granbycollege.edu"><i class="ph ph-envelope" aria-hidden="true"></i> support@granbycollege.edu</a>
+  </div>
+</div>
+
 <!-- NAVBAR -->
 <nav>
   <div class="logo-container">
@@ -78,6 +86,10 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           <i class="ph ph-shield-check" aria-hidden="true"></i>
           <div><h2>Privacy-aware reporting</h2><p>Results are hidden when response groups are too small.</p></div>
         </div>
+        <div class="hero-highlight">
+          <i class="ph ph-chart-line-up" aria-hidden="true"></i>
+          <div><h2>Actionable insights</h2><p>Use clear results to guide meaningful teaching improvements.</p></div>
+        </div>
       </div>
     </div>
     <!-- Scroll indicator -->
@@ -89,6 +101,9 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
   <!-- ── PAGE 1 : ABOUT ── -->
   <div class="page" id="about">
     <div class="page-inner about-inner">
+      <div class="about-layout">
+        <img class="about-school-logo" src="../assets/images/schoollogo.png" alt="Granby Colleges of Science and Technology logo">
+        <div class="about-content">
       <div class="section-label"><i class="ph ph-info"></i> About the System</div>
       <h2 class="section-heading">Built for Academic Excellence</h2>
       <p class="section-sub">The Faculty Evaluation System replaces paper evaluations with a centralized digital platform — faster, fairer, and more transparent.</p>
@@ -116,6 +131,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
         <div class="about-card"><div class="about-icon"><i class="ph ph-layout"></i></div><h3>Instructor Dashboard</h3><p>Faculty members view their evaluation results and performance analytics.</p></div>
         <div class="about-card"><div class="about-icon"><i class="ph ph-chart-bar"></i></div><h3>Performance Reports</h3><p>Evaluation scores are calculated automatically and available instantly.</p></div>
         <div class="about-card"><div class="about-icon"><i class="ph ph-shield-check"></i></div><h3>Administrative Control</h3><p>Admins manage records, evaluation criteria, and system settings.</p></div>
+      </div>
+        </div>
       </div>
     </div>
     <div class="scroll-indicator page-link" data-page="2"><i class="ph ph-caret-down"></i></div>

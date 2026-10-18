@@ -69,15 +69,6 @@ $default_avatar = "https://cdn-icons-png.flaticon.com/512/3135/3135755.png";
 $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image') === 0)
     ? $faculty_photo
     : $default_avatar;
-$faculty_name_parts = preg_split('/\s+/', trim($faculty_name));
-$faculty_suffix = trim((string)($faculty['suffix'] ?? ''));
-if ($faculty_suffix && count($faculty_name_parts) > 1 && strcasecmp(end($faculty_name_parts), $faculty_suffix) === 0) {
-  array_pop($faculty_name_parts);
-}
-$faculty_initials = strtoupper(substr($faculty_name_parts[0] ?? 'I', 0, 1));
-if (count($faculty_name_parts) > 1) {
-  $faculty_initials .= strtoupper(substr($faculty_name_parts[count($faculty_name_parts) - 1], 0, 1));
-}
 
 $faculty_assigned_subjects = [];
 $subjectSql = <<<'SQL'
@@ -178,14 +169,6 @@ if ($subjectStmt) {
       Checking evaluation status
     </span>
     <div class="welcome-content">
-      <div class="welcome-left">
-        <div class="avatar-section">
-          <div class="large-avatar faculty-avatar">
-            <span class="faculty-avatar-initials"><?php echo htmlspecialchars($faculty_initials); ?></span>
-          </div>
-        </div>
-      </div>
-      
       <div class="welcome-right">
         <div class="welcome-header-inline">
           <h1 class="student-name-title">Welcome, <?php echo htmlspecialchars($faculty_name); ?>!</h1>
@@ -205,8 +188,7 @@ if ($subjectStmt) {
         </div>
         
         <p class="welcome-message">
-          Track your evaluation scores, analyze student feedback, and enhance your 
-          teaching strategies for better academic outcomes.
+          Track your evaluation scores, review student feedback, and refine your teaching strategies to improve teaching effectiveness and support better academic outcomes.
         </p>
         
         <?php if ($faculty_status !== 'active'): ?>

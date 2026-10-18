@@ -12,6 +12,7 @@
     if (index < 0 || index >= pages.length) return;
     if (window.matchMedia("(max-width: 768px)").matches) {
       current = index;
+      document.body.classList.toggle("about-view", current === 1);
       pages.forEach((page, i) =>
         page.classList.toggle("active", i === current),
       );
@@ -20,6 +21,7 @@
     }
     if (index === current || animating) return;
     animating = true;
+    document.body.classList.toggle("about-view", index === 1);
 
     const dir = index > current ? "up" : "down";
     pages[current].classList.add(dir === "up" ? "exit-up" : "exit-down");
