@@ -1128,7 +1128,16 @@ body {
   .home-text {
     width: 100%;
     max-width: 640px;
+    align-self: center;
+    text-align: center;
     transform: none;
+  }
+  .home-text h1,
+  .home-text p {
+    text-align: center;
+  }
+  .hero-actions {
+    justify-content: center;
   }
   .about-view #about {
     min-height: 100vh;
@@ -1168,27 +1177,29 @@ body {
   .hero-badge {
     max-width: 100%;
     font-size: clamp(9px, 2.8vw, 11px);
-    padding: 6px clamp(9px, 3vw, 14px);
+    padding: clamp(5px, 1.6vw, 6px) clamp(9px, 3vw, 14px);
     margin-bottom: clamp(14px, 4vw, 22px);
   }
   .home-text h1 {
-    font-size: clamp(26px, 5.8vw, 38px);
+    font-size: clamp(22px, 7vw, 38px);
     line-height: 1.14;
-    letter-spacing: -0.4px;
-    margin-bottom: clamp(12px, 3vw, 18px);
+    letter-spacing: clamp(-0.4px, -0.1vw, -0.2px);
+    margin-bottom: clamp(10px, 3vw, 18px);
   }
   .home-text p {
     max-width: 560px;
-    font-size: clamp(13px, 3.4vw, 15px);
+    font-size: clamp(12px, 3.7vw, 15px);
     line-height: 1.6;
-    margin-bottom: clamp(18px, 4.5vw, 28px);
+    margin: 0 auto clamp(16px, 4.5vw, 28px);
   }
   .hero-actions {
-    justify-content: flex-start;
+    justify-content: center;
+    gap: clamp(8px, 2.5vw, 16px);
   }
   .hero-actions a {
-    padding: clamp(9px, 3vw, 12px) clamp(14px, 5vw, 22px);
-    font-size: clamp(12px, 3.5vw, 15px);
+    gap: clamp(5px, 1.5vw, 8px);
+    padding: clamp(6px, 1.8vw, 11px) clamp(8px, 3vw, 18px);
+    font-size: clamp(10px, calc(1vw + 8px), 14px);
   }
   .hero-highlights {
     position: relative;
@@ -1206,14 +1217,19 @@ body {
   }
   .hero-highlight {
     min-height: 0;
-    padding: 10px 10px;
-    gap: 12px;
+    padding: clamp(8px, 2.5vw, 10px);
+    gap: clamp(8px, 3vw, 12px);
+  }
+  .hero-highlight > i {
+    width: clamp(34px, 10vw, 40px);
+    height: clamp(34px, 10vw, 40px);
+    font-size: clamp(16px, 5vw, 20px);
   }
   .hero-highlight h2 {
-    font-size: clamp(12px, 3.6vw, 14px);
+    font-size: clamp(11px, 3.6vw, 14px);
   }
   .hero-highlight p {
-    font-size: clamp(11px, 3.2vw, 13px);
+    font-size: clamp(10.5px, 3.4vw, 13px);
   }
   .section-label {
     font-size: clamp(10px, 2.8vw, 11px);

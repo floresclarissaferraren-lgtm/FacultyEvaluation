@@ -13,6 +13,8 @@ date_default_timezone_set("Asia/Manila");
 
 $mode = $_GET["mode"] ?? "view"; // view | download
 $search = trim($_GET["search"] ?? "");
+$academicYear = trim((string) ($_GET["academic_year"] ?? ""));
+$semester = trim((string) ($_GET["semester"] ?? ""));
 
 function getStatusLabel($score)
 {
@@ -44,21 +46,48 @@ $sql = "SELECT
             f.suffix,
             COUNT(e.id) AS total_responses,
             COUNT(DISTINCT e.student_id) AS privacy_respondents,
-            AVG(e.overall_rating) AS average_score
+            GROUP_CONCAT(DISTINCT ep.id ORDER BY ep.id) AS period_ids
         FROM evaluations e
-        INNER JOIN add_faculties f ON f.id = e.faculty_id";
+        INNER JOIN add_faculties f ON f.id = e.faculty_id
+        LEFT JOIN evaluation_periods ep
+            ON ep.id = COALESCE(
+                e.period_id,
+                (SELECT ep2.id
+                 FROM evaluation_periods ep2
+                 WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
+                 ORDER BY ep2.id DESC
+                 LIMIT 1)
+            )";
 
 $params = [];
 $types = "";
+$where = [
+    "ep.id IS NOT NULL",
+    "ep.end_date IS NOT NULL",
+    "(ep.end_date < CURDATE() OR ep.is_active = 0)",
+];
+if ($academicYear !== "") {
+    $where[] = "TRIM(ep.ay) = ?";
+    $params[] = $academicYear;
+    $types .= "s";
+}
+if ($semester !== "") {
+    $where[] = "LOWER(TRIM(ep.semester)) = LOWER(?)";
+    $params[] = $semester;
+    $types .= "s";
+}
 if ($search !== "") {
-    $sql .=
-        " WHERE CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, ''), ' ', f.faculty_id) LIKE ?";
+    $where[] =
+        "CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, ''), ' ', f.faculty_id) LIKE ?";
     $params[] = "%" . $search . "%";
     $types .= "s";
 }
 
-$sql .= " GROUP BY f.id, f.faculty_id, f.firstname, f.lastname, f.suffix
-          ORDER BY average_score DESC";
+$sql .=
+    " WHERE " .
+    implode(" AND ", $where) .
+    " GROUP BY f.id, f.faculty_id, f.firstname, f.lastname, f.suffix
+      ORDER BY f.lastname ASC, f.firstname ASC";
 
 $stmt = $conn->prepare($sql);
 if ($stmt && !empty($params)) {
@@ -79,10 +108,34 @@ if ($stmt) {
         $privacySuppressed =
             intval($r["total_responses"]) > 0 &&
             !evaluationMeetsPrivacyThreshold(intval($r["privacy_respondents"]));
-        $avg =
+        $periodIds = array_values(
+            array_filter(
+                array_map(
+                    "intval",
+                    explode(",", (string) ($r["period_ids"] ?? "")),
+                ),
+                static fn($periodId) => $periodId > 0,
+            ),
+        );
+        $scores =
             $facultyId > 0 && !$privacySuppressed
-                ? calcWeightedScore($conn, $facultyId)
-                : 0;
+                ? array_map(
+                    static fn($periodId) => calcWeightedScore(
+                        $conn,
+                        $facultyId,
+                        null,
+                        null,
+                        $periodId,
+                    ),
+                    $periodIds,
+                )
+                : [];
+        $scores = array_values(
+            array_filter($scores, static fn($score) => $score > 0),
+        );
+        $avg = empty($scores)
+            ? 0
+            : round(array_sum($scores) / count($scores), 2);
         $rows[] = [
             "name" => trim(
                 $r["firstname"] . " " . $r["lastname"] . " " . $r["suffix"],

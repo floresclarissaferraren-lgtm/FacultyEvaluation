@@ -49,6 +49,13 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
   <!-- Right Side User Menu -->
   <div class="user-menu">
+    <div class="navbar-admin-profile" aria-label="Signed in as System Administrator">
+      <div class="navbar-admin-avatar" aria-hidden="true">SA</div>
+      <div class="navbar-admin-profile-text">
+        <span class="navbar-admin-name">System Administrator</span>
+        <span class="navbar-admin-role">Administrator</span>
+      </div>
+    </div>
     <button type="button" class="admin-notification-btn" id="adminNotificationBtn" title="Notifications" aria-label="Notifications">
       <i class="ph ph-bell"></i>
       <span class="notification-dot" aria-hidden="true"></span>
@@ -195,13 +202,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
   <!-- Sidebar Bottom / Logout -->
   <div class="sidebar-bottom">
-    <div class="sidebar-profile" aria-label="Signed in as System Administrator">
-      <div class="sidebar-profile-avatar" aria-hidden="true">SA</div>
-      <div class="sidebar-profile-text">
-        <span class="sidebar-profile-name">System Administrator</span>
-        <span class="sidebar-profile-role">Administrator</span>
-      </div>
-    </div>
     <a href="#" class="sidebar-logout-btn" id="logoutLink" data-tooltip="Logout" aria-label="Logout">
       <i class="ph ph-sign-out"></i>
       <span>Logout</span>
@@ -214,33 +214,11 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <!-- Dashboard Section  =====================================================================================================================================-->
 <div id="dashboard-section" class="section">
   <div class="admin-welcome-box">
-    <div class="admin-welcome-icon" aria-hidden="true">
-      <i class="ph ph-hand-waving"></i>
-    </div>
-    <div>
+    <div class="admin-welcome-copy">
       <h1>Admin Overview</h1>
-      <p>Here's an overview of the Faculty Evaluation System.</p>
+      <p>Here's an overview of your Faculty Evaluation System. Track faculty performance, monitor evaluation progress, and manage reports and system activities all in one place.</p>
     </div>
-    <div class="admin-period-summary" aria-label="Selected academic period">
-      <div class="admin-period-item academic-year-item">
-        <div>
-          <span>Academic Year</span>
-          <strong id="dashboardAcademicYear">Not set</strong>
-        </div>
-      </div>
-      <div class="admin-period-item semester-item">
-        <div>
-          <span>Semester</span>
-          <strong id="dashboardSemester">Not set</strong>
-        </div>
-      </div>
-      <div class="admin-period-item evaluation-status-item">
-        <div>
-          <span>Evaluation Status</span>
-          <strong id="evaluationStatusText">Closed</strong>
-        </div>
-      </div>
-    </div>
+    <img class="admin-welcome-image" src="../assets/images/mainimg.png" alt="" aria-hidden="true">
   </div>
 
   <div class="dashboard">
@@ -285,15 +263,25 @@ include __DIR__ . '/totalstudents_dashcount.php';
       </div>
     </div>
 
-    <!-- Overall Faculty Ratings Card -->
-    <div class="dashboard-card overall-ratings">
-      <div class="dashboard-content">
+    <div class="admin-period-summary">
+      <h2 class="admin-period-summary-title">Academic Overview</h2>
+      <div class="admin-period-item academic-year-item">
         <div>
-          <h3>Overall Faculty Rating</h3>
-          <p id="overallRating" class="dashboard-value">0.00</p>
-          <span>Out of 5.0</span>
+          <span>Academic Year</span>
+          <strong id="dashboardAcademicYear">Not set</strong>
         </div>
-        <div class="icon-box"><i class="ph-fill ph-star"></i></div>
+      </div>
+      <div class="admin-period-item semester-item">
+        <div>
+          <span>Semester</span>
+          <strong id="dashboardSemester">Not set</strong>
+        </div>
+      </div>
+      <div class="admin-period-item evaluation-status-item">
+        <div>
+          <span>Evaluation Status</span>
+          <strong id="evaluationStatusText">Closed</strong>
+        </div>
       </div>
     </div>
 
@@ -307,34 +295,69 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <div class="rating-header">
           <h3>Rating Distribution</h3>
         </div>
-        <div class="rating-chart-wrapper">
-          <canvas id="ratingDistributionChart" width="200" height="200"></canvas>
-        </div>
-        <div class="rating-legend" id="ratingLegend">
-          <div class="legend-item">
-            <div class="legend-color excellent"></div>
-            <span class="legend-label">Excellent</span>
+        <div class="rating-distribution-inner">
+          <div class="rating-chart-wrapper">
+            <canvas id="ratingDistributionChart" width="200" height="200"></canvas>
+            <div class="rating-chart-center" id="ratingChartCenter">
+              <strong id="ratingOverallPercentage">0%</strong>
+              <span>Overall<br>Performance</span>
+            </div>
           </div>
-          <div class="legend-item">
-            <div class="legend-color very-good"></div>
-            <span class="legend-label">Very Good</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color good"></div>
-            <span class="legend-label">Good</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color fair"></div>
-            <span class="legend-label">Fair</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color poor"></div>
-            <span class="legend-label">Poor</span>
+          <div class="rating-legend" id="ratingLegend">
+            <div class="legend-item">
+              <div class="legend-color excellent"></div>
+              <span class="legend-label">Excellent</span>
+              <span class="legend-percent">0%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color very-good"></div>
+              <span class="legend-label">Very Good</span>
+              <span class="legend-percent">0%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color good"></div>
+              <span class="legend-label">Good</span>
+              <span class="legend-percent">0%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color fair"></div>
+              <span class="legend-label">Fair</span>
+              <span class="legend-percent">0%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color poor"></div>
+              <span class="legend-label">Poor</span>
+              <span class="legend-percent">0%</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <div class="dashboard-card program-evaluation-progress">
+      <div class="dashboard-content">
+        <div class="rating-header">
+          <h3>Evaluation Progress</h3>
+        </div>
+        <div class="program-progress-list" id="programEvaluationProgressList" aria-live="polite">
+          <div class="program-progress-empty">Loading program progress...</div>
+        </div>
+        <div class="program-progress-summary" aria-label="Overall evaluation progress">
+          <div class="program-progress-summary-item submitted">
+            <strong id="programProgressSubmitted">0</strong>
+            <span>Submitted</span>
+          </div>
+          <div class="program-progress-summary-item pending">
+            <strong id="programProgressPending">0</strong>
+            <span>Pending</span>
+          </div>
+          <div class="program-progress-summary-item overall">
+            <strong id="programProgressOverall">0%</strong>
+            <span>Overall</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="dashboard-card top-performance">
       <div class="dashboard-content">
         <div class="rating-header">
@@ -346,42 +369,8 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
       </div>
     </div>
-
   </div>
 
-  <!-- Third Row -->
-  <div class="dashboard-row-3">
-    <div class="dashboard-card evaluation-progress">
-      <div class="dashboard-content">
-        <div class="rating-header">
-          <h3>Evaluation Progress</h3>
-        </div>
-        <div class="evaluation-progress-stats">
-          <div class="evaluation-progress-stat completion">
-            <strong id="evaluationCompletionRate">0.0%</strong>
-            <span>Completion Rate</span>
-          </div>
-          <div class="evaluation-progress-stat submissions">
-            <strong id="evaluationSubmissionCount">0</strong>
-            <span>Completed Students</span>
-          </div>
-          <div class="evaluation-progress-stat pending">
-            <strong id="evaluationPendingCount">0</strong>
-            <span>Pending Students</span>
-          </div>
-        </div>
-        <div class="progress-list">
-          <div class="progress-item">
-            <div class="progress-label-row">
-              <span>Students Who Finished</span>
-              <small id="evaluationProgressText">No completed students yet</small>
-            </div>
-            <div class="progress-track"><div id="evaluationProgressFill" class="progress-fill submitted" style="width:0%;"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div id="topPerformanceModal" class="performance-modal">
@@ -1501,7 +1490,16 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <div class="report-chart-heading">
           <div><h3>Overall Rating Distribution</h3></div>
         </div>
-        <div class="report-donut-layout"><div class="report-donut-canvas"><canvas id="reportRatingDistributionChart"></canvas></div><div id="reportRatingLegend" class="report-chart-legend"></div></div>
+        <div class="report-donut-layout">
+          <div class="report-rating-chart-wrapper">
+            <canvas id="reportRatingDistributionChart"></canvas>
+            <div class="rating-chart-center" aria-hidden="true">
+              <strong id="reportRatingOverallPercentage">0%</strong>
+              <span>Overall<br>Performance</span>
+            </div>
+          </div>
+          <div id="reportRatingLegend" class="rating-legend report-rating-legend"></div>
+        </div>
       </div>
       <div class="report-chart-card report-program-card">
         <div class="report-chart-heading"><div><h3>Average Ratings by Program</h3></div></div>
@@ -1773,11 +1771,11 @@ include __DIR__ . '/totalstudents_dashcount.php';
 -->
 
 <!-- Faculty Report Modal -->
-<div id="facultyReportModal" class="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+<div id="facultyReportModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="facultyReportTitle">
   <div class="modal-content report-modal-content">
     <div class="modal-header report-modal-header">
-      <h3>Evaluation Details</h3>
-      <span class="close-btn" onclick="closeFacultyReportModal()">&times;</span>
+      <h3 id="facultyReportTitle">Evaluation Details</h3>
+      <button type="button" class="close-btn" onclick="closeFacultyReportModal()" aria-label="Close evaluation details">&times;</button>
     </div>
     <div class="modal-body report-modal-body">
       <div class="faculty-info-header">
@@ -1798,14 +1796,11 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <strong id="reportOverallRating" class="report-card-value">-</strong>
           <span class="report-card-note">out of 5.0</span>
           <span id="reportOverallPercentage" class="report-card-percent">0%</span>
-          <div class="report-card-progress" aria-hidden="true">
-            <div id="reportOverallProgressFill" class="report-card-progress-fill"></div>
-          </div>
         </div>
         <div class="report-card">
-          <span class="report-card-label">Total Responses</span>
+          <span class="report-card-label">Student Respondents</span>
           <strong id="reportTotalResponses" class="report-card-value">-</strong>
-          <span class="report-card-note">evaluation responses</span>
+          <span class="report-card-note">students responded</span>
         </div>
         <div class="report-card status-card">
           <span class="report-card-label">Report Status</span>
@@ -1814,16 +1809,18 @@ include __DIR__ . '/totalstudents_dashcount.php';
         </div>
       </div>
 
-      <div class="report-section-title">
-        <div>
-          <h4>Evaluation Categories</h4>
-          <p>Category scores shown as percentage progress.</p>
+      <div class="category-section">
+        <div class="report-section-title">
+          <div>
+            <h4>Evaluation Categories</h4>
+            <p>Category scores shown as percentages.</p>
+          </div>
+          <span id="reportCategoryCount" class="section-count">0 categories</span>
         </div>
-        <span id="reportCategoryCount" class="section-count">0 categories</span>
-      </div>
 
-      <div id="reportCategoryList" class="category-list">
-        <span class="category-list-empty">Loading categories...</span>
+        <div id="reportCategoryList" class="category-list">
+          <span class="category-list-empty">Loading categories...</span>
+        </div>
       </div>
 
       <div class="evaluation-details-table-wrap">

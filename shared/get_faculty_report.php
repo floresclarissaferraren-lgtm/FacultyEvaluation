@@ -116,7 +116,8 @@ try {
         $subject_id > 0 ? " AND e.subject_id = ? AND e.class_id = ?" : "";
     $periodWhere = $period_id > 0 ? " AND e.period_id = ?" : "";
     $overall_query = "SELECT 
-                        COUNT(e.id) as total_responses,
+                        COUNT(e.id) as total_evaluations,
+                        COUNT(DISTINCT e.student_id) as total_respondents,
                         COUNT(DISTINCT e.student_id) AS privacy_respondents,
                         MIN(DATE(e.created_at)) as date_from,
                         MAX(DATE(e.created_at)) as date_to,
@@ -151,7 +152,8 @@ try {
     $overall_data = $overall_result->fetch_assoc();
 
     // Weighted overall score (real-time)
-    $totalResponses = intval($overall_data["total_responses"] ?? 0);
+    $totalEvaluations = intval($overall_data["total_evaluations"] ?? 0);
+    $totalRespondents = intval($overall_data["total_respondents"] ?? 0);
     $adminPrivacyPreview =
         (string) ($_SESSION["role"] ?? "") === "admin" &&
         (string) ($_GET["admin_privacy_preview"] ?? "") === "1";
@@ -159,12 +161,12 @@ try {
     $privacySuppressed =
         !$adminPrivacyPreview &&
         !$facultyResults &&
-        $totalResponses > 0 &&
+        $totalEvaluations > 0 &&
         !evaluationMeetsPrivacyThreshold(
             intval($overall_data["privacy_respondents"] ?? 0),
         );
     $overallScore =
-        $totalResponses > 0 && !$privacySuppressed
+        $totalEvaluations > 0 && !$privacySuppressed
             ? calcWeightedScore(
                 $conn,
                 intval($faculty_id),
@@ -318,7 +320,7 @@ try {
             $overallScore > 0
                 ? number_format(($overallScore / 5) * 100, 2)
                 : "0.00",
-        "total_responses" => $privacySuppressed ? 0 : $totalResponses,
+        "total_responses" => $privacySuppressed ? 0 : $totalRespondents,
         "overall_status" => $overallStatus,
         "overall_status_class" => $overallStatusClass,
         "evaluation_period" => $periodText,

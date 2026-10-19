@@ -204,7 +204,7 @@ function syncRegularStudentsForClass(mysqli $conn, int $class_id): void
         "DELETE FROM student_subject_classes WHERE student_id = ? AND class_id = ?",
     );
     $ins = $conn->prepare(
-        "INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)",
+        "INSERT IGNORE INTO student_subjects (student_id, subject_id) VALUES (?, ?)",
     );
     $insClass = $conn->prepare(
         "INSERT IGNORE INTO student_subject_classes (student_id, subject_id, class_id) VALUES (?, ?, ?)",

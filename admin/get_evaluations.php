@@ -14,7 +14,11 @@ try {
     $academicYear = trim((string) ($_GET["academic_year"] ?? ""));
     $semester = trim((string) ($_GET["semester"] ?? ""));
 
-    $where = ["ep.end_date IS NOT NULL", "ep.end_date < CURDATE()"];
+    $where = [
+        "ep.id IS NOT NULL",
+        "ep.end_date IS NOT NULL",
+        "(ep.end_date < CURDATE() OR ep.is_active = 0)",
+    ];
     $params = [];
     $types = "";
 
@@ -42,7 +46,7 @@ try {
         COALESCE(e.period_id, ep.id, 0) AS resolved_period_id,
         ep.ay AS academic_year,
         ep.semester,
-        COUNT(e.id) as total_responses,
+        COUNT(DISTINCT e.student_id) as total_responses,
         MAX(e.created_at) as last_evaluation
     FROM evaluations e
     INNER JOIN add_faculties f ON f.id = e.faculty_id

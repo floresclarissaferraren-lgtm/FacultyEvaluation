@@ -76,7 +76,12 @@ const managePeriodsModal = document.getElementById("managePeriodsModal");
   window.addEventListener("scroll", hideSidebarTooltip, true);
 })();
 
-function setButtonLoading(button, isLoading, loadingText = "Loading...") {
+function setButtonLoading(
+  button,
+  isLoading,
+  loadingText = "Loading...",
+  loadingHtml = null,
+) {
   if (!button) return;
 
   if (isLoading) {
@@ -86,7 +91,9 @@ function setButtonLoading(button, isLoading, loadingText = "Loading...") {
     button.disabled = true;
     button.classList.add("is-loading");
     button.setAttribute("aria-busy", "true");
-    button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span>${loadingText}`;
+    button.innerHTML =
+      loadingHtml ??
+      `<span class="button-spinner" aria-hidden="true"></span>${loadingText}`;
     return;
   }
 
@@ -1651,7 +1658,15 @@ document.addEventListener("DOMContentLoaded", () => {
   let cachedEvaluationPeriods = [];
   let periodConfirmationResolver = null;
 
-  function confirmPeriodAction({ opening, periodName, duration }) {
+  function confirmPeriodAction({
+    opening,
+    periodName,
+    duration,
+    titleText,
+    messageText,
+    confirmText,
+    iconClass = "ph-calendar-check",
+  }) {
     const modal = document.getElementById("periodConfirmationModal");
     const title = document.getElementById("periodConfirmationTitle");
     const period = document.getElementById("periodConfirmationPeriod");
@@ -1675,16 +1690,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (periodConfirmationResolver) periodConfirmationResolver(false);
 
-    title.textContent = opening
-      ? "Open evaluation period?"
-      : "Close evaluation period?";
+    title.textContent =
+      titleText ||
+      (opening ? "Open evaluation period?" : "Close evaluation period?");
     period.textContent = periodName;
-    dates.textContent = duration || "Schedule dates are not set";
-    message.textContent = opening
-      ? "Opening this period will close any other active period and send an opening notification to students. Students can evaluate only within the scheduled dates."
-      : "Students will no longer be able to submit evaluations for this period.";
-    acceptButton.textContent = opening ? "Open Period" : "Close Period";
-    acceptButton.classList.toggle("is-close", !opening);
+    dates.textContent =
+      duration || (titleText ? "" : "Schedule dates are not set");
+    message.textContent =
+      messageText ||
+      (opening
+        ? "Opening this period will close any other active period and send an opening notification to students. Students can evaluate only within the scheduled dates."
+        : "Students will no longer be able to submit evaluations for this period.");
+    acceptButton.textContent =
+      confirmText || (opening ? "Open Period" : "Close Period");
+    acceptButton.classList.toggle("is-close", !opening && !confirmText);
+    const icon = modal.querySelector(".period-confirmation-icon i");
+    if (icon) icon.className = `ph ${iconClass}`;
     modal.hidden = false;
 
     return new Promise((resolve) => {
@@ -3643,6 +3664,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalTitle = modal.querySelector("h3");
     const className = modal.querySelector("#viewClassName");
     const subjectsList = document.getElementById("viewClassSubjectsList");
+    const displayPeriodLabel = periodLabel
+      .replace(/\b\d{4}\s*[-–]\s*\d{4}\s*[-–]\s*/, "")
+      .trim();
 
     modalTitle.innerHTML = `Class Subjects`;
     className.textContent = `Loading...`;
@@ -3658,12 +3682,12 @@ document.addEventListener("DOMContentLoaded", () => {
           ? currentProgram.program_code
           : "PROGRAM";
         const yearDigit = yearLevel.match(/\d+/);
-        className.textContent = `${programCode}- ${yearDigit ? yearDigit[0] : ""}${sectionName}${periodLabel ? ` · ${periodLabel}` : ""}`;
+        className.textContent = `${programCode}- ${yearDigit ? yearDigit[0] : ""}${sectionName}${displayPeriodLabel ? ` · ${displayPeriodLabel}` : ""}`;
       })
       .catch((err) => {
         console.error("Error fetching program:", err);
         const yearDigit = yearLevel.match(/\d+/);
-        className.textContent = `${yearDigit ? yearDigit[0] : ""}${sectionName}${periodLabel ? ` · ${periodLabel}` : ""}`;
+        className.textContent = `${yearDigit ? yearDigit[0] : ""}${sectionName}${displayPeriodLabel ? ` · ${displayPeriodLabel}` : ""}`;
       });
 
     // Fetch subjects for this class
@@ -3684,11 +3708,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class='subject-card' data-subject-id='${subject.subject_id}' data-class-id='${classId}'>
             <div class='subject-header'>
               <strong>${subject.subject_code}</strong>
-              <span class='year-badge'>${subject.year_level || ""}</span>
             </div>
             <p class='subject-desc'>${subject.subject_desc || ""}</p>
-            <div style='margin:8px 0 0; font-size:0.95rem; color:#4b5563;'>
-              <i class='ph ph-user' style='margin-right:5px; color:#1565c0; font-size:1rem; vertical-align:middle;'></i>
+            <div class='class-subject-instructor'>
+              <i class='ph ph-user' aria-hidden='true'></i>
               Instructor: ${subject.faculty_name || "Unassigned"}
             </div>
           </div>
@@ -4992,11 +5015,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           data.data.forEach((evaluation) => {
-            const pct = parseFloat(evaluation.percentage_score || 0);
             const privacySuppressed = Boolean(evaluation.privacy_suppressed);
-            const pctText = privacySuppressed
-              ? "Withheld"
-              : `${pct.toFixed(1)}%`;
             const ratingClass = evaluation.rating_class || "na";
             const ratingText = privacySuppressed
               ? "Privacy protected"
@@ -5025,14 +5044,10 @@ document.addEventListener("DOMContentLoaded", () => {
             </td>
             <td>
               <span class="report-period-year">${escapeHtml(evaluation.academic_year || "Unassigned Year")}</span>
-              <small>${escapeHtml(evaluation.semester || "Unassigned Semester")}</small>
+              <small class="report-period-semester">${escapeHtml(evaluation.semester || "Unassigned Semester")}</small>
             </td>
             <td>
               <div class="score-cell">
-                <span class="score-pct">${pctText}</span>
-                <div class="score-mini-track">
-                  <div class="score-mini-fill ${escapeHtml(ratingClass)}" style="width:${Math.min(pct, 100)}%"></div>
-                </div>
                 <span class="score-raw">${privacySuppressed ? "Withheld" : `${Number(evaluation.average_score).toFixed(2)} / 5.00`}</span>
               </div>
             </td>
@@ -5101,9 +5116,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderReportAnalytics(data) {
     const labels = ["Excellent", "Very Good", "Good", "Fair", "Poor"];
     const colors = ["#2563eb", "#16a34a", "#eab308", "#f97316", "#ef4444"];
+    const legendClasses = ["excellent", "very-good", "good", "fair", "poor"];
     const distribution = data.distribution || {};
     const values = labels.map((label) => Number(distribution[label] || 0));
     const total = Number(data.total || 0);
+    const weightedRating = values.reduce(
+      (sum, value, index) => sum + value * (values.length - index),
+      0,
+    );
+    const overallPercentage = total
+      ? Math.round((weightedRating / (total * values.length)) * 100)
+      : 0;
+    const overallPercentageElement = document.getElementById(
+      "reportRatingOverallPercentage",
+    );
+    if (overallPercentageElement) {
+      overallPercentageElement.textContent = `${overallPercentage}%`;
+    }
 
     const donutCanvas = document.getElementById(
       "reportRatingDistributionChart",
@@ -5119,14 +5148,14 @@ document.addEventListener("DOMContentLoaded", () => {
               data: values,
               backgroundColor: colors,
               borderColor: "#fff",
-              borderWidth: 3,
+              borderWidth: 2,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: "66%",
+          cutout: "60%",
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -5146,7 +5175,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const percentage = total
             ? Math.round((values[index] / total) * 100)
             : 0;
-          return `<div class="report-legend-item"><div class="report-legend-label"><span class="report-legend-dot" style="background:${colors[index]}"></span><span>${label}</span><strong>${percentage}%</strong></div><div class="report-legend-track"><span style="width:${percentage}%;background:${colors[index]}"></span></div></div>`;
+          return `<div class="legend-item"><span class="legend-color ${legendClasses[index]}"></span><span class="legend-label">${label}</span><span class="legend-percent">${percentage}%</span></div>`;
         })
         .join("");
 
@@ -5560,11 +5589,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ? reportData.category_totals
         : [];
 
-    // Check if weights are present
-    const hasWeights = details.some(
-      (d) => parseFloat(d.normalised_weight || d.weight || 0) > 0,
-    );
-
     if (categoryCountEl) {
       categoryCountEl.textContent = `${details.length} ${details.length === 1 ? "category" : "categories"}`;
     }
@@ -5596,18 +5620,9 @@ document.addEventListener("DOMContentLoaded", () => {
               )
                 .toLowerCase()
                 .replace(/\s+/g, "-");
-              const normW = parseFloat(
-                detail.normalised_weight || detail.weight || 0,
-              );
-              const weightTag = hasWeights
-                ? `<span class="category-weight-tag" title="Category weight">${normW.toFixed(1)}%</span>`
-                : "";
               return `
             <div class="category-pill ${escapeHtml(ratingClass)}">
-              <div class="category-pill-name">${escapeHtml(categoryName)} ${weightTag}</div>
-              <div class="category-pill-meter" aria-label="${escapeHtml(categoryName)} ${percentText}">
-                <div class="category-pill-fill" style="width: ${scorePercent}%;"></div>
-              </div>
+              <div class="category-pill-name">${escapeHtml(categoryName)}</div>
               <div class="category-pill-percent">${percentText}</div>
               <div class="category-pill-rating">${escapeHtml(scoreValue)} / 5.00</div>
             </div>
@@ -5620,19 +5635,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (details.length === 0) {
       tbody.innerHTML = `
       <tr>
-        <td colspan="${hasWeights ? 5 : 4}" class="empty-report-cell">No categories available</td>
+        <td colspan="4" class="empty-report-cell">No categories available</td>
       </tr>
     `;
       return;
-    }
-
-    // Update thead if weight column needed
-    const thead = tbody.closest("table")?.querySelector("thead tr");
-    if (thead && hasWeights && !thead.querySelector(".weight-th")) {
-      const weightTh = document.createElement("th");
-      weightTh.className = "weight-th";
-      weightTh.textContent = "Weight";
-      thead.insertBefore(weightTh, thead.children[1]); // after Category name
     }
 
     const rowsHtml = details
@@ -5658,17 +5664,9 @@ document.addEventListener("DOMContentLoaded", () => {
             detail.responses ?? detail.total_responses ?? 0,
             10,
           ) || 0;
-        const normW = parseFloat(
-          detail.normalised_weight || detail.weight || 0,
-        );
-        const weightCell = hasWeights
-          ? `<td class="category-weight-cell"><span class="category-weight-tag">${normW.toFixed(1)}%</span></td>`
-          : "";
-
         return `
       <tr>
         <td class="category-name-cell">${escapeHtml(categoryName)}</td>
-        ${weightCell}
         <td class="category-rating-cell">
           <div class="category-score-cell">
             <span class="score-text">${escapeHtml(scoreValue)} / 5.00</span>
@@ -5717,9 +5715,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const overallPercentElement = document.getElementById(
       "reportOverallPercentage",
     );
-    const overallProgressFill = document.getElementById(
-      "reportOverallProgressFill",
-    );
     const categoryCountEl = document.getElementById("reportCategoryCount");
     const feedbackCountEl = document.getElementById("reportFeedbackCount");
     const categoryListEl = document.getElementById("reportCategoryList");
@@ -5736,7 +5731,6 @@ document.addEventListener("DOMContentLoaded", () => {
       statusElement.textContent = "-";
     }
     if (overallPercentElement) overallPercentElement.textContent = "0%";
-    if (overallProgressFill) overallProgressFill.style.width = "0%";
     if (categoryCountEl) categoryCountEl.textContent = "0 categories";
     if (feedbackCountEl) feedbackCountEl.textContent = "0 comments";
     if (categoryListEl)
@@ -5768,9 +5762,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const overallPercentElement = document.getElementById(
             "reportOverallPercentage",
           );
-          const overallProgressFill = document.getElementById(
-            "reportOverallProgressFill",
-          );
           const responsesElement = document.getElementById(
             "reportTotalResponses",
           );
@@ -5801,8 +5792,6 @@ document.addEventListener("DOMContentLoaded", () => {
             overallPercentElement.textContent = privacySuppressed
               ? "Withheld"
               : `${pctScore.toFixed(1)}%`;
-          if (overallProgressFill)
-            overallProgressFill.style.width = `${Math.min(pctScore, 100)}%`;
           if (responsesElement)
             responsesElement.textContent = privacySuppressed
               ? "Withheld"
@@ -6017,9 +6006,103 @@ document.addEventListener("DOMContentLoaded", () => {
     if (target) openReportFacultyRankings(event);
   });
 
+  function renderProgramEvaluationProgress(data) {
+    const list = document.getElementById("programEvaluationProgressList");
+    if (!list) return;
+
+    const programs = Array.isArray(data.programs) ? data.programs : [];
+    if (!Number(data.activePeriodId)) {
+      list.innerHTML =
+        '<div class="program-progress-empty">No active evaluation period</div>';
+    } else if (programs.length === 0) {
+      list.innerHTML =
+        '<div class="program-progress-empty">No programs available</div>';
+    } else {
+      list.innerHTML = programs
+        .map((program) => {
+          const expected = Math.max(0, Number(program.expected) || 0);
+          const completed = Math.max(
+            0,
+            Math.min(expected, Number(program.completed) || 0),
+          );
+          const percentage =
+            expected > 0
+              ? Math.max(
+                  0,
+                  Math.min(100, Number(program.percentage) || 0),
+                )
+              : 0;
+          const label = program.code || program.name || "Program";
+          const submissionText =
+            expected > 0
+              ? `${completed.toLocaleString()} / ${expected.toLocaleString()} submitted`
+              : "No assigned students";
+
+          return `
+            <div class="program-progress-item">
+              <div class="program-progress-label-row">
+                <span class="program-progress-code">${escapeHtml(label)}</span>
+                <span class="program-progress-count">${submissionText}</span>
+                <strong class="program-progress-percent">${percentage.toFixed(0)}%</strong>
+              </div>
+              <div class="program-progress-track" role="progressbar"
+                aria-label="${escapeHtml(program.name || label)} evaluation progress"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percentage.toFixed(0)}">
+                <span style="width:${percentage.toFixed(1)}%"></span>
+              </div>
+            </div>`;
+        })
+        .join("");
+    }
+
+    const submitted = document.getElementById("programProgressSubmitted");
+    const pending = document.getElementById("programProgressPending");
+    const overall = document.getElementById("programProgressOverall");
+    if (submitted) {
+      submitted.textContent = (
+        Number(data.completed) || 0
+      ).toLocaleString();
+    }
+    if (pending) {
+      pending.textContent = (Number(data.pending) || 0).toLocaleString();
+    }
+    if (overall) {
+      overall.textContent = `${(
+        Number(data.overallPercentage) || 0
+      ).toFixed(1)}%`;
+    }
+  }
+
+  async function loadProgramEvaluationProgress() {
+    const list = document.getElementById("programEvaluationProgressList");
+    if (!list) return;
+
+    try {
+      const response = await fetch(
+        `get_program_evaluation_progress.php?cb=${Date.now()}`,
+        { cache: "no-store" },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(
+          result.message || "Unable to load program evaluation progress",
+        );
+      }
+      renderProgramEvaluationProgress(result.data || {});
+    } catch (error) {
+      console.error("Failed to load program evaluation progress:", error);
+      list.innerHTML =
+        '<div class="program-progress-empty is-error">Unable to load program progress</div>';
+    }
+  }
+
   function loadDashboardStats(silent = false) {
     if (dashboardStatsLoading) return Promise.resolve();
     dashboardStatsLoading = true;
+    loadProgramEvaluationProgress();
     console.log("Loading dashboard stats...");
     if (!silent && initialDashboardSkeletonPending) {
       showSectionSkeleton("dashboard-section");
@@ -9698,14 +9781,15 @@ document.addEventListener("DOMContentLoaded", () => {
             ${
               !p.is_active
                 ? `
-              <button type="button" class="action-icon-btn send-reports-btn" data-id="${p.id}" title="Generate and send both faculty report PDFs">
+              <button type="button" class="action-icon-btn send-reports-btn" data-id="${p.id}" title="Generate and send both faculty report PDFs" aria-label="Send reports for ${periodName}, ${ay}">
                 <i class="ph ph-envelope-simple"></i>
               </button>
             `
                 : ""
             }
-            <button class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period">
+            <button type="button" class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period" aria-label="Edit ${periodName}, ${ay}">
               <i class="ph ph-note-pencil"></i>
+              <span class="period-action-label">Edit</span>
             </button>
           </div>
         </td>
@@ -9898,14 +9982,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const periodName = `${period.semester} ${period.ay}`;
       if (
-        !window.confirm(
-          `Generate and email the evaluation report and per-subject report to each active instructor for ${periodName}? This may resend reports previously delivered.`,
-        )
+        !(await confirmPeriodAction({
+          opening: true,
+          periodName,
+          duration: "",
+          titleText: "Send evaluation reports?",
+          messageText: `Generate and email the evaluation report and per-subject report to each active instructor for ${periodName}? This may resend reports previously delivered.`,
+          confirmText: "Send Reports",
+          iconClass: "ph-envelope-simple",
+        }))
       ) {
         return;
       }
 
-      setButtonLoading(sendReportsBtn, true, "Sending...");
+      setButtonLoading(
+        sendReportsBtn,
+        true,
+        "",
+        '<i class="ph ph-circle-notch period-send-spinner" aria-hidden="true"></i>',
+      );
       try {
         const res = await fetch(
           "../shared/periods_api.php?action=send_reports",
@@ -9935,7 +10030,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ? result.report_email_errors[0]
             : "";
           showNotification(
-            `Report emails sent (2 PDFs each): ${sent}${failed ? `; ${failed} failed${detail ? `: ${detail}` : ". Check the server error log for details."}` : "."}`,
+            `Reports already sent in email: ${sent}${failed ? `; ${failed} failed${detail ? `: ${detail}` : ". Check the server error log for details."}` : "."}`,
             failed ? "#f59e0b" : "#10b981",
             7000,
           );
@@ -10305,6 +10400,10 @@ document.addEventListener("DOMContentLoaded", () => {
 const doughnutPercentageLabels = {
   id: "doughnutPercentageLabels",
   afterDatasetsDraw(chart) {
+    if (
+      chart.canvas?.id === "ratingDistributionChart" ||
+      chart.canvas?.id === "reportRatingDistributionChart"
+    ) return;
     const dataset = chart.data.datasets[0];
     if (!dataset) return;
 
@@ -10371,6 +10470,25 @@ function initRatingDistributionChart(ratingDistribution = {}) {
     },
   ];
   const hasRatings = ratingData.some((item) => item.value > 0);
+  const ratingTotal = ratingData.reduce((total, item) => total + item.value, 0);
+  const weightedRating = ratingData.reduce(
+    (total, item, index) => total + item.value * (ratingData.length - index),
+    0,
+  );
+  const overallPercentage = ratingTotal
+    ? Math.round((weightedRating / (ratingTotal * ratingData.length)) * 100)
+    : 0;
+  const overallPercentageEl = document.getElementById("ratingOverallPercentage");
+  if (overallPercentageEl) {
+    overallPercentageEl.textContent = `${overallPercentage}%`;
+  }
+
+  legendContainer?.querySelectorAll(".legend-percent").forEach((percent, index) => {
+    const value = ratingData[index]?.value || 0;
+    percent.textContent = ratingTotal
+      ? `${Math.round((value / ratingTotal) * 100)}%`
+      : "0%";
+  });
 
   if (chartWrapper) {
     chartWrapper.style.display = "flex";

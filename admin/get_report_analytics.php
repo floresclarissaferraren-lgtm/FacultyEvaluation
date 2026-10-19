@@ -14,7 +14,11 @@ try {
 
     $academicYear = trim((string) ($_GET["academic_year"] ?? ""));
     $semester = trim((string) ($_GET["semester"] ?? ""));
-    $where = ["ep.end_date IS NOT NULL", "ep.end_date < CURDATE()"];
+    $where = [
+        "ep.id IS NOT NULL",
+        "ep.end_date IS NOT NULL",
+        "(ep.end_date < CURDATE() OR ep.is_active = 0)",
+    ];
     $params = [];
     $types = "";
 
