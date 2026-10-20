@@ -5,8 +5,11 @@ header("Content-Type: application/json");
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/evaluation_schema.php";
 
 try {
+    ensureEvaluationsSchema($conn);
+
     $periodResult = $conn->query(
         "SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1",
     );
@@ -15,6 +18,36 @@ try {
     }
     $periodRow = $periodResult->fetch_assoc() ?: [];
     $activePeriodId = intval($periodRow["active_period_id"] ?? 0);
+    $progressPeriodId = $activePeriodId;
+
+    // When evaluations are closed, keep showing the latest period with saved submissions.
+    if ($progressPeriodId <= 0) {
+        $savedPeriodResult = $conn->query("
+            SELECT ep.id
+            FROM evaluation_periods ep
+            INNER JOIN evaluations e ON e.period_id = ep.id
+            GROUP BY ep.id
+            ORDER BY MAX(e.created_at) DESC, ep.id DESC
+            LIMIT 1
+        ");
+        if ($savedPeriodResult) {
+            $savedPeriodRow = $savedPeriodResult->fetch_assoc() ?: [];
+            $progressPeriodId = intval($savedPeriodRow["id"] ?? 0);
+        }
+    }
+
+    $hasRecords = false;
+    if ($progressPeriodId > 0) {
+        $recordStmt = $conn->prepare(
+            "SELECT 1 FROM evaluations WHERE period_id = ? LIMIT 1",
+        );
+        if ($recordStmt) {
+            $recordStmt->bind_param("i", $progressPeriodId);
+            $recordStmt->execute();
+            $hasRecords = (bool) $recordStmt->get_result()->fetch_row();
+            $recordStmt->close();
+        }
+    }
 
     $stmt = $conn->prepare("
         SELECT
@@ -87,7 +120,7 @@ try {
         throw new Exception("Unable to prepare program evaluation progress query.");
     }
 
-    $stmt->bind_param("i", $activePeriodId);
+    $stmt->bind_param("i", $progressPeriodId);
     $stmt->execute();
     $result = $stmt->get_result();
     $programs = [];
@@ -120,6 +153,8 @@ try {
         "success" => true,
         "data" => [
             "activePeriodId" => $activePeriodId,
+            "progressPeriodId" => $progressPeriodId,
+            "hasRecords" => $hasRecords,
             "programs" => $programs,
             "completed" => $totalCompleted,
             "pending" => $pending,

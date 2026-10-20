@@ -15,6 +15,17 @@ const viewFacultySubjectsModal = document.getElementById(
 );
 const managePeriodsModal = document.getElementById("managePeriodsModal");
 
+// Route any legacy duplicate-student alert through the shared admin notification UI.
+const nativeAdminAlert = window.alert.bind(window);
+window.alert = function (message) {
+  const text = String(message ?? "");
+  if (/student already exists/i.test(text)) {
+    window.showGlobalNotification(text, "warning");
+    return;
+  }
+  nativeAdminAlert(message);
+};
+
 (() => {
   let tooltip;
 
@@ -108,6 +119,29 @@ function setButtonLoading(
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const adminOverviewTime = document.getElementById("adminOverviewTime");
+  if (adminOverviewTime) {
+    const updateAdminOverviewTime = () => {
+      const now = new Date();
+      adminOverviewTime.textContent = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Manila",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }).format(now);
+      adminOverviewTime.dateTime = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Manila",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(now);
+    };
+    updateAdminOverviewTime();
+    window.setInterval(updateAdminOverviewTime, 1000);
+  }
+
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
   const resetAdminScrollPosition = () => {
@@ -724,7 +758,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "programs-section": "Program Management",
       "faculties-section": "Faculty Management",
       "students-section": "Student Management",
-      "criteria-section": "Evaluation Criteria List",
+      "criteria-section": "Criteria Management",
       "academic-year-section": "Academic Year Management",
       "report-section": "Evaluation Report",
       "subjects-section": "Subjects Management",
@@ -993,6 +1027,15 @@ document.addEventListener("DOMContentLoaded", () => {
               updateProgramCount();
             }
           }
+
+          // Refresh class data before closing the modal resets deleteType.
+          // This keeps the sections badge in sync immediately after deletion.
+          if (deleteType === "class") {
+            loadClasses();
+          }
+          if (deleteType === "student") {
+            loadPrograms();
+          }
           closeDeleteModal();
           openDeleteSuccess();
 
@@ -1002,10 +1045,6 @@ document.addEventListener("DOMContentLoaded", () => {
             loadSubjects?.();
           }
 
-          // Refresh classes list after successful deletion
-          if (deleteType === "class") {
-            loadClasses();
-          }
           if (deleteType === "faculty" || deleteType === "student") {
             refreshSectionStats();
           }
@@ -1446,17 +1485,22 @@ document.addEventListener("DOMContentLoaded", () => {
           card.dataset.programCode = p.program_code;
           card.dataset.programName = p.program_name;
           card.dataset.color = index % 8;
+          const programCode = escapeHtml(p.program_code || "PROGRAM");
+          const programName = escapeHtml(p.program_name || "Unnamed program");
           card.innerHTML = `
           <div class="program-card-header">
-            <div class="program-icon">${p.program_code}</div>
+            <div class="program-icon">${programCode}</div>
+          </div>
+          <div class="program-card-body">
+            <span class="program-card-category">Academic Program</span>
             <div class="program-content">
-              <div class="program-name">${p.program_name}</div>
+              <div class="program-name">${programName}</div>
             </div>
           </div>
           <div class="program-card-actions">
             <div class="left-buttons">
-              <button class="btn-manage">
-                <i class="ph ph-sliders"></i> Manage
+              <button class="btn-manage" type="button">
+                <i class="ph ph-sliders" aria-hidden="true"></i> Manage program <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
               </button>
             </div>
             <div class="right-buttons">
@@ -1704,8 +1748,9 @@ document.addEventListener("DOMContentLoaded", () => {
     acceptButton.textContent =
       confirmText || (opening ? "Open Period" : "Close Period");
     acceptButton.classList.toggle("is-close", !opening && !confirmText);
+    modal.classList.toggle("is-close-action", !opening && !confirmText);
     const icon = modal.querySelector(".period-confirmation-icon i");
-    if (icon) icon.className = `ph ${iconClass}`;
+    if (icon) icon.className = `ph-fill ${iconClass}`;
     modal.hidden = false;
 
     return new Promise((resolve) => {
@@ -2267,6 +2312,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailSubtitle = document.getElementById("manageContentSubtitle");
     const detailBack = document.getElementById("manageDetailBack");
     const manageAddButton = document.querySelector(".add-manage-btn");
+    const setDetailHeading = (text) => {
+      if (!detailTitle) return;
+      const countBadge =
+        detailTitle.querySelector("#manageSubjectsResultCount") ||
+        Object.assign(document.createElement("span"), {
+          id: "manageSubjectsResultCount",
+          className: "manage-subject-count-badge",
+        });
+      if (!countBadge.querySelector(".manage-subject-count-text")) {
+        countBadge.replaceChildren(
+          Object.assign(document.createElement("span"), {
+            className: "manage-subject-count-dot",
+          }),
+          Object.assign(document.createElement("span"), {
+            className: "manage-subject-count-text",
+          }),
+        );
+      }
+      detailTitle.replaceChildren(document.createTextNode(text), countBadge);
+    };
 
     document
       .getElementById("manage-section")
@@ -2295,13 +2360,21 @@ document.addEventListener("DOMContentLoaded", () => {
         manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add New Subject';
       }
       if (detailTitle) {
-        detailTitle.textContent = "All Subjects";
+        const formattedYear = selectedManageYear
+          ? selectedManageYear.toLowerCase()
+          : "ALL YEARS";
+        setDetailHeading(
+          `Subject Offered in ${currentProgramCode || "PROGRAM"} - ${formattedYear}`,
+        );
       }
       if (detailEyebrow) {
         detailEyebrow.textContent =
           `${currentProgramCode || "PROGRAM"}${selectedManageYear ? ` · ${selectedManageYear}` : ""}`.toUpperCase();
       }
-      if (detailSubtitle) detailSubtitle.textContent = "";
+      if (detailSubtitle) {
+        detailSubtitle.textContent =
+          "Manage and organize subjects for each program and year level, ensuring all subject information is accurate and up to date.";
+      }
     } else {
       s.style.display = "none";
       c.style.display = "block";
@@ -2313,13 +2386,16 @@ document.addEventListener("DOMContentLoaded", () => {
         manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add New Class';
       }
       if (detailTitle) {
-        detailTitle.textContent = "Class Sections";
+        setDetailHeading("Class Sections");
       }
       if (detailEyebrow) {
         detailEyebrow.textContent =
           `${currentProgramCode || "PROGRAM"} · ${selectedManageYear || "ALL YEARS"}`.toUpperCase();
       }
-      if (detailSubtitle) detailSubtitle.textContent = "";
+      if (detailSubtitle) {
+        detailSubtitle.textContent =
+          "Manage class sections and assign the appropriate subjects and instructors to each class to keep teaching assignments organized and accurate.";
+      }
     }
     const headingIcon = document.querySelector(
       "#manage-section .manage-class-heading-icon i",
@@ -2635,7 +2711,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const resultCount = document.getElementById("manageSubjectsResultCount");
     if (resultCount) {
       const count = subjectsFilteredData.length;
-      resultCount.textContent = `${count} ${count === 1 ? "subject" : "subjects"} found`;
+      const countText = resultCount.querySelector(".manage-subject-count-text");
+      const label = `${count} ${count === 1 ? "subject" : "subjects"}`;
+      if (countText) countText.textContent = label;
+      else resultCount.textContent = label;
     }
     const academicYear = document.getElementById("manageSubjectsAcademicYear");
     if (academicYear) {
@@ -3263,6 +3342,24 @@ document.addEventListener("DOMContentLoaded", () => {
             )
           : classesAllData;
 
+        const classCountBadge = document.getElementById(
+          "manageSubjectsResultCount",
+        );
+        const classCountText = classCountBadge?.querySelector(
+          ".manage-subject-count-text",
+        );
+        const visibleClassCount = matchingClasses.length;
+        if (classCountText) {
+          classCountText.textContent = `${visibleClassCount} ${visibleClassCount === 1 ? "section" : "sections"}`;
+        }
+        const classesSubtitle = document.getElementById(
+          "manageContentSubtitle",
+        );
+        if (classesSubtitle) {
+          classesSubtitle.textContent =
+            "Manage class sections and assign the appropriate subjects and instructors to each class to keep teaching assignments organized and accurate.";
+        }
+
         if (matchingClasses.length === 0) {
           const emptyMessage = requestedYear
             ? `No classes found for ${escapeHtml(requestedYear)}`
@@ -3299,25 +3396,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="class-card-top">
                   <span class="class-card-block">${block}</span>
                   <strong class="class-card-title">${programYearLabel}</strong>
-                  <span class="class-card-enrolled">
-                    <strong>${enrolledStudentCount}</strong>
-                    <small>Enrolled</small>
-                  </span>
                 </div>
               </td>
               <td class="class-card-year">${yearLevel}</td>
               <td class="class-card-term">
-                <span class="class-card-info-label"><i class="ph ph-calendar-blank"></i> Academic Term</span>
-                ${academicTerm}
+                <span class="class-card-icon"><i class="ph ph-calendar-blank" aria-hidden="true"></i></span>
+                <span class="class-card-info">
+                  <span class="class-card-info-label">Academic Term</span>
+                  ${academicTerm}
+                </span>
               </td>
               <td class="class-card-assigned">
-                <span class="class-card-info-label"><i class="ph ph-book-open"></i> Assigned</span>
-                <strong class="class-card-subject-count">Loading...</strong>
-                <small class="class-card-load-state">Subjects assigned</small>
+                <span class="class-card-icon"><i class="ph ph-book-open" aria-hidden="true"></i></span>
+                <span class="class-card-info">
+                  <span class="class-card-info-label">Assigned</span>
+                  <strong class="class-card-subject-count">Loading...</strong>
+                  <small class="class-card-load-state">Subjects assigned</small>
+                </span>
+              </td>
+              <td class="class-card-enrolled">
+                <span class="class-card-icon"><i class="ph ph-users-three" aria-hidden="true"></i></span>
+                <span class="class-card-info">
+                  <span class="class-card-info-label">Enrolled</span>
+                  <strong>${enrolledStudentCount}</strong>
+                </span>
               </td>
               <td class="action-cell class-card-actions">
             <div class="action-buttons">
-              <button class="action-icon-btn view-subjects-btn" title="View Subjects" aria-label="View"><i class="ph ph-eye"></i><span>View</span></button>
+              <button class="action-icon-btn view-subjects-btn" title="View this class" aria-label="View this class"><i class="ph ph-eye"></i><span>View this class</span></button>
               <button class="action-icon-btn edit-btn" title="Edit Class" aria-label="Edit"><i class="ph ph-note-pencil"></i><span>Edit</span></button>
               <button class="action-icon-btn delete-btn" title="Delete Class" aria-label="Delete"><i class="ph ph-trash"></i><span>Delete</span></button>
             </div>
@@ -4000,6 +4106,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const archivedFacultySection = document.querySelector(
     "#faculties-section .archived-faculty-section",
   );
+  const facultyListBox = document.querySelector(
+    "#faculties-section .faculty-list-box",
+  );
+  const facultyPageHeadingBox = document.querySelector(
+    "#faculties-section .faculty-page-heading-box",
+  );
 
   function normalizeStatusValue(status) {
     return String(status || "active")
@@ -4214,6 +4326,14 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("resize", () => closeStatusMenus());
 
   function showFacultyListView() {
+    if (facultyPageHeadingBox) {
+      facultyPageHeadingBox.hidden = false;
+      facultyPageHeadingBox.style.display = "";
+    }
+    if (facultyListBox) {
+      facultyListBox.hidden = false;
+      facultyListBox.style.display = "";
+    }
     if (facultyToolbar) {
       facultyToolbar.hidden = false;
       facultyToolbar.style.display = "";
@@ -4239,6 +4359,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showArchivedFacultyView() {
+    if (facultyPageHeadingBox) {
+      facultyPageHeadingBox.hidden = true;
+      facultyPageHeadingBox.style.display = "none";
+    }
+    if (facultyListBox) {
+      facultyListBox.hidden = true;
+      facultyListBox.style.display = "none";
+    }
     if (facultyToolbar) {
       facultyToolbar.hidden = true;
       facultyToolbar.style.display = "none";
@@ -4378,19 +4506,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const avatarHtml = f.photo
             ? `<img src="${f.photo}" class="table-avatar" alt="${f.firstname} ${f.lastname}">`
             : `<div class="table-avatar placeholder faculty-placeholder-avatar" aria-label="No profile image for ${f.firstname} ${f.lastname}" title="No profile image">${initials}</div>`;
+          const subjectCount = Array.isArray(f.subjects) ? f.subjects.length : 0;
+          const subjectCountLabel = `${subjectCount} ${subjectCount === 1 ? "subject" : "subjects"}`;
 
           if (normalizeStatusValue(f.status) === "archived") {
             row.innerHTML = `
-            <td>${avatarHtml}</td>
             <td><span class="person-id-badge">${f.faculty_id}</span></td>
             <td>
-              <div>
+              <div class="faculty-name-cell">
+                ${avatarHtml}
+                <div>
                 <div class="faculty-name-text">${f.firstname} ${f.lastname} ${f.suffix || ""}</div>
                 <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
+                </div>
               </div>
             </td>
             <td>
-              <span class="subject-count-badge">${f.subjects ? f.subjects.length : 0}</span>
+              ${subjectCountLabel}
             </td>
             <td>${statusPillHtml(f.status)}</td>`;
 
@@ -4399,16 +4531,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           row.innerHTML = `
-          <td>${avatarHtml}</td>
           <td><span class="person-id-badge">${f.faculty_id}</span></td>
+          <td><div class="faculty-name-cell">${avatarHtml}<div><div class="faculty-name-text">${f.firstname} ${f.lastname} ${f.suffix || ""}</div><small>${f.email}</small></div></div></td>
           <td>
-            <div>
-              <div class="faculty-name-text">${f.firstname} ${f.lastname} ${f.suffix || ""}</div>
-              <small style="color: var(--neutral-500); font-weight: 500;">${f.email}</small>
-            </div>
-          </td>
-          <td>
-            <span class="subject-count-badge">${f.subjects ? f.subjects.length : 0}</span>
+            ${subjectCountLabel}
           </td>
           <td>${statusPillHtml(f.status)}</td>
           <td class="action-cell">
@@ -4809,7 +4935,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const visibleCount = [...facultyTbody.rows].filter(
       (row) => row.id.startsWith("faculty-") && row.style.display !== "none",
     ).length;
-    countEl.textContent = `${visibleCount} faculty member${visibleCount === 1 ? "" : "s"}`;
+    countEl.textContent = String(visibleCount);
   }
 
   document.getElementById("faculty-search").oninput = filterFaculty;
@@ -5282,7 +5408,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "title",
           "Click here to view all report faculty rankings.",
         );
-      const chartSource = reportRatings.slice(0, 5);
+      const chartSource = reportRatings.slice(0, 4);
       rankings.innerHTML =
         chartSource
           .map((item, index) => {
@@ -5501,10 +5627,10 @@ document.addEventListener("DOMContentLoaded", () => {
           .map(
             (subject) => `
           <div class="faculty-subject-row">
-            <span class="faculty-subject-code">${escapeHtml(subject.subject_code || "")}</span>
+            <span class="faculty-subject-code">${escapeHtml(subject.subject_code || "SUB")}</span>
             <div class="faculty-subject-info">
-              <strong>${escapeHtml(subject.subject_desc || "")}</strong>
-              <span>${escapeHtml(formatSubjectYearLevel(subject.year_level))}</span>
+              <strong>${escapeHtml(subject.subject_desc || subject.subject_code || "Assigned Subject")}</strong>
+              <span class="faculty-subject-year">${escapeHtml(formatSubjectYearLevel(subject.year_level))}</span>
             </div>
           </div>
         `,
@@ -6011,9 +6137,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list) return;
 
     const programs = Array.isArray(data.programs) ? data.programs : [];
-    if (!Number(data.activePeriodId)) {
+    if (!Number(data.progressPeriodId ?? data.activePeriodId)) {
       list.innerHTML =
         '<div class="program-progress-empty">No active evaluation period</div>';
+    } else if (!data.hasRecords) {
+      list.innerHTML =
+        '<div class="program-progress-empty">No evaluation records yet</div>';
     } else if (programs.length === 0) {
       list.innerHTML =
         '<div class="program-progress-empty">No programs available</div>';
@@ -6381,7 +6510,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const wrapper = progressList.closest(".top-performance-chart-wrapper");
 
     const sorted = window.topPerformanceState.sortedRatings || [];
-    const chartSource = sorted.slice(0, 5);
+    const chartSource = sorted.slice(0, 4);
 
     if (window.topPerformanceChartInstance) {
       window.topPerformanceChartInstance.destroy();
@@ -6396,16 +6525,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentProgressList = document.getElementById("topPerformanceChart");
     if (!currentProgressList) return;
 
-    currentProgressList.title =
-      "Open the Evaluation Report for all faculty rankings.";
+    currentProgressList.title = "View the full faculty rankings.";
     currentProgressList.onclick = (event) => {
       event.preventDefault();
-      showSection("report-section");
+      showAllFacultyPerformance();
     };
     currentProgressList.onkeydown = function (e) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        showSection("report-section");
+        showAllFacultyPerformance();
       }
     };
 
@@ -6554,6 +6682,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const archivedStudentSection = document.querySelector(
     "#students-section .archived-student-section",
   );
+  const studentPageHeadingBox = document.querySelector(
+    "#students-section .student-page-heading-box",
+  );
+  const studentTableBox = document.querySelector(
+    "#students-section .student-table-box",
+  );
 
   function updateStudentCountSummary() {
     if (!studentTbody) return;
@@ -6578,6 +6712,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showStudentListView() {
+    if (studentPageHeadingBox) {
+      studentPageHeadingBox.hidden = false;
+      studentPageHeadingBox.style.display = "";
+    }
+    if (studentTableBox) {
+      studentTableBox.hidden = false;
+      studentTableBox.style.display = "";
+    }
     if (studentToolbarBox) {
       studentToolbarBox.hidden = false;
       studentToolbarBox.style.display = "";
@@ -6603,6 +6745,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showArchivedStudentView() {
+    if (studentPageHeadingBox) {
+      studentPageHeadingBox.hidden = true;
+      studentPageHeadingBox.style.display = "none";
+    }
+    if (studentTableBox) {
+      studentTableBox.hidden = true;
+      studentTableBox.style.display = "none";
+    }
     if (studentToolbarBox) {
       studentToolbarBox.hidden = true;
       studentToolbarBox.style.display = "none";
@@ -7443,6 +7593,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const d = await res.json();
                     if (d.success) {
                       loadStudents();
+                      loadPrograms();
                       closeModal(addStudentModal);
                       addProgramToDropdown(val("program"));
                       showNotification(
@@ -9071,9 +9222,9 @@ document.addEventListener("DOMContentLoaded", () => {
             subject.year_level || subject.class_year_level || "";
           html += `
           <div class='student-subject-row'>
-            <span class='student-subject-code'>${subject.subject_code}</span>
+            <span class='student-subject-code'>${subject.subject_code || subject.subject || "SUB"}</span>
             <div class='student-subject-info'>
-              <strong>${subject.subject_code} - ${subject.subject_desc}</strong>
+              <strong>${subject.subject_desc || subject.subject_code || "Assigned Subject"}</strong>
               <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || "Unassigned"}</span>
             </div>
             ${isIrregularStudent ? `<span class='student-subject-year'>${subjectYearLevel}</span>` : ""}
@@ -9120,9 +9271,9 @@ document.addEventListener("DOMContentLoaded", () => {
                   subject.year_level || subject.class_year_level || "";
                 html += `
                 <div class='student-subject-row'>
-                  <span class='student-subject-code'>${subject.subject_code}</span>
+                  <span class='student-subject-code'>${subject.subject_code || subject.subject || "SUB"}</span>
                   <div class='student-subject-info'>
-                    <strong>${subject.subject_code} - ${subject.subject_desc}</strong>
+                    <strong>${subject.subject_desc || subject.subject_code || "Assigned Subject"}</strong>
                     <span class='student-subject-instructor'>Instructor: ${subject.instructor_name || "Unassigned"}</span>
                   </div>
                   ${currentStudentIsIrregular ? `<span class='student-subject-year'>${subjectYearLevel}</span>` : ""}
@@ -9396,6 +9547,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const d = await res.json();
             if (d.success) {
               loadStudents();
+              loadPrograms();
               setTimeout(() => {
                 loadDashboardStats();
                 console.log("Dashboard stats updated after student add");
@@ -9406,7 +9558,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if ((d.message || "").startsWith("Student ID must be GC-")) {
               showGlobalNotification(d.message, "warning");
             } else {
-              alert(d.message || "Error adding student.");
+              const message = d.message || "Error adding student.";
+              const messageType = /already exists/i.test(message)
+                ? "warning"
+                : "error";
+              showGlobalNotification(message, messageType);
             }
           } catch (err) {
             console.error("Error saving student:", err);

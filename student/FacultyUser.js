@@ -848,7 +848,10 @@ async function loadStudentFacultyCards() {
         const isIrregularStudent = yearLevel.toLowerCase() === "irregular";
         const subjectYearLevel =
           subject.year_level || subject.class_year_level || "";
-        const programCode = subject.program_code || faculty.program_code || "";
+        const leftLabel =
+          isIrregularStudent && subjectYearLevel
+            ? subjectYearLevel
+            : subjectCode;
         const classLabel = [
           subject.class_year_level || faculty.class_year_level || "",
           subject.class_section || faculty.class_section || "",
@@ -864,11 +867,6 @@ async function loadStudentFacultyCards() {
 
         const fullName = nameParts.join(" ");
         const isEvaluated = Number(faculty.evaluation_id || 0) > 0;
-        const leftLabel =
-          isIrregularStudent && subjectYearLevel
-            ? subjectYearLevel
-            : subjectCode;
-
         const card = document.createElement("div");
         card.className = "faculty-evaluation-row";
         card.onclick = () => {
@@ -891,8 +889,8 @@ async function loadStudentFacultyCards() {
         card.innerHTML = `
           <div class="subject-code-badge">${leftLabel || "Subject"}</div>
           <div class="faculty-evaluation-details">
-            <h3 class="faculty-name">${subjectLabels || "Assigned Subject"}</h3>
-            <p class="faculty-evaluation-meta">${fullName || "Faculty Member"}${programCode ? ` <span>·</span> ${programCode}` : ""}</p>
+            <h3 class="faculty-name">${subjectDesc || subjectCode || "Assigned Subject"}</h3>
+            <p class="faculty-evaluation-meta">${fullName || "Faculty Member"}</p>
           </div>
             <button class="evaluate-faculty-btn ${isEvaluated ? "evaluated" : ""}" ${evaluationOpen && !isEvaluated ? "" : "disabled"}>
               <i class="ph ${isEvaluated ? "ph-check-circle" : "ph-note-pencil"}"></i> ${isEvaluated ? "Evaluated" : "Evaluate Now"}
@@ -1387,7 +1385,9 @@ function showFinalReviewModal() {
   modal.innerHTML = `
     <div class="final-review-card" role="dialog" aria-modal="true" aria-labelledby="frTitle">
       <div class="fr-icon-wrap">
-        <i class="ph ph-paper-plane-tilt fr-icon"></i>
+      <svg class="fr-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M21.7 2.3a.8.8 0 0 0-.85-.18L2.4 9.9a1.15 1.15 0 0 0 .12 2.15l7.26 2.18 2.18 7.26a1.15 1.15 0 0 0 2.15.12l7.78-18.45a.8.8 0 0 0-.19-.86ZM13.1 18.76l-1.56-5.2 4.64-4.64a.8.8 0 1 0-1.13-1.13l-4.64 4.64-5.2-1.56L19.6 4.4Z"/>
+      </svg>
       </div>
       <h2 class="fr-title" id="frTitle">Final Review</h2>
       <p class="fr-sub">Submit this evaluation?</p>

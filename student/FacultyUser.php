@@ -79,7 +79,12 @@ $conn->close();
   </div>
   <div class="user-menu">
     <div class="student-box" onclick="toggleDropdown()" role="button" tabindex="0" aria-label="Student account menu" aria-haspopup="true" aria-expanded="false">
-      <span class="student-account-icon" aria-hidden="true">SP</span>
+      <span class="student-account-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle cx="12" cy="7" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0v1H4z" />
+        </svg>
+      </span>
       <i class="ph ph-caret-down student-caret" aria-hidden="true"></i>
     </div>
     <div class="dropdown-menu" id="dropdownMenu">
@@ -147,8 +152,9 @@ $conn->close();
       
       <form id="passwordChangeForm" class="modern-login-form">
         <div class="modern-input-group has-toggle">
+          <label class="password-field-label" for="oldPass">Old Password</label>
           <div class="input-wrap">
-            <input type="password" id="oldPass" placeholder="Old Password" required>
+            <input type="password" id="oldPass" required>
             <div class="password-toggle" onclick="togglePassword('oldPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>
@@ -157,8 +163,9 @@ $conn->close();
         </div>
         
         <div class="modern-input-group has-toggle">
+          <label class="password-field-label" for="newPass">New Password</label>
           <div class="input-wrap">
-            <input type="password" id="newPass" placeholder="New Password" required>
+            <input type="password" id="newPass" required>
             <div class="password-toggle" onclick="togglePassword('newPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>
@@ -167,8 +174,9 @@ $conn->close();
         </div>
         
         <div class="modern-input-group has-toggle">
+          <label class="password-field-label" for="confirmPass">Confirm Password</label>
           <div class="input-wrap">
-            <input type="password" id="confirmPass" placeholder="Confirm Password" required>
+            <input type="password" id="confirmPass" required>
             <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>
@@ -243,6 +251,7 @@ $conn->close();
           Evaluate Now
         </button>
       </div>
+      <img class="welcome-main-image" src="../assets/images/mainimg.png" alt="" aria-hidden="true">
     </div>
   </div>
 
@@ -251,8 +260,8 @@ $conn->close();
     <div class="eval-box">
       <div class="eval-header">
         <div class="title-subtitle">
-          <h1>Faculty Evaluation</h1>
-          <p class="eval-description">Please provide your honest feedback about your faculty's teaching performance. Your responses will help improve the quality of education.</p>
+          <h1>Evaluation Guide</h1>
+          <p class="eval-description">Select a subject to evaluate its assigned instructor. Rate each statement honestly based on your learning experience. Complete all items to submit your evaluation.</p>
         </div>
       </div>
       <div class="eval-actions">
@@ -277,9 +286,9 @@ $conn->close();
           <strong id="summaryPercent">0%</strong>
           <span>Complete</span>
         </div>
-        <div class="summary-stat"><span><i class="ph ph-circle"></i> Total Subjects</span><strong id="summaryTotal">0</strong></div>
-        <div class="summary-stat"><span><i class="ph ph-check-circle"></i> Evaluated</span><strong id="summaryEvaluated">0</strong></div>
-        <div class="summary-stat"><span><i class="ph ph-clock"></i> Pending</span><strong id="summaryPending">0</strong></div>
+        <div class="summary-stat summary-total"><span><i class="ph ph-circle"></i> Total Subjects</span><strong id="summaryTotal">0</strong></div>
+        <div class="summary-stat summary-evaluated"><span><i class="ph ph-check-circle"></i> Evaluated</span><strong id="summaryEvaluated">0</strong></div>
+        <div class="summary-stat summary-pending"><span><i class="ph ph-clock"></i> Pending</span><strong id="summaryPending">0</strong></div>
       </aside>
     </div>
   </div>

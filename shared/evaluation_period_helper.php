@@ -651,9 +651,9 @@ function helperGenerateEvaluationSummaryPDF(array $data, string $outputPath): bo
 
         $pdf->SetDrawColor($border[0], $border[1], $border[2]);
         $pdf->SetFont('Arial', 'B', 8);
-        $categoryWidths = [53, 22, 22, 31, 27, 35];
-        foreach (['Category', 'Weight', 'Score', 'Average', 'Responses', 'Status'] as $index => $heading) {
-            $pdf->Cell($categoryWidths[$index], 7, $heading, 1, $index === 5 ? 1 : 0, 'C', true);
+        $categoryWidths = [64, 24, 34, 28, 40];
+        foreach (['Category', 'Score', 'Average', 'Responses', 'Status'] as $index => $heading) {
+            $pdf->Cell($categoryWidths[$index], 7, $heading, 1, $index === 4 ? 1 : 0, 'C', true);
         }
 
         $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
@@ -674,14 +674,13 @@ function helperGenerateEvaluationSummaryPDF(array $data, string $outputPath): bo
                 $pdf->SetFillColor(...($index % 2 === 0 ? [255, 255, 255] : [247, 250, 255]));
                 $values = [
                     $toPdfText($category['category_name'] ?? 'N/A'),
-                    number_format((float)($category['normalised_weight'] ?? 0), 1) . '%',
                     number_format(max(0, min(100, $categoryScore * 20)), 0) . '%',
                     $categoryScore > 0 ? number_format($categoryScore, 2) . ' / 5' : 'N/A',
                     (string)max(0, (int)($category['responses'] ?? 0)),
                     $categoryStatus,
                 ];
                 foreach ($values as $column => $value) {
-                    $pdf->Cell($categoryWidths[$column], 7, $toPdfText((string)$value), 1, $column === 5 ? 1 : 0, $column === 0 ? 'L' : 'C', true);
+                    $pdf->Cell($categoryWidths[$column], 7, $toPdfText((string)$value), 1, $column === 4 ? 1 : 0, $column === 0 ? 'L' : 'C', true);
                 }
             }
         }
@@ -869,26 +868,23 @@ function helperGenerateReportPDF(mysqli $conn, array $data, string $outputPath):
                     $pdf->SetFont('Arial', 'B', 8);
                     $pdf->SetFillColor($NAVY[0], $NAVY[1], $NAVY[2]);
                     $pdf->SetTextColor(255, 255, 255);
-                    $pdf->Cell(57, 7, 'Category', 1, 0, 'L', true);
-                    $pdf->Cell(23, 7, 'Weight', 1, 0, 'C', true);
+                    $pdf->Cell(80, 7, 'Category', 1, 0, 'L', true);
                     $pdf->Cell(24, 7, 'Score', 1, 0, 'C', true);
-                    $pdf->Cell(28, 7, 'Average', 1, 0, 'C', true);
+                    $pdf->Cell(30, 7, 'Average', 1, 0, 'C', true);
                     $pdf->Cell(27, 7, 'Responses', 1, 0, 'C', true);
-                    $pdf->Cell(30, 7, 'Status', 1, 1, 'C', true);
+                    $pdf->Cell(28, 7, 'Status', 1, 1, 'C', true);
                     $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
                     $pdf->SetFont('Arial', '', 8);
                     foreach (array_values($subj['category_totals']) as $rowIndex => $cat) {
                         $subcatavg = max(0, (float)($cat['avg_rating'] ?? 0));
                         $catResponses = max(0, (int)($cat['responses'] ?? 0));
-                        $catWeight = max(0, (float)($cat['normalised_weight'] ?? 0));
                         $catPercent = $catResponses > 0 ? max(0, min(100, ($subcatavg / 5) * 100)) : 0;
                         $pdf->SetFillColor(...($rowIndex % 2 === 0 ? [255, 255, 255] : [247, 250, 255]));
-                        $pdf->Cell(57, 7, $ct($cat['category_name'] ?? ''), 1, 0, 'L', true);
-                        $pdf->Cell(23, 7, $ct(number_format($catWeight, 1) . '%'), 1, 0, 'C', true);
+                        $pdf->Cell(80, 7, $ct($cat['category_name'] ?? ''), 1, 0, 'L', true);
                         $pdf->Cell(24, 7, $ct(number_format($catPercent, 0) . '%'), 1, 0, 'C', true);
-                        $pdf->Cell(28, 7, $catResponses > 0 ? $ct(number_format($subcatavg, 2) . ' / 5') : 'N/A', 1, 0, 'C', true);
+                        $pdf->Cell(30, 7, $catResponses > 0 ? $ct(number_format($subcatavg, 2) . ' / 5') : 'N/A', 1, 0, 'C', true);
                         $pdf->Cell(27, 7, $ct((string)$catResponses), 1, 0, 'C', true);
-                        $pdf->Cell(30, 7, $ct($catResponses > 0 ? $ratingLabel($subcatavg) : 'N/A'), 1, 1, 'C', true);
+                        $pdf->Cell(28, 7, $ct($catResponses > 0 ? $ratingLabel($subcatavg) : 'N/A'), 1, 1, 'C', true);
                     }
                 } else {
                     $pdf->SetFont('Arial', '', 8);

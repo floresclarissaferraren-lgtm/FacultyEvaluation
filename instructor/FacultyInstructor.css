@@ -162,6 +162,13 @@ h6,
   letter-spacing: 0.2px;
 }
 
+.instructor-account-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
 .instructor-box .instructor-account-icon {
   font:
     700 13px/1 "Inter",
@@ -180,14 +187,14 @@ h6,
   top: calc(100% + 10px);
   right: 0;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   display: none;
   flex-direction: column;
-  min-width: 280px;
+  min-width: 300px;
   padding: 0;
   animation: fadeIn 0.2s ease;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   z-index: 1000;
 }
 
@@ -199,22 +206,22 @@ h6,
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 12px 12px 0 0;
+  padding: 18px 16px;
+  background: #eff6ff;
+  border-radius: 10px 10px 0 0;
 }
 
 .dropdown-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--navy-blue);
+  background: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(44, 62, 117, 0.2);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
 }
 
 .dropdown-avatar-initials {
@@ -237,7 +244,7 @@ h6,
   font:
     600 15px/1.2 "Inter",
     sans-serif;
-  color: #1f2937;
+  color: #1e3a8a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -247,7 +254,7 @@ h6,
   font:
     400 12px/1.2 "Inter",
     sans-serif;
-  color: #6b7280;
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -257,8 +264,8 @@ h6,
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  color: #1f2937;
+  padding: 11px 16px;
+  color: #475569;
   font:
     500 14px/1.4 "Inter",
     sans-serif;
@@ -267,29 +274,29 @@ h6,
 }
 
 .dropdown-menu a i {
-  color: #6b7280;
+  color: #64748b;
   font-size: 18px;
   transition: 0.2s;
 }
 
 .dropdown-menu a:hover {
-  background: #dbeafe;
-  color: var(--dark-blue);
+  background: #eff6ff;
+  color: #2563eb;
 }
 
 .dropdown-menu a:hover i {
-  color: var(--dark-blue);
+  color: #2563eb;
 }
 
 .dropdown-divider {
   margin: 0;
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
 }
 
 .dropdown-menu .logout-link {
   color: #dc2626;
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 10px 10px;
 }
 
 .dropdown-menu .logout-link i {
@@ -504,8 +511,8 @@ h6,
 /* Action Buttons ==================================================================================== */
 .action-buttons {
   display: flex;
-  align-self: flex-end;
-  justify-content: flex-end;
+  align-self: flex-start;
+  justify-content: flex-start;
   gap: 8px;
   margin-top: 4px;
 }
@@ -1822,6 +1829,24 @@ body {
   max-width: 100%;
 }
 
+.evaluation-overview {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.06);
+}
+
+.evaluation-overview-title {
+  margin: 0 0 12px;
+  color: #1e3a8a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .stat-card,
 .tabbed-section {
   border: 1px solid #e2e8f0;
@@ -1965,6 +1990,9 @@ body {
   .content-container {
     padding: 88px 16px 24px;
   }
+  .evaluation-overview {
+    padding: 14px;
+  }
   .welcome-content {
     gap: 24px;
     padding: 30px 24px;
@@ -1994,7 +2022,7 @@ body {
   }
   .action-buttons {
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
   }
   .action-btn {
     width: auto;
@@ -2113,8 +2141,9 @@ body {
   min-width: 0;
 }
 
-.college-info {
-  transform: translateY(4px);
+.college-info,
+.psm-header-left > div {
+  transform: translateY(5px);
 }
 
 .college-logo,
@@ -2129,7 +2158,10 @@ body {
 .psm-header h2 {
   margin: 0;
   color: #12336b;
+  font-family: var(--font-body);
   font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .report-subtitle,
@@ -2153,6 +2185,13 @@ body {
   color: #1e3a8a;
   cursor: pointer;
   font: 600 0.84rem var(--font-body);
+}
+
+.report-header-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
 }
 
 .report-body,
@@ -2207,6 +2246,10 @@ body {
   background: #fafbfd;
 }
 
+.report-summary-grid .report-card {
+  padding: 9px;
+}
+
 .report-card-label,
 .psm-card-label {
   display: block;
@@ -2217,6 +2260,10 @@ body {
   text-transform: uppercase;
 }
 
+.report-summary-grid .report-card-label {
+  font-size: 0.62rem;
+}
+
 .report-card-value,
 .psm-card-value {
   display: block;
@@ -2225,10 +2272,20 @@ body {
   font-size: 1.1rem;
 }
 
+.report-summary-grid .report-card-value {
+  margin: 5px 0 3px;
+  font-size: 1rem;
+}
+
 .report-card-note,
 .psm-card-note {
   color: #64748b;
   font-size: 0.76rem;
+}
+
+.report-summary-grid .report-card-note {
+  font-size: 0.68rem;
+  line-height: 1.35;
 }
 
 .report-card-percent,
@@ -2237,6 +2294,10 @@ body {
   color: #0b90e0;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+.report-summary-grid .report-card-percent {
+  font-size: 0.74rem;
 }
 
 .report-card-progress {
@@ -2375,9 +2436,15 @@ body {
 .report-footer,
 .psm-header-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
+}
+
+.psm-header-actions {
+  flex: 0 0 auto;
+  margin-top: 0;
 }
 
 .download-pdf-btn,
@@ -2393,6 +2460,31 @@ body {
   color: #fff;
   cursor: pointer;
   font: 600 0.92rem var(--font-body);
+}
+
+.report-header-actions .download-pdf-btn,
+.psm-header-actions .psm-download-btn {
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-header-actions .download-pdf-btn:hover,
+.psm-header-actions .psm-download-btn:hover {
+  background: #0668a8;
+}
+
+.report-header-actions .download-pdf-btn:active,
+.psm-header-actions .psm-download-btn:active {
+  background: #064e82;
+}
+
+.report-header-actions .download-pdf-btn:focus-visible,
+.report-header-actions .close-report-btn:focus-visible,
+.psm-header-actions .psm-download-btn:focus-visible,
+.psm-header-actions .psm-close-btn:focus-visible {
+  outline: 2px solid #0b90e0;
+  outline-offset: 2px;
 }
 
 .report-loading,
@@ -2875,22 +2967,267 @@ body {
 }
 
 #logoutModal .no-btn:hover {
-  background: #f1f5f9 !important;
+  background: #fee2e2 !important;
   background-image: none !important;
-  border-color: #cbd5e1 !important;
-  color: #334155 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
 }
 
 #logoutModal .no-btn:focus,
 #logoutModal .no-btn:focus-visible,
 #logoutModal .no-btn:active {
-  background: #fef2f2 !important;
+  background: #fecaca !important;
   background-image: none !important;
-  border-color: #fecaca !important;
+  border-color: #f87171 !important;
   color: #991b1b !important;
+}
+
+#logoutModal .no-btn,
+#logoutModal .no-btn:hover,
+#logoutModal .no-btn:focus,
+#logoutModal .no-btn:focus-visible,
+#logoutModal .no-btn:active {
+  transform: none !important;
+  transition: none !important;
 }
 
 #logoutModal .logout-content h3 {
   color: #111827;
   font-size: 15px;
+}
+
+/* Main welcome illustration */
+.welcome-main-image {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(180px, 24vw, 290px);
+  max-height: 190px;
+  height: auto;
+  margin-left: auto;
+  object-fit: contain;
+  object-position: center right;
+}
+
+@media (max-width: 768px) {
+  .welcome-main-image {
+    width: min(42vw, 190px);
+    max-height: 135px;
+    align-self: flex-end;
+    margin: 4px 0 0 auto;
+  }
+}
+
+/* Keep the Instructor and Student welcome cards consistent on mobile. */
+@media (max-width: 768px) {
+  .content-container {
+    padding: clamp(76px, 11vw, 84px) clamp(12px, 3vw, 20px) 16px !important;
+  }
+
+  .welcome-card {
+    border-radius: clamp(16px, 3vw, 22px);
+    border-left-width: clamp(5px, 1vw, 7px);
+  }
+
+  .evaluation-period-status {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    display: flex !important;
+    width: fit-content;
+    max-width: calc(100% - 28px);
+    margin: 14px 14px 0 auto !important;
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .welcome-content {
+    box-sizing: border-box;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(16px, 3vw, 24px);
+    padding: clamp(20px, 4vw, 32px) clamp(16px, 3vw, 24px);
+  }
+
+  .welcome-right {
+    width: 100%;
+    text-align: center;
+  }
+
+  .welcome-header-inline {
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .welcome-card .student-name-title,
+  #mainPage .student-name-title {
+    position: static !important;
+    top: auto !important;
+    width: 100%;
+    font-size: clamp(20px, 3.7vw, 26px) !important;
+    line-height: 1.2 !important;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .welcome-period-subtitle {
+    max-width: 100%;
+  }
+
+  .welcome-message,
+  .welcome-message p,
+  .evaluation-period-access-message {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .action-buttons {
+    align-items: center !important;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .action-buttons .action-btn,
+  .evaluate-now-btn {
+    align-self: center;
+    width: min(100%, 230px);
+    justify-content: center;
+  }
+
+  .welcome-main-image {
+    width: min(42vw, 190px);
+    max-height: 135px;
+    align-self: flex-end;
+    margin: 4px 0 0 auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .welcome-content {
+    gap: 16px;
+    padding: 18px 14px 20px;
+  }
+
+  .evaluation-period-status {
+    margin: 10px 10px 0 auto !important;
+    font-size: 10px !important;
+  }
+
+  .welcome-main-image {
+    width: min(44vw, 160px);
+    max-height: 115px;
+  }
+}
+
+/* Match the account password dialog to the shared login form styling. */
+#passwordForm .LoginForm-content {
+  width: min(100%, 440px);
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 30px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 60px rgba(59, 130, 246, 0.15);
+}
+
+#passwordForm .LoginForm-header {
+  margin-bottom: 17px;
+}
+
+#passwordForm .login-title {
+  margin: -5px 0 8px;
+  font-size: 28px;
+  letter-spacing: 0;
+}
+
+#passwordForm .login-description {
+  margin-bottom: 20px;
+}
+
+#passwordForm .modern-input-group {
+  --input-control-height: 49px;
+  margin-bottom: 10px;
+}
+
+#passwordForm .password-field-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#passwordForm .modern-input-group input {
+  min-height: 0;
+  padding: 13px 48px 13px 20px;
+  border-radius: 10px;
+  transform: none;
+}
+
+#passwordForm .modern-input-group input:focus {
+  transform: none;
+}
+
+#passwordForm .modern-login-btn {
+  min-height: 0;
+  max-height: none;
+  padding: 14px 24px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  font-size: 15px;
+}
+
+#passwordForm .modern-login-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+@media (max-width: 480px) {
+  #passwordForm .LoginForm-content {
+    width: calc(100% - 32px);
+    padding: 24px 20px;
+  }
+}
+
+/* Keep the faculty navbar transparent and without a separator line. */
+.navbar {
+  background: linear-gradient(135deg, #0855b1 0%, #4fa5d8 100%) !important;
+  border-width: 0 !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  outline: 0;
+  color: #1e3a8a;
+}
+
+.navbar::before,
+.navbar::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.navbar .instructor-box,
+.navbar .instructor-box:hover,
+.navbar .instructor-box:focus,
+.navbar .instructor-box:focus-visible,
+.navbar .instructor-box:active {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.navbar .logo-text.main-title {
+  color: #fff;
+}
+
+.navbar .logo-subtitle {
+  color: rgba(255, 255, 255, 0.78);
 }

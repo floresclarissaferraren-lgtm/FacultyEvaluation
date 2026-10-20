@@ -5,8 +5,18 @@ include __DIR__ . "/../shared/connect.php";
 
 header("Content-Type: application/json");
 
-$query =
-    "SELECT id, program_code, program_name FROM add_programs ORDER BY id DESC";
+$query = "
+    SELECT p.id, p.program_code, p.program_name,
+        (
+            SELECT COUNT(*)
+            FROM add_students st
+            WHERE st.program = CAST(p.id AS CHAR)
+               OR UPPER(TRIM(st.program)) = UPPER(TRIM(p.program_code))
+               OR UPPER(TRIM(st.program)) = UPPER(TRIM(p.program_name))
+        ) AS enrolled_students
+    FROM add_programs p
+    ORDER BY p.id DESC
+";
 $result = mysqli_query($conn, $query);
 
 $programs = [];

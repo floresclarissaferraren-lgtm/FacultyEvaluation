@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Faculty Evaluation System ERD</title>
+  <desc id="desc">Entity relationship diagram with ten tables and seven one-to-many relationships.</desc>
+  <defs>
+    <marker id="many" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L12,7 M1,13 L12,7 M1,7 L12,7" fill="none" stroke="#52647d" stroke-width="1.8"/></marker>
+    <style>
+      .bg{fill:#f4f7fb}.title{font:700 30px Arial,sans-serif;fill:#12233f}.subtitle{font:15px Arial,sans-serif;fill:#52627a}
+      .box{fill:#fff;stroke:#b8c7d9;stroke-width:1.5;rx:10}.head{fill:#e8f0fb;rx:10}.tbl{font:700 17px Arial,sans-serif;fill:#17365e}.field{font:14px Arial,sans-serif;fill:#27364b}.muted{font:12px Arial,sans-serif;fill:#65758b}
+      .link{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#many)}.one{fill:#fff;stroke:#52647d;stroke-width:1.5}.rel{font:12px Arial,sans-serif;fill:#40516a}.card{fill:#fff;stroke:#d7e0eb;rx:9}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="1120"/>
+  <text class="title" x="800" y="48" text-anchor="middle">ENTITY RELATIONSHIP DIAGRAM</text>
+  <text class="subtitle" x="800" y="76" text-anchor="middle">Real-Time Faculty Evaluation and Performance Dashboard System</text>
+
+  <!-- relationship connectors behind entities -->
+  <path class="link" d="M305 219 H415"/><circle class="one" cx="313" cy="219" r="4"/><text class="rel" x="337" y="207">offers</text>
+  <path class="link" d="M305 499 H420"/><circle class="one" cx="313" cy="499" r="4"/><text class="rel" x="330" y="487">contains</text>
+  <path class="link" d="M305 779 H420"/><circle class="one" cx="313" cy="779" r="4"/><text class="rel" x="335" y="767">submits</text>
+  <path class="link" d="M865 820 H735"/><circle class="one" cx="857" cy="820" r="4"/><text class="rel" x="765" y="808">receives</text>
+  <path class="link" d="M625 330 V700"/><circle class="one" cx="625" cy="338" r="4"/><text class="rel" x="638" y="480">evaluated in</text>
+  <path class="link" d="M735 499 H780 V550 H1140 V700 H1165"/><circle class="one" cx="743" cy="499" r="4"/><text class="rel" x="820" y="538">is answered in</text>
+  <path class="link" d="M735 875 H780 V940 H1140 V800 H1165"/><circle class="one" cx="743" cy="875" r="4"/><text class="rel" x="850" y="932">has answers</text>
+
+  <!-- Programs -->
+  <g transform="translate(65 150)"><rect class="box" width="240" height="138"/><rect class="head" width="240" height="38"/><text class="tbl" x="14" y="25">ADD_PROGRAMS</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">UQ  program_code : VARCHAR(20)</text><text class="field" x="14" y="108">program_name : VARCHAR(100)</text><text class="muted" x="14" y="129">created_at · updated_at</text></g>
+  <!-- Subjects -->
+  <g transform="translate(415 150)"><rect class="box" width="320" height="180"/><rect class="head" width="320" height="38"/><text class="tbl" x="14" y="25">ADD_SUBJECTS</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">FK  program_id : INT(11)</text><text class="field" x="14" y="108">subject_code : VARCHAR(20)</text><text class="field" x="14" y="131">subject_desc : VARCHAR(150)</text><text class="field" x="14" y="154">year_level · semester</text><text class="muted" x="14" y="173">created_at · updated_at</text></g>
+  <!-- Student login -->
+  <g transform="translate(65 350)"><rect class="box" width="240" height="125"/><rect class="head" width="240" height="38"/><text class="tbl" x="14" y="25">STUDENT_LOGIN</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">UQ  username : VARCHAR(50)</text><text class="field" x="14" y="108">password : VARCHAR(255)</text></g>
+  <!-- Categories -->
+  <g transform="translate(65 440)"><rect class="box" width="240" height="150"/><rect class="head" width="240" height="38"/><text class="tbl" x="14" y="25">ADD_CATEGORIES</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">category_name : VARCHAR(255)</text><text class="field" x="14" y="108">UQ  section_number</text><text class="field" x="14" y="131">weight : DECIMAL(5,2)</text></g>
+  <!-- Questions -->
+  <g transform="translate(420 440)"><rect class="box" width="315" height="145"/><rect class="head" width="315" height="38"/><text class="tbl" x="14" y="25">ADD_QUESTIONS</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">FK  category_id : INT(11)</text><text class="field" x="14" y="108">question_text : TEXT</text><text class="muted" x="14" y="132">created_at · updated_at</text></g>
+  <!-- Faculty login -->
+  <g transform="translate(65 625)"><rect class="box" width="240" height="125"/><rect class="head" width="240" height="38"/><text class="tbl" x="14" y="25">FACULTY_LOGIN</text><text class="field" x="14" y="62">PK  faculty_id : INT(11)</text><text class="field" x="14" y="85">UQ  faculty_username</text><text class="field" x="14" y="108">faculty_password</text></g>
+  <!-- Student -->
+  <g transform="translate(65 755)"><rect class="box" width="240" height="210"/><rect class="head" width="240" height="38"/><text class="tbl" x="14" y="25">ADD_STUDENTS</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">UQ  student_number</text><text class="field" x="14" y="108">UQ  email : VARCHAR(100)</text><text class="field" x="14" y="131">firstname · lastname</text><text class="field" x="14" y="154">suffix · program</text><text class="muted" x="14" y="184">No login FK defined</text></g>
+  <!-- Evaluations -->
+  <g transform="translate(420 700)"><rect class="box" width="315" height="220"/><rect class="head" width="315" height="38"/><text class="tbl" x="14" y="25">EVALUATIONS</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">student_id : INT(11)</text><text class="field" x="14" y="108">faculty_id : INT(11)</text><text class="field" x="14" y="131">subject_id · class_id</text><text class="field" x="14" y="154">overall_rating · feedback</text><text class="field" x="14" y="177">period_id</text><text class="muted" x="14" y="202">created_at · updated_at</text></g>
+  <!-- Faculty -->
+  <g transform="translate(865 700)"><rect class="box" width="300" height="220"/><rect class="head" width="300" height="38"/><text class="tbl" x="14" y="25">ADD_FACULTIES</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">UQ  faculty_id : VARCHAR(50)</text><text class="field" x="14" y="108">email · firstname · lastname</text><text class="field" x="14" y="131">suffix · photo · password</text><text class="field" x="14" y="154">status</text><text class="muted" x="14" y="184">created_at · no login FK defined</text></g>
+  <!-- Answers -->
+  <g transform="translate(1165 700)"><rect class="box" width="350" height="175"/><rect class="head" width="350" height="38"/><text class="tbl" x="14" y="25">EVALUATION_ANSWERS</text><text class="field" x="14" y="62">PK  id : INT(11)</text><text class="field" x="14" y="85">evaluation_id : INT(11)</text><text class="field" x="14" y="108">question_id : INT(11)</text><text class="field" x="14" y="131">rating : TINYINT(1)</text><text class="muted" x="14" y="157">created_at · updated_at</text></g>
+  <!-- legend -->
+  <rect class="card" x="865" y="150" width="650" height="180"/>
+  <text class="tbl" x="890" y="183">RELATIONSHIP LEGEND</text>
+  <circle class="one" cx="905" cy="216" r="4"/><path class="link" d="M911 216 H1030"/><text class="field" x="1050" y="221">One side (1) → crow’s foot (many side)</text>
+  <text class="field" x="890" y="260">Login tables are included as standalone tables because the schema</text>
+  <text class="field" x="890" y="283">does not define foreign keys connecting them to student/faculty records.</text>
+  <text class="muted" x="800" y="1055" text-anchor="middle">Note: ID-based evaluation links are logical relationships; not all are declared as SQL foreign keys.</text>
+</svg>

@@ -282,9 +282,9 @@ $pdf->SetFillColor($navy[0], $navy[1], $navy[2]);
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetDrawColor($border[0], $border[1], $border[2]);
 $pdf->SetFont("Arial", "B", 8);
-$categoryWidths = [53, 22, 22, 31, 27, 35];
+$categoryWidths = [64, 24, 34, 28, 40];
 foreach (
-    ["Category", "Weight", "Score", "Average", "Responses", "Status"]
+    ["Category", "Score", "Average", "Responses", "Status"]
     as $index => $heading
 ) {
     $pdf->Cell(
@@ -292,7 +292,7 @@ foreach (
         7,
         $heading,
         1,
-        $index === 5 ? 1 : 0,
+        $index === 4 ? 1 : 0,
         "C",
         true,
     );
@@ -316,24 +316,21 @@ if (empty($evaluationDetails)) {
             (string) ($detail["responses"] ??
                 ($detail["total_responses"] ?? "0")),
         );
-        $weight =
-            number_format(
-                (float) ($detail["normalised_weight"] ??
-                    ($detail["weight"] ?? 0)),
-                1,
-            ) . "%";
         $scorePercent =
             number_format(max(0, min(100, $ratingValue * 20)), 0) . "%";
-        $status = cleanText(
-            $detail["rating"] ??
-                ($detail["status"] ?? ratingLabel($ratingValue)),
-        );
+        $status = trim((string) ($detail["rating"] ?? ""));
+        if ($status === "") {
+            $status = trim((string) ($detail["status"] ?? ""));
+        }
+        if ($status === "") {
+            $status = ratingLabel($ratingValue);
+        }
+        $status = cleanText($status);
         $pdf->SetFillColor(
             ...$index % 2 === 0 ? [255, 255, 255] : [247, 250, 255],
         );
         $values = [
             $category,
-            cleanText($weight),
             cleanText($scorePercent),
             $ratingValue > 0 ? $rating . " / 5" : "N/A",
             $responses,
@@ -345,7 +342,7 @@ if (empty($evaluationDetails)) {
                 7,
                 $value,
                 1,
-                $column === 5 ? 1 : 0,
+                $column === 4 ? 1 : 0,
                 $column === 0 ? "L" : "C",
                 true,
             );

@@ -7,6 +7,7 @@ header('Expires: 0');
 require_once __DIR__ . '/../shared/security.php';
 requireDashboardRole('admin');
 include __DIR__ . '/totalstudents_dashcount.php';
+$adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,6 +47,8 @@ include __DIR__ . '/totalstudents_dashcount.php';
     </div>
 
   </div>
+
+
 
   <!-- Right Side User Menu -->
   <div class="user-menu">
@@ -125,7 +128,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
   <!-- Logo Top -->
   <div class="sidebar-top">
     <div class="logo-title-container">
-      <img src="../assets/images/schoollogo.png" class="sidebar-logo">
+      <img src="../assets/images/schoollogo.png" class="sidebar-logo" alt="Granby Colleges seal">
       <div class="title-container">
         <h1>FaculRate</h1>
         <span class="subtitle">Faculty Evaluation System</span>
@@ -139,7 +142,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
     <!-- Main Section -->
     <div class="menu-section">
       <div class="menu-header">
-        <span>Main</span>
+        <span>Menu</span>
       </div>
       <div class="menu-items">
         <a href="#" class="active" data-section="dashboard-section" data-tooltip="Dashboard" aria-label="Dashboard"
@@ -166,10 +169,10 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <i class="ph ph-users-three"></i>
           <span>Faculty</span>
         </a>
-        <a href="#" data-section="students-section" data-tooltip="Students" aria-label="Students"
+        <a href="#" data-section="students-section" data-tooltip="Student" aria-label="Student"
            onclick="showSection('students-section', event)">
           <i class="ph ph-student"></i>
-          <span>Students</span>
+          <span>Student</span>
         </a>
         <a href="#" data-section="criteria-section" data-tooltip="Evaluation Criteria" aria-label="Evaluation Criteria"
            onclick="showSection('criteria-section', event)">
@@ -181,19 +184,10 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <i class="ph ph-calendar-blank"></i>
           <span>Academic Year</span>
         </a>
-      </div>
-    </div>
-
-    <!-- Analytics Section -->
-    <div class="menu-section">
-      <div class="menu-header">
-        <span>Analytics</span>
-      </div>
-      <div class="menu-items">
-        <a href="#" data-section="report-section" data-tooltip="Reports" aria-label="Reports"
+        <a href="#" data-section="report-section" data-tooltip="Report" aria-label="Report"
            onclick="showSection('report-section', event)">
           <i class="ph ph-chart-bar"></i>
-          <span>Reports</span>
+          <span>Report</span>
         </a>
       </div>
     </div>
@@ -215,7 +209,18 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <div id="dashboard-section" class="section">
   <div class="admin-welcome-box">
     <div class="admin-welcome-copy">
-      <h1>Admin Overview</h1>
+      <div class="admin-welcome-heading">
+        <h1>Admin Overview</h1>
+        <div class="admin-overview-date-box" aria-label="Current date and time">
+    <strong class="admin-overview-date-title">Time &amp; Date</strong>
+    <time class="admin-overview-date" datetime="<?= $adminOverviewNow->format('Y-m-d') ?>">
+      <?= $adminOverviewNow->format('F j, Y') ?>
+    </time>
+    <time id="adminOverviewTime" class="admin-overview-time" datetime="<?= $adminOverviewNow->format('H:i:s') ?>">
+      <?= $adminOverviewNow->format('g:i:s A') ?>
+    </time>
+    </div>
+      </div>
       <p>Here's an overview of your Faculty Evaluation System. Track faculty performance, monitor evaluation progress, and manage reports and system activities all in one place.</p>
     </div>
     <img class="admin-welcome-image" src="../assets/images/mainimg.png" alt="" aria-hidden="true">
@@ -366,7 +371,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         <div class="top-performance-chart-wrapper">
           <div id="topPerformanceChart" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all faculty performance rankings"></div>
         </div>
-        <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
+        <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full rankings.</div>
       </div>
     </div>
   </div>
@@ -432,6 +437,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         </div>
         <div class="stats-info">
           <p class="stats-number" id="totalPrograms">0 Program Record</p>
+          <p class="stats-subtitle">Active programs in your institution</p>
         </div>
       </div>
       <div class="programs-actions">
@@ -484,7 +490,12 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
 <div id="deleteSuccessModal" class="modal" style="display:none;">
   <div class="modal-content success-modal-card">
-    <div class="success-icon-circle"><i class="ph ph-check-circle"></i></div>
+    <div class="success-icon-circle">
+      <svg class="success-icon-solid" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="10" fill="currentColor" />
+        <path d="m7.5 12.2 3 3 6-6.4" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" />
+      </svg>
+    </div>
     <p class="success-main-text">Deleted successfully!</p>
     <div class="success-buttons">
       <button id="success-ok-btn" class="ok-btn">OK</button>
@@ -528,7 +539,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
     <div>
       <p class="manage-section-eyebrow">Curriculum Structure</p>
       <span class="manage-class-heading-icon" aria-hidden="true"><i class="ph ph-book-open"></i></span>
-      <h3 id="manageContentTitle">Explore by year level</h3>
+      <h3 id="manageContentTitle">Explore by year level<span id="manageSubjectsResultCount" class="manage-subject-count-badge"><span class="manage-subject-count-dot" aria-hidden="true"></span><span class="manage-subject-count-text"></span></span></h3>
       <p id="manageContentSubtitle" class="manage-content-subtitle"></p>
     </div>
     <div class="manage-content-actions">
@@ -581,10 +592,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
             <option value="4th Year">4th Year</option>
           </select>
         </div>
-      </div>
-      <div class="manage-subjects-results" aria-live="polite">
-        <strong id="manageSubjectsResultCount">0 subjects found</strong>
-        <span id="manageSubjectsAcademicYear"></span>
       </div>
       <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
@@ -791,6 +798,17 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <!-- ===================== Faculties Section ===================== -->
 <div id="faculties-section" class="section" style="display:none;">
 
+  <div class="faculty-page-heading-box">
+  <div class="faculty-page-heading">
+    <div>
+      <h1><i class="ph ph-users-three faculty-page-heading-icon" aria-hidden="true"></i><span>Faculty List</span><span class="faculty-title-count" aria-live="polite"><span class="faculty-count-dot" aria-hidden="true"></span>Total Faculty: <strong id="facultyMemberCount"><?php echo (int)$facultyStats['total_faculty']; ?></strong></span></h1>
+      <p>Manage faculty members, their assigned subjects, and account status</p>
+    </div>
+    <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
+  </div>
+  </div>
+
+  <div class="faculty-list-box">
   <div class="faculty-toolbar">
     <div class="search-filters-container">
       <button type="button" class="clear-search-btn" data-clear-targets="faculty-search,faculty-status-filter" title="Clear search" aria-label="Clear faculty search">
@@ -811,24 +829,20 @@ include __DIR__ . '/totalstudents_dashcount.php';
       </div>
     </div>
     <div class="header-actions">
-      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
       <button class="show-archived-faculty-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
     </div>
   </div>
 
   <div class="table-wrapper">
-    <div class="faculty-count-summary" aria-live="polite">
-      <span class="faculty-count-dot" aria-hidden="true"></span>
-      <span id="facultyMemberCount"><?php echo (int)$facultyStats['total_faculty']; ?> faculty member<?php echo (int)$facultyStats['total_faculty'] === 1 ? '' : 's'; ?></span>
-    </div>
     <div class="table-scroll-container">
       <table class="faculties-table">
         <thead>
-          <tr><th>Image</th><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th><th>Actions</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
+  </div>
   </div>
 
   <div class="archived-faculty-section" hidden>
@@ -851,7 +865,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
     <div class="table-scroll-container">
       <table class="faculties-table archived-faculties-table">
         <thead>
-          <tr><th>Image</th><th>Faculty ID</th><th>Faculty Name</th><th>Subjects</th><th>Status</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -976,11 +990,28 @@ include __DIR__ . '/totalstudents_dashcount.php';
 
 <!-- ===================== Students Section ===================== -->
 <div id="students-section" class="section" style="display:none;">
+  <div class="student-page-heading-box">
+    <div class="student-page-heading">
+      <div class="student-page-heading-copy">
+        <h1>
+          <i class="ph ph-student" aria-hidden="true"></i>
+          <span>Student List</span>
+          <span class="student-count-summary" aria-live="polite">
+            <span class="student-count-item"><span class="student-count-dot total" aria-hidden="true"></span>Total Students: <strong id="totalStudentsCount"><?php echo (int)$studentStats['total_students']; ?></strong></span>
+            <span class="student-count-item"><span class="student-count-dot regular" aria-hidden="true"></span>Regular: <strong id="regularStudentsCount"><?php echo (int)$studentStats['regular_students']; ?></strong></span>
+            <span class="student-count-item"><span class="student-count-dot irregular" aria-hidden="true"></span>Irregular: <strong id="irregularStudentsCount"><?php echo (int)$studentStats['irregular_students']; ?></strong></span>
+          </span>
+        </h1>
+        <p>Organize student profiles, year levels, and section</p>
+      </div>
+      <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
+    </div>
+  </div>
+
   <div class="student-table-box">
     <div class="student-toolbar-box">
     <div class="student-toolbar">
       <div class="student-header-actions">
-        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
         <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
       </div>
       <div class="student-filter-row">
@@ -1013,11 +1044,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
     </div>
 
     <div class="table-wrapper">
-    <div class="student-count-summary" aria-live="polite">
-      <span class="student-count-item"><span class="student-count-dot total" aria-hidden="true"></span>Total Students: <strong id="totalStudentsCount"><?php echo (int)$studentStats['total_students']; ?></strong></span>
-      <span class="student-count-item"><span class="student-count-dot regular" aria-hidden="true"></span>Regular: <strong id="regularStudentsCount"><?php echo (int)$studentStats['regular_students']; ?></strong></span>
-      <span class="student-count-item"><span class="student-count-dot irregular" aria-hidden="true"></span>Irregular: <strong id="irregularStudentsCount"><?php echo (int)$studentStats['irregular_students']; ?></strong></span>
-    </div>
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
@@ -1211,7 +1237,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
       <div class="header-title-section">
         <h2 class="section-title">
           <i class="ph ph-clipboard-text"></i>
-          <span>Criteria Management</span>
+          <span>Criteria List</span>
         </h2>
         <p class="section-subtitle">
           Manage the standards used to evaluate faculty performance.
@@ -1348,6 +1374,19 @@ include __DIR__ . '/totalstudents_dashcount.php';
 <!-- Academic Year Section =========================================================================================================-->
 <div id="academic-year-section" class="section" style="display:none;">
 
+  <div class="academic-year-page-heading-box">
+    <div class="academic-year-page-heading">
+      <div class="academic-year-page-heading-copy">
+        <h1><i class="ph ph-calendar-blank" aria-hidden="true"></i><span>Academic Year List</span></h1>
+        <p>Manage academic years, semesters, and evaluation periods.</p>
+      </div>
+      <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
+        <i class="ph ph-plus"></i> Add Academic Year
+      </button>
+    </div>
+  </div>
+
+  <div class="academic-year-list-box">
   <!-- Table Header with Search and Filters -->
   <div class="table-wrapper academic-year-controls">
     <div class="table-header">
@@ -1371,11 +1410,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
               <option value="Summer">Summer</option>
             </select>
           </div>
-        </div>
-        <div class="header-actions academic-year-add-action">
-          <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
-            <i class="ph ph-plus"></i> Add Academic Year
-          </button>
         </div>
       </div>
     </div>
@@ -1403,6 +1437,7 @@ include __DIR__ . '/totalstudents_dashcount.php';
         </tbody>
       </table>
     </div>
+  </div>
   </div>
 </div>
 
@@ -1484,42 +1519,6 @@ include __DIR__ . '/totalstudents_dashcount.php';
           <!-- Dynamic content will be loaded here -->
         </tbody>
       </table>
-    </div>
-    <div class="report-analytics" aria-label="Evaluation report analytics">
-      <div class="report-chart-card report-distribution-card">
-        <div class="report-chart-heading">
-          <div><h3>Overall Rating Distribution</h3></div>
-        </div>
-        <div class="report-donut-layout">
-          <div class="report-rating-chart-wrapper">
-            <canvas id="reportRatingDistributionChart"></canvas>
-            <div class="rating-chart-center" aria-hidden="true">
-              <strong id="reportRatingOverallPercentage">0%</strong>
-              <span>Overall<br>Performance</span>
-            </div>
-          </div>
-          <div id="reportRatingLegend" class="rating-legend report-rating-legend"></div>
-        </div>
-      </div>
-      <div class="report-chart-card report-program-card">
-        <div class="report-chart-heading"><div><h3>Average Ratings by Program</h3></div></div>
-        <div class="report-bar-canvas"><canvas id="reportProgramRatingsChart"></canvas></div>
-      </div>
-      <div class="report-chart-card report-trend-card">
-        <div class="report-chart-heading"><div><h3>Ratings Trend Over Time</h3></div></div>
-        <div class="report-line-canvas"><canvas id="reportRatingsTrendChart"></canvas></div>
-      </div>
-      <div id="reportRankingCard" class="dashboard-card top-performance report-chart-card report-ranking-card" onclick="openReportFacultyRankings(event)" onkeydown="if (event.key === 'Enter' || event.key === ' ') openReportFacultyRankings(event)" tabindex="0" role="button" aria-label="View all report faculty rankings">
-        <div class="dashboard-content">
-          <div class="rating-header">
-            <h3>Top Faculty Rankings</h3>
-          </div>
-          <div id="reportRankingClickTarget" class="top-performance-chart-wrapper">
-            <div id="reportFacultyRankings" class="top-performance-progress-list" role="button" tabindex="0" aria-label="View all report faculty rankings"></div>
-          </div>
-          <div class="top-performance-hint">Showing the highest-ranked evaluated faculties. Click the list to view the full ranking.</div>
-        </div>
-      </div>
     </div>
   </div>
 </div>

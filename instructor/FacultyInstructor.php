@@ -71,6 +71,7 @@ $faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image
     : $default_avatar;
 
 $faculty_assigned_subjects = [];
+// Show a faculty member's assignments in their profile even when evaluation is closed.
 $subjectSql = <<<'SQL'
   SELECT DISTINCT s.subject_code, s.subject_desc, s.year_level,
     p.program_code, p.program_name
@@ -79,7 +80,6 @@ $subjectSql = <<<'SQL'
   INNER JOIN add_subjects s ON s.id = cs.subject_id
   LEFT JOIN add_programs p ON p.id = s.program_id
   WHERE cs.faculty_id = ?
-    AND ac.period_id = (SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1)
   ORDER BY s.year_level ASC, s.subject_code ASC
 SQL;
 $subjectStmt = $conn->prepare($subjectSql);
@@ -129,8 +129,12 @@ if ($subjectStmt) {
 
   <div class="user-menu">
     <div class="instructor-box" onclick="toggleDropdown()">
-      <span class="instructor-account-icon" aria-hidden="true">IP</span>
-      <span class="student-label">Instructor</span>
+    <span class="instructor-account-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="12" cy="7" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0v1H4z" />
+      </svg>
+    </span>
       <i class="ph ph-caret-down"></i>
     </div>
 
@@ -147,6 +151,7 @@ if ($subjectStmt) {
           <div class="dropdown-user-email"><?php echo htmlspecialchars($faculty_email); ?></div>
         </div>
       </div>
+      <hr class="dropdown-divider">
       <a href="#" onclick="showPasswordForm(event)">
         <i class="ph ph-key"></i> Change Password
       </a>
@@ -214,55 +219,7 @@ if ($subjectStmt) {
           </button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Stats Cards -->
-  <div class="stats-cards-container">
-    <div class="stat-card">
-      <div class="stat-content">
-        <div class="stat-header">
-          <span class="stat-label">OVERALL RATING</span>
-          <div class="stat-icon-small yellow">
-            <i class="ph-fill ph-star"></i>
-          </div>
-        </div>
-        <div class="stat-main">
-          <span class="stat-value" id="overallRatingNumber">0.00</span>
-          <span class="stat-unit">/ 5.00</span>
-        </div>
-        <span class="stat-extra" id="overallRatingStatus">Performance Status</span>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-content">
-        <div class="stat-header">
-          <span class="stat-label">STUDENT RESPONDENTS</span>
-          <div class="stat-icon-small blue">
-            <i class="ph-fill ph-users-three"></i>
-          </div>
-        </div>
-        <div class="stat-main">
-          <span class="stat-value" id="totalResponsesValue">0</span>
-        </div>
-        <span class="stat-extra" id="responsePeriodNote">Students participated</span>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-content">
-        <div class="stat-header">
-          <span class="stat-label">SUBJECTS EVALUATED</span>
-          <div class="stat-icon-small purple">
-            <i class="ph-fill ph-book-open"></i>
-          </div>
-        </div>
-        <div class="stat-main">
-          <span class="stat-value" id="subjectsEvaluatedValue">0</span>
-        </div>
-        <span class="stat-extra" id="subjectPeriodNote">With student responses</span>
-      </div>
+      <img class="welcome-main-image" src="../assets/images/mainimg.png" alt="" aria-hidden="true">
     </div>
   </div>
 
@@ -306,8 +263,9 @@ if ($subjectStmt) {
       
       <form id="passwordChangeForm" class="modern-login-form">
         <div class="modern-input-group has-toggle">
+          <label class="password-field-label" for="oldPass">Old Password</label>
           <div class="input-wrap">
-            <input type="password" id="oldPass" placeholder="Old Password" required>
+            <input type="password" id="oldPass" required>
             <div class="password-toggle" onclick="togglePassword('oldPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>
@@ -316,8 +274,9 @@ if ($subjectStmt) {
         </div>
         
         <div class="modern-input-group has-toggle">
+          <label class="password-field-label" for="newPass">New Password</label>
           <div class="input-wrap">
-            <input type="password" id="newPass" placeholder="New Password" required>
+            <input type="password" id="newPass" required>
             <div class="password-toggle" onclick="togglePassword('newPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>
@@ -326,8 +285,9 @@ if ($subjectStmt) {
         </div>
         
         <div class="modern-input-group has-toggle">
+          <label class="password-field-label" for="confirmPass">Confirm Password</label>
           <div class="input-wrap">
-            <input type="password" id="confirmPass" placeholder="Confirm Password" required>
+            <input type="password" id="confirmPass" required>
             <div class="password-toggle" onclick="togglePassword('confirmPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>

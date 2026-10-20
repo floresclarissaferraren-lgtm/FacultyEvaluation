@@ -272,18 +272,12 @@ function renderCategoryTotals(categoryTotals) {
     return '<div class="category-empty">No category totals available yet.</div>';
   }
 
-  // Determine if weights are meaningful (any non-zero)
-  const hasWeights = categoryTotals.some(
-    (item) => parseFloat(item.weight || 0) > 0,
-  );
-
   return `
     <div class="category-table-wrap">
       <table class="category-table">
         <thead>
           <tr>
             <th>Category</th>
-            ${hasWeights ? "<th>Weight</th>" : ""}
             <th>Percentage</th>
             <th>Average</th>
             <th>Status</th>
@@ -298,7 +292,6 @@ function renderCategoryTotals(categoryTotals) {
               );
               const hasResponses = responseCount > 0;
 
-              const percent = hasResponses ? getRatingPercentageValue(avg) : 0;
               const percentText = hasResponses
                 ? formatRatingPercentage(avg)
                 : "0%";
@@ -308,22 +301,10 @@ function renderCategoryTotals(categoryTotals) {
               const statusClass = hasResponses
                 ? getStatusBadgeClass(avg).replace(/^status-/, "")
                 : "na";
-              const normW = Number(item.normalised_weight ?? item.weight ?? 0);
-              const weightText = hasWeights
-                ? `${(Number.isFinite(normW) ? normW : 0).toFixed(1)}%`
-                : "—";
               return `
             <tr>
               <td>${escapeHtml(item.category_name || "Uncategorized")}</td>
-              ${hasWeights ? `<td><span class="category-weight-tag">${weightText}</span></td>` : ""}
-              <td>
-                <div class="category-percent-cell">
-                  <span>${percentText}</span>
-                  <div class="category-percent-track">
-                    <div class="category-percent-fill ${statusClass}" style="width: ${percent}%;"></div>
-                  </div>
-                </div>
-              </td>
+              <td>${percentText}</td>
               <td>${escapeHtml(item.avg_rating || "0.00")} / 5.00</td>
               <td><span class="report-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
             </tr>
@@ -1107,9 +1088,14 @@ function showEvaluationReport() {
               <p class="report-subtitle">${selectedProgramLabel ? `Program: <strong>${escapeHtml(selectedProgramLabel)}</strong>` : "A summary of student feedback and performance indicators."}</p>
             </div>
           </div>
-          <button class="close-report-btn" onclick="closeEvaluationReport()">
-            <i class="ph ph-x"></i>
-          </button>
+          <div class="report-header-actions">
+            <button type="button" class="download-pdf-btn" onclick="downloadEvaluationReport()">
+              <i class="ph ph-download"></i> Download PDF
+            </button>
+            <button type="button" class="close-report-btn" onclick="closeEvaluationReport()" aria-label="Close report">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
         </div>
 
         <div class="report-body">
@@ -1158,12 +1144,6 @@ function showEvaluationReport() {
             <div class="feedback-list">
               ${feedbackHtml}
             </div>
-          </div>
-
-          <div class="report-footer">
-            <button class="download-pdf-btn" onclick="downloadEvaluationReport()">
-              <i class="ph ph-download"></i> Download PDF
-            </button>
           </div>
         </div>
       </div>
@@ -1799,10 +1779,6 @@ function buildSubjectsHtml(subjects) {
             <span class="psm-meta-label">Status</span>
             <span class="report-badge ${hasData ? badge : "na"} psm-status-badge">${escapeHtml(hasData ? s.rating_label || "No Rating" : "No Responses")}</span>
           </div>
-        </div>
-
-        <div class="psm-subject-progress" role="img" aria-label="Performance score ${pct.toFixed(1)} percent">
-          <div class="psm-prog-track"><div class="psm-prog-fill ${badge}" style="width:${hasData ? pct : 0}%"></div></div>
         </div>
 
         <div class="psm-subject-categories">

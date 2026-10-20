@@ -289,12 +289,11 @@ foreach ($departments as $dept) {
             $pdf->SetFont("Arial", "B", 8);
             $pdf->SetFillColor($NAVY[0], $NAVY[1], $NAVY[2]);
             $pdf->SetTextColor(255, 255, 255);
-            $pdf->Cell(57, 7, "Category", 1, 0, "L", true);
-            $pdf->Cell(23, 7, "Weight", 1, 0, "C", true);
+            $pdf->Cell(80, 7, "Category", 1, 0, "L", true);
             $pdf->Cell(24, 7, "Score", 1, 0, "C", true);
-            $pdf->Cell(28, 7, "Average", 1, 0, "C", true);
+            $pdf->Cell(30, 7, "Average", 1, 0, "C", true);
             $pdf->Cell(27, 7, "Responses", 1, 0, "C", true);
-            $pdf->Cell(30, 7, "Status", 1, 1, "C", true);
+            $pdf->Cell(28, 7, "Status", 1, 1, "C", true);
             $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
             $pdf->SetFont("Arial", "", 8);
             foreach (
@@ -303,28 +302,18 @@ foreach ($departments as $dept) {
             ) {
                 $cavg = floatval($cat["avg_rating"] ?? 0);
                 $catResponses = max(0, (int) ($cat["responses"] ?? 0));
-                $catWeight = max(0, (float) ($cat["normalised_weight"] ?? 0));
                 $catPercent =
                     $catResponses > 0 ? max(0, min(100, ($cavg / 5) * 100)) : 0;
                 $pdf->SetFillColor(
                     ...$rowIndex % 2 === 0 ? [255, 255, 255] : [247, 250, 255],
                 );
                 $pdf->Cell(
-                    57,
+                    80,
                     7,
                     ct($cat["category_name"] ?? ""),
                     1,
                     0,
                     "L",
-                    true,
-                );
-                $pdf->Cell(
-                    23,
-                    7,
-                    ct(number_format($catWeight, 1) . "%"),
-                    1,
-                    0,
-                    "C",
                     true,
                 );
                 $pdf->Cell(
@@ -337,7 +326,7 @@ foreach ($departments as $dept) {
                     true,
                 );
                 $pdf->Cell(
-                    28,
+                    30,
                     7,
                     $catResponses > 0
                         ? ct(number_format($cavg, 2) . " / 5")
@@ -349,7 +338,7 @@ foreach ($departments as $dept) {
                 );
                 $pdf->Cell(27, 7, ct((string) $catResponses), 1, 0, "C", true);
                 $pdf->Cell(
-                    30,
+                    28,
                     7,
                     ct($catResponses > 0 ? ratingLabel($cavg) : "N/A"),
                     1,
