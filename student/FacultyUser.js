@@ -1624,8 +1624,20 @@ function closeSuccessModal() {
 
 // Add event listener for password form back button
 document.addEventListener("DOMContentLoaded", function () {
+  const studentSkeletonShownAt = performance.now();
+  const minimumStudentSkeletonDuration = 1200;
+
   Promise.allSettled([loadStudentAcademicPeriod(), loadStudentStats()]).finally(
-    () => {
+    async () => {
+      const remainingSkeletonTime =
+        minimumStudentSkeletonDuration -
+        (performance.now() - studentSkeletonShownAt);
+      if (remainingSkeletonTime > 0) {
+        await new Promise((resolve) =>
+          window.setTimeout(resolve, remainingSkeletonTime),
+        );
+      }
+
       const dashboard = document.getElementById("mainPage");
       const navbar = document.getElementById("studentNavbar");
       dashboard?.classList.remove("student-dashboard-loading");

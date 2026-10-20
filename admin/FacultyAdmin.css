@@ -462,9 +462,9 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   position: relative;
   width: 42px;
   height: 42px;
-  border: 1px solid #e2e8f0;
+  border: 0;
   border-radius: 10px;
-  background: #f8fafc;
+  background: transparent;
   color: #475569;
   display: inline-flex;
   align-items: center;
@@ -482,9 +482,8 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
 .admin-notification-btn:hover,
 .admin-notification-btn:focus-visible {
   background: #f1f5f9;
-  border-color: #cbd5e1;
   color: #1e3a8a;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
+  box-shadow: none;
   outline: none;
 }
 
@@ -14975,7 +14974,7 @@ main,
 .admin-skeleton-chart,
 .admin-skeleton-cell {
   display: block;
-  background: linear-gradient(90deg, #e6edf7 25%, #f5f8fc 50%, #e6edf7 75%);
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
   background-size: 720px 100%;
   animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
 }
@@ -14995,6 +14994,240 @@ main,
 .admin-skeleton-line.button { width: 88px; height: 36px; border-radius: 8px; }
 .admin-skeleton-line.row { width: 100%; height: 18px; }
 .admin-skeleton-line.short { width: 52%; }
+
+.admin-section-skeleton .admin-skeleton-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 20%);
+  align-items: center;
+  gap: 16px;
+  min-height: 112px;
+  padding: 18px 24px;
+  border-radius: 12px;
+}
+
+.admin-skeleton-welcome .admin-welcome-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-skeleton-welcome-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-skeleton-welcome-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-skeleton-welcome .admin-skeleton-line.title {
+  width: min(32%, 220px);
+  height: 26px;
+}
+
+.admin-skeleton-welcome .admin-skeleton-line.datetime {
+  width: 150px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.admin-skeleton-welcome .admin-skeleton-line.meta {
+  width: 82%;
+}
+
+.admin-skeleton-welcome .admin-skeleton-line.meta.short {
+  width: 58%;
+}
+
+.admin-skeleton-welcome-image {
+  display: block;
+  width: 100%;
+  height: 76px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 720px 100%;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+#dashboard-section.admin-section-loading > .admin-section-skeleton .dashboard.admin-skeleton-grid {
+  grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.3fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-section-skeleton .dashboard.admin-skeleton-grid > .dashboard-card {
+  min-height: 112px;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.admin-section-skeleton .dashboard.admin-skeleton-grid .dashboard-content {
+  align-items: center;
+  height: 100%;
+}
+
+.admin-section-skeleton .admin-skeleton-overview {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  padding: 12px !important;
+}
+
+.admin-skeleton-overview > .admin-skeleton-line.title {
+  grid-column: 1 / -1;
+  width: 58%;
+}
+
+.admin-skeleton-overview .admin-period-item {
+  display: flex;
+  min-width: 0;
+  min-height: 62px;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-color: #e5e7eb !important;
+  background: #f3f4f6 !important;
+  box-shadow: none !important;
+}
+
+.admin-skeleton-overview .admin-period-item .admin-skeleton-line {
+  width: 90%;
+}
+
+.admin-skeleton-overview .admin-period-item .admin-skeleton-line.meta {
+  width: 68%;
+}
+
+#dashboard-section.admin-section-loading > .admin-section-skeleton .dashboard-row-2.admin-skeleton-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 12px;
+  margin: 0;
+}
+
+.admin-section-skeleton .dashboard-row-2.admin-skeleton-grid > .dashboard-card {
+  min-height: 250px;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.admin-section-skeleton .dashboard-row-2 .admin-skeleton-chart {
+  width: min(132px, 50%);
+  margin: 10px auto;
+  background: #e5e7eb;
+}
+
+.admin-section-skeleton .dashboard-row-2 .admin-skeleton-list {
+  gap: 12px;
+}
+
+.admin-skeleton-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.admin-skeleton-progress-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-skeleton-progress-heading .admin-skeleton-line.code {
+  width: 48px;
+  flex: 0 0 48px;
+}
+
+.admin-skeleton-progress-heading .admin-skeleton-line.description {
+  width: auto;
+  flex: 1 1 auto;
+}
+
+.admin-skeleton-progress-heading .admin-skeleton-line.percent {
+  width: 38px;
+  flex: 0 0 38px;
+}
+
+.admin-skeleton-progress-bar {
+  display: block;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 720px 100%;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.admin-skeleton-progress-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.admin-skeleton-progress-summary > div {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.admin-skeleton-progress-summary .admin-skeleton-line.value {
+  width: 42%;
+  height: 18px;
+}
+
+.admin-skeleton-progress-summary .admin-skeleton-line.label {
+  width: 68%;
+}
+
+.admin-skeleton-ranking-card {
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.admin-skeleton-ranking-avatar {
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 720px 100%;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.admin-skeleton-ranking-card .admin-skeleton-line.ranking-name {
+  width: 58%;
+}
+
+.admin-skeleton-ranking-card .admin-skeleton-line.ranking-score {
+  width: 38%;
+  height: 24px;
+}
+
+.admin-skeleton-ranking-card .admin-skeleton-line.ranking-place {
+  width: 28%;
+  height: 20px;
+}
 
 .admin-skeleton-icon {
   flex: 0 0 44px;
@@ -15122,7 +15355,34 @@ main,
   }
 }
 
+@media (min-width: 641px) and (max-width: 1100px) {
+  #dashboard-section.admin-section-loading > .admin-section-skeleton .dashboard.admin-skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
+  #dashboard-section.admin-section-loading > .admin-section-skeleton .dashboard.admin-skeleton-grid,
+  #dashboard-section.admin-section-loading > .admin-section-skeleton .dashboard-row-2.admin-skeleton-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-section-skeleton .admin-skeleton-welcome {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-skeleton-welcome-heading {
+    flex-wrap: wrap;
+  }
+
+  .admin-skeleton-welcome-image {
+    display: none;
+  }
+
+  .admin-section-skeleton .admin-skeleton-overview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .admin-skeleton-stat-card,
   .admin-section-skeleton .dashboard-card {
     min-height: 116px;
@@ -15144,9 +15404,12 @@ main,
   .admin-skeleton-line,
   .admin-skeleton-icon,
   .admin-skeleton-chart,
-  .admin-skeleton-cell {
+  .admin-skeleton-cell,
+  .admin-skeleton-welcome-image,
+  .admin-skeleton-progress-bar,
+  .admin-skeleton-ranking-avatar {
     animation: none;
-    background: #e9eff7;
+    background: #e5e7eb;
   }
 }
 
@@ -17080,28 +17343,28 @@ table thead th {
    REMOVE LINGERING SKELETON LOADERS
    ==================================================================================================================================== */
 
-/* Hide any skeleton elements that remain visible after content loads */
-.section .admin-section-skeleton {
+/* Keep the skeleton hidden unless its section is actively loading. */
+.section:not(.admin-section-loading) > .admin-section-skeleton {
   display: none !important;
 }
 
-/* Ensure skeleton only shows when explicitly called during initial page load */
-.section.loading .admin-section-skeleton {
-  display: block !important;
+/* Show the dashboard-shaped skeleton only while loading dashboard data. */
+.section.admin-section-loading > .admin-section-skeleton {
+  display: flex !important;
 }
 
 /* Hide skeleton loading animations from static content */
-.admin-skeleton-card:not(.loading *),
-.admin-skeleton-line:not(.loading *),
-.admin-skeleton-icon:not(.loading *),
-.admin-skeleton-cell:not(.loading *),
-.admin-skeleton-grid:not(.loading *),
-.admin-skeleton-table:not(.loading *),
-.admin-skeleton-stack:not(.loading *),
-.admin-skeleton-stat-card:not(.loading *),
-.admin-skeleton-toolbar:not(.loading *),
-.admin-skeleton-chart:not(.loading *),
-.admin-skeleton-list:not(.loading *) {
+.admin-skeleton-card:not(.admin-section-loading *),
+.admin-skeleton-line:not(.admin-section-loading *),
+.admin-skeleton-icon:not(.admin-section-loading *),
+.admin-skeleton-cell:not(.admin-section-loading *),
+.admin-skeleton-grid:not(.admin-section-loading *),
+.admin-skeleton-table:not(.admin-section-loading *),
+.admin-skeleton-stack:not(.admin-section-loading *),
+.admin-skeleton-stat-card:not(.admin-section-loading *),
+.admin-skeleton-toolbar:not(.admin-section-loading *),
+.admin-skeleton-chart:not(.admin-section-loading *),
+.admin-skeleton-list:not(.admin-section-loading *) {
   animation: none !important;
   background: transparent !important;
 }
@@ -24812,7 +25075,7 @@ button.classes-btn:not(:disabled):hover i {
 
 #dashboard-section .admin-period-item strong {
   color: #64748b;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   white-space: normal;
 }
@@ -24848,7 +25111,7 @@ button.classes-btn:not(:disabled):hover i {
   }
 
   #dashboard-section .admin-period-item strong {
-    font-size: 10px;
+    font-size: 12px;
     overflow-wrap: anywhere;
   }
 }
@@ -26988,6 +27251,16 @@ main > .section {
   row-gap: 2px;
 }
 
+#manage-section.manage-classes-view .manage-content-subtitle strong {
+  color: #315f9e;
+  font-weight: 700;
+}
+
+#manage-section.manage-subjects-view .manage-content-subtitle strong {
+  color: #315f9e;
+  font-weight: 700;
+}
+
 @media (max-width: 640px) {
   #manage-section.manage-classes-view #manageContentTitle,
   #manage-section.manage-subjects-view #manageContentTitle {
@@ -27096,6 +27369,43 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
 
 #manage-section.manage-subjects-view #subjects .subjects-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+/* Keep Subject Offered column headers and values on the same left edge. */
+#manage-section.manage-subjects-view #subjects .subjects-table {
+  width: 100%;
+  min-width: 600px;
+  table-layout: fixed !important;
+}
+
+#manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(1),
+#manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(1) {
+  width: 17%;
+  text-align: left !important;
+}
+
+#manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(2),
+#manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(2) {
+  width: 35%;
+  text-align: left !important;
+}
+
+#manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(3),
+#manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(3),
+#manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(4),
+#manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(4) {
+  width: 17%;
+  text-align: left !important;
+}
+
+#manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(5),
+#manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(5) {
+  width: 14%;
+  text-align: center !important;
+}
+
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons {
+  justify-content: center;
 }
 
 @media (max-width: 760px) {
@@ -29078,6 +29388,24 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   }
 }
 
+@media (min-width: 992px) {
+  #manage-section.manage-classes-view #classes .classes-table tbody {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 641px) and (max-width: 991px) {
+  #manage-section.manage-classes-view #classes .classes-table tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  #manage-section.manage-classes-view #classes .classes-table tbody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Program cards: reference-inspired header, enrollment detail, and pastel action. */
 #programs-section .program-card {
   position: relative;
@@ -29125,8 +29453,8 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   height: 44px;
   border: 0;
   border-radius: 12px;
-  background: linear-gradient(145deg, #3b76ee, #2459d8);
-  box-shadow: 0 12px 24px rgba(37, 99, 235, .2);
+  background: linear-gradient(145deg, #1689b6, #08658f);
+  box-shadow: 0 12px 24px rgba(0, 106, 145, .22);
   color: #fff;
   font-size: 12px;
 }
@@ -29748,4 +30076,31 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
 
 #criteria-section .criteria-category .category-header {
   background: #1086C1 !important;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content,
+#dashboard-section .dashboard-card.students .dashboard-content,
+#dashboard-section .dashboard-card.evaluations .dashboard-content {
+  justify-content: flex-start;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content > div:first-child,
+#dashboard-section .dashboard-card.students .dashboard-content > div:first-child,
+#dashboard-section .dashboard-card.evaluations .dashboard-content > div:first-child {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content > div:first-child > span,
+#dashboard-section .dashboard-card.students .dashboard-content > div:first-child > span,
+#dashboard-section .dashboard-card.evaluations .dashboard-content > div:first-child > span {
+  margin-top: auto;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content .dashboard-value,
+#dashboard-section .dashboard-card.students .dashboard-content .dashboard-value,
+#dashboard-section .dashboard-card.evaluations .dashboard-content .dashboard-value {
+  margin-top: auto;
+  margin-bottom: auto;
 }

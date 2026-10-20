@@ -210,8 +210,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const sectionSkeletons = {
     "dashboard-section": `
+      <div class="admin-welcome-box admin-skeleton-card admin-skeleton-welcome">
+        <div class="admin-welcome-copy">
+          <div class="admin-skeleton-welcome-heading">
+            <span class="admin-skeleton-line title"></span>
+            <span class="admin-skeleton-line datetime"></span>
+          </div>
+          <div class="admin-skeleton-welcome-copy">
+            <span class="admin-skeleton-line meta"></span>
+            <span class="admin-skeleton-line meta short"></span>
+          </div>
+        </div>
+        <span class="admin-skeleton-welcome-image"></span>
+      </div>
       <div class="dashboard admin-skeleton-grid">
-        ${Array.from({ length: 4 })
+        ${Array.from({ length: 3 })
           .map(
             () => `
           <div class="dashboard-card admin-skeleton-card">
@@ -227,6 +240,19 @@ document.addEventListener("DOMContentLoaded", () => {
         `,
           )
           .join("")}
+        <div class="admin-period-summary admin-skeleton-card admin-skeleton-overview">
+          <span class="admin-skeleton-line title"></span>
+          ${Array.from({ length: 3 })
+            .map(
+              () => `
+                <div class="admin-period-item admin-skeleton-card">
+                  <span class="admin-skeleton-line label"></span>
+                  <span class="admin-skeleton-line meta"></span>
+                </div>
+              `,
+            )
+            .join("")}
+        </div>
       </div>
       <div class="dashboard-row-2 admin-skeleton-grid">
         <div class="dashboard-card admin-skeleton-card admin-skeleton-chart-card">
@@ -242,14 +268,44 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="dashboard-content">
             <span class="admin-skeleton-line title"></span>
             <div class="admin-skeleton-list">${Array.from({ length: 5 })
-              .map(() => `<span class="admin-skeleton-line row"></span>`)
+              .map(
+                () => `
+                  <div class="admin-skeleton-progress-row">
+                    <div class="admin-skeleton-progress-heading">
+                      <span class="admin-skeleton-line code"></span>
+                      <span class="admin-skeleton-line description"></span>
+                      <span class="admin-skeleton-line percent"></span>
+                    </div>
+                    <span class="admin-skeleton-progress-bar"></span>
+                  </div>
+                `,
+              )
               .join("")}</div>
+            <div class="admin-skeleton-progress-summary">
+              ${Array.from({ length: 3 })
+                .map(
+                  () => `
+                    <div>
+                      <span class="admin-skeleton-line value"></span>
+                      <span class="admin-skeleton-line label"></span>
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
           </div>
         </div>
-      </div>
-      <div class="dashboard-row-3 admin-skeleton-grid">
-        <div class="period-container"><div class="dashboard-card admin-skeleton-card"><div class="dashboard-content admin-skeleton-stack"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line control short"></span></div></div></div>
-        <div class="dashboard-card admin-skeleton-card"><div class="dashboard-content admin-skeleton-stack"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line meta"></span></div></div>
+        <div class="dashboard-card admin-skeleton-card">
+          <div class="dashboard-content">
+            <span class="admin-skeleton-line title"></span>
+            <div class="admin-skeleton-ranking-card">
+              <span class="admin-skeleton-ranking-avatar"></span>
+              <span class="admin-skeleton-line ranking-name"></span>
+              <span class="admin-skeleton-line ranking-score"></span>
+              <span class="admin-skeleton-line ranking-place"></span>
+            </div>
+          </div>
+        </div>
       </div>
     `,
     "programs-section": `
@@ -2360,20 +2416,16 @@ document.addEventListener("DOMContentLoaded", () => {
         manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add New Subject';
       }
       if (detailTitle) {
-        const formattedYear = selectedManageYear
-          ? selectedManageYear.toLowerCase()
-          : "ALL YEARS";
-        setDetailHeading(
-          `Subject Offered in ${currentProgramCode || "PROGRAM"} - ${formattedYear}`,
-        );
+        setDetailHeading("Subject Offered");
       }
       if (detailEyebrow) {
         detailEyebrow.textContent =
           `${currentProgramCode || "PROGRAM"}${selectedManageYear ? ` · ${selectedManageYear}` : ""}`.toUpperCase();
       }
       if (detailSubtitle) {
-        detailSubtitle.textContent =
-          "Manage and organize subjects for each program and year level, ensuring all subject information is accurate and up to date.";
+        const subjectContext = `${currentProgramCode || "this program"}${selectedManageYear ? ` - ${selectedManageYear.toLowerCase()}` : ""}`;
+        detailSubtitle.innerHTML =
+          `Manage and organize subjects for each program and year level for <strong>${escapeHtml(subjectContext)}</strong>.`;
       }
     } else {
       s.style.display = "none";
@@ -2393,8 +2445,8 @@ document.addEventListener("DOMContentLoaded", () => {
           `${currentProgramCode || "PROGRAM"} · ${selectedManageYear || "ALL YEARS"}`.toUpperCase();
       }
       if (detailSubtitle) {
-        detailSubtitle.textContent =
-          "Manage class sections and assign the appropriate subjects and instructors to each class to keep teaching assignments organized and accurate.";
+        detailSubtitle.innerHTML =
+          `Manage class sections and assign subjects and instructors for <strong>${escapeHtml(currentProgramCode || "this program")}</strong>.`;
       }
     }
     const headingIcon = document.querySelector(
@@ -3356,8 +3408,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "manageContentSubtitle",
         );
         if (classesSubtitle) {
-          classesSubtitle.textContent =
-            "Manage class sections and assign the appropriate subjects and instructors to each class to keep teaching assignments organized and accurate.";
+          classesSubtitle.innerHTML =
+            `Manage class sections and assign subjects and instructors for <strong>${escapeHtml(currentProgramCode || "this program")}</strong>.`;
         }
 
         if (matchingClasses.length === 0) {

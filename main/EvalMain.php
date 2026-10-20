@@ -342,55 +342,39 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
   <!-- Faculty Layout Skeleton -->
   <div class="faculty-skeleton">
-    <div class="skeleton-navbar">
-      <div class="skeleton-nav-left">
-        <div class="skeleton-logo"></div>
-        <div class="skeleton-nav-title" style="width: 180px;"></div>
+    <div class="faculty-loading-navbar">
+      <div class="faculty-loading-brand">
+        <span class="faculty-loading-logo"></span>
+        <div class="faculty-loading-brand-text">
+          <span class="faculty-loading-brand-title"></span>
+          <span class="faculty-loading-brand-subtitle"></span>
+        </div>
       </div>
-      <div class="skeleton-user-box">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-user-name" style="width: 74px;"></div>
+      <div class="faculty-loading-account">
+        <span class="faculty-loading-avatar"></span>
+        <span class="faculty-loading-caret"></span>
       </div>
     </div>
 
     <div class="faculty-skeleton-content">
-      <div class="faculty-hero-card">
-        <div class="faculty-hero-image"></div>
-        <div class="faculty-hero-copy">
-          <div class="skeleton-title" style="width: 420px; height: 34px; margin-bottom: 20px;"></div>
-          <div class="skeleton-badge" style="width: 300px; margin-bottom: 24px;"></div>
-          <div class="skeleton-text" style="width: 88%; height: 14px; margin-bottom: 10px;"></div>
-          <div class="skeleton-text" style="width: 76%; height: 14px;"></div>
-        </div>
-      </div>
-
-      <div class="faculty-hub-panel">
-        <div class="faculty-name-block">
-          <div class="skeleton-title" style="width: 240px; height: 26px; margin-bottom: 8px;"></div>
-          <div class="skeleton-text" style="width: 120px; height: 14px;"></div>
-        </div>
-        <div class="faculty-actions">
-          <div class="skeleton-btn" style="width: 130px; height: 44px;"></div>
-          <div class="skeleton-btn" style="width: 200px; height: 44px;"></div>
-        </div>
-      </div>
-
-      <div class="faculty-filter-row">
-        <div class="skeleton-text" style="width: 120px; height: 14px;"></div>
-        <div class="skeleton-dropdown" style="width: 220px; height: 42px;"></div>
-      </div>
-
-      <div class="faculty-stats-row">
-        <div class="faculty-stat-card">
-          <div class="skeleton-title" style="width: 150px; height: 18px; margin-bottom: 18px;"></div>
-          <div class="skeleton-title" style="width: 150px; height: 36px; margin-bottom: 10px;"></div>
-          <div class="skeleton-text" style="width: 80px; height: 12px; margin-bottom: 18px;"></div>
-          <div class="skeleton-progress-line" style="width: 100%;"></div>
-        </div>
-        <div class="faculty-stat-card">
-          <div class="skeleton-title" style="width: 150px; height: 18px; margin-bottom: 18px;"></div>
-          <div class="skeleton-title" style="width: 120px; height: 36px; margin-bottom: 10px;"></div>
-          <div class="skeleton-progress-line" style="width: 120px;"></div>
+      <div class="faculty-loading-welcome">
+        <span class="faculty-loading-status"></span>
+        <div class="faculty-loading-welcome-content">
+          <div class="faculty-loading-copy">
+            <div class="faculty-loading-heading">
+              <span class="faculty-loading-title"></span>
+              <span class="faculty-loading-period"></span>
+            </div>
+            <div class="faculty-loading-description">
+              <span></span>
+              <span></span>
+            </div>
+            <div class="faculty-loading-actions">
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <span class="faculty-loading-illustration"></span>
         </div>
       </div>
     </div>
@@ -453,11 +437,17 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
       </div>
       <div class="skeleton-dashboard-content">
         <div class="skeleton-welcome-box">
-          <div class="skeleton-welcome-icon"></div>
           <div class="skeleton-welcome-copy">
-            <div class="skeleton-title" style="width: 200px; height: 22px; margin-bottom: 10px;"></div>
-            <div class="skeleton-text" style="width: 340px; height: 12px;"></div>
+            <div class="skeleton-welcome-heading">
+              <div class="skeleton-title" style="width: 180px; height: 22px;"></div>
+              <div class="skeleton-text" style="width: 150px; height: 18px;"></div>
+            </div>
+            <div class="skeleton-welcome-description">
+              <div class="skeleton-text" style="width: 82%; height: 12px;"></div>
+              <div class="skeleton-text" style="width: 58%; height: 12px;"></div>
+            </div>
           </div>
+          <div class="skeleton-admin-welcome-image"></div>
         </div>
 
         <div class="skeleton-cards-grid">
@@ -485,13 +475,22 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
             </div>
             <div class="skeleton-card-icon-box"></div>
           </div>
-          <div class="skeleton-dash-card">
-            <div class="skeleton-card-left">
-              <div class="skeleton-title" style="width: 120px; height: 12px; margin-bottom: 8px;"></div>
-              <div class="skeleton-value" style="width: 60px; height: 32px; margin-bottom: 8px;"></div>
-              <div class="skeleton-text short" style="width: 70px; height: 10px; margin-bottom: 0;"></div>
+          <div class="skeleton-academic-overview">
+            <div class="skeleton-title" style="width: 130px; height: 16px;"></div>
+            <div class="skeleton-academic-items">
+              <div class="skeleton-academic-item">
+                <div class="skeleton-text" style="width: 64px; height: 10px;"></div>
+                <div class="skeleton-title" style="width: 82px; height: 14px;"></div>
+              </div>
+              <div class="skeleton-academic-item">
+                <div class="skeleton-text" style="width: 48px; height: 10px;"></div>
+                <div class="skeleton-title" style="width: 70px; height: 14px;"></div>
+              </div>
+              <div class="skeleton-academic-item">
+                <div class="skeleton-text" style="width: 74px; height: 10px;"></div>
+                <div class="skeleton-title" style="width: 60px; height: 14px;"></div>
+              </div>
             </div>
-            <div class="skeleton-card-icon-box"></div>
           </div>
         </div>
 
@@ -512,32 +511,62 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
             </div>
           </div>
           <div class="skeleton-large-card">
-            <div class="skeleton-title" style="width: 150px; height: 16px; margin-bottom: 24px;"></div>
-            <div class="skeleton-rankings-list">
-              <div class="skeleton-ranking-row">
-                <div class="skeleton-rank-number"></div>
-                <div class="skeleton-rank-avatar"></div>
-                <div class="skeleton-rank-bar-container">
-                  <div class="skeleton-rank-name"></div>
-                  <div class="skeleton-rank-progress"></div>
+            <div class="skeleton-title" style="width: 150px; height: 16px;"></div>
+            <div class="skeleton-program-progress-list">
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
                 </div>
+                <span class="skeleton-program-progress-bar"></span>
               </div>
-              <div class="skeleton-ranking-row">
-                <div class="skeleton-rank-number" style="width: 12px;"></div>
-                <div class="skeleton-rank-avatar"></div>
-                <div class="skeleton-rank-bar-container">
-                  <div class="skeleton-rank-name" style="width: 90px;"></div>
-                  <div class="skeleton-rank-progress" style="width: 60%;"></div>
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
                 </div>
+                <span class="skeleton-program-progress-bar"></span>
               </div>
-              <div class="skeleton-ranking-row">
-                <div class="skeleton-rank-number" style="width: 12px;"></div>
-                <div class="skeleton-rank-avatar"></div>
-                <div class="skeleton-rank-bar-container">
-                  <div class="skeleton-rank-name" style="width: 110px;"></div>
-                  <div class="skeleton-rank-progress" style="width: 45%;"></div>
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
                 </div>
+                <span class="skeleton-program-progress-bar"></span>
               </div>
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
+                </div>
+                <span class="skeleton-program-progress-bar"></span>
+              </div>
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
+                </div>
+                <span class="skeleton-program-progress-bar"></span>
+              </div>
+            </div>
+            <div class="skeleton-progress-summary">
+              <div><span class="skeleton-value"></span><span class="skeleton-text"></span></div>
+              <div><span class="skeleton-value"></span><span class="skeleton-text"></span></div>
+              <div><span class="skeleton-value"></span><span class="skeleton-text"></span></div>
+            </div>
+          </div>
+          <div class="skeleton-large-card skeleton-top-performance">
+            <div class="skeleton-title" style="width: 160px; height: 16px;"></div>
+            <div class="skeleton-top-performance-feature">
+              <div class="skeleton-top-performance-avatar"></div>
+              <div class="skeleton-top-performance-name"></div>
+              <div class="skeleton-top-performance-score"></div>
+              <div class="skeleton-top-performance-rank"></div>
             </div>
             <div class="skeleton-text" style="width: 80%; height: 10px; margin-top: auto; margin-bottom: 0;"></div>
           </div>

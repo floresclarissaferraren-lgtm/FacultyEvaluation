@@ -168,7 +168,25 @@ if ($subjectStmt) {
 
 <div class="content-container">
   <!-- Welcome Card -->
-  <div class="welcome-card">
+  <div class="welcome-card instructor-dashboard-loading" id="instructorDashboard" aria-busy="true">
+    <div class="instructor-dashboard-skeleton" aria-hidden="true">
+      <span class="instructor-dashboard-skeleton-status"></span>
+      <div class="instructor-dashboard-skeleton-content">
+        <div class="instructor-dashboard-skeleton-header">
+          <span class="instructor-dashboard-skeleton-line title"></span>
+          <span class="instructor-dashboard-skeleton-line period"></span>
+        </div>
+        <div class="instructor-dashboard-skeleton-copy">
+          <span></span>
+          <span></span>
+        </div>
+        <div class="instructor-dashboard-skeleton-actions">
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+      <span class="instructor-dashboard-skeleton-image"></span>
+    </div>
     <span id="instructor-evaluation-status" class="evaluation-period-status is-checking" role="status" aria-live="polite">
       <i class="ph ph-circle-notch" aria-hidden="true"></i>
       Checking evaluation status

@@ -52,6 +52,10 @@ $adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')
 
   <!-- Right Side User Menu -->
   <div class="user-menu">
+    <button type="button" class="admin-notification-btn" id="adminNotificationBtn" title="Notifications" aria-label="Notifications">
+      <i class="ph ph-bell-ringing"></i>
+      <span class="notification-dot" aria-hidden="true"></span>
+    </button>
     <div class="navbar-admin-profile" aria-label="Signed in as System Administrator">
       <div class="navbar-admin-avatar" aria-hidden="true">SA</div>
       <div class="navbar-admin-profile-text">
@@ -59,10 +63,6 @@ $adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')
         <span class="navbar-admin-role">Administrator</span>
       </div>
     </div>
-    <button type="button" class="admin-notification-btn" id="adminNotificationBtn" title="Notifications" aria-label="Notifications">
-      <i class="ph ph-bell"></i>
-      <span class="notification-dot" aria-hidden="true"></span>
-    </button>
     <div class="admin-notification-panel" id="adminNotificationPanel" role="status" aria-live="polite" hidden>
       <div class="admin-notification-panel-header">
         <strong>Notifications</strong>

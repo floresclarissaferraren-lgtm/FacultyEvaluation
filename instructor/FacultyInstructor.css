@@ -3231,3 +3231,408 @@ body {
 .navbar .logo-subtitle {
   color: rgba(255, 255, 255, 0.78);
 }
+
+.instructor-dashboard-loading > :not(.instructor-dashboard-skeleton) {
+  visibility: hidden;
+}
+
+.instructor-dashboard-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  align-items: center;
+  gap: clamp(24px, 3vw, 38px);
+  padding: 38px 42px;
+}
+
+.instructor-dashboard-loading > .instructor-dashboard-skeleton {
+  display: flex;
+}
+
+.instructor-dashboard-loading {
+  background: #ffffff;
+  border-color: #e5edf7;
+  border-left-color: #e5edf7;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.instructor-dashboard-skeleton-content {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.instructor-dashboard-skeleton-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.instructor-dashboard-skeleton-line,
+.instructor-dashboard-skeleton-copy span,
+.instructor-dashboard-skeleton-actions span,
+.instructor-dashboard-skeleton-image,
+.instructor-dashboard-skeleton-status {
+  display: block;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 720px 100%;
+  animation: instructorDashboardSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes instructorDashboardSkeletonShimmer {
+  0% { background-position: -720px 0; }
+  100% { background-position: 720px 0; }
+}
+
+.instructor-dashboard-skeleton-line.title {
+  width: min(360px, 82%);
+  height: 32px;
+  border-radius: 7px;
+}
+
+.instructor-dashboard-skeleton-line.period {
+  width: 150px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.instructor-dashboard-skeleton-copy {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.instructor-dashboard-skeleton-copy span {
+  width: 96%;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.instructor-dashboard-skeleton-copy span:last-child {
+  width: 82%;
+}
+
+.instructor-dashboard-skeleton-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.instructor-dashboard-skeleton-actions span {
+  width: 148px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.instructor-dashboard-skeleton-actions span:last-child {
+  width: 158px;
+}
+
+.instructor-dashboard-skeleton-image {
+  flex: 0 0 clamp(180px, 24vw, 290px);
+  width: clamp(180px, 24vw, 290px);
+  height: 150px;
+  border-radius: 18px;
+}
+
+.instructor-dashboard-skeleton-status {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 142px;
+  height: 27px;
+  border-radius: 999px;
+}
+
+@media (max-width: 768px) {
+  .instructor-dashboard-skeleton {
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(16px, 3vw, 24px);
+    padding: clamp(20px, 4vw, 32px) clamp(16px, 3vw, 24px);
+  }
+
+  .instructor-dashboard-skeleton-image {
+    width: min(42vw, 190px);
+    height: 120px;
+    flex-basis: auto;
+    align-self: flex-end;
+    margin: 0;
+  }
+
+  .instructor-dashboard-skeleton-content {
+    width: 100%;
+    gap: 16px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .instructor-dashboard-skeleton-header {
+    width: 100%;
+    align-items: center;
+  }
+
+  .instructor-dashboard-skeleton-line.title {
+    width: min(360px, 85%);
+  }
+
+  .instructor-dashboard-skeleton-copy {
+    align-items: center;
+  }
+
+  .instructor-dashboard-skeleton-copy span:last-child {
+    width: 85%;
+  }
+
+  .instructor-dashboard-skeleton-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .instructor-dashboard-skeleton-status {
+    position: relative;
+    inset: auto;
+    align-self: flex-end;
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .instructor-dashboard-skeleton-line,
+  .instructor-dashboard-skeleton-copy span,
+  .instructor-dashboard-skeleton-actions span,
+  .instructor-dashboard-skeleton-image,
+  .instructor-dashboard-skeleton-status {
+    animation: none;
+    background: #e5e7eb;
+  }
+}
+
+#passwordForm {
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#passwordForm .LoginForm-content {
+  width: min(440px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#passwordForm .modern-login-form,
+#passwordForm .modern-input-group,
+#passwordForm .input-wrap {
+  min-width: 0;
+  width: 100%;
+}
+
+.profileform {
+  box-sizing: border-box;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.profileform .sp-modal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+
+.profileform .sp-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.profileform .sp-info-value,
+.profileform .sp-program-name,
+.profileform .sp-subject-desc {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  #passwordForm,
+  .profileform {
+    padding: 12px;
+  }
+
+  #passwordForm .LoginForm-content {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  #passwordForm .LoginForm-header {
+    margin-bottom: 14px;
+  }
+
+  #passwordForm .login-title {
+    font-size: clamp(22px, 7vw, 28px);
+  }
+
+  #passwordForm .modern-input-group input {
+    padding-right: 44px;
+    padding-left: 14px;
+  }
+
+  .profileform .sp-modal {
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 14px;
+  }
+
+  .profileform .sp-body {
+    padding: 16px;
+  }
+
+  .profileform .sp-name-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .profileform .sp-status-badge {
+    margin-left: auto;
+  }
+
+  .profileform .sp-subjects-list {
+    max-height: min(240px, 30dvh);
+  }
+}
+
+@media (max-height: 560px) {
+  #passwordForm,
+  .profileform {
+    align-items: flex-start;
+  }
+
+  #passwordForm .LoginForm-content,
+  .profileform .sp-modal {
+    margin-block: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  #instructorDashboard .welcome-content {
+    gap: clamp(12px, 3vw, 20px);
+    padding: clamp(16px, 4.5vw, 24px) clamp(12px, 4vw, 20px);
+  }
+
+  #instructorDashboard .welcome-right {
+    gap: clamp(10px, 2.8vw, 16px);
+  }
+
+  #instructorDashboard .student-name-title {
+    font-size: clamp(17px, 5vw, 22px) !important;
+  }
+
+  #instructorDashboard .welcome-period-subtitle {
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: clamp(10px, 2.8vw, 12px);
+  }
+
+  #instructorDashboard .welcome-message {
+    font-size: clamp(12px, 1.9vw, 14px);
+    line-height: 1.55;
+  }
+
+  #instructorDashboard .evaluation-period-status {
+    gap: 4px;
+    padding: 6px 8px !important;
+    font-size: clamp(9px, 2.6vw, 11px) !important;
+  }
+
+  #instructorDashboard .action-buttons {
+    gap: clamp(6px, 2vw, 8px);
+  }
+
+  #instructorDashboard .action-buttons .action-btn {
+    width: clamp(150px, 52vw, 210px);
+    min-height: clamp(32px, 8.5vw, 36px);
+    padding: clamp(7px, 2vw, 10px) clamp(10px, 3vw, 16px);
+    gap: clamp(5px, 1.5vw, 7px);
+    font-size: clamp(10px, 3vw, 13px);
+  }
+
+  #instructorDashboard .action-buttons .action-btn i {
+    font-size: clamp(13px, 3.7vw, 16px);
+  }
+
+  #instructorDashboard .welcome-main-image {
+    width: min(40vw, 170px);
+    max-height: clamp(90px, 28vw, 120px);
+  }
+}
+
+@media (max-width: 360px) {
+  #instructorDashboard .welcome-content {
+    padding-inline: 12px;
+  }
+
+  #instructorDashboard .action-buttons .action-btn {
+    width: clamp(138px, 50vw, 180px);
+    font-size: clamp(10px, 3vw, 11px);
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding-inline: clamp(10px, 3vw, 18px);
+  }
+
+  .brand {
+    min-width: 0;
+    gap: clamp(8px, 2vw, 14px);
+  }
+
+  .brand-text {
+    min-width: 0;
+  }
+
+  .logo-text.main-title {
+    font-size: clamp(11px, 3.5vw, 16px);
+    line-height: 1.15;
+  }
+
+  .logo-subtitle {
+    font-size: clamp(8px, 2.2vw, 10px);
+    letter-spacing: clamp(0.3px, 0.2vw, 0.8px);
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar {
+    padding-inline: 10px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .navbar-logo {
+    height: 34px;
+  }
+
+  .logo-text.main-title {
+    font-size: clamp(10px, 3.2vw, 12px);
+  }
+
+  .logo-subtitle {
+    font-size: 8px;
+    letter-spacing: 0.3px;
+  }
+}

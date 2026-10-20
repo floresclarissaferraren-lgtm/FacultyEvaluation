@@ -68,7 +68,10 @@ $conn->close();
       <span class="student-navbar-skeleton-title"></span>
       <span class="student-navbar-skeleton-subtitle"></span>
     </div>
-    <span class="student-navbar-skeleton-user"></span>
+    <div class="student-navbar-skeleton-account">
+      <span class="student-navbar-skeleton-user"></span>
+      <span class="student-navbar-skeleton-caret"></span>
+    </div>
   </div>
   <div class="brand"> 
     <img src="../assets/images/schoollogo.png" alt="Logo" class="navbar-logo">
@@ -211,10 +214,12 @@ $conn->close();
           <span class="student-dashboard-skeleton-period"></span>
         </div>
         <div class="student-dashboard-skeleton-copy">
-          <span></span><span></span>
+          <span></span><span></span><span></span>
         </div>
         <span class="student-dashboard-skeleton-button"></span>
       </div>
+      <span class="student-dashboard-skeleton-image"></span>
+      <span class="student-dashboard-skeleton-status"></span>
     </div>
     <span id="evaluation-period-status" class="evaluation-period-status is-checking" role="status" aria-live="polite">
       <i class="ph ph-circle-notch" aria-hidden="true"></i>

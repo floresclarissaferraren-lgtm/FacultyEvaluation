@@ -1418,7 +1418,11 @@ async function loadInstructorAcademicPeriod() {
 
 // Refresh academic period display every 1 second
 function startInstructorPeriodRefresh() {
-  loadInstructorAcademicPeriod(); // Load immediately
+  loadInstructorAcademicPeriod().finally(() => {
+    const dashboard = document.getElementById("instructorDashboard");
+    dashboard?.classList.remove("instructor-dashboard-loading");
+    dashboard?.removeAttribute("aria-busy");
+  });
   setInterval(loadInstructorAcademicPeriod, 1000); // Then every 1 second
 }
 

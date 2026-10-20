@@ -1932,30 +1932,24 @@ body.modal-open {
 
 .skeleton-dashboard-content {
   flex-grow: 1;
-  padding: 24px 28px;
+  padding: 22px 24px;
   background: #f3f4f6;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .skeleton-welcome-box {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px 24px;
+  gap: 20px;
+  min-height: 88px;
+  padding: 16px 24px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
-}
-
-.skeleton-welcome-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  flex-shrink: 0;
 }
 
 .skeleton-welcome-copy {
@@ -1963,6 +1957,27 @@ body.modal-open {
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  gap: 10px;
+  margin-left: 50px;
+}
+
+.skeleton-welcome-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton-welcome-description {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.skeleton-admin-welcome-image {
+  width: 150px;
+  height: 60px;
+  flex: 0 0 150px;
+  border-radius: 12px;
 }
 
 .skeleton-toolbar {
@@ -1992,15 +2007,17 @@ body.modal-open {
 
 .skeleton-cards-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.3fr);
+  gap: 12px;
 }
 
 .skeleton-dash-card {
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
-  padding: 20px;
+  min-width: 0;
+  min-height: 112px;
+  padding: 18px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -2008,8 +2025,40 @@ body.modal-open {
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
 }
 
+.skeleton-academic-overview {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+}
+
+.skeleton-academic-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 0;
+  flex: 1;
+}
+
+.skeleton-academic-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
 .skeleton-card-left {
   display: flex;
+  min-width: 0;
   flex-direction: column;
 }
 
@@ -2028,16 +2077,17 @@ body.modal-open {
 
 .skeleton-row-2 {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 20px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 12px;
 }
 
 .skeleton-large-card {
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
-  padding: 24px;
-  min-height: 300px;
+  min-width: 0;
+  padding: 18px;
+  min-height: 250px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
@@ -2072,6 +2122,118 @@ body.modal-open {
   gap: 12px;
   margin-top: 14px;
 }
+
+.skeleton-program-progress-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.skeleton-program-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton-program-progress-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeleton-program-progress-code,
+.skeleton-program-progress-name,
+.skeleton-program-progress-percent,
+.skeleton-program-progress-bar {
+  display: block;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.skeleton-program-progress-code {
+  width: 48px;
+  height: 11px;
+  flex: 0 0 48px;
+}
+
+.skeleton-program-progress-name {
+  width: auto;
+  height: 11px;
+  flex: 1 1 auto;
+}
+
+.skeleton-program-progress-percent {
+  width: 36px;
+  height: 11px;
+  flex: 0 0 36px;
+}
+
+.skeleton-program-progress-bar {
+  width: 100%;
+  height: 7px;
+}
+
+.skeleton-progress-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.skeleton-progress-summary > div {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.skeleton-progress-summary .skeleton-value {
+  width: 44%;
+  height: 18px;
+}
+
+.skeleton-progress-summary .skeleton-text {
+  width: 70%;
+  height: 9px;
+}
+
+.skeleton-top-performance-feature {
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.skeleton-top-performance-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+
+.skeleton-top-performance-name,
+.skeleton-top-performance-score,
+.skeleton-top-performance-rank {
+  height: 12px;
+  border-radius: 999px;
+}
+
+.skeleton-top-performance-name { width: 58%; }
+.skeleton-top-performance-score { width: 38%; height: 22px; }
+.skeleton-top-performance-rank { width: 28%; height: 18px; }
 
 .skeleton-legend-item {
   width: 50px;
@@ -2137,10 +2299,19 @@ body.modal-open {
 .skeleton-caret,
 .skeleton-toolbar-label,
 .skeleton-dropdown,
+.skeleton-admin-welcome-image,
 .skeleton-card-icon-box,
 .skeleton-value,
 .skeleton-circle-chart,
 .skeleton-legend-item,
+.skeleton-program-progress-code,
+.skeleton-program-progress-name,
+.skeleton-program-progress-percent,
+.skeleton-program-progress-bar,
+.skeleton-top-performance-avatar,
+.skeleton-top-performance-name,
+.skeleton-top-performance-score,
+.skeleton-top-performance-rank,
 .skeleton-rank-number,
 .skeleton-rank-avatar,
 .skeleton-rank-name,
@@ -2164,7 +2335,10 @@ body.modal-open {
     grid-template-columns: repeat(2, 1fr);
   }
   .skeleton-row-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .skeleton-top-performance {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2185,6 +2359,50 @@ body.modal-open {
   }
   .skeleton-cards-grid {
     grid-template-columns: 1fr;
+  }
+  .skeleton-row-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .skeleton-top-performance {
+    grid-column: auto;
+  }
+  .skeleton-welcome-copy {
+    margin-left: 0;
+  }
+  .skeleton-admin-welcome-image {
+    display: none;
+  }
+  .skeleton-academic-items {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fullscreen-spinner .admin-skeleton .skeleton-title,
+  #fullscreen-spinner .admin-skeleton .skeleton-text,
+  #fullscreen-spinner .admin-skeleton .skeleton-menu-header,
+  #fullscreen-spinner .admin-skeleton .skeleton-menu-icon,
+  #fullscreen-spinner .admin-skeleton .skeleton-menu-text,
+  #fullscreen-spinner .admin-skeleton .skeleton-sidebar-logo,
+  #fullscreen-spinner .admin-skeleton .skeleton-hamburger,
+  #fullscreen-spinner .admin-skeleton .skeleton-nav-title,
+  #fullscreen-spinner .admin-skeleton .skeleton-avatar-circle,
+  #fullscreen-spinner .admin-skeleton .skeleton-caret,
+  #fullscreen-spinner .admin-skeleton .skeleton-card-icon-box,
+  #fullscreen-spinner .admin-skeleton .skeleton-value,
+  #fullscreen-spinner .admin-skeleton .skeleton-circle-chart,
+  #fullscreen-spinner .admin-skeleton .skeleton-legend-item,
+  #fullscreen-spinner .admin-skeleton .skeleton-admin-welcome-image,
+  #fullscreen-spinner .admin-skeleton .skeleton-program-progress-code,
+  #fullscreen-spinner .admin-skeleton .skeleton-program-progress-name,
+  #fullscreen-spinner .admin-skeleton .skeleton-program-progress-percent,
+  #fullscreen-spinner .admin-skeleton .skeleton-program-progress-bar,
+  #fullscreen-spinner .admin-skeleton .skeleton-top-performance-avatar,
+  #fullscreen-spinner .admin-skeleton .skeleton-top-performance-name,
+  #fullscreen-spinner .admin-skeleton .skeleton-top-performance-score,
+  #fullscreen-spinner .admin-skeleton .skeleton-top-performance-rank {
+    animation: none;
+    background: #e5e7eb;
   }
 }
 
@@ -2218,9 +2436,9 @@ body.modal-open {
 .faculty-skeleton {
   display: none;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   flex-direction: column;
-  background: #f8fafc;
+  background: #f3f4f6;
 }
 
 #fullscreen-spinner.loading-faculty .faculty-skeleton {
@@ -2231,183 +2449,288 @@ body.modal-open {
   display: none;
 }
 
-.faculty-skeleton .skeleton-navbar {
-  height: 64px;
-  background: #0d4781;
+.faculty-loading-navbar {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex: 0 0 64px;
+  height: 64px;
   justify-content: space-between;
   align-items: center;
   padding: 0 28px;
-  box-shadow: 0 8px 20px rgba(0, 31, 63, 0.22);
-  width: 100%;
-  box-sizing: border-box;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
 }
 
-.faculty-skeleton .skeleton-nav-left {
+.faculty-loading-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.faculty-skeleton .skeleton-logo {
+.faculty-loading-logo,
+.faculty-loading-brand-title,
+.faculty-loading-brand-subtitle,
+.faculty-loading-avatar,
+.faculty-loading-caret,
+.faculty-loading-title,
+.faculty-loading-period,
+.faculty-loading-description span,
+.faculty-loading-actions span,
+.faculty-loading-illustration,
+.faculty-loading-status {
+  display: block;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 720px 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+}
+
+.faculty-loading-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.faculty-loading-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.faculty-loading-brand-title {
+  width: 190px;
+  height: 14px;
+  border-radius: 5px;
+}
+
+.faculty-loading-brand-subtitle {
+  width: 105px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.faculty-loading-account {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px 6px 6px;
+}
+
+.faculty-loading-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
 }
 
-.faculty-skeleton .skeleton-nav-title {
-  height: 20px;
-  border-radius: 4px;
-}
-
-.faculty-skeleton .skeleton-user-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.faculty-skeleton .skeleton-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-}
-
-.faculty-skeleton .skeleton-user-name {
-  height: 14px;
+.faculty-loading-caret {
+  width: 10px;
+  height: 6px;
   border-radius: 3px;
 }
 
 .faculty-skeleton-content {
   width: 100%;
-  max-width: 980px;
-  margin: 26px auto 0;
-  padding: 0 18px 32px;
-  box-sizing: border-box;
+  max-width: 1120px;
+  margin: 26px auto;
+  padding: 0 24px;
+}
+
+.faculty-loading-welcome {
+  position: relative;
+  min-height: 244px;
+  padding: 28px 42px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-left: 7px solid #e5e7eb;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
+}
+
+.faculty-loading-status {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 142px;
+  height: 27px;
+  border-radius: 999px;
+}
+
+.faculty-loading-welcome-content {
   display: flex;
+  min-height: 186px;
+  align-items: center;
+  gap: 32px;
+}
+
+.faculty-loading-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 24px;
 }
 
-.faculty-hero-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 26px 30px;
-  border: 1px solid #dbe6ff;
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 26px;
-  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
-}
-
-.faculty-hero-image {
-  width: 200px;
-  height: 200px;
-  border-radius: 18px;
-}
-
-.faculty-hero-copy {
+.faculty-loading-heading {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.faculty-hub-panel {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 24px 30px;
-  border: 1px solid #dbe6ff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
+.faculty-loading-title {
+  width: min(360px, 78%);
+  height: 30px;
+  border-radius: 7px;
 }
 
-.faculty-name-block {
+.faculty-loading-period {
+  width: 116px;
+  height: 22px;
+  border-radius: 4px;
+}
+
+.faculty-loading-description {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
-.faculty-actions {
+.faculty-loading-description span {
+  width: 96%;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.faculty-loading-description span:last-child {
+  width: 82%;
+}
+
+.faculty-loading-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  margin-top: 2px;
 }
 
-.faculty-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 4px;
+.faculty-loading-actions span {
+  width: 148px;
+  height: 36px;
+  border-radius: 8px;
 }
 
-.faculty-stats-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+.faculty-loading-actions span:last-child {
+  width: 158px;
 }
 
-.faculty-stat-card {
-  background: #ffffff;
+.faculty-loading-illustration {
+  width: clamp(180px, 24vw, 290px);
+  height: 150px;
+  flex: 0 0 clamp(180px, 24vw, 290px);
   border-radius: 18px;
-  border: 1px solid #dbe6ff;
-  padding: 24px 26px;
-  box-shadow: 0 10px 30px rgba(15, 46, 117, 0.08);
 }
 
-.skeleton-progress-line {
-  height: 8px;
-  border-radius: 999px;
-}
-
-.faculty-skeleton .skeleton-logo,
-.faculty-skeleton .skeleton-nav-title,
-.faculty-skeleton .skeleton-avatar,
-.faculty-skeleton .skeleton-user-name,
-.faculty-skeleton .skeleton-icon,
-.faculty-skeleton .faculty-hero-image,
-.faculty-skeleton .skeleton-title,
-.faculty-skeleton .skeleton-badge,
-.faculty-skeleton .skeleton-text,
-.faculty-skeleton .skeleton-btn,
-.faculty-skeleton .skeleton-dropdown,
-.faculty-skeleton .skeleton-progress-line {
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.4s infinite;
-}
-
-@media (max-width: 920px) {
-  .faculty-hero-card {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
+@media (max-width: 768px) {
+  .faculty-loading-navbar {
+    padding: 0 16px;
   }
 
-  .faculty-hero-copy {
+  .faculty-skeleton-content {
+    margin: 20px auto;
+    padding: 0 16px;
+  }
+
+  .faculty-loading-welcome {
+    min-height: 0;
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+
+  .faculty-loading-welcome-content {
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    padding-top: 24px;
+  }
+
+  .faculty-loading-copy {
+    align-items: center;
+    gap: 18px;
+  }
+
+  .faculty-loading-heading {
+    width: 100%;
     align-items: center;
   }
 
-  .faculty-hub-panel,
-  .faculty-filter-row,
-  .faculty-stats-row {
-    grid-template-columns: 1fr;
+  .faculty-loading-title {
+    width: min(360px, 85%);
   }
 
-  .faculty-hub-panel,
-  .faculty-filter-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .faculty-actions {
+  .faculty-loading-description {
     width: 100%;
+    align-items: center;
+  }
+
+  .faculty-loading-description span:last-child {
+    width: 85%;
+  }
+
+  .faculty-loading-actions {
     flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .faculty-loading-illustration {
+    width: min(42vw, 190px);
+    height: 120px;
+    flex-basis: auto;
+    align-self: flex-end;
+  }
+
+  .faculty-loading-status {
+    top: 14px;
+    right: 14px;
+    width: 132px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .faculty-loading-brand-title {
+    width: min(160px, 42vw);
+  }
+
+  .faculty-loading-logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .faculty-loading-welcome {
+    padding: 22px 14px;
+  }
+
+  .faculty-loading-actions span {
+    width: min(100%, 220px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faculty-skeleton .faculty-loading-logo,
+  .faculty-skeleton .faculty-loading-brand-title,
+  .faculty-skeleton .faculty-loading-brand-subtitle,
+  .faculty-skeleton .faculty-loading-avatar,
+  .faculty-skeleton .faculty-loading-caret,
+  .faculty-skeleton .faculty-loading-title,
+  .faculty-skeleton .faculty-loading-period,
+  .faculty-skeleton .faculty-loading-description span,
+  .faculty-skeleton .faculty-loading-actions span,
+  .faculty-skeleton .faculty-loading-illustration,
+  .faculty-skeleton .faculty-loading-status {
+    animation: none;
+    background: #e5e7eb;
   }
 }
 
