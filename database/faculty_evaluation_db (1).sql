@@ -161,20 +161,6 @@ INSERT INTO `admin_login` (`admin_id`, `admin_username`, `admin_password`) VALUE
 (1, 'ADM-0001', '$2y$10$o1tFhqdY6p9Z0rw/Px4Hk.6MCuZ7p025FwzHuiqatzmS0Zxc4FfQa');
 
 --
--- Table structure for table `classes`
---
-
-CREATE TABLE `classes` (
-  `id` int(11) NOT NULL,
-  `program_id` int(11) NOT NULL,
-  `section_name` varchar(100) NOT NULL,
-  `year_level` varchar(20) NOT NULL,
-  `block` varchar(10) NOT NULL,
-  `status` enum('active','inactive') DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 
 --
@@ -352,16 +338,6 @@ CREATE TABLE `student_subject_classes` (
 --
 
 --
--- Table structure for table `subject_semesters`
---
-
-CREATE TABLE `subject_semesters` (
-  `id` int(11) NOT NULL,
-  `subject_id` int(11) NOT NULL,
-  `semester` enum('1st Semester','2nd Semester') NOT NULL,
-  `academic_year` varchar(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 --
 -- Indexes for dumped tables
 --
@@ -425,11 +401,6 @@ ALTER TABLE `admin_login`
   ADD UNIQUE KEY `admin_username` (`admin_username`);
 
 --
--- Indexes for table `classes`
---
-ALTER TABLE `classes`
-  ADD PRIMARY KEY (`id`);
-
 --
 -- Academic-period lookup for class offerings
 --
@@ -463,7 +434,8 @@ ALTER TABLE `evaluations`
 ALTER TABLE `evaluation_answers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uniq_eval_question` (`evaluation_id`,`question_id`),
-  ADD KEY `idx_answer_eval` (`evaluation_id`);
+  ADD KEY `idx_answer_eval` (`evaluation_id`),
+  ADD KEY `idx_answer_question` (`question_id`);
 
 --
 -- Indexes for table `evaluation_periods`
@@ -530,15 +502,10 @@ ALTER TABLE `student_subject_classes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_student_subject_class` (`student_id`,`subject_id`,`class_id`),
   ADD KEY `idx_ssc_student` (`student_id`),
-  ADD KEY `idx_ssc_class` (`class_id`);
+  ADD KEY `idx_ssc_class` (`class_id`),
+  ADD KEY `idx_ssc_subject` (`subject_id`);
 
 --
--- Indexes for table `subject_semesters`
---
-ALTER TABLE `subject_semesters`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `subject_id` (`subject_id`);
-
 --
 -- AUTO_INCREMENT for dumped tables
 --
@@ -592,11 +559,6 @@ ALTER TABLE `admin_login`
   MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `classes`
---
-ALTER TABLE `classes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
 --
 -- AUTO_INCREMENT for table `class_subjects`
 --
@@ -664,11 +626,6 @@ ALTER TABLE `student_subject_classes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1008;
 
 --
--- AUTO_INCREMENT for table `subject_semesters`
---
-ALTER TABLE `subject_semesters`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 --
 -- Constraints for dumped tables
 --
@@ -677,7 +634,8 @@ ALTER TABLE `subject_semesters`
 -- Constraints for table `add_classes`
 --
 ALTER TABLE `add_classes`
-  ADD CONSTRAINT `add_classes_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `add_programs` (`id`);
+  ADD CONSTRAINT `add_classes_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `add_programs` (`id`),
+  ADD CONSTRAINT `fk_add_classes_period` FOREIGN KEY (`period_id`) REFERENCES `evaluation_periods` (`id`);
 
 --
 -- Constraints for table `add_questions`
@@ -714,10 +672,40 @@ ALTER TABLE `student_subjects`
   ADD CONSTRAINT `student_subjects_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `add_subjects` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `subject_semesters`
+-- Evaluation records retain their related source records.
 --
-ALTER TABLE `subject_semesters`
-  ADD CONSTRAINT `subject_semesters_ibfk_1` FOREIGN KEY (`subject_id`) REFERENCES `add_subjects` (`id`);
+ALTER TABLE `evaluations`
+  ADD CONSTRAINT `fk_evaluations_student` FOREIGN KEY (`student_id`) REFERENCES `add_students` (`id`),
+  ADD CONSTRAINT `fk_evaluations_faculty` FOREIGN KEY (`faculty_id`) REFERENCES `add_faculties` (`id`),
+  ADD CONSTRAINT `fk_evaluations_subject` FOREIGN KEY (`subject_id`) REFERENCES `add_subjects` (`id`),
+  ADD CONSTRAINT `fk_evaluations_class` FOREIGN KEY (`class_id`) REFERENCES `add_classes` (`id`),
+  ADD CONSTRAINT `fk_evaluations_period` FOREIGN KEY (`period_id`) REFERENCES `evaluation_periods` (`id`);
+
+ALTER TABLE `evaluation_answers`
+  ADD CONSTRAINT `fk_answers_evaluation` FOREIGN KEY (`evaluation_id`) REFERENCES `evaluations` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_answers_question` FOREIGN KEY (`question_id`) REFERENCES `add_questions` (`id`);
+
+ALTER TABLE `evaluation_settings`
+  ADD CONSTRAINT `fk_settings_active_period` FOREIGN KEY (`active_period_id`) REFERENCES `evaluation_periods` (`id`);
+
+--
+-- Login credentials and class enrollment rows are dependent records.
+--
+ALTER TABLE `faculty_login`
+  ADD CONSTRAINT `fk_faculty_login_profile` FOREIGN KEY (`faculty_id`) REFERENCES `add_faculties` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `student_login`
+  ADD CONSTRAINT `fk_student_login_profile` FOREIGN KEY (`username`) REFERENCES `add_students` (`student_number`) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE `faculty_uploaded_reports`
+  ADD CONSTRAINT `fk_reports_faculty` FOREIGN KEY (`faculty_id`) REFERENCES `add_faculties` (`id`);
+
+ALTER TABLE `student_subject_classes`
+  ADD CONSTRAINT `fk_ssc_student` FOREIGN KEY (`student_id`) REFERENCES `add_students` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ssc_subject` FOREIGN KEY (`subject_id`) REFERENCES `add_subjects` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ssc_class` FOREIGN KEY (`class_id`) REFERENCES `add_classes` (`id`) ON DELETE CASCADE;
+
+--
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

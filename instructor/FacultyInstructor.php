@@ -1,24 +1,26 @@
 <?php
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
-require_once __DIR__ . '/../shared/security.php';
-requireDashboardRole('faculty');
+require_once __DIR__ . "/../shared/security.php";
+requireDashboardRole("faculty");
 
-include __DIR__ . '/../shared/connect.php';
-require_once __DIR__ . '/../shared/evaluation_period_helper.php';
-require_once __DIR__ . '/../shared/class_period_helper.php';
+include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/evaluation_period_helper.php";
+require_once __DIR__ . "/../shared/class_period_helper.php";
 ensureClassPeriodColumn($conn);
 
 // Fetch faculty data
-$faculty_id = $_SESSION['id'];
+$faculty_id = $_SESSION["id"];
 $evaluation_ongoing = isEvaluationOngoing($conn);
 
 // Debug: Check what ID we're looking for
 error_log("Faculty ID from session: " . $faculty_id);
 
-$stmt = $conn->prepare("SELECT faculty_id, firstname, lastname, suffix, email, status, photo FROM add_faculties WHERE id = ?");
+$stmt = $conn->prepare(
+    "SELECT faculty_id, firstname, lastname, suffix, email, status, photo FROM add_faculties WHERE id = ?",
+);
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -31,44 +33,51 @@ $faculty_photo = ""; // Default fallback
 
 if ($result->num_rows === 1) {
     $faculty = $result->fetch_assoc();
-    
+
     // Debug: Log what we got from database
     error_log("Faculty data from DB: " . print_r($faculty, true));
-    
+
     // Build full name from firstname and lastname
     $name_parts = [];
-    if (!empty($faculty['firstname'])) {
-        $name_parts[] = trim($faculty['firstname']);
+    if (!empty($faculty["firstname"])) {
+        $name_parts[] = trim($faculty["firstname"]);
     }
-    if (!empty($faculty['lastname'])) {
-        $name_parts[] = trim($faculty['lastname']);
+    if (!empty($faculty["lastname"])) {
+        $name_parts[] = trim($faculty["lastname"]);
     }
-    if (!empty($faculty['suffix'])) {
-        $name_parts[] = trim($faculty['suffix']);
+    if (!empty($faculty["suffix"])) {
+        $name_parts[] = trim($faculty["suffix"]);
     }
-    
+
     // Combine name parts with space
     if (!empty($name_parts)) {
-        $faculty_name = implode(' ', $name_parts);
+        $faculty_name = implode(" ", $name_parts);
     }
-    
+
     // Debug: Log the final name
     error_log("Final faculty name: " . $faculty_name);
-    
-    $faculty_email = $faculty['email'] ?? '';
-    $faculty_faculty_id = $faculty['faculty_id'] ?? '';
-    $faculty_status = strtolower($faculty['status'] ?? 'active');
-    $faculty_photo = $faculty['photo'] ?? '';
+
+    $faculty_email = $faculty["email"] ?? "";
+    $faculty_faculty_id = $faculty["faculty_id"] ?? "";
+    $faculty_status = strtolower($faculty["status"] ?? "active");
+    $faculty_photo = $faculty["photo"] ?? "";
 } else {
-    error_log("No faculty found with ID: " . $faculty_id . " (Found " . $result->num_rows . " rows)");
+    error_log(
+        "No faculty found with ID: " .
+            $faculty_id .
+            " (Found " .
+            $result->num_rows .
+            " rows)",
+    );
 }
 $stmt->close();
 
 // Determine the image source: use stored base64 photo or fall back to default avatar
 $default_avatar = "https://cdn-icons-png.flaticon.com/512/3135/3135755.png";
-$faculty_img_src = (!empty($faculty_photo) && strpos($faculty_photo, 'data:image') === 0)
-    ? $faculty_photo
-    : $default_avatar;
+$faculty_img_src =
+    !empty($faculty_photo) && strpos($faculty_photo, "data:image") === 0
+        ? $faculty_photo
+        : $default_avatar;
 
 $faculty_assigned_subjects = [];
 // Show a faculty member's assignments in their profile even when evaluation is closed.
@@ -84,19 +93,19 @@ $subjectSql = <<<'SQL'
 SQL;
 $subjectStmt = $conn->prepare($subjectSql);
 if ($subjectStmt) {
-  $subjectStmt->bind_param("i", $faculty_id);
-  $subjectStmt->execute();
-  $subjectResult = $subjectStmt->get_result();
-  while ($subject = $subjectResult->fetch_assoc()) {
-    $faculty_assigned_subjects[] = [
-      'code' => $subject['subject_code'],
-      'name' => $subject['subject_desc'],
-      'year_level' => $subject['year_level'],
-      'program_code' => $subject['program_code'] ?: 'N/A',
-      'program_name' => $subject['program_name'] ?: 'Unassigned Program'
-    ];
-  }
-  $subjectStmt->close();
+    $subjectStmt->bind_param("i", $faculty_id);
+    $subjectStmt->execute();
+    $subjectResult = $subjectStmt->get_result();
+    while ($subject = $subjectResult->fetch_assoc()) {
+        $faculty_assigned_subjects[] = [
+            "code" => $subject["subject_code"],
+            "name" => $subject["subject_desc"],
+            "year_level" => $subject["year_level"],
+            "program_code" => $subject["program_code"] ?: "N/A",
+            "program_name" => $subject["program_name"] ?: "Unassigned Program",
+        ];
+    }
+    $subjectStmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -104,11 +113,18 @@ if ($subjectStmt) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="csrf-token" content="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+  <meta name="csrf-token" content="<?= htmlspecialchars(
+      csrfToken(),
+      ENT_QUOTES,
+      "UTF-8",
+  ) ?>">
   <title>Faculty Evaluation System</title>
 
-  <link rel="stylesheet" href="FacultyInstructor.css?v=<?=time()?>&fix=<?=rand(1000,9999)?>">
-  <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?=time()?>">
+  <link rel="stylesheet" href="FacultyInstructor.css?v=<?= time() ?>&fix=<?= rand(
+    1000,
+    9999,
+) ?>">
+  <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?= time() ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
@@ -141,14 +157,20 @@ if ($subjectStmt) {
     <div class="dropdown-menu" id="dropdownMenu">
       <div class="dropdown-user-info">
         <div class="dropdown-avatar">
-          <span class="dropdown-avatar-initials"><?php 
-            $names = explode(' ', $faculty_name);
-            echo strtoupper(substr($names[0] ?? 'I', 0, 1) . substr($names[1] ?? 'N', 0, 1));
+          <span class="dropdown-avatar-initials"><?php
+          $names = explode(" ", $faculty_name);
+          echo strtoupper(
+              substr($names[0] ?? "I", 0, 1) . substr($names[1] ?? "N", 0, 1),
+          );
           ?></span>
         </div>
         <div class="dropdown-user-details">
-          <div class="dropdown-user-name"><?php echo htmlspecialchars($faculty_name); ?></div>
-          <div class="dropdown-user-email"><?php echo htmlspecialchars($faculty_email); ?></div>
+          <div class="dropdown-user-name"><?php echo htmlspecialchars(
+              $faculty_name,
+          ); ?></div>
+          <div class="dropdown-user-email"><?php echo htmlspecialchars(
+              $faculty_email,
+          ); ?></div>
         </div>
       </div>
       <hr class="dropdown-divider">
@@ -194,9 +216,11 @@ if ($subjectStmt) {
     <div class="welcome-content">
       <div class="welcome-right">
         <div class="welcome-header-inline">
-          <h1 class="student-name-title">Welcome, <?php echo htmlspecialchars($faculty_name); ?>!</h1>
+          <h1 class="student-name-title">Welcome, <?php echo htmlspecialchars(
+              $faculty_name,
+          ); ?>!</h1>
           <!-- Debug info (remove this after fixing) -->
-          <?php if ($faculty_name === 'Instructor'): ?>
+          <?php if ($faculty_name === "Instructor"): ?>
           <div style="background:#ffebee;padding:10px;border-radius:8px;margin-top:10px;font-size:12px;color:#c62828;">
             <strong>Debug:</strong> Faculty ID from session: <?php echo $faculty_id; ?><br>
             Please check if this faculty exists in the database with firstname and lastname filled in.
@@ -214,7 +238,7 @@ if ($subjectStmt) {
           Track your evaluation scores, review student feedback, and refine your teaching strategies to improve teaching effectiveness and support better academic outcomes.
         </p>
         
-        <?php if ($faculty_status !== 'active'): ?>
+        <?php if ($faculty_status !== "active"): ?>
         <div class="inactive-account-message">
           <i class="ph ph-warning-circle"></i>
           <span>Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.</span>
@@ -244,14 +268,29 @@ if ($subjectStmt) {
 </div>
 
 <!-- Hidden fields -->
-<input type="hidden" id="facultyId" value="<?php echo htmlspecialchars($faculty_faculty_id); ?>">
-<input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars($faculty_id); ?>">
-<input type="hidden" id="facultyName" value="<?php echo htmlspecialchars($faculty_name); ?>">
-<input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars($faculty_email); ?>">
-<input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars($faculty_status); ?>">
-<input type="hidden" id="evaluationOngoing" value="<?php echo $evaluation_ongoing ? '1' : '0'; ?>">
+<input type="hidden" id="facultyId" value="<?php echo htmlspecialchars(
+    $faculty_faculty_id,
+); ?>">
+<input type="hidden" id="facultyNumericId" value="<?php echo htmlspecialchars(
+    $faculty_id,
+); ?>">
+<input type="hidden" id="facultyName" value="<?php echo htmlspecialchars(
+    $faculty_name,
+); ?>">
+<input type="hidden" id="facultyEmail" value="<?php echo htmlspecialchars(
+    $faculty_email,
+); ?>">
+<input type="hidden" id="facultyStatus" value="<?php echo htmlspecialchars(
+    $faculty_status,
+); ?>">
+<input type="hidden" id="evaluationOngoing" value="<?php echo $evaluation_ongoing
+    ? "1"
+    : "0"; ?>">
 <script>
-  window.facultyAssignedSubjects = <?php echo json_encode($faculty_assigned_subjects, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+  window.facultyAssignedSubjects = <?php echo json_encode(
+      $faculty_assigned_subjects,
+      JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT,
+  ); ?>;
 </script>
 </div>
 
@@ -328,10 +367,10 @@ if ($subjectStmt) {
 </div>
 
 <!-- JS FILE -->
-<script src="../shared/assets/unified_notifications.js?v=<?=time()?>"></script>
-<script src="../shared/assets/session_keepalive.js?v=<?=time()?>"></script>
-<script src="../shared/assets/csrf.js?v=<?=time()?>"></script>
-<script src="FacultyInstructor.js?v=<?=time()?>"></script>
+<script src="../shared/assets/unified_notifications.js?v=<?= time() ?>"></script>
+<script src="../shared/assets/session_keepalive.js?v=<?= time() ?>"></script>
+<script src="../shared/assets/csrf.js?v=<?= time() ?>"></script>
+<script src="FacultyInstructor.js?v=<?= time() ?>"></script>
 
 </body>
 </html>

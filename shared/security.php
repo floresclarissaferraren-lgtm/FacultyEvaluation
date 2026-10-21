@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/session_config.php';
+require_once __DIR__ . "/session_config.php";
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -7,47 +7,58 @@ if (session_status() === PHP_SESSION_NONE) {
 
 function isJsonRequest(): bool
 {
-    return isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
-        || isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false;
+    return (isset($_SERVER["HTTP_ACCEPT"]) &&
+        strpos($_SERVER["HTTP_ACCEPT"], "application/json") !== false) ||
+        (isset($_SERVER["CONTENT_TYPE"]) &&
+            strpos($_SERVER["CONTENT_TYPE"], "application/json") !== false);
 }
 
-function failUnauthorized(string $message = 'Unauthorized access', int $status = 401): never
-{
+function failUnauthorized(
+    string $message = "Unauthorized access",
+    int $status = 401,
+): never {
     http_response_code($status);
     if (isJsonRequest() || !headers_sent()) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'error' => $message, 'message' => $message]);
+        header("Content-Type: application/json");
+        echo json_encode([
+            "success" => false,
+            "error" => $message,
+            "message" => $message,
+        ]);
     } else {
         echo $message;
     }
-    exit;
+    exit();
 }
 
 function requireRole(string ...$roles): void
 {
-    $role = (string)($_SESSION['role'] ?? '');
-    if ($role === '' || !in_array($role, $roles, true)) {
-        failUnauthorized('Unauthorized access', 403);
+    $role = (string) ($_SESSION["role"] ?? "");
+    if ($role === "" || !in_array($role, $roles, true)) {
+        failUnauthorized("Unauthorized access", 403);
     }
 }
 
 function requireDashboardRole(string $role): void
 {
-    if (empty($_SESSION['id']) || (string)($_SESSION['role'] ?? '') !== $role) {
+    if (
+        empty($_SESSION["id"]) ||
+        (string) ($_SESSION["role"] ?? "") !== $role
+    ) {
         http_response_code(403);
-        header('Content-Type: text/html; charset=utf-8');
+        header("Content-Type: text/html; charset=utf-8");
         echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 Access Denied</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f6f8;color:#202a35;font:16px/1.5 Arial,sans-serif}.access-denied{text-align:center;padding:40px 24px}h1{margin:0;color:#c62828;font-size:64px;line-height:1}h2{margin:16px 0 8px;font-size:24px}p{margin:0;color:#596573}</style></head><body><main class="access-denied"><h1>403</h1><h2>Access Denied</h2><p>You don\'t have permission to access this page.</p></main></body></html>';
-        exit;
+        exit();
     }
 }
 
 function requireMethod(string ...$methods): void
 {
-    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $method = $_SERVER["REQUEST_METHOD"] ?? "GET";
     if (!in_array($method, $methods, true)) {
-        failUnauthorized('Method not allowed', 405);
+        failUnauthorized("Method not allowed", 405);
     }
-    if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+    if (in_array($method, ["POST", "PUT", "PATCH", "DELETE"], true)) {
         requireSameOrigin();
         requireCsrf();
     }
@@ -55,85 +66,102 @@ function requireMethod(string ...$methods): void
 
 function requireSameOrigin(): void
 {
-    $origin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
-    if ($origin !== '') {
-        $expected = (requestIsHttps() ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '');
-        if (!hash_equals($expected, rtrim($origin, '/'))) {
-            failUnauthorized('Cross-origin request blocked', 403);
+    $origin = trim((string) ($_SERVER["HTTP_ORIGIN"] ?? ""));
+    if ($origin !== "") {
+        $expected =
+            (requestIsHttps() ? "https" : "http") .
+            "://" .
+            ($_SERVER["HTTP_HOST"] ?? "");
+        if (!hash_equals($expected, rtrim($origin, "/"))) {
+            failUnauthorized("Cross-origin request blocked", 403);
         }
         return;
     }
-    $referer = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
-    if ($referer !== '' && parse_url($referer, PHP_URL_HOST) !== ($_SERVER['HTTP_HOST'] ?? '')) {
-        failUnauthorized('Cross-origin request blocked', 403);
+    $referer = trim((string) ($_SERVER["HTTP_REFERER"] ?? ""));
+    if (
+        $referer !== "" &&
+        parse_url($referer, PHP_URL_HOST) !== ($_SERVER["HTTP_HOST"] ?? "")
+    ) {
+        failUnauthorized("Cross-origin request blocked", 403);
     }
 }
 
 function csrfToken(): string
 {
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    if (empty($_SESSION["csrf_token"])) {
+        $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
     }
-    return $_SESSION['csrf_token'];
+    return $_SESSION["csrf_token"];
 }
 
 function requireCsrf(): void
 {
-    $provided = (string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? '');
-    if ($provided === '' || !hash_equals((string)($_SESSION['csrf_token'] ?? ''), $provided)) {
-        failUnauthorized('Invalid security token', 419);
+    $provided =
+        (string) ($_SERVER["HTTP_X_CSRF_TOKEN"] ??
+            ($_POST["csrf_token"] ?? ""));
+    if (
+        $provided === "" ||
+        !hash_equals((string) ($_SESSION["csrf_token"] ?? ""), $provided)
+    ) {
+        failUnauthorized("Invalid security token", 419);
     }
 }
 
 function rotateSessionSecurityState(): void
 {
     session_regenerate_id(true);
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    $_SESSION['session_started_at'] = time();
-    $_SESSION['last_activity'] = time();
+    $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
+    $_SESSION["session_started_at"] = time();
+    $_SESSION["last_activity"] = time();
 }
 
 function generateTemporaryPassword(int $length = 8): string
 {
     if ($length < 3) {
-        throw new InvalidArgumentException('Temporary passwords must contain at least three characters.');
+        throw new InvalidArgumentException(
+            "Temporary passwords must contain at least three characters.",
+        );
     }
 
     $characterSets = [
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        'abcdefghijklmnopqrstuvwxyz',
-        '0123456789',
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "abcdefghijklmnopqrstuvwxyz",
+        "0123456789",
     ];
-    $allCharacters = implode('', $characterSets);
+    $allCharacters = implode("", $characterSets);
     $characters = [];
 
     foreach ($characterSets as $characterSet) {
         $characters[] = $characterSet[random_int(0, strlen($characterSet) - 1)];
     }
     while (count($characters) < $length) {
-        $characters[] = $allCharacters[random_int(0, strlen($allCharacters) - 1)];
+        $characters[] =
+            $allCharacters[random_int(0, strlen($allCharacters) - 1)];
     }
 
     for ($index = count($characters) - 1; $index > 0; $index--) {
         $swapIndex = random_int(0, $index);
-        [$characters[$index], $characters[$swapIndex]] = [$characters[$swapIndex], $characters[$index]];
+        [$characters[$index], $characters[$swapIndex]] = [
+            $characters[$swapIndex],
+            $characters[$index],
+        ];
     }
 
-    return implode('', $characters);
+    return implode("", $characters);
 }
 
 function expireSession(): void
 {
     $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
+    if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', [
-            'expires' => time() - 42000,
-            'path' => $params['path'],
-            'domain' => $params['domain'],
-            'secure' => $params['secure'],
-            'httponly' => $params['httponly'],
-            'samesite' => $params['samesite'] ?? 'Lax',
+        setcookie(session_name(), "", [
+            "expires" => time() - 42000,
+            "path" => $params["path"],
+            "domain" => $params["domain"],
+            "secure" => $params["secure"],
+            "httponly" => $params["httponly"],
+            "samesite" => $params["samesite"] ?? "Lax",
         ]);
     }
     session_destroy();
@@ -144,13 +172,18 @@ function expireSession(): void
 $now = time();
 $idleTimeout = 1800;
 $absoluteTimeout = 28800;
-$authenticated = !empty($_SESSION['role']) && !empty($_SESSION['id']);
-$lastActivity = (int)($_SESSION['last_activity'] ?? $now);
-$sessionStarted = (int)($_SESSION['session_started_at'] ?? $now);
-if ($authenticated && (($now - $lastActivity) >= $idleTimeout || ($now - $sessionStarted) >= $absoluteTimeout)) {
+$authenticated = !empty($_SESSION["role"]) && !empty($_SESSION["id"]);
+$lastActivity = (int) ($_SESSION["last_activity"] ?? $now);
+$sessionStarted = (int) ($_SESSION["session_started_at"] ?? $now);
+if (
+    $authenticated &&
+    ($now - $lastActivity >= $idleTimeout ||
+        $now - $sessionStarted >= $absoluteTimeout)
+) {
     expireSession();
 }
-$_SESSION['session_started_at'] = (int)($_SESSION['session_started_at'] ?? $now);
+$_SESSION["session_started_at"] =
+    (int) ($_SESSION["session_started_at"] ?? $now);
 if ($authenticated) {
-    $_SESSION['last_activity'] = $now;
+    $_SESSION["last_activity"] = $now;
 }

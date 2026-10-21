@@ -1,20 +1,27 @@
 
 <?php
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
-require_once __DIR__ . '/../shared/security.php';
-requireDashboardRole('admin');
-include __DIR__ . '/totalstudents_dashcount.php';
-$adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
+require_once __DIR__ . "/../shared/security.php";
+requireDashboardRole("admin");
+include __DIR__ . "/totalstudents_dashcount.php";
+$adminOverviewNow = new DateTimeImmutable(
+    "now",
+    new DateTimeZone("Asia/Manila"),
+);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="csrf-token" content="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+  <meta name="csrf-token" content="<?= htmlspecialchars(
+      csrfToken(),
+      ENT_QUOTES,
+      "UTF-8",
+  ) ?>">
   <title>Faculty Evaluation System</title>
   <link rel="stylesheet" href="FacultyAdmin.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?php echo time(); ?>">
@@ -213,11 +220,15 @@ $adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')
         <h1>Admin Overview</h1>
         <div class="admin-overview-date-box" aria-label="Current date and time">
     <strong class="admin-overview-date-title">Time &amp; Date</strong>
-    <time class="admin-overview-date" datetime="<?= $adminOverviewNow->format('Y-m-d') ?>">
-      <?= $adminOverviewNow->format('F j, Y') ?>
+    <time class="admin-overview-date" datetime="<?= $adminOverviewNow->format(
+        "Y-m-d",
+    ) ?>">
+      <?= $adminOverviewNow->format("F j, Y") ?>
     </time>
-    <time id="adminOverviewTime" class="admin-overview-time" datetime="<?= $adminOverviewNow->format('H:i:s') ?>">
-      <?= $adminOverviewNow->format('g:i:s A') ?>
+    <time id="adminOverviewTime" class="admin-overview-time" datetime="<?= $adminOverviewNow->format(
+        "H:i:s",
+    ) ?>">
+      <?= $adminOverviewNow->format("g:i:s A") ?>
     </time>
     </div>
       </div>
@@ -801,7 +812,9 @@ $adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')
   <div class="faculty-page-heading-box">
   <div class="faculty-page-heading">
     <div>
-      <h1><i class="ph ph-users-three faculty-page-heading-icon" aria-hidden="true"></i><span>Faculty List</span><span class="faculty-title-count" aria-live="polite"><span class="faculty-count-dot" aria-hidden="true"></span>Total Faculty: <strong id="facultyMemberCount"><?php echo (int)$facultyStats['total_faculty']; ?></strong></span></h1>
+      <h1><i class="ph ph-users-three faculty-page-heading-icon" aria-hidden="true"></i><span>Faculty List</span><span class="faculty-title-count" aria-live="polite"><span class="faculty-count-dot" aria-hidden="true"></span>Total Faculty: <strong id="facultyMemberCount"><?php echo (int) $facultyStats[
+          "total_faculty"
+      ]; ?></strong></span></h1>
       <p>Manage faculty members, their assigned subjects, and account status</p>
     </div>
     <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
@@ -997,9 +1010,15 @@ $adminOverviewNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')
           <i class="ph ph-student" aria-hidden="true"></i>
           <span>Student List</span>
           <span class="student-count-summary" aria-live="polite">
-            <span class="student-count-item"><span class="student-count-dot total" aria-hidden="true"></span>Total Students: <strong id="totalStudentsCount"><?php echo (int)$studentStats['total_students']; ?></strong></span>
-            <span class="student-count-item"><span class="student-count-dot regular" aria-hidden="true"></span>Regular: <strong id="regularStudentsCount"><?php echo (int)$studentStats['regular_students']; ?></strong></span>
-            <span class="student-count-item"><span class="student-count-dot irregular" aria-hidden="true"></span>Irregular: <strong id="irregularStudentsCount"><?php echo (int)$studentStats['irregular_students']; ?></strong></span>
+            <span class="student-count-item"><span class="student-count-dot total" aria-hidden="true"></span>Total Students: <strong id="totalStudentsCount"><?php echo (int) $studentStats[
+                "total_students"
+            ]; ?></strong></span>
+            <span class="student-count-item"><span class="student-count-dot regular" aria-hidden="true"></span>Regular: <strong id="regularStudentsCount"><?php echo (int) $studentStats[
+                "regular_students"
+            ]; ?></strong></span>
+            <span class="student-count-item"><span class="student-count-dot irregular" aria-hidden="true"></span>Irregular: <strong id="irregularStudentsCount"><?php echo (int) $studentStats[
+                "irregular_students"
+            ]; ?></strong></span>
           </span>
         </h1>
         <p>Organize student profiles, year levels, and section</p>

@@ -1,17 +1,17 @@
 <?php
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
-require_once __DIR__ . '/../shared/security.php';
-requireDashboardRole('student');
-include __DIR__ . '/../shared/connect.php';
+require_once __DIR__ . "/../shared/security.php";
+requireDashboardRole("student");
+include __DIR__ . "/../shared/connect.php";
 
-$student_id = intval($_SESSION['id']);
-$studentName = '';
-$studentYearLevel = '';
-$studentProgram = '';
-$studentStatus = 'active';
+$student_id = intval($_SESSION["id"]);
+$studentName = "";
+$studentYearLevel = "";
+$studentProgram = "";
+$studentStatus = "active";
 
 $stmt = $conn->prepare("SELECT s.firstname, s.lastname, s.yearlevel, s.student_number, s.section, s.status, p.program_name, p.program_code 
                           FROM add_students s 
@@ -23,18 +23,22 @@ $result = $stmt->get_result();
 
 if ($result && $result->num_rows === 1) {
     $student = $result->fetch_assoc();
-    $studentName = trim(($student['firstname'] ?? '') . ' ' . ($student['lastname'] ?? ''));
-    $studentYearLevel = $student['yearlevel'] ?? '';
-    $studentNumber = $student['student_number'] ?? '';
-    $studentProgram = $student['program_name'] ?? '';
-    $studentProgramCode = $student['program_code'] ?? '';
-    $studentSection = $student['section'] ?? '';
-    $studentStatus = strtolower(trim((string)($student['status'] ?? 'active')));
+    $studentName = trim(
+        ($student["firstname"] ?? "") . " " . ($student["lastname"] ?? ""),
+    );
+    $studentYearLevel = $student["yearlevel"] ?? "";
+    $studentNumber = $student["student_number"] ?? "";
+    $studentProgram = $student["program_name"] ?? "";
+    $studentProgramCode = $student["program_code"] ?? "";
+    $studentSection = $student["section"] ?? "";
+    $studentStatus = strtolower(
+        trim((string) ($student["status"] ?? "active")),
+    );
 } else {
     $stmt->close();
     $conn->close();
-    header('Location: ../EvalMain.php');
-    exit;
+    header("Location: ../EvalMain.php");
+    exit();
 }
 
 $stmt->close();
@@ -44,10 +48,14 @@ $conn->close();
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="csrf-token" content="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+  <meta name="csrf-token" content="<?= htmlspecialchars(
+      csrfToken(),
+      ENT_QUOTES,
+      "UTF-8",
+  ) ?>">
   <title>Faculty Evaluation System - Admin Panel</title>
-  <link rel="stylesheet" href="FacultyUser.css?v=<?=time()?>">
-  <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?=time()?>">
+  <link rel="stylesheet" href="FacultyUser.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?= time() ?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <script>
     window.addEventListener("pageshow", event => {
@@ -93,28 +101,32 @@ $conn->close();
     <div class="dropdown-menu" id="dropdownMenu">
       <div class="dropdown-user-info">
         <div class="dropdown-avatar">
-          <span class="dropdown-avatar-initials"><?php 
-            $names = explode(' ', $studentName);
-            echo strtoupper(substr($names[0] ?? 'S', 0, 1) . substr($names[1] ?? 'T', 0, 1));
+          <span class="dropdown-avatar-initials"><?php
+          $names = explode(" ", $studentName);
+          echo strtoupper(
+              substr($names[0] ?? "S", 0, 1) . substr($names[1] ?? "T", 0, 1),
+          );
           ?></span>
         </div>
         <div class="dropdown-user-details">
-          <span class="dropdown-user-name"><?php echo htmlspecialchars($studentName ?: 'Student'); ?></span>
-          <span class="dropdown-user-email"><?php 
-            // Get email from database
-            include __DIR__ . '/../shared/connect.php';
-            $stmt = $conn->prepare("SELECT email FROM add_students WHERE id = ?");
-            $stmt->bind_param("i", $student_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $email = '';
-            if ($result && $result->num_rows === 1) {
-                $row = $result->fetch_assoc();
-                $email = $row['email'] ?? '';
-            }
-            $stmt->close();
-            $conn->close();
-            echo htmlspecialchars($email ?: 'student@email.com');
+          <span class="dropdown-user-name"><?php echo htmlspecialchars(
+              $studentName ?: "Student",
+          ); ?></span>
+          <span class="dropdown-user-email"><?php
+          // Get email from database
+          include __DIR__ . "/../shared/connect.php";
+          $stmt = $conn->prepare("SELECT email FROM add_students WHERE id = ?");
+          $stmt->bind_param("i", $student_id);
+          $stmt->execute();
+          $result = $stmt->get_result();
+          $email = "";
+          if ($result && $result->num_rows === 1) {
+              $row = $result->fetch_assoc();
+              $email = $row["email"] ?? "";
+          }
+          $stmt->close();
+          $conn->close();
+          echo htmlspecialchars($email ?: "student@email.com");
           ?></span>
         </div>
       </div>
@@ -193,13 +205,27 @@ $conn->close();
   </div>
 </div>
 
-<input type="hidden" id="studentId" value="<?php echo htmlspecialchars($student_id); ?>">
-<input type="hidden" id="studentName" value="<?php echo htmlspecialchars($studentName); ?>">
-<input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars($studentNumber); ?>">
-<input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars($studentYearLevel); ?>">
-<input type="hidden" id="studentSection" value="<?php echo htmlspecialchars($studentSection); ?>">
-<input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars($studentProgram); ?>">
-<input type="hidden" id="studentStatus" value="<?php echo htmlspecialchars($studentStatus); ?>">
+<input type="hidden" id="studentId" value="<?php echo htmlspecialchars(
+    $student_id,
+); ?>">
+<input type="hidden" id="studentName" value="<?php echo htmlspecialchars(
+    $studentName,
+); ?>">
+<input type="hidden" id="studentNumber" value="<?php echo htmlspecialchars(
+    $studentNumber,
+); ?>">
+<input type="hidden" id="studentYearLevel" value="<?php echo htmlspecialchars(
+    $studentYearLevel,
+); ?>">
+<input type="hidden" id="studentSection" value="<?php echo htmlspecialchars(
+    $studentSection,
+); ?>">
+<input type="hidden" id="studentProgram" value="<?php echo htmlspecialchars(
+    $studentProgram,
+); ?>">
+<input type="hidden" id="studentStatus" value="<?php echo htmlspecialchars(
+    $studentStatus,
+); ?>">
 
 
 <!-- Main Page ======================================================================================-->
@@ -228,7 +254,9 @@ $conn->close();
     <div class="welcome-content">
       <div class="welcome-right">
         <div class="welcome-header-inline">
-          <h1 class="student-name-title" style="font-family: Arial, Helvetica, sans-serif; font-weight: 800;">Welcome, <?php echo htmlspecialchars($studentName ?: 'Student'); ?>!</h1>
+          <h1 class="student-name-title" style="font-family: Arial, Helvetica, sans-serif; font-weight: 800;">Welcome, <?php echo htmlspecialchars(
+              $studentName ?: "Student",
+          ); ?>!</h1>
           <span id="studentAcademicPeriod" class="welcome-period-subtitle" hidden>
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path fill="currentColor" d="M3 5.75A1.75 1.75 0 0 1 4.75 4h5.086c.464 0 .91.184 1.238.512l1.414 1.414c.14.14.33.219.528.219h6.234A1.75 1.75 0 0 1 21 7.895v10.355A1.75 1.75 0 0 1 19.25 20H4.75A1.75 1.75 0 0 1 3 18.25z"/>
@@ -244,14 +272,17 @@ $conn->close();
           <p>Thank you for your time and participation!</p>
         </div>
         
-        <?php if ($studentStatus !== 'active'): ?>
+        <?php if ($studentStatus !== "active"): ?>
         <div class="inactive-account-message">
           <i class="ph ph-warning-circle"></i>
           <span>Your account has been set to inactive by an admin. You cannot evaluate until your account is active again.</span>
         </div>
         <?php endif; ?>
         
-        <button class="evaluate-now-btn" onclick="showEvaluateSection()" <?php echo $studentStatus !== 'active' ? 'disabled' : ''; ?>>
+        <button class="evaluate-now-btn" onclick="showEvaluateSection()" <?php echo $studentStatus !==
+        "active"
+            ? "disabled"
+            : ""; ?>>
           <i class="ph ph-clipboard-text"></i>
           Evaluate Now
         </button>
@@ -302,9 +333,9 @@ $conn->close();
 </div>
 
 
-<script src="../shared/assets/unified_notifications.js?v=<?=time()?>"></script>
-<script src="../shared/assets/session_keepalive.js?v=<?=time()?>"></script>
-<script src="../shared/assets/csrf.js?v=<?=time()?>"></script>
-<script src="FacultyUser.js?v=<?=time()?>"></script>
+<script src="../shared/assets/unified_notifications.js?v=<?= time() ?>"></script>
+<script src="../shared/assets/session_keepalive.js?v=<?= time() ?>"></script>
+<script src="../shared/assets/csrf.js?v=<?= time() ?>"></script>
+<script src="FacultyUser.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -1,78 +1,95 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-requireRole('admin');
-requireMethod('POST');
+require_once __DIR__ . "/../shared/security.php";
+requireRole("admin");
+requireMethod("POST");
 header("Content-Type: application/json");
-include __DIR__ . '/../shared/connect.php';
-require_once __DIR__ . '/../shared/mailer.php';
-require_once __DIR__ . '/../shared/ensure_schema_column.php';
+include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/mailer.php";
+require_once __DIR__ . "/../shared/ensure_schema_column.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
-$action = $data['action'] ?? '';
+$action = $data["action"] ?? "";
 
-ensureColumnExists($conn, 'add_faculties', 'status', 'VARCHAR(20) NOT NULL DEFAULT "active"');
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "status",
+    'VARCHAR(20) NOT NULL DEFAULT "active"',
+);
 
 /* =========================
    ADD NEW FACULTY
 ========================= */
 if ($action === "add") {
+    $faculty_id = trim($data["faculty_id"] ?? "");
+    $email = trim($data["email"] ?? "");
+    $firstname = trim($data["firstname"] ?? "");
+    $lastname = trim($data["lastname"] ?? "");
+    $suffix = trim($data["suffix"] ?? "");
+    $photo = $data["photo"] ?? "";
+    $subjects = $data["subjects"] ?? [];
 
-    $faculty_id = trim($data['faculty_id'] ?? '');
-    $email = trim($data['email'] ?? '');
-    $firstname = trim($data['firstname'] ?? '');
-    $lastname = trim($data['lastname'] ?? '');
-    $suffix = trim($data['suffix'] ?? '');
-    $photo = $data['photo'] ?? '';
-    $subjects = $data['subjects'] ?? [];
-    
     // Generate random password
     $password = generateTemporaryPassword();
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Handle photo - if base64 string, store as is
-    if (!empty($photo) && strpos($photo, 'data:image') === 0) {
+    if (!empty($photo) && strpos($photo, "data:image") === 0) {
         // Photo is base64 encoded, store as is
         error_log("Photo is base64 encoded, length: " . strlen($photo));
     } else {
         // Empty or invalid photo
-        $photo = '';
+        $photo = "";
     }
 
     if (!$faculty_id || !$email || !$firstname || !$lastname) {
-        echo json_encode(["success"=>false,"message"=>"Missing required fields"]);
-        exit;
+        echo json_encode([
+            "success" => false,
+            "message" => "Missing required fields",
+        ]);
+        exit();
     }
 
     if (!preg_match('/^FC-[0-9]{6}$/', $faculty_id)) {
-        echo json_encode(["success"=>false,"message"=>"Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456)."]);
-        exit;
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                "Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456).",
+        ]);
+        exit();
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo json_encode(["success"=>false,"message"=>"Invalid email"]);
-        exit;
+        echo json_encode(["success" => false, "message" => "Invalid email"]);
+        exit();
     }
 
     /* duplicate check */
-    $check = $conn->prepare("SELECT id FROM add_faculties WHERE faculty_id=? OR email=?");
+    $check = $conn->prepare(
+        "SELECT id FROM add_faculties WHERE faculty_id=? OR email=?",
+    );
     $check->bind_param("ss", $faculty_id, $email);
     $check->execute();
     $check->store_result();
 
     if ($check->num_rows > 0) {
-        echo json_encode(["success"=>false,"message"=>"Faculty already exists"]);
-        exit;
+        echo json_encode([
+            "success" => false,
+            "message" => "Faculty already exists",
+        ]);
+        exit();
     }
     $check->close();
 
     $conn->begin_transaction();
 
     try {
-
         // Check if password column exists
-        $result = $conn->query("SHOW COLUMNS FROM add_faculties LIKE 'password'");
+        $result = $conn->query(
+            "SHOW COLUMNS FROM add_faculties LIKE 'password'",
+        );
         $hasPasswordColumn = $result->num_rows > 0;
-        
+
         if ($hasPasswordColumn) {
             // Insert with password
             $stmt = $conn->prepare("
@@ -88,7 +105,7 @@ if ($action === "add") {
                 $lastname,
                 $suffix,
                 $photo,
-                $hashed_password
+                $hashed_password,
             );
         } else {
             // Insert without password (fallback)
@@ -104,7 +121,7 @@ if ($action === "add") {
                 $firstname,
                 $lastname,
                 $suffix,
-                $photo
+                $photo,
             );
         }
 
@@ -112,43 +129,68 @@ if ($action === "add") {
             if ($stmt->errno === 1062) {
                 throw new RuntimeException("Faculty already exists");
             }
-            throw new RuntimeException("Unable to save faculty profile: " . $stmt->error);
+            throw new RuntimeException(
+                "Unable to save faculty profile: " . $stmt->error,
+            );
         }
         $faculty_db_id = $stmt->insert_id;
         $stmt->close();
 
         // create login credentials for faculty
         $faculty_username = $faculty_id;
-        $loginStmt = $conn->prepare("INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)");
+        $loginStmt = $conn->prepare(
+            "INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)",
+        );
         if (!$loginStmt) {
-            throw new RuntimeException("Unable to prepare faculty login credentials: " . $conn->error);
+            throw new RuntimeException(
+                "Unable to prepare faculty login credentials: " . $conn->error,
+            );
         }
-        $loginStmt->bind_param("iss", $faculty_db_id, $faculty_username, $hashed_password);
+        $loginStmt->bind_param(
+            "iss",
+            $faculty_db_id,
+            $faculty_username,
+            $hashed_password,
+        );
         if (!$loginStmt->execute()) {
-            throw new RuntimeException("Unable to save faculty login credentials: " . $loginStmt->error);
+            throw new RuntimeException(
+                "Unable to save faculty login credentials: " .
+                    $loginStmt->error,
+            );
         }
         $loginStmt->close();
 
         // Confirm that the exact username and password hash were saved before committing.
-        $verifyLogin = $conn->prepare("SELECT faculty_password FROM faculty_login WHERE faculty_id = ? AND faculty_username = ? LIMIT 1");
+        $verifyLogin = $conn->prepare(
+            "SELECT faculty_password FROM faculty_login WHERE faculty_id = ? AND faculty_username = ? LIMIT 1",
+        );
         if (!$verifyLogin) {
-            throw new RuntimeException("Unable to verify faculty login credentials: " . $conn->error);
+            throw new RuntimeException(
+                "Unable to verify faculty login credentials: " . $conn->error,
+            );
         }
         $verifyLogin->bind_param("is", $faculty_db_id, $faculty_username);
         if (!$verifyLogin->execute()) {
-            throw new RuntimeException("Unable to verify faculty login credentials: " . $verifyLogin->error);
+            throw new RuntimeException(
+                "Unable to verify faculty login credentials: " .
+                    $verifyLogin->error,
+            );
         }
         $verifyResult = $verifyLogin->get_result();
         $verifyRow = $verifyResult ? $verifyResult->fetch_assoc() : null;
         $verifyLogin->close();
 
-        if (!$verifyRow || !password_verify($password, $verifyRow['faculty_password'])) {
-            throw new RuntimeException("Faculty login credentials could not be verified");
+        if (
+            !$verifyRow ||
+            !password_verify($password, $verifyRow["faculty_password"])
+        ) {
+            throw new RuntimeException(
+                "Faculty login credentials could not be verified",
+            );
         }
 
         /* subjects */
         if (!empty($subjects)) {
-
             $sub = $conn->prepare("
                 INSERT INTO faculty_subjects (faculty_id,subject_id)
                 VALUES (?,?)
@@ -164,46 +206,63 @@ if ($action === "add") {
         }
 
         $conn->commit();
-
     } catch (Exception $e) {
         $conn->rollback();
         error_log("Faculty add error: " . $e->getMessage());
-        echo json_encode(["success"=>false,"message"=>"Database error: " . $e->getMessage()]);
-        exit;
+        echo json_encode([
+            "success" => false,
+            "message" => "Database error: " . $e->getMessage(),
+        ]);
+        exit();
     }
 
     /* ================= EMAIL WITH PASSWORD ================= */
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $baseUrl = $protocol . '://' . $host . '/FacultyEvaluation';
+    $protocol =
+        !empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off"
+            ? "https"
+            : "http";
+    $host = $_SERVER["HTTP_HOST"] ?? "localhost";
+    $baseUrl = $protocol . "://" . $host . "/FacultyEvaluation";
 
     $title = "Welcome to Faculty Evaluation System";
-    $greeting = "Hello Professor " . htmlspecialchars($firstname . ' ' . $lastname, ENT_QUOTES, 'UTF-8') . ",";
-    $content_html = "
+    $greeting =
+        "Hello Professor " .
+        htmlspecialchars($firstname . " " . $lastname, ENT_QUOTES, "UTF-8") .
+        ",";
+    $content_html =
+        "
         <p style='margin: 0 0 16px 0;'>Your faculty instructor account has been successfully created. You can now access the Faculty Evaluation System using your credentials below.</p>
-        <p style='margin: 0 0 16px 0;'><strong>Faculty Number / Username:</strong> " . htmlspecialchars($faculty_id, ENT_QUOTES, 'UTF-8') . "</p>
+        <p style='margin: 0 0 16px 0;'><strong>Faculty Number / Username:</strong> " .
+        htmlspecialchars($faculty_id, ENT_QUOTES, "UTF-8") .
+        "</p>
         <p style='margin: 0 0 16px 0;'>For security reasons, we strongly recommend that you change your password immediately after logging in for the first time.</p>
     ";
 
     $highlight_box = [
-        'label' => 'Temporary Password',
-        'value' => $password,
-        'subtext' => 'Keep this password secure'
+        "label" => "Temporary Password",
+        "value" => $password,
+        "subtext" => "Keep this password secure",
     ];
 
     $cta = [
-        'label' => 'Log In to Dashboard',
-        'url' => $baseUrl . '/EvalMain.php'
+        "label" => "Log In to Dashboard",
+        "url" => $baseUrl . "/EvalMain.php",
     ];
 
-    $body = getEmailHTML($title, $greeting, $content_html, $highlight_box, $cta);
+    $body = getEmailHTML(
+        $title,
+        $greeting,
+        $content_html,
+        $highlight_box,
+        $cta,
+    );
 
     // Send email asynchronously to avoid blocking
     $sent = sendEmail(
         $email,
         "$firstname $lastname",
         "Welcome to Faculty Evaluation System",
-        $body
+        $body,
     );
 
     if (!$sent) {
@@ -214,106 +273,117 @@ if ($action === "add") {
         "success" => true,
         "message" => $sent
             ? "Faculty added and temporary password sent by email."
-            : "Faculty added, but the password email could not be sent. Ask the faculty member to use Forgot Password."
+            : "Faculty added, but the password email could not be sent. Ask the faculty member to use Forgot Password.",
     ]);
-}
-
-/* =========================
+} /* =========================
    EDIT FACULTY
-========================= */
-elseif ($action === "edit") {
-
-    $id = intval($data['id'] ?? 0);
+========================= */ elseif (
+    $action === "edit"
+) {
+    $id = intval($data["id"] ?? 0);
 
     if (!$id) {
-        echo json_encode(["success"=>false,"message"=>"Invalid ID"]);
-        exit;
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit();
     }
 
-    $faculty_id = trim((string)($data['faculty_id'] ?? ''));
-    $email = $data['email'];
-    $firstname = $data['firstname'];
-    $lastname = $data['lastname'];
-    $suffix = $data['suffix'];
-    $photo = $data['photo'];
-    $subjects = $data['subjects'] ?? [];
+    $faculty_id = trim((string) ($data["faculty_id"] ?? ""));
+    $email = $data["email"];
+    $firstname = $data["firstname"];
+    $lastname = $data["lastname"];
+    $suffix = $data["suffix"];
+    $photo = $data["photo"];
+    $subjects = $data["subjects"] ?? [];
 
     if (!preg_match('/^FC-[0-9]{6}$/', $faculty_id)) {
-        echo json_encode(["success"=>false,"message"=>"Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456)."]);
-        exit;
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                "Faculty ID must be FC- followed by exactly 6 digits (example: FC-123456).",
+        ]);
+        exit();
     }
 
     $conn->begin_transaction();
     try {
-    $stmt = $conn->prepare("
+        $stmt = $conn->prepare("
         UPDATE add_faculties
         SET faculty_id=?, email=?, firstname=?, lastname=?, suffix=?, photo=?
         WHERE id=?
     ");
 
-    $stmt->bind_param(
-        "ssssssi",
-        $faculty_id,
-        $email,
-        $firstname,
-        $lastname,
-        $suffix,
-        $photo,
-        $id
-    );
+        $stmt->bind_param(
+            "ssssssi",
+            $faculty_id,
+            $email,
+            $firstname,
+            $lastname,
+            $suffix,
+            $photo,
+            $id,
+        );
 
-    if ($stmt->execute()) {
+        if ($stmt->execute()) {
+            $deleteSubjects = $conn->prepare(
+                "DELETE FROM faculty_subjects WHERE faculty_id = ?",
+            );
+            $deleteSubjects->bind_param("i", $id);
+            $deleteSubjects->execute();
+            $deleteSubjects->close();
 
-        $deleteSubjects = $conn->prepare("DELETE FROM faculty_subjects WHERE faculty_id = ?");
-        $deleteSubjects->bind_param("i", $id);
-        $deleteSubjects->execute();
-        $deleteSubjects->close();
-
-        if (!empty($subjects)) {
-
-            $sub = $conn->prepare("
+            if (!empty($subjects)) {
+                $sub = $conn->prepare("
                 INSERT INTO faculty_subjects (faculty_id,subject_id)
                 VALUES (?,?)
             ");
 
-            foreach ($subjects as $sid) {
-                $sid = intval($sid);
-                $sub->bind_param("ii", $id, $sid);
-                if (!$sub->execute()) {
-                    throw new RuntimeException('Unable to save faculty subject assignments.');
+                foreach ($subjects as $sid) {
+                    $sid = intval($sid);
+                    $sub->bind_param("ii", $id, $sid);
+                    if (!$sub->execute()) {
+                        throw new RuntimeException(
+                            "Unable to save faculty subject assignments.",
+                        );
+                    }
                 }
+
+                $sub->close();
             }
 
-            $sub->close();
+            $conn->commit();
+            echo json_encode([
+                "success" => true,
+                "message" => "Faculty updated",
+            ]);
+        } else {
+            throw new RuntimeException("Unable to update faculty profile.");
         }
 
-        $conn->commit();
-        echo json_encode(["success"=>true,"message"=>"Faculty updated"]);
-    } else {
-        throw new RuntimeException('Unable to update faculty profile.');
-    }
-
-    $stmt->close();
+        $stmt->close();
     } catch (Throwable $e) {
         $conn->rollback();
-        error_log('Faculty update error: ' . $e->getMessage());
+        error_log("Faculty update error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(["success"=>false,"message"=>"Unable to update faculty. Please try again."]);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to update faculty. Please try again.",
+        ]);
     }
-}
-
-/* =========================
+} /* =========================
    UPDATE FACULTY STATUS
-========================= */
-elseif ($action === "update_status") {
+========================= */ elseif (
+    $action === "update_status"
+) {
+    $id = intval($data["id"] ?? 0);
+    $status = $data["status"] ?? "";
 
-    $id = intval($data['id'] ?? 0);
-    $status = $data['status'] ?? '';
-
-    $allowedStatuses = ['active', 'inactive', 'on leave', 'archived'];
+    $allowedStatuses = ["active", "inactive", "on leave", "archived"];
     if (!$id || !in_array(strtolower(trim($status)), $allowedStatuses, true)) {
-        echo json_encode(["success"=>false,"message"=>"Invalid ID or status"]);
-        exit;
+        echo json_encode([
+            "success" => false,
+            "message" => "Invalid ID or status",
+        ]);
+        exit();
     }
     $status = strtolower(trim($status));
 
@@ -321,48 +391,56 @@ elseif ($action === "update_status") {
     $stmt->bind_param("si", $status, $id);
 
     if ($stmt->execute()) {
-        echo json_encode(["success"=>true,"message"=>"Faculty status updated successfully"]);
+        echo json_encode([
+            "success" => true,
+            "message" => "Faculty status updated successfully",
+        ]);
     } else {
-        echo json_encode(["success"=>false,"message"=>$stmt->error]);
+        echo json_encode(["success" => false, "message" => $stmt->error]);
     }
 
     $stmt->close();
-}
-
-/* =========================
+} /* =========================
    DELETE FACULTY
-========================= */
-elseif ($action === "delete") {
-
-    $id = intval($data['id'] ?? 0);
+========================= */ elseif (
+    $action === "delete"
+) {
+    $id = intval($data["id"] ?? 0);
 
     if (!$id) {
-        echo json_encode(["success"=>false,"message"=>"Invalid ID"]);
-        exit;
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit();
     }
 
     $conn->begin_transaction();
     try {
-        $deleteSubjects = $conn->prepare("DELETE FROM faculty_subjects WHERE faculty_id = ?");
+        $deleteSubjects = $conn->prepare(
+            "DELETE FROM faculty_subjects WHERE faculty_id = ?",
+        );
         $deleteSubjects->bind_param("i", $id);
         $deleteSubjects->execute();
         $deleteSubjects->close();
 
-        $deleteFaculty = $conn->prepare("DELETE FROM add_faculties WHERE id = ?");
+        $deleteFaculty = $conn->prepare(
+            "DELETE FROM add_faculties WHERE id = ?",
+        );
         $deleteFaculty->bind_param("i", $id);
         $deleteFaculty->execute();
         $deleted = $deleteFaculty->affected_rows;
         $deleteFaculty->close();
         if ($deleted === 0) {
-            throw new RuntimeException('Faculty record not found.');
+            throw new RuntimeException("Faculty record not found.");
         }
         $conn->commit();
-        echo json_encode(["success"=>true,"message"=>"Faculty deleted"]);
+        echo json_encode(["success" => true, "message" => "Faculty deleted"]);
     } catch (Throwable $e) {
         $conn->rollback();
-        error_log('Faculty delete error: ' . $e->getMessage());
+        error_log("Faculty delete error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(["success"=>false,"message"=>"Unable to delete faculty. Please try again."]);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to delete faculty. Please try again.",
+        ]);
     }
 }
 

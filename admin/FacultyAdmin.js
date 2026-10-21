@@ -2084,18 +2084,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   ["subjects-search", "subjects-year-filter"].forEach((id) => {
-    document
-      .getElementById(id)
-      ?.addEventListener("input", () => {
-        subjectsMainCurrentPage = 1;
-        renderSubjectsMainTable();
-      });
-    document
-      .getElementById(id)
-      ?.addEventListener("change", () => {
-        subjectsMainCurrentPage = 1;
-        renderSubjectsMainTable();
-      });
+    document.getElementById(id)?.addEventListener("input", () => {
+      subjectsMainCurrentPage = 1;
+      renderSubjectsMainTable();
+    });
+    document.getElementById(id)?.addEventListener("change", () => {
+      subjectsMainCurrentPage = 1;
+      renderSubjectsMainTable();
+    });
   });
 
   function defaultAcademicYear() {
@@ -2413,7 +2409,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mw) mw.style.display = "none";
       if (mc) mc.style.display = "none";
       if (manageAddButton) {
-        manageAddButton.innerHTML = '<i class="ph ph-plus"></i> Add New Subject';
+        manageAddButton.innerHTML =
+          '<i class="ph ph-plus"></i> Add New Subject';
       }
       if (detailTitle) {
         setDetailHeading("Subject Offered");
@@ -2424,8 +2421,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (detailSubtitle) {
         const subjectContext = `${currentProgramCode || "this program"}${selectedManageYear ? ` - ${selectedManageYear.toLowerCase()}` : ""}`;
-        detailSubtitle.innerHTML =
-          `Manage and organize subjects for each program and year level for <strong>${escapeHtml(subjectContext)}</strong>.`;
+        detailSubtitle.innerHTML = `Manage and organize subjects for each program and year level for <strong>${escapeHtml(subjectContext)}</strong>.`;
       }
     } else {
       s.style.display = "none";
@@ -2445,8 +2441,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `${currentProgramCode || "PROGRAM"} · ${selectedManageYear || "ALL YEARS"}`.toUpperCase();
       }
       if (detailSubtitle) {
-        detailSubtitle.innerHTML =
-          `Manage class sections and assign subjects and instructors for <strong>${escapeHtml(currentProgramCode || "this program")}</strong>.`;
+        detailSubtitle.innerHTML = `Manage class sections and assign subjects and instructors for <strong>${escapeHtml(currentProgramCode || "this program")}</strong>.`;
       }
     }
     const headingIcon = document.querySelector(
@@ -2791,7 +2786,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (total === 0) {
       subjectsTableBody.innerHTML =
-        '<tr><td colspan="5" class="admin-empty-state">No Subject found for this program</td></tr>';
+        '<tr class="table-empty-row"><td colspan="5" class="admin-empty-state table-empty-message">No Subject found for this program</td></tr>';
       renderManageSubjectsPagination(0);
       return;
     }
@@ -3408,15 +3403,14 @@ document.addEventListener("DOMContentLoaded", () => {
           "manageContentSubtitle",
         );
         if (classesSubtitle) {
-          classesSubtitle.innerHTML =
-            `Manage class sections and assign subjects and instructors for <strong>${escapeHtml(currentProgramCode || "this program")}</strong>.`;
+          classesSubtitle.innerHTML = `Manage class sections and assign subjects and instructors for <strong>${escapeHtml(currentProgramCode || "this program")}</strong>.`;
         }
 
         if (matchingClasses.length === 0) {
           const emptyMessage = requestedYear
             ? `No classes found for ${escapeHtml(requestedYear)}`
             : "No classes found for this program";
-          classesTableBody.innerHTML = `<tr><td colspan='5' class='admin-empty-state'>${emptyMessage}</td></tr>`;
+          classesTableBody.innerHTML = `<tr class="table-empty-row"><td colspan='5' class='admin-empty-state table-empty-message'>${emptyMessage}</td></tr>`;
           return;
         }
 
@@ -4259,7 +4253,8 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.style.left = "";
         menu.style.top = "";
         trigger?.setAttribute("aria-expanded", "false");
-        if (wrapper && menu.parentElement !== wrapper) wrapper.appendChild(menu);
+        if (wrapper && menu.parentElement !== wrapper)
+          wrapper.appendChild(menu);
       });
   }
 
@@ -4558,7 +4553,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const avatarHtml = f.photo
             ? `<img src="${f.photo}" class="table-avatar" alt="${f.firstname} ${f.lastname}">`
             : `<div class="table-avatar placeholder faculty-placeholder-avatar" aria-label="No profile image for ${f.firstname} ${f.lastname}" title="No profile image">${initials}</div>`;
-          const subjectCount = Array.isArray(f.subjects) ? f.subjects.length : 0;
+          const subjectCount = Array.isArray(f.subjects)
+            ? f.subjects.length
+            : 0;
           const subjectCountLabel = `${subjectCount} ${subjectCount === 1 ? "subject" : "subjects"}`;
 
           if (normalizeStatusValue(f.status) === "archived") {
@@ -6208,10 +6205,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           const percentage =
             expected > 0
-              ? Math.max(
-                  0,
-                  Math.min(100, Number(program.percentage) || 0),
-                )
+              ? Math.max(0, Math.min(100, Number(program.percentage) || 0))
               : 0;
           const label = program.code || program.name || "Program";
           const submissionText =
@@ -6240,17 +6234,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const pending = document.getElementById("programProgressPending");
     const overall = document.getElementById("programProgressOverall");
     if (submitted) {
-      submitted.textContent = (
-        Number(data.completed) || 0
-      ).toLocaleString();
+      submitted.textContent = (Number(data.completed) || 0).toLocaleString();
     }
     if (pending) {
       pending.textContent = (Number(data.pending) || 0).toLocaleString();
     }
     if (overall) {
-      overall.textContent = `${(
-        Number(data.overallPercentage) || 0
-      ).toFixed(1)}%`;
+      overall.textContent = `${(Number(data.overallPercentage) || 0).toFixed(
+        1,
+      )}%`;
     }
   }
 
@@ -8677,7 +8669,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     addCategoryModal.style.display = "flex";
     delete addCategoryModal.dataset.editId;
-    document.getElementById("categoryModalTitle").innerText = "ADD NEW CATEGORY";
+    document.getElementById("categoryModalTitle").innerText =
+      "ADD NEW CATEGORY";
     ["category-name", "section-number", "category-weight"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = "";
@@ -10611,7 +10604,8 @@ const doughnutPercentageLabels = {
     if (
       chart.canvas?.id === "ratingDistributionChart" ||
       chart.canvas?.id === "reportRatingDistributionChart"
-    ) return;
+    )
+      return;
     const dataset = chart.data.datasets[0];
     if (!dataset) return;
 
@@ -10686,17 +10680,21 @@ function initRatingDistributionChart(ratingDistribution = {}) {
   const overallPercentage = ratingTotal
     ? Math.round((weightedRating / (ratingTotal * ratingData.length)) * 100)
     : 0;
-  const overallPercentageEl = document.getElementById("ratingOverallPercentage");
+  const overallPercentageEl = document.getElementById(
+    "ratingOverallPercentage",
+  );
   if (overallPercentageEl) {
     overallPercentageEl.textContent = `${overallPercentage}%`;
   }
 
-  legendContainer?.querySelectorAll(".legend-percent").forEach((percent, index) => {
-    const value = ratingData[index]?.value || 0;
-    percent.textContent = ratingTotal
-      ? `${Math.round((value / ratingTotal) * 100)}%`
-      : "0%";
-  });
+  legendContainer
+    ?.querySelectorAll(".legend-percent")
+    .forEach((percent, index) => {
+      const value = ratingData[index]?.value || 0;
+      percent.textContent = ratingTotal
+        ? `${Math.round((value / ratingTotal) * 100)}%`
+        : "0%";
+    });
 
   if (chartWrapper) {
     chartWrapper.style.display = "flex";
@@ -11110,9 +11108,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const tbody = table.tBodies[0];
     if (!tbody) return;
 
-    const host = table.closest(
-      ".table-scroll-container, .table-scroll, .performance-modal-table-wrapper, .table-wrapper, .evaluation-details-table-wrap, .periods-table-section",
-    ) || table.parentElement;
+    const host =
+      table.closest(
+        ".table-scroll-container, .table-scroll, .performance-modal-table-wrapper, .table-wrapper, .evaluation-details-table-wrap, .periods-table-section",
+      ) || table.parentElement;
     if (!host) return;
 
     const pager = document.createElement("div");
@@ -11145,7 +11144,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const pageCount = Math.ceil(dataRows.length / rowsPerPage);
 
       if (pageCount <= 1) {
-        allRows.forEach((row) => row.classList.remove("admin-table-page-hidden"));
+        allRows.forEach((row) =>
+          row.classList.remove("admin-table-page-hidden"),
+        );
         pager.innerHTML = "";
         pager.style.display = "none";
         rendering = false;
@@ -11154,7 +11155,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       currentPage = Math.min(Math.max(1, currentPage), pageCount);
       const firstRow = (currentPage - 1) * rowsPerPage;
-      const visibleRows = new Set(dataRows.slice(firstRow, firstRow + rowsPerPage));
+      const visibleRows = new Set(
+        dataRows.slice(firstRow, firstRow + rowsPerPage),
+      );
       allRows.forEach((row) => {
         row.classList.toggle(
           "admin-table-page-hidden",
@@ -11172,12 +11175,14 @@ document.addEventListener("DOMContentLoaded", function () {
           Next <i class="ph ph-caret-right" aria-hidden="true"></i>
         </button>`;
 
-      pager.querySelectorAll(".admin-table-page-btn:not(:disabled)").forEach((button) => {
-        button.addEventListener("click", () => {
-          currentPage = Number(button.dataset.page);
-          render();
+      pager
+        .querySelectorAll(".admin-table-page-btn:not(:disabled)")
+        .forEach((button) => {
+          button.addEventListener("click", () => {
+            currentPage = Number(button.dataset.page);
+            render();
+          });
         });
-      });
       rendering = false;
     }
 

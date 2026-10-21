@@ -117,7 +117,9 @@ try {
         ORDER BY p.program_name
     ");
     if (!$stmt) {
-        throw new Exception("Unable to prepare program evaluation progress query.");
+        throw new Exception(
+            "Unable to prepare program evaluation progress query.",
+        );
     }
 
     $stmt->bind_param("i", $progressPeriodId);
@@ -137,17 +139,17 @@ try {
             "name" => (string) ($row["program_name"] ?? ""),
             "expected" => $expected,
             "completed" => $completed,
-            "percentage" => $expected > 0
-                ? round(($completed / $expected) * 100, 1)
-                : 0,
+            "percentage" =>
+                $expected > 0 ? round(($completed / $expected) * 100, 1) : 0,
         ];
     }
 
     $stmt->close();
     $pending = max($totalExpected - $totalCompleted, 0);
-    $overallPercentage = $totalExpected > 0
-        ? round(($totalCompleted / $totalExpected) * 100, 1)
-        : 0;
+    $overallPercentage =
+        $totalExpected > 0
+            ? round(($totalCompleted / $totalExpected) * 100, 1)
+            : 0;
 
     echo json_encode([
         "success" => true,
@@ -165,7 +167,8 @@ try {
     http_response_code(500);
     echo json_encode([
         "success" => false,
-        "message" => "Unable to load program evaluation progress: " . $e->getMessage(),
+        "message" =>
+            "Unable to load program evaluation progress: " . $e->getMessage(),
     ]);
 }
 

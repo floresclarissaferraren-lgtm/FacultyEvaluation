@@ -1,19 +1,27 @@
 <?php
-require_once __DIR__ . '/../shared/security.php';
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+require_once __DIR__ . "/../shared/security.php";
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
-if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
+if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
     $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
+    if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+        setcookie(
+            session_name(),
+            "",
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"],
+        );
     }
     session_unset();
     session_destroy();
-    header('Location: EvalMain.php');
-    exit;
+    header("Location: EvalMain.php");
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -21,9 +29,13 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="csrf-token" content="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+<meta name="csrf-token" content="<?= htmlspecialchars(
+    csrfToken(),
+    ENT_QUOTES,
+    "UTF-8",
+) ?>">
 <title>Faculty Evaluation System</title>
-<link rel="stylesheet" href="EvalMain.css?v=<?=time()?>">
+<link rel="stylesheet" href="EvalMain.css?v=<?= time() ?>">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
