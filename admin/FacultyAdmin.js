@@ -1082,6 +1082,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (deleteType === "program") {
               updateProgramCount();
             }
+            if (deleteType === "category") {
+              updateCriteriaCounts();
+              updateWeightDistribution();
+              loadCategories();
+            }
+            if (deleteType === "question") {
+              updateCriteriaCounts();
+            }
           }
 
           // Refresh class data before closing the modal resets deleteType.
@@ -6186,13 +6194,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list) return;
 
     const programs = Array.isArray(data.programs) ? data.programs : [];
-    if (!Number(data.progressPeriodId ?? data.activePeriodId)) {
-      list.innerHTML =
-        '<div class="program-progress-empty">No active evaluation period</div>';
-    } else if (!data.hasRecords) {
-      list.innerHTML =
-        '<div class="program-progress-empty">No evaluation records yet</div>';
-    } else if (programs.length === 0) {
+    const hasEvaluationPeriod = Boolean(
+      Number(data.progressPeriodId ?? data.activePeriodId),
+    );
+    if (programs.length === 0) {
       list.innerHTML =
         '<div class="program-progress-empty">No programs available</div>';
     } else {
@@ -6208,8 +6213,9 @@ document.addEventListener("DOMContentLoaded", () => {
               ? Math.max(0, Math.min(100, Number(program.percentage) || 0))
               : 0;
           const label = program.code || program.name || "Program";
-          const submissionText =
-            expected > 0
+          const submissionText = !hasEvaluationPeriod
+            ? "Evaluation not open"
+            : expected > 0
               ? `${completed.toLocaleString()} / ${expected.toLocaleString()} submitted`
               : "No assigned students";
 
@@ -8960,6 +8966,71 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
   //  LOAD CATEGORIES ========================= //
+  function updateCriteriaCounts() {
+    const categoryCount = document.querySelectorAll(
+      "#categoriesColumn .criteria-category",
+    ).length;
+    const questionCount = document.querySelectorAll(
+      "#categoriesColumn .question-item",
+    ).length;
+    const totalCategories = document.getElementById("total-categories");
+    const totalQuestions = document.getElementById("total-questions");
+
+    if (totalCategories) totalCategories.textContent = String(categoryCount);
+    if (totalQuestions) totalQuestions.textContent = String(questionCount);
+  }
+
+  function updateWeightSummary(weights) {
+    const weightSumRow = document.getElementById("weight-sum-row");
+    const weightDisplay = document.getElementById("total-weight-display");
+    const weightStatus = document.getElementById("weight-sum-status");
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+
+    if (weights.length === 0) {
+      if (weightSumRow) weightSumRow.style.display = "none";
+      return;
+    }
+
+    if (weightSumRow) weightSumRow.style.display = "block";
+    if (weightDisplay) weightDisplay.textContent = "100%";
+    if (weightStatus) {
+      if (Math.abs(totalWeight - 100) < 0.1) {
+        weightStatus.textContent = "✓";
+        weightStatus.style.color = "#10b981";
+      } else {
+        weightStatus.textContent = "(auto-normalised to 100%)";
+        weightStatus.style.color = "#f59e0b";
+      }
+    }
+  }
+
+  function normaliseCategoryWeights(weights) {
+    if (weights.length === 0) return [];
+
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+    if (totalWeight <= 0) {
+      return weights.map(() => 100 / weights.length);
+    }
+
+    if (totalWeight < 100) {
+      const unassignedIndexes = weights.reduce((indexes, weight, index) => {
+        if (weight <= 0) indexes.push(index);
+        return indexes;
+      }, []);
+      const indexesToAdjust =
+        unassignedIndexes.length > 0
+          ? unassignedIndexes
+          : weights.map((_, index) => index);
+      const remainderPerCategory =
+        (100 - totalWeight) / indexesToAdjust.length;
+      return weights.map((weight, index) =>
+        indexesToAdjust.includes(index) ? weight + remainderPerCategory : weight,
+      );
+    }
+
+    return weights.map((weight) => (weight / totalWeight) * 100);
+  }
+
   function loadCategories() {
     fetch("../shared/get_category.php")
       .then((r) => r.json())
@@ -8969,42 +9040,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("total-categories").innerText = cats.length;
         let totalQuestions = 0;
 
-        // Normalise weights for display (same logic as PHP helper)
-        const totalW = cats.reduce((s, c) => s + parseFloat(c.weight || 0), 0);
-        const useEqual = totalW <= 0;
-        const equalW = cats.length > 0 ? 100 / cats.length : 0;
-
-        // Update summary panel weight row
-        const weightSumRow = document.getElementById("weight-sum-row");
-        const weightDisplay = document.getElementById("total-weight-display");
-        const weightStatus = document.getElementById("weight-sum-status");
-        if (cats.length > 0 && weightSumRow) {
-          weightSumRow.style.display = "block";
-          const displayTotal = useEqual ? 100 : Math.round(totalW * 100) / 100;
-          if (weightDisplay) weightDisplay.textContent = displayTotal + "%";
-          if (weightStatus) {
-            if (useEqual) {
-              weightStatus.textContent = "(equal split)";
-              weightStatus.style.color = "#64748b";
-            } else if (Math.abs(totalW - 100) < 0.1) {
-              weightStatus.textContent = "✓";
-              weightStatus.style.color = "#10b981";
-            } else {
-              weightStatus.textContent = "(auto-normalised to 100%)";
-              weightStatus.style.color = "#f59e0b";
-            }
-          }
-        } else if (weightSumRow) {
-          weightSumRow.style.display = "none";
-        }
+        const categoryWeights = cats.map((c) => parseFloat(c.weight || 0));
+        updateWeightSummary(categoryWeights);
 
         cats.forEach((c) => {
-          const normW = useEqual
-            ? parseFloat(equalW.toFixed(2))
-            : parseFloat(
-                ((parseFloat(c.weight || 0) / totalW) * 100).toFixed(2),
-              );
-
           const cat = document.createElement("div");
           cat.className = "criteria-category";
           cat.id = `cat-${c.id}`;
@@ -9175,34 +9214,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!weightListContainer || categories.length === 0) {
       if (weightDistributionSection)
         weightDistributionSection.style.display = "none";
+      updateWeightSummary([]);
       return;
     }
 
-    // Calculate total weight
-    let totalWeight = 0;
     const categoryData = [];
 
     categories.forEach((cat) => {
       const weight = parseFloat(cat.dataset.weight || 0);
       const name = cat.querySelector(".category-name")?.textContent || "";
-      totalWeight += weight;
       categoryData.push({ name, weight });
     });
 
-    // Determine if using equal split
-    const useEqualSplit = totalWeight <= 0;
-    const equalWeight = categories.length > 0 ? 100 / categories.length : 0;
+    updateWeightSummary(categoryData.map((category) => category.weight));
+    const normalizedWeights = normaliseCategoryWeights(
+      categoryData.map((category) => category.weight),
+    );
 
     // Show weight distribution section
     if (weightDistributionSection) {
       weightDistributionSection.style.display = "block";
       weightListContainer.innerHTML = "";
 
-      categoryData.forEach((cat) => {
-        const normalizedWeight = useEqualSplit
-          ? equalWeight
-          : (cat.weight / totalWeight) * 100;
-
+      categoryData.forEach((cat, index) => {
+        const normalizedWeight = normalizedWeights[index];
         const listItem = document.createElement("div");
         listItem.className = "weight-list-item";
         listItem.innerHTML = `
@@ -10927,10 +10962,11 @@ document.addEventListener("DOMContentLoaded", function () {
     row.setAttribute("data-id", period.id);
     row.setAttribute("data-academic-year", period.ay);
     row.setAttribute("data-semester", period.semester);
+    const isActive = Boolean(Number(period.is_active));
     row.innerHTML = `
       <td>${escapeAcademicHtml(period.ay)}</td>
       <td>${escapeAcademicHtml(period.semester)}</td>
-      <td><span class="status-badge ${period.is_active ? "active" : "inactive"}">${period.is_active ? "Active" : "Inactive"}</span></td>
+      <td><span class="status-badge ${isActive ? "active" : "inactive"}"><span class="status-dot" aria-hidden="true"></span>${isActive ? "Active" : "Inactive"}</span></td>
       <td class="action-cell">
         <div class="action-buttons">
           <button class="manage-period-btn" title="Manage Period" aria-label="Manage Period">

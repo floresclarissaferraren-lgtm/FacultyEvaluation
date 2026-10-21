@@ -21801,8 +21801,25 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
 }
 
 #academic-year-section .academic-year-table .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.65rem;
   letter-spacing: 0.3px;
+}
+
+#academic-year-section .academic-year-table .status-badge .status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+#academic-year-section .academic-year-table .status-badge.inactive {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
 }
 
 @media (max-width: 1000px) {
@@ -28540,6 +28557,11 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   background-image: none !important;
   border-color: #fffa94 !important;
   color: #713f12 !important;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
 }
 .show-archived-faculty-btn i,
 .show-archived-student-btn i,
@@ -28548,16 +28570,21 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   color: #713f12 !important;
 }
 #faculties-section .faculty-toolbar .show-archived-faculty-btn:hover,
-#students-section .student-header-actions .show-archived-student-btn:hover {
+#students-section .student-header-actions .show-archived-student-btn:hover,
+.show-archived-faculty-btn:focus-visible,
+.show-archived-student-btn:focus-visible {
   background: #f5e85a !important;
   border-color: #f5e85a !important;
   color: #713f12 !important;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.24) !important;
+  outline: none;
 }
 #faculties-section .faculty-toolbar .show-archived-faculty-btn:active,
 #students-section .student-header-actions .show-archived-student-btn:active {
   background: #e9d83c !important;
   border-color: #e9d83c !important;
   color: #713f12 !important;
+  box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.28) !important;
 }
 #faculties-section .faculty-toolbar .show-archived-faculty-btn:hover i,
 #faculties-section .faculty-toolbar .show-archived-faculty-btn:active i,
@@ -29797,6 +29824,44 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
 #dashboard-section .program-progress-summary {
   flex: 0 0 auto;
   margin-top: auto;
+}
+
+@media (min-width: 1101px) {
+  #dashboard-section .dashboard-row-2 > .dashboard-card {
+    height: 390px;
+    min-height: 0;
+    padding: 16px;
+  }
+
+  #dashboard-section .program-evaluation-progress .dashboard-content {
+    gap: 8px;
+  }
+
+  #dashboard-section .program-progress-list {
+    gap: 5px;
+    min-height: 0;
+  }
+
+  #dashboard-section .program-progress-item {
+    gap: 4px;
+  }
+
+  #dashboard-section .program-progress-code {
+    padding: 2px 5px;
+  }
+
+  #dashboard-section .program-progress-track {
+    height: 5px;
+  }
+
+  #dashboard-section .program-progress-summary {
+    padding-top: 8px;
+  }
+
+  #dashboard-section .program-progress-summary-item {
+    min-height: 42px;
+    padding: 4px;
+  }
 }
 
 /* Match the faculty rankings table header to the Student List table header. */

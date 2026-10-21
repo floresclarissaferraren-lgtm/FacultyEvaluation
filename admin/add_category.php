@@ -37,6 +37,8 @@ if ($category_name === "" || $section_number === "") {
     exit();
 }
 
+$section_number = (int) $section_number;
+
 $duplicateStmt = $conn->prepare("
     SELECT id FROM add_categories
     WHERE LOWER(TRIM(category_name)) = LOWER(TRIM(?))
@@ -53,12 +55,24 @@ if ($duplicateStmt->get_result()->num_rows > 0) {
 }
 $duplicateStmt->close();
 
+$sectionStmt = $conn->prepare(
+    "SELECT id FROM add_categories WHERE section_number = ? LIMIT 1",
+);
+$sectionStmt->bind_param("i", $section_number);
+$sectionStmt->execute();
+if ($sectionStmt->get_result()->num_rows > 0) {
+    echo json_encode([
+        "success" => false,
+        "message" => "This section number is already in use.",
+    ]);
+    exit();
+}
+$sectionStmt->close();
+
 // Ensure weight column exists (idempotent guard)
 $conn->query(
     "ALTER TABLE add_categories ADD COLUMN IF NOT EXISTS weight DECIMAL(5,2) NOT NULL DEFAULT 0.00",
 );
-
-$section_number = (int) $section_number;
 
 // --- Server-side weight validation (only when a non-zero weight is supplied) ---
 if ($weight > 0) {
@@ -93,12 +107,19 @@ if (!$stmt) {
 $stmt->bind_param("sid", $category_name, $section_number, $weight);
 
 $response = [];
-if ($stmt->execute()) {
-    $response["success"] = true;
-    $response["id"] = $conn->insert_id;
-} else {
+try {
+    if ($stmt->execute()) {
+        $response["success"] = true;
+        $response["id"] = $conn->insert_id;
+    }
+} catch (mysqli_sql_exception $exception) {
+    if ($exception->getCode() !== 1062) {
+        throw $exception;
+    }
+
     $response["success"] = false;
-    $response["message"] = $conn->error;
+    $response["message"] =
+        "This category or section number already exists.";
 }
 echo json_encode($response);
 ?>

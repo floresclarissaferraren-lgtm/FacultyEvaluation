@@ -83,6 +83,39 @@ function bindDynamicParams(
     call_user_func_array([$stmt, "bind_param"], $refs);
 }
 
+function normaliseCategoryWeights(array $weights): array
+{
+    if (empty($weights)) {
+        return [];
+    }
+
+    $totalWeight = array_sum($weights);
+    $categoryCount = count($weights);
+
+    if ($totalWeight <= 0) {
+        return array_fill_keys(array_keys($weights), 100.0 / $categoryCount);
+    }
+
+    if ($totalWeight < 100) {
+        $unassignedKeys = array_keys(
+            array_filter($weights, static fn($weight) => $weight <= 0),
+        );
+        $keysToAdjust = $unassignedKeys ?: array_keys($weights);
+        $remainderPerCategory =
+            (100.0 - $totalWeight) / count($keysToAdjust);
+        foreach ($keysToAdjust as $key) {
+            $weights[$key] += $remainderPerCategory;
+        }
+        return $weights;
+    }
+
+    foreach ($weights as $key => $weight) {
+        $weights[$key] = ($weight / $totalWeight) * 100.0;
+    }
+
+    return $weights;
+}
+
 function calcWeightedScore(
     mysqli $conn,
     int $faculty_id,
@@ -140,23 +173,13 @@ function calcWeightedScore(
         return 0.0;
     }
 
-    // Normalise weights
-    $totalWeight = array_sum(array_column($rows, "weight"));
-
-    if ($totalWeight <= 0) {
-        // Fall back: equal weight for each category that has data
-        $equalWeight = 100.0 / count($rows);
-        foreach ($rows as &$r) {
-            $r["weight"] = $equalWeight;
-        }
-        unset($r);
-        $totalWeight = 100.0;
-    }
+    $normalisedWeights = normaliseCategoryWeights(
+        array_column($rows, "weight"),
+    );
 
     $weighted = 0.0;
-    foreach ($rows as $r) {
-        $normalised = ($r["weight"] / $totalWeight) * 100.0;
-        $weighted += $r["avg"] * ($normalised / 100.0);
+    foreach ($rows as $index => $row) {
+        $weighted += $row["avg"] * ($normalisedWeights[$index] / 100.0);
     }
 
     return round($weighted, 2);
@@ -217,22 +240,14 @@ function calcWeightedScoreFromAnswers(mysqli $conn, array $answers): float
         return 0.0;
     }
 
-    $totalWeight = array_sum(array_column($active, "weight"));
-
-    if ($totalWeight <= 0) {
-        $equalWeight = 100.0 / count($active);
-        foreach ($active as &$c) {
-            $c["weight"] = $equalWeight;
-        }
-        unset($c);
-        $totalWeight = 100.0;
-    }
+    $normalisedWeights = normaliseCategoryWeights(
+        array_column($active, "weight"),
+    );
 
     $weighted = 0.0;
-    foreach ($active as $c) {
-        $catAvg = array_sum($c["ratings"]) / count($c["ratings"]);
-        $normalised = ($c["weight"] / $totalWeight) * 100.0;
-        $weighted += $catAvg * ($normalised / 100.0);
+    foreach (array_values($active) as $index => $category) {
+        $catAvg = array_sum($category["ratings"]) / count($category["ratings"]);
+        $weighted += $catAvg * ($normalisedWeights[$index] / 100.0);
     }
 
     return round($weighted, 2);
@@ -298,18 +313,16 @@ function getCategoryStats(
         $rows,
         static fn($row) => intval($row["responses"] ?? 0) > 0,
     );
-    $totalWeight = array_sum(array_column($activeRows, "weight"));
-    $activeCount = count($activeRows);
+    $normalisedWeights = normaliseCategoryWeights(
+        array_column($activeRows, "weight"),
+    );
+    $activeIndex = 0;
     foreach ($rows as &$row) {
         $row["weight"] = floatval($row["weight"]);
         $hasResponses = intval($row["responses"] ?? 0) > 0;
-        $row["normalised_weight"] = !$hasResponses
-            ? 0
-            : ($totalWeight > 0
-                ? round(($row["weight"] / $totalWeight) * 100, 2)
-                : ($activeCount > 0
-                    ? round(100 / $activeCount, 2)
-                    : 0));
+        $row["normalised_weight"] = $hasResponses
+            ? round($normalisedWeights[$activeIndex++], 2)
+            : 0;
         $row["avg_rating"] = number_format(floatval($row["avg_rating"]), 2);
         $row["responses"] = intval($row["responses"]);
     }
@@ -393,20 +406,13 @@ function calcWeightedScoreByProgram(
         return 0.0;
     }
 
-    $totalWeight = array_sum(array_column($rows, "weight"));
-    if ($totalWeight <= 0) {
-        $equalWeight = 100.0 / count($rows);
-        foreach ($rows as &$r) {
-            $r["weight"] = $equalWeight;
-        }
-        unset($r);
-        $totalWeight = 100.0;
-    }
+    $normalisedWeights = normaliseCategoryWeights(
+        array_column($rows, "weight"),
+    );
 
     $weighted = 0.0;
-    foreach ($rows as $r) {
-        $normalised = ($r["weight"] / $totalWeight) * 100.0;
-        $weighted += $r["avg"] * ($normalised / 100.0);
+    foreach ($rows as $index => $row) {
+        $weighted += $row["avg"] * ($normalisedWeights[$index] / 100.0);
     }
 
     return round($weighted, 2);
@@ -482,18 +488,16 @@ function getCategoryStatsByProgram(
         $rows,
         static fn($row) => intval($row["responses"] ?? 0) > 0,
     );
-    $totalWeight = array_sum(array_column($activeRows, "weight"));
-    $activeCount = count($activeRows);
+    $normalisedWeights = normaliseCategoryWeights(
+        array_column($activeRows, "weight"),
+    );
+    $activeIndex = 0;
     foreach ($rows as &$row) {
         $row["weight"] = floatval($row["weight"]);
         $hasResponses = intval($row["responses"] ?? 0) > 0;
-        $row["normalised_weight"] = !$hasResponses
-            ? 0
-            : ($totalWeight > 0
-                ? round(($row["weight"] / $totalWeight) * 100, 2)
-                : ($activeCount > 0
-                    ? round(100 / $activeCount, 2)
-                    : 0));
+        $row["normalised_weight"] = $hasResponses
+            ? round($normalisedWeights[$activeIndex++], 2)
+            : 0;
         $row["avg_rating"] = number_format(floatval($row["avg_rating"]), 2);
         $row["responses"] = intval($row["responses"]);
     }
