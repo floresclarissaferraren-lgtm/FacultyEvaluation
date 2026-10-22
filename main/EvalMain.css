@@ -125,22 +125,22 @@ nav ul li a:hover {
 }
 
 .login-btn {
-  background: #fbbf24;
-  color: #0f172a !important;
+  background: #2563eb;
+  color: #ffffff !important;
   padding: 10px 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 12px !important;
   font-weight: 700 !important;
   font-size: 14px !important;
-  box-shadow: 0 5px 16px rgba(251, 191, 36, 0.18);
+  box-shadow: 0 5px 16px rgba(37, 99, 235, 0.22);
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease !important;
 }
 
 .login-btn:hover {
-  background: #f59e0b !important;
-  box-shadow: 0 7px 20px rgba(251, 191, 36, 0.28);
+  background: #1d4ed8 !important;
+  box-shadow: 0 7px 20px rgba(37, 99, 235, 0.32);
   transform: none !important;
 }
 
@@ -528,22 +528,25 @@ body {
   align-items: center;
   gap: 8px;
   padding: clamp(9px, 0.73vw, 10px) clamp(14px, 1.47vw, 20px);
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #0f172a;
+  background: #2563eb;
+  color: #ffffff;
   font-size: clamp(13px, 1.03vw, 14px);
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 12px;
   cursor: pointer;
   text-decoration: none;
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.22);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
   transition: none;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+#loginBtn2 {
+  font-size: clamp(12px, 0.96vw, 13px);
+}
 .btn-primary:hover {
-  background: #f59e0b;
-  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.32);
+  background: #1d4ed8;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.32);
 }
 
 .btn-ghost {
@@ -706,15 +709,6 @@ body {
   position: relative;
   overflow: hidden;
 }
-.about-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
-}
 .about-card:hover {
   transform: none;
   box-shadow: none;
@@ -794,8 +788,8 @@ body {
   margin: 0;
 }
 .student-panel .how-panel-title {
-  background: #fef2f2;
-  color: #991b1b;
+  background: #eff6ff;
+  color: #1e40af;
 }
 .faculty-panel .how-panel-title {
   background: #fffbeb;
@@ -838,8 +832,8 @@ body {
   flex-shrink: 0;
 }
 .student-panel .how-number {
-  border-color: #fca5a5;
-  color: #991b1b;
+  border-color: #93c5fd;
+  color: #1e40af;
 }
 .faculty-panel .how-number {
   border-color: #fcd34d;
@@ -889,6 +883,7 @@ body {
 .contact-intro .section-label {
   background: #eff6ff;
   color: #2563eb;
+  border-color: #2563eb;
   padding: 5px 13px;
   margin-bottom: 18px;
   font-size: 12px;
@@ -980,9 +975,9 @@ body {
 }
 
 .contact-brand img {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
   object-fit: contain;
   border-radius: 6px;
 }
@@ -3063,6 +3058,224 @@ body.modal-open {
   .resend-row {
     margin-top: 10px;
     font-size: 12px;
+  }
+}
+
+/* Match the post-login admin skeleton to the current FacultyAdmin dashboard. */
+#fullscreen-spinner .admin-skeleton {
+  background: #f4f7fc;
+}
+
+#fullscreen-spinner .skeleton-sidebar {
+  position: relative;
+  width: 260px;
+  min-width: 260px;
+  padding: 20px 14px 12px;
+  gap: 24px;
+  background: #f4f7fc;
+  border-right: 1px solid #e5edf7;
+}
+
+#fullscreen-spinner .skeleton-sidebar-logo-title {
+  min-height: 68px;
+  padding: 0 6px 16px;
+  border-bottom: 1px solid #e5edf7;
+}
+
+#fullscreen-spinner .skeleton-sidebar-menu {
+  gap: 7px;
+}
+
+#fullscreen-spinner .skeleton-sidebar .skeleton-menu-header,
+#fullscreen-spinner .skeleton-sidebar .skeleton-menu-icon,
+#fullscreen-spinner .skeleton-sidebar .skeleton-menu-text,
+#fullscreen-spinner .skeleton-sidebar .skeleton-sidebar-logo,
+#fullscreen-spinner .skeleton-sidebar .skeleton-text {
+  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+}
+
+#fullscreen-spinner .skeleton-sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding: 9px 10px;
+  min-height: 60px;
+  border: 1px solid #e5edf7;
+  border-radius: 12px;
+  background: transparent;
+}
+
+#fullscreen-spinner .skeleton-sidebar-profile-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 50%;
+}
+
+#fullscreen-spinner .skeleton-sidebar-profile-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#fullscreen-spinner .skeleton-sidebar-profile-avatar,
+#fullscreen-spinner .skeleton-sidebar-profile .skeleton-text,
+#fullscreen-spinner .skeleton-sidebar-profile .skeleton-caret {
+  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+}
+
+#fullscreen-spinner .skeleton-navbar {
+  height: 64px;
+  padding: 0 24px;
+  background: #fff;
+}
+
+#fullscreen-spinner .skeleton-notification-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+}
+
+#fullscreen-spinner .skeleton-dashboard-content {
+  padding: 14px 18px 24px;
+  gap: 12px;
+  background: #f4f7fc;
+}
+
+#fullscreen-spinner .skeleton-welcome-box {
+  min-height: 124px;
+  padding: 14px 20px;
+  gap: 18px;
+  border-radius: 12px;
+}
+
+#fullscreen-spinner .skeleton-welcome-copy {
+  margin-left: 0;
+}
+
+#fullscreen-spinner .skeleton-cards-grid {
+  gap: 12px;
+}
+
+#fullscreen-spinner .skeleton-dash-card,
+#fullscreen-spinner .skeleton-academic-overview {
+  min-height: 128px;
+  border-radius: 12px;
+}
+
+#fullscreen-spinner .skeleton-row-2 {
+  gap: 12px;
+}
+
+#fullscreen-spinner .skeleton-large-card {
+  min-height: 320px;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+#fullscreen-spinner .skeleton-doughnut-container {
+  margin: 4px 0 10px;
+}
+
+#fullscreen-spinner .skeleton-circle-chart {
+  width: 132px;
+  height: 132px;
+}
+
+#fullscreen-spinner .skeleton-circle-chart-inner {
+  width: 80px;
+  height: 80px;
+}
+
+#fullscreen-spinner .skeleton-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+#fullscreen-spinner .skeleton-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 12px;
+  background: transparent;
+  animation: none;
+}
+
+#fullscreen-spinner .skeleton-legend-dot,
+#fullscreen-spinner .skeleton-legend-label,
+#fullscreen-spinner .skeleton-legend-percent {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+}
+
+#fullscreen-spinner .skeleton-legend-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+}
+
+#fullscreen-spinner .skeleton-legend-label {
+  width: 82px;
+  flex: 0 1 82px;
+}
+
+#fullscreen-spinner .skeleton-legend-percent {
+  width: 28px;
+  margin-left: auto;
+}
+
+#fullscreen-spinner .skeleton-program-progress-list {
+  gap: 7px;
+}
+
+#fullscreen-spinner .skeleton-program-progress-row {
+  gap: 5px;
+}
+
+#fullscreen-spinner .skeleton-top-performance-feature {
+  width: 126px;
+  min-height: 128px;
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 12px;
+  gap: 7px;
+  background: #e5e7eb;
+}
+
+#fullscreen-spinner .skeleton-top-performance-avatar {
+  width: 42px;
+  height: 42px;
+}
+
+@media (max-width: 768px) {
+  #fullscreen-spinner .skeleton-sidebar {
+    display: none;
+  }
+
+  #fullscreen-spinner .skeleton-dashboard-content {
+    padding: 12px;
+  }
+
+  #fullscreen-spinner .skeleton-welcome-box {
+    min-height: 100px;
+  }
+
+  #fullscreen-spinner .skeleton-large-card {
+    min-height: 260px;
   }
 }
 

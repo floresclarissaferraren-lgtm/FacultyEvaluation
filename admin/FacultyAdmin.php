@@ -63,13 +63,6 @@ $adminOverviewNow = new DateTimeImmutable(
       <i class="ph ph-bell-ringing"></i>
       <span class="notification-dot" aria-hidden="true"></span>
     </button>
-    <div class="navbar-admin-profile" aria-label="Signed in as System Administrator">
-      <div class="navbar-admin-avatar" aria-hidden="true">SA</div>
-      <div class="navbar-admin-profile-text">
-        <span class="navbar-admin-name">System Administrator</span>
-        <span class="navbar-admin-role">Administrator</span>
-      </div>
-    </div>
     <div class="admin-notification-panel" id="adminNotificationPanel" role="status" aria-live="polite" hidden>
       <div class="admin-notification-panel-header">
         <strong>Notifications</strong>
@@ -135,7 +128,7 @@ $adminOverviewNow = new DateTimeImmutable(
   <!-- Logo Top -->
   <div class="sidebar-top">
     <div class="logo-title-container">
-      <img src="../assets/images/schoollogo.png" class="sidebar-logo" alt="Granby Colleges seal">
+      <img src="../assets/images/granbylogo.png" class="sidebar-logo" alt="Granby Colleges seal">
       <div class="title-container">
         <h1>FaculRate</h1>
         <span class="subtitle">Faculty Evaluation System</span>
@@ -198,15 +191,22 @@ $adminOverviewNow = new DateTimeImmutable(
         </a>
       </div>
     </div>
-
   </nav>
 
   <!-- Sidebar Bottom / Logout -->
   <div class="sidebar-bottom">
-    <a href="#" class="sidebar-logout-btn" id="logoutLink" data-tooltip="Logout" aria-label="Logout">
+    <a href="#" class="sidebar-logout-btn" id="logoutLink" data-tooltip="Logout" aria-label="Logout" aria-hidden="true">
       <i class="ph ph-sign-out"></i>
       <span>Logout</span>
     </a>
+    <button type="button" class="sidebar-profile" id="adminProfileToggle" aria-label="Admin User profile" aria-expanded="false" aria-controls="logoutLink">
+      <div class="sidebar-profile-avatar" aria-hidden="true">AD</div>
+      <div class="sidebar-profile-text">
+        <span class="sidebar-profile-name">Admin User</span>
+        <span class="sidebar-profile-role">Administrator</span>
+      </div>
+      <i class="ph ph-caret-down sidebar-profile-chevron" aria-hidden="true"></i>
+    </button>
   </div>
   
 </div>
@@ -219,22 +219,22 @@ $adminOverviewNow = new DateTimeImmutable(
       <div class="admin-welcome-heading">
         <h1>Admin Overview</h1>
         <div class="admin-overview-date-box" aria-label="Current date and time">
-    <strong class="admin-overview-date-title">Time &amp; Date</strong>
-    <time class="admin-overview-date" datetime="<?= $adminOverviewNow->format(
-        "Y-m-d",
-    ) ?>">
-      <?= $adminOverviewNow->format("F j, Y") ?>
-    </time>
-    <time id="adminOverviewTime" class="admin-overview-time" datetime="<?= $adminOverviewNow->format(
-        "H:i:s",
-    ) ?>">
-      <?= $adminOverviewNow->format("g:i:s A") ?>
-    </time>
-    </div>
+          <strong class="admin-overview-date-title">Time &amp; Date</strong>
+          <time class="admin-overview-date" datetime="<?= $adminOverviewNow->format(
+              "Y-m-d",
+          ) ?>">
+            <?= $adminOverviewNow->format("F j, Y") ?>
+          </time>
+          <time id="adminOverviewTime" class="admin-overview-time" datetime="<?= $adminOverviewNow->format(
+              "H:i:s",
+          ) ?>">
+            <?= $adminOverviewNow->format("g:i:s A") ?>
+          </time>
+        </div>
       </div>
       <p>Here's an overview of your Faculty Evaluation System. Track faculty performance, monitor evaluation progress, and manage reports and system activities all in one place.</p>
     </div>
-    <img class="admin-welcome-image" src="../assets/images/mainimg.png" alt="" aria-hidden="true">
+    <img class="admin-welcome-image" src="../assets/images/imagesbg.png" alt="" aria-hidden="true">
   </div>
 
   <div class="dashboard">
@@ -809,53 +809,47 @@ $adminOverviewNow = new DateTimeImmutable(
 <!-- ===================== Faculties Section ===================== -->
 <div id="faculties-section" class="section" style="display:none;">
 
-  <div class="faculty-page-heading-box">
-  <div class="faculty-page-heading">
-    <div>
-      <h1><i class="ph ph-users-three faculty-page-heading-icon" aria-hidden="true"></i><span>Faculty List</span><span class="faculty-title-count" aria-live="polite"><span class="faculty-count-dot" aria-hidden="true"></span>Total Faculty: <strong id="facultyMemberCount"><?php echo (int) $facultyStats[
-          "total_faculty"
-      ]; ?></strong></span></h1>
-      <p>Manage faculty members, their assigned subjects, and account status</p>
-    </div>
-    <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
-  </div>
-  </div>
-
   <div class="faculty-list-box">
-  <div class="faculty-toolbar">
-    <div class="search-filters-container">
-      <button type="button" class="clear-search-btn" data-clear-targets="faculty-search,faculty-status-filter" title="Clear search" aria-label="Clear faculty search">
-        <i class="ph ph-arrow-clockwise"></i>
-      </button>
-      <div class="search-wrapper">
-        <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-        <input id="faculty-search" placeholder="Search faculty...">
+    <div class="faculty-list-toolbar">
+      <div class="faculty-list-title">
+        <h1>Faculty List</h1>
+        <span class="faculty-title-count" aria-live="polite">(Total Faculty: <strong id="facultyMemberCount"><?php echo (int) $facultyStats[
+            "total_faculty"
+        ]; ?></strong>)</span>
       </div>
-      <div class="program-filter-wrapper">
-        <i class="ph ph-funnel"></i>
-        <select id="faculty-status-filter" class="status-dropdown">
-          <option value="">Filter by Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="on leave">On Leave</option>
-        </select>
+      <div class="faculty-heading-actions">
+      <div class="faculty-toolbar">
+        <div class="search-filters-container">
+          <div class="search-wrapper">
+            <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+            <input id="faculty-search" placeholder="Search faculty...">
+          </div>
+          <div class="program-filter-wrapper">
+            <i class="ph ph-funnel"></i>
+            <select id="faculty-status-filter" class="status-dropdown">
+              <option value="">Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="on leave">On Leave</option>
+            </select>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
       <button class="show-archived-faculty-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
+      <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
+      </div>
     </div>
-  </div>
 
-  <div class="table-wrapper">
-    <div class="table-scroll-container">
-      <table class="faculties-table">
-        <thead>
-          <tr><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <div class="table-wrapper">
+      <div class="table-scroll-container">
+        <table class="faculties-table">
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
-  </div>
   </div>
 
   <div class="archived-faculty-section" hidden>
@@ -1023,16 +1017,16 @@ $adminOverviewNow = new DateTimeImmutable(
         </h1>
         <p>Organize student profiles, year levels, and section</p>
       </div>
-      <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
+      <div class="student-heading-actions">
+        <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
+        <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
+      </div>
     </div>
   </div>
 
   <div class="student-table-box">
     <div class="student-toolbar-box">
     <div class="student-toolbar">
-      <div class="student-header-actions">
-        <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
-      </div>
       <div class="student-filter-row">
         <button type="button" class="clear-search-btn" data-clear-targets="student-search,student-program-filter,student-yearlevel-filter" title="Clear search" aria-label="Clear student search">
           <i class="ph ph-arrow-clockwise"></i>

@@ -144,8 +144,8 @@ $WHITE = [255, 255, 255];
 /* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
 $pdf->SetFillColor($BLUE[0], $BLUE[1], $BLUE[2]);
 $pdf->Rect(10, 10, 190, 34, "F");
-if (file_exists(__DIR__ . "/../assets/images/logo.png")) {
-    $pdf->Image(__DIR__ . "/../assets/images/logo.png", 15, 15, 23);
+if (file_exists(__DIR__ . "/../assets/images/granbylogo.png")) {
+    $pdf->Image(__DIR__ . "/../assets/images/granbylogo.png", 15, 15, 23);
 }
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont("Arial", "B", 15);

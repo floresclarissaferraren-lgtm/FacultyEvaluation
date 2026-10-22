@@ -108,7 +108,6 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
       <div class="about-layout">
         <div class="about-content">
       <img class="about-logo" src="../assets/images/schoollogo.png" alt="Granby Colleges of Science and Technology logo">
-      <div class="section-label"><i class="ph ph-info"></i> About Us</div>
       <h2 class="section-heading">Feedback That Supports Better Teaching</h2>
       <p class="section-sub">The Faculty Evaluation System gives students a convenient way to share feedback about their learning experience. It helps faculty and administrators review evaluation results and identify opportunities to strengthen teaching and learning.</p>
 
@@ -128,7 +127,6 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
   <div class="page" id="how-it-works">
     <div class="page-inner how-inner">
       <img class="section-logo" src="../assets/images/schoollogo.png" alt="Granby Colleges of Science and Technology logo">
-      <div class="section-label"><i class="ph ph-steps"></i> Process</div>
       <h2 class="section-heading">How It Works</h2>
       <p class="section-sub">Follow the steps based on your role in the evaluation process.</p>
 
@@ -182,7 +180,7 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
       <footer class="contact-footer">
         <div class="contact-footer-main">
           <div class="contact-brand">
-            <img src="../assets/images/schoollogo.png" alt="" aria-hidden="true">
+            <img src="../assets/images/granbylogo.png" alt="" aria-hidden="true">
             <div class="contact-brand-copy">
               <h3>FaculRate</h3>
               <p>Granby Colleges of Science and Technology</p>
@@ -431,6 +429,14 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
           <div class="skeleton-menu-text" style="width: 60px;"></div>
         </div>
       </div>
+      <div class="skeleton-sidebar-profile">
+        <div class="skeleton-sidebar-profile-avatar"></div>
+        <div class="skeleton-sidebar-profile-copy">
+          <div class="skeleton-text" style="width: 82px; height: 12px; margin: 0 0 4px;"></div>
+          <div class="skeleton-text" style="width: 64px; height: 10px; margin: 0;"></div>
+        </div>
+        <div class="skeleton-caret"></div>
+      </div>
     </div>
     <div class="skeleton-main">
       <div class="skeleton-navbar">
@@ -438,14 +444,7 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
           <div class="skeleton-hamburger"></div>
           <div class="skeleton-nav-title"></div>
         </div>
-        <div class="skeleton-user-box">
-          <div class="skeleton-avatar-circle"></div>
-          <div class="skeleton-user-text">
-            <div class="skeleton-text" style="width: 120px; height: 12px; margin-bottom: 4px;"></div>
-            <div class="skeleton-text" style="width: 40px; height: 10px; margin-bottom: 0;"></div>
-          </div>
-          <div class="skeleton-caret"></div>
-        </div>
+        <div class="skeleton-notification-icon"></div>
       </div>
       <div class="skeleton-dashboard-content">
         <div class="skeleton-welcome-box">
@@ -515,16 +514,32 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
               </div>
             </div>
             <div class="skeleton-legend">
-              <div class="skeleton-legend-item"></div>
-              <div class="skeleton-legend-item"></div>
-              <div class="skeleton-legend-item"></div>
-              <div class="skeleton-legend-item"></div>
-              <div class="skeleton-legend-item"></div>
+              <div class="skeleton-legend-item"><span class="skeleton-legend-dot"></span><span class="skeleton-legend-label"></span><span class="skeleton-legend-percent"></span></div>
+              <div class="skeleton-legend-item"><span class="skeleton-legend-dot"></span><span class="skeleton-legend-label"></span><span class="skeleton-legend-percent"></span></div>
+              <div class="skeleton-legend-item"><span class="skeleton-legend-dot"></span><span class="skeleton-legend-label"></span><span class="skeleton-legend-percent"></span></div>
+              <div class="skeleton-legend-item"><span class="skeleton-legend-dot"></span><span class="skeleton-legend-label"></span><span class="skeleton-legend-percent"></span></div>
+              <div class="skeleton-legend-item"><span class="skeleton-legend-dot"></span><span class="skeleton-legend-label"></span><span class="skeleton-legend-percent"></span></div>
             </div>
           </div>
           <div class="skeleton-large-card">
             <div class="skeleton-title" style="width: 150px; height: 16px;"></div>
             <div class="skeleton-program-progress-list">
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
+                </div>
+                <span class="skeleton-program-progress-bar"></span>
+              </div>
+              <div class="skeleton-program-progress-row">
+                <div class="skeleton-program-progress-heading">
+                  <span class="skeleton-program-progress-code"></span>
+                  <span class="skeleton-program-progress-name"></span>
+                  <span class="skeleton-program-progress-percent"></span>
+                </div>
+                <span class="skeleton-program-progress-bar"></span>
+              </div>
               <div class="skeleton-program-progress-row">
                 <div class="skeleton-program-progress-heading">
                   <span class="skeleton-program-progress-code"></span>

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap");
 
 :root {
   --primary-50: #f0f9ff;
@@ -136,7 +136,7 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   justify-content: center;
   align-items: center;
   color: #4169e1;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .stats-number {
@@ -3269,7 +3269,7 @@ table.evaluation-table .view-btn {
   color: #3b82f6 !important;
   font-weight: 600 !important;
   padding: 6px 12px !important;
-  border-radius: 6px !important;
+  border-radius: 14px !important;
   font-size: 0.85rem !important;
   transition: all 0.3s ease !important;
   border: none !important;
@@ -13900,7 +13900,7 @@ input[type="range"] {
 #students-section > .student-page-heading-box,
 #students-section > .student-table-box,
 #students-section .archived-student-section {
-  border-radius: 6px !important;
+  border-radius: 7px !important;
 }
 
 #faculties-section > .faculty-list-box {
@@ -23386,7 +23386,19 @@ button:not(:disabled):hover svg {
 #students-section .table-row-actions-trigger i,
 #faculties-section .table-row-actions-trigger i {
   color: #64748b;
+  font-size: 18px;
   transition: color 0.15s ease;
+}
+
+#students-section .table-row-actions-trigger .table-action-dots,
+#faculties-section .table-row-actions-trigger .table-action-dots {
+  color: #64748b;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+  transform: translateX(1px);
 }
 
 #students-section .table-row-actions-trigger:hover i,
@@ -24090,6 +24102,85 @@ button.classes-btn:not(:disabled):hover i {
   min-height: 26px !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* Compact labeled action menu for Faculty and Student rows */
+.table-row-actions-menu {
+  width: 144px !important;
+  min-width: 144px !important;
+  padding: 5px !important;
+  border-radius: 9px !important;
+}
+
+.table-row-actions-menu .action-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 2px !important;
+  width: 100% !important;
+}
+
+.table-row-actions-menu .action-buttons .action-icon-btn,
+.table-row-actions-menu .status-action-menu,
+.table-row-actions-menu .status-action-menu .action-icon-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 29px !important;
+  min-height: 29px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  text-align: left !important;
+}
+
+.table-row-actions-menu .status-action-menu {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.table-row-actions-menu .action-icon-btn i,
+.table-row-actions-menu .status-action-menu .action-icon-btn i {
+  flex: 0 0 15px;
+  width: 15px;
+  font-size: 14px !important;
+}
+
+.table-row-actions-menu .action-icon-btn span {
+  display: inline !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+
+.table-row-actions-menu .action-buttons .action-icon-btn:hover,
+.table-row-actions-menu .action-buttons .action-icon-btn:focus-visible,
+.table-row-actions-menu .action-buttons .action-icon-btn:active,
+.table-row-actions-menu .status-action-menu .settings-btn:hover,
+.table-row-actions-menu .status-action-menu .settings-btn:focus-visible,
+.table-row-actions-menu .status-action-menu .settings-btn:active,
+.table-row-actions-menu .status-dropdown-menu .status-option:hover,
+.table-row-actions-menu .status-dropdown-menu .status-option:focus-visible,
+.table-row-actions-menu .status-dropdown-menu .status-option:active {
+  background: #eff6ff !important;
+  border-color: transparent !important;
+  color: #1d4ed8 !important;
+  box-shadow: none !important;
+}
+
+.table-row-actions-menu .action-buttons .action-icon-btn:hover i,
+.table-row-actions-menu .action-buttons .action-icon-btn:focus-visible i,
+.table-row-actions-menu .action-buttons .action-icon-btn:active i,
+.table-row-actions-menu .status-action-menu .settings-btn:hover i,
+.table-row-actions-menu .status-action-menu .settings-btn:focus-visible i,
+.table-row-actions-menu .status-action-menu .settings-btn:active i {
+  color: #1d4ed8 !important;
 }
 
 #students-section .student-table-box {
@@ -25682,9 +25773,8 @@ button.classes-btn:not(:disabled):hover i {
 #sidebar .sidebar-logo {
   width: 44px;
   height: 44px;
-  border: 2px solid rgba(255, 255, 255, 0.85);
   border-radius: 50%;
-  background: #fff;
+  background: transparent;
 }
 
 #sidebar .title-container h1 {
@@ -29270,7 +29360,7 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
 
 #sidebar .sidebar-bottom {
   border-top-color: rgba(255, 255, 255, 0.28) !important;
-  background: #1b8acc !important;
+  background: #094b6d !important;
 }
 
 #sidebar,
@@ -29480,8 +29570,8 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
 }
 
 #sidebar .sidebar-menu a:hover {
-  border-color: #55b6e8 !important;
-  background: #1682b8 !important;
+  border-color: #267da8 !important;
+  background: #1674a3 !important;
   color: #fff !important;
 }
 
@@ -29534,10 +29624,10 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
   min-width: 0;
   margin: 0;
   padding: 9px 12px;
-  border: 1px solid #c7dcf5;
+  border: 1px solid #bfdbfe;
   border-radius: 10px;
-  background: #e8f1fd;
-  box-shadow: 0 2px 8px rgba(15, 75, 149, 0.1);
+  background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.08);
 }
 
 #dashboard-section .admin-overview-date-title {
@@ -30082,9 +30172,8 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
 #sidebar .sidebar-logo {
   width: 44px;
   height: 44px;
-  border: 2px solid rgba(255, 255, 255, 0.85);
   border-radius: 50%;
-  background: #fff;
+  background: transparent;
 }
 
 #sidebar .title-container h1 {
@@ -31114,12 +31203,11 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   transform: translate(-50%, -50%);
 }
 
-/* Keep the brand, navigation, and admin account on one continuous gradient. */
+/* Keep the sidebar light through the menu; reserve the dark color for logout. */
 #sidebar {
   background: linear-gradient(
-    160deg,
+    to bottom,
     #094b6d 0%,
-    #0c6499 52%,
     #1086c1 100%
   ) !important;
   border-right: 0;
@@ -31219,7 +31307,7 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   gap: 8px;
   padding: 12px 14px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-  background: transparent !important;
+  background: #094b6d !important;
 }
 
 #sidebar .sidebar-profile {
@@ -31308,9 +31396,8 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   flex: 0 0 42px;
   width: 42px;
   height: 42px;
-  border: 2px solid rgba(255, 255, 255, 0.88);
   border-radius: 8px;
-  background: #fff;
+  background: transparent;
   object-fit: contain;
 }
 
@@ -31631,4 +31718,1184 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
     padding: 6px 6px;
     font-size: clamp(0.58rem, 2vw, 0.68rem);
   }
+}
+
+#sidebar .sidebar-top {
+  background: #094b6d !important;
+}
+
+#sidebar .sidebar-bottom,
+#sidebar .sidebar-bottom .sidebar-logout-btn {
+  background: #0c6499 !important;
+}
+
+/* Slightly reduce the overall size of admin add and archive controls. */
+.add-program-btn,
+.add-faculty-btn,
+.add-student-btn,
+.add-manage-btn,
+.add-subject-main-btn,
+.add-btn,
+.period-add-btn,
+#add-subject-btn,
+#addCategoryBtn,
+#confirm-subject-selection,
+#confirm-faculty-subject-selection,
+.show-archived-faculty-btn,
+.show-archived-student-btn {
+  font-size: calc(1em - 3px) !important;
+  min-height: 38px !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+}
+
+#report-section .generate-report-btn {
+  font-size: calc(1em - 3px) !important;
+  min-height: 38px !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+}
+
+#sidebar .sidebar-bottom {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn {
+  min-height: 34px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+#sidebar .sidebar-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+#dashboard-section .admin-welcome-box {
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 20%) !important;
+}
+
+#dashboard-section .admin-welcome-copy {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#dashboard-section .admin-overview-date-box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.08);
+}
+
+#dashboard-section .admin-overview-date,
+#dashboard-section .admin-overview-time {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#dashboard-section .admin-overview-time {
+  padding-left: 9px;
+  border-left: 1px solid #bfd3ed;
+}
+
+#dashboard-section .admin-welcome-image {
+  grid-column: 2;
+  grid-row: 1;
+  display: block;
+  width: min(100%, 220px);
+  max-height: 150px;
+  object-fit: contain;
+  object-position: center;
+  justify-self: end;
+  align-self: center;
+}
+
+@media (max-width: 640px) {
+  #dashboard-section .admin-welcome-box {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #dashboard-section .admin-welcome-image {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: end;
+  }
+}
+
+/* Restore the blue admin sidebar palette. */
+#sidebar,
+#sidebar .sidebar-top,
+#sidebar .sidebar-menu,
+#sidebar .sidebar-bottom {
+  color: #fff !important;
+}
+
+#sidebar {
+  background: linear-gradient(
+    to bottom,
+    #094b6d 0%,
+    #0c6499 30%,
+    #1688bd 72%,
+    #094b6d 100%
+  ) !important;
+  border-right: 0 !important;
+  box-shadow: none !important;
+}
+
+#sidebar .sidebar-top,
+#sidebar .sidebar-menu {
+  background: transparent !important;
+}
+
+#sidebar .sidebar-bottom {
+  background: transparent !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#sidebar .title-container h1,
+#sidebar .title-container span:not(.subtitle),
+#sidebar .sidebar-top span,
+#sidebar .title-container .subtitle,
+#sidebar .menu-header span,
+#sidebar .sidebar-menu a,
+#sidebar .sidebar-menu a i {
+  color: #fff !important;
+}
+
+#sidebar .sidebar-menu a:hover {
+  border-color: #55b6e8 !important;
+  background: #1682b8 !important;
+  color: #fff !important;
+}
+
+#sidebar .sidebar-menu a:hover i {
+  color: #fff !important;
+}
+
+#sidebar .sidebar-menu a.active,
+#sidebar .sidebar-menu a.active:hover {
+  border-color: #084d75 !important;
+  background: #084d75 !important;
+  color: #fff !important;
+}
+
+#sidebar .sidebar-menu a.active i,
+#sidebar .sidebar-menu a.active:hover i {
+  color: #fff !important;
+}
+
+#sidebar .sidebar-menu a:active,
+#sidebar .sidebar-bottom .sidebar-logout-btn:active {
+  border-color: #062f47 !important;
+  background: #062f47 !important;
+  color: #fff !important;
+}
+
+#sidebar .sidebar-menu a:active i,
+#sidebar .sidebar-bottom .sidebar-logout-btn:active i {
+  color: #fff !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn,
+#sidebar .sidebar-bottom .sidebar-logout-btn i {
+  color: #fff !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn {
+  background: transparent !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover {
+  background: #1674a3 !important;
+  color: #fff !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover i {
+  color: #fff !important;
+}
+
+/* Restore the navbar bar while retaining its controls. */
+body > .navbar {
+  background: #fff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.06) !important;
+}
+
+body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
+  background: #fff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.06) !important;
+}
+
+body > .navbar .section-title {
+  font-weight: 700 !important;
+}
+
+/* Match the navbar skeleton to its real icon + title arrangement. */
+body:has(> main > .section.admin-section-loading) > .navbar .hamburger {
+  color: transparent !important;
+  background: linear-gradient(90deg, #e5eaf2 25%, #f5f7fb 50%, #e5eaf2 75%) !important;
+  background-size: 320px 100% !important;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+  border-radius: 10px;
+}
+
+body:has(> main > .section.admin-section-loading) > .navbar .hamburger i {
+  visibility: hidden;
+}
+
+body:has(> main > .section.admin-section-loading) > .navbar .admin-notification-btn {
+  color: transparent !important;
+  background: linear-gradient(90deg, #e5eaf2 25%, #f5f7fb 50%, #e5eaf2 75%) !important;
+  background-size: 320px 100% !important;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+
+body:has(> main > .section.admin-section-loading) > .navbar .admin-notification-btn i,
+body:has(> main > .section.admin-section-loading) > .navbar .admin-notification-btn .notification-dot {
+  visibility: hidden;
+}
+
+body:has(> main > .section.admin-section-loading) > .navbar .section-title {
+  width: 126px;
+  height: 16px;
+  padding: 0 !important;
+  border-radius: 999px;
+  color: transparent !important;
+  background: linear-gradient(90deg, #e5eaf2 25%, #f5f7fb 50%, #e5eaf2 75%);
+  background-size: 320px 100%;
+  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+  overflow: hidden;
+}
+
+body > .navbar .navbar-admin-avatar {
+  background: #094b6d !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+#dashboard-section .admin-welcome-copy {
+  transform: translateY(-4px);
+}
+
+#dashboard-section .admin-welcome-box {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 12px 20px !important;
+  align-items: center;
+}
+
+#dashboard-section .admin-welcome-image {
+  max-height: 100px;
+  object-fit: contain;
+}
+
+#dashboard-section .admin-welcome-heading h1 {
+  font-size: clamp(1.05rem, 1.7vw, 1.45rem);
+}
+
+#dashboard-section
+  .dashboard-card.rating-distribution
+  .rating-distribution-inner {
+  border: 2px solid #86efac;
+  background: linear-gradient(145deg, #f8fdf9 0%, #effbf3 100%);
+}
+
+#dashboard-section .admin-period-summary {
+  border-color: #bfdbfe;
+  background: linear-gradient(145deg, #f5faff 0%, #eaf4ff 100%);
+}
+
+#dashboard-section .admin-period-summary .admin-period-item {
+  border: 1px solid #93c5fd !important;
+}
+
+#dashboard-section .admin-period-summary .academic-year-item {
+  border: 1.5px solid #60a5fa !important;
+}
+
+#dashboard-section .admin-period-summary .semester-item {
+  border: 1.5px solid #a78bfa !important;
+}
+
+#dashboard-section .admin-period-summary .evaluation-status-item {
+  border: 1.5px solid #fb7185 !important;
+}
+
+#dashboard-section .admin-period-summary .admin-period-item {
+  align-self: center !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  gap: 5px !important;
+  padding: 8px 10px !important;
+}
+
+#dashboard-section .top-performance-name {
+  margin-top: 4px;
+}
+
+#sidebar .sidebar-logo {
+  flex-basis: 48px;
+  width: 48px;
+  height: 48px;
+}
+
+#sidebar .logo-title-container {
+  gap: 5px;
+}
+
+#sidebar.collapsed .sidebar-top .logo-title-container {
+  width: 100%;
+  justify-content: center !important;
+}
+
+#sidebar.collapsed .sidebar-top .sidebar-logo {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+}
+
+#sidebar .sidebar-bottom .sidebar-profile {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0 !important;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(4, 17, 43, 0.12);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+#sidebar .sidebar-bottom .sidebar-profile:hover {
+  border-color: #35a8dc !important;
+  background: #0b5f91 !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgba(4, 17, 43, 0.24);
+}
+
+#sidebar .sidebar-bottom .sidebar-profile:active {
+  border-color: #083c5a !important;
+  background: #083c5a !important;
+  color: #fff !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-profile:hover .sidebar-profile-name,
+#sidebar .sidebar-bottom .sidebar-profile:hover .sidebar-profile-role,
+#sidebar .sidebar-bottom .sidebar-profile:hover .sidebar-profile-chevron,
+#sidebar .sidebar-bottom .sidebar-profile:active .sidebar-profile-name,
+#sidebar .sidebar-bottom .sidebar-profile:active .sidebar-profile-role,
+#sidebar .sidebar-bottom .sidebar-profile:active .sidebar-profile-chevron {
+  color: #fff !important;
+}
+
+#sidebar .sidebar-profile-avatar {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+}
+
+#sidebar .sidebar-profile-name {
+  color: #fff;
+  font-size: 13px;
+}
+
+#sidebar .sidebar-profile-role {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#sidebar .sidebar-profile-chevron {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  transition: transform 0.18s ease;
+}
+
+#sidebar .sidebar-profile[aria-expanded="true"] .sidebar-profile-chevron {
+  transform: rotate(180deg);
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn {
+  display: none !important;
+  position: absolute;
+  z-index: 5;
+  right: 12px;
+  bottom: calc(100% + 8px);
+  left: 12px;
+  padding: 12px 14px;
+  border: 1px solid #dbeafe !important;
+  border-radius: 12px;
+  background: #fff !important;
+  color: #e11d48 !important;
+  box-shadow: 0 8px 20px rgba(4, 17, 43, 0.16);
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn.is-open {
+  display: flex !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn i {
+  color: #e11d48 !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover {
+  background: #fff1f2 !important;
+  color: #be123c !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover i {
+  color: #be123c !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn,
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover {
+  border-radius: 8px !important;
+}
+
+#sidebar.collapsed .sidebar-bottom .sidebar-profile {
+  justify-content: center;
+  gap: 0;
+  padding: 8px 4px;
+}
+
+#sidebar.collapsed .sidebar-profile-chevron {
+  display: none;
+}
+
+#sidebar .sidebar-bottom {
+  position: relative;
+}
+
+#dashboard-section .top-performance-percent,
+#report-section .report-ranking-card .top-performance-percent {
+  transform: translateY(-8px);
+}
+
+@keyframes adminDashboardSkeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-line,
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-icon,
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-chart,
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-cell,
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-welcome-image,
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-progress-bar,
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-ranking-avatar {
+  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%) !important;
+  background-size: 200% 100% !important;
+  animation: adminDashboardSkeletonShimmer 1.4s ease-in-out infinite !important;
+}
+
+#dashboard-section.admin-section-loading > .admin-section-skeleton
+  .admin-skeleton-ranking-card {
+  background: #f9fafb !important;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading) #sidebar,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-top,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-bottom {
+  background: #f4f7fc !important;
+  border-color: #e5edf7 !important;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a.active,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-logout-btn {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a i,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile *,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-logout-btn i {
+  color: transparent !important;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-logo {
+  opacity: 0;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a i,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a span,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .menu-header span,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-avatar,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-name,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-role,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-chevron,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .title-container h1,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .title-container .subtitle {
+  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%) !important;
+  background-size: 200% 100% !important;
+  animation: adminDashboardSkeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+  color: transparent !important;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a i {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-menu a span,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-name,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-role,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .title-container h1,
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .title-container .subtitle {
+  display: inline-block;
+  min-height: 12px;
+}
+
+body:has(> main > #dashboard-section.admin-section-loading)
+  #sidebar .sidebar-profile-avatar {
+  color: transparent !important;
+}
+
+#faculties-section .faculty-toolbar .search-filters-container {
+  flex: 0 1 auto;
+  grid-template-columns: 44px minmax(150px, 220px) minmax(135px, 170px);
+}
+
+@media (max-width: 900px) {
+  #faculties-section .faculty-toolbar .search-filters-container {
+    flex: 1 1 100%;
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  #faculties-section .faculty-toolbar .program-filter-wrapper {
+    grid-column: 1 / -1;
+  }
+}
+
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions {
+  display: flex;
+  flex: 0 0 auto !important;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+#faculties-section > .faculty-page-heading-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn {
+  border: 1px solid #d1d5db !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #111827 !important;
+}
+
+#faculties-section > .faculty-page-heading-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn:hover,
+#faculties-section > .faculty-page-heading-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn:focus-visible {
+  border-color: #9ca3af !important;
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+@media (max-width: 900px) {
+  #faculties-section > .faculty-page-heading-box .faculty-heading-actions {
+    width: 100%;
+  }
+
+  #faculties-section > .faculty-page-heading-box
+    .faculty-heading-actions
+    > button {
+    flex: 1 1 0;
+    width: auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  #faculties-section > .faculty-page-heading-box .faculty-heading-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #faculties-section > .faculty-page-heading-box
+    .faculty-heading-actions
+    > button {
+    width: 100%;
+  }
+}
+
+#faculties-section > .faculty-list-box {
+  overflow: hidden;
+  border-radius: 12px !important;
+  border: 1px solid #edf1f7 !important;
+  background: #fff !important;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06) !important;
+}
+
+#faculties-section .faculty-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 0;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+#faculties-section .faculty-list-title {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+#faculties-section .faculty-list-title h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-weight: 700;
+}
+
+#faculties-section .faculty-list-title h1 i {
+  color: #087fc4;
+  font-size: 1.35em;
+}
+
+#faculties-section .faculty-list-title .faculty-title-count {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+#faculties-section .faculty-list-title .faculty-title-count strong {
+  color: #1e3a8a;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions {
+  display: flex;
+  flex: 0 1 auto !important;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions .faculty-toolbar {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .search-filters-container {
+  display: grid;
+  grid-template-columns: 38px minmax(150px, 220px) minmax(120px, 160px);
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  flex: 0 1 auto;
+}
+
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .clear-search-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+}
+
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .search-wrapper,
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .program-filter-wrapper {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn {
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  white-space: nowrap;
+  border: 1px solid #d1d5db !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #111827 !important;
+}
+
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn:hover,
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn:focus-visible {
+  border-color: #9ca3af !important;
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+#faculties-section > .faculty-list-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn
+  i {
+  color: #111827 !important;
+}
+
+#faculties-section > .faculty-list-box > .table-wrapper {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1200px) {
+  #faculties-section .faculty-list-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #faculties-section > .faculty-list-box .faculty-heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  #faculties-section > .faculty-list-box .faculty-heading-actions .faculty-toolbar {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .search-filters-container {
+    grid-template-columns: 38px minmax(0, 1fr) minmax(120px, 180px);
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  #faculties-section .faculty-list-toolbar {
+    padding: 12px;
+  }
+
+  #faculties-section .faculty-list-title {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .search-filters-container {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .program-filter-wrapper {
+    grid-column: 1 / -1;
+  }
+
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .show-archived-faculty-btn,
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .add-faculty-btn {
+    flex: 1 1 0;
+    width: auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  #faculties-section .faculty-list-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #faculties-section > .faculty-list-box .faculty-heading-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .show-archived-faculty-btn,
+  #faculties-section > .faculty-list-box
+    .faculty-heading-actions
+    .add-faculty-btn {
+    width: 100%;
+  }
+}
+
+#faculties-section > .faculty-page-heading-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn {
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+#faculties-section > .faculty-page-heading-box
+  .faculty-heading-actions
+  .show-archived-faculty-btn
+  i {
+  color: #111827 !important;
+}
+
+#students-section > .student-page-heading-box .student-heading-actions {
+  display: flex;
+  flex: 0 0 auto !important;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+#students-section > .student-page-heading-box
+  .student-heading-actions
+  .show-archived-student-btn {
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  white-space: nowrap;
+  border: 1px solid #d1d5db !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #111827 !important;
+}
+
+#students-section > .student-page-heading-box
+  .student-heading-actions
+  .show-archived-student-btn:hover,
+#students-section > .student-page-heading-box
+  .student-heading-actions
+  .show-archived-student-btn:focus-visible {
+  border-color: #9ca3af !important;
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+#students-section > .student-page-heading-box
+  .student-heading-actions
+  .show-archived-student-btn
+  i {
+  color: #111827 !important;
+}
+
+@media (max-width: 900px) {
+  #students-section > .student-page-heading-box .student-heading-actions {
+    width: 100%;
+  }
+
+  #students-section > .student-page-heading-box
+    .student-heading-actions
+    > button {
+    flex: 1 1 0;
+    width: auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  #students-section > .student-page-heading-box .student-heading-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #students-section > .student-page-heading-box
+    .student-heading-actions
+    > button {
+    width: 100%;
+  }
+}
+
+/* Put faculty filters and actions on the Faculty List heading row. */
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions {
+  flex: 0 1 auto !important;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+#faculties-section .faculty-heading-actions .faculty-toolbar {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#faculties-section .faculty-heading-actions .search-filters-container {
+  display: grid;
+  grid-template-columns: 38px minmax(150px, 220px) minmax(120px, 160px);
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  flex: 0 1 auto;
+}
+
+#faculties-section .faculty-heading-actions .clear-search-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+}
+
+#faculties-section .faculty-heading-actions .search-wrapper,
+#faculties-section .faculty-heading-actions .program-filter-wrapper {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+#faculties-section > .faculty-page-heading-box {
+  margin-bottom: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#faculties-section > .faculty-list-box {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid #edf1f7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+}
+
+#faculties-section > .faculty-list-box > .table-wrapper {
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  #faculties-section > .faculty-page-heading-box > .faculty-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  #faculties-section > .faculty-page-heading-box .faculty-heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  #faculties-section .faculty-heading-actions .faculty-toolbar {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  #faculties-section .faculty-heading-actions .search-filters-container {
+    grid-template-columns: 38px minmax(0, 1fr) minmax(120px, 180px);
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  #faculties-section .faculty-heading-actions .search-filters-container {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  #faculties-section .faculty-heading-actions .program-filter-wrapper {
+    grid-column: 1 / -1;
+  }
+
+  #faculties-section .faculty-heading-actions .show-archived-faculty-btn,
+  #faculties-section .faculty-heading-actions .add-faculty-btn {
+    flex: 1 1 0;
+    width: auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  #faculties-section > .faculty-page-heading-box .faculty-heading-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #faculties-section .faculty-heading-actions .show-archived-faculty-btn,
+  #faculties-section .faculty-heading-actions .add-faculty-btn {
+    width: 100%;
+  }
+}
+
+/* Keep faculty toolbar controls aligned with the archive button. */
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .search-wrapper,
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .program-filter-wrapper,
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .show-archived-faculty-btn,
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .add-faculty-btn {
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  font-size: 13px !important;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .search-wrapper,
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .program-filter-wrapper {
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  font-size: 13px !important;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .search-wrapper input,
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .program-filter-wrapper select {
+  font-size: 13px !important;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .search-wrapper:focus-within,
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .program-filter-wrapper:focus-within {
+  border-color: #9ca3af !important;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15) !important;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .search-filters-container {
+  column-gap: 4px;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .clear-search-btn {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+#faculties-section > .faculty-list-box .faculty-heading-actions
+  .search-filters-container {
+  grid-template-columns: minmax(150px, 220px) minmax(120px, 160px);
+}
+
+@media (max-width: 1200px) {
+  #faculties-section > .faculty-list-box .faculty-heading-actions
+    .search-filters-container {
+    grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
+  }
+}
+
+@media (max-width: 640px) {
+  #faculties-section > .faculty-list-box .faculty-heading-actions
+    .search-filters-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+#faculties-section > .faculty-list-box .faculties-table thead th {
+  color: #000 !important;
 }

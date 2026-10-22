@@ -810,7 +810,7 @@ function helperGenerateEvaluationSummaryPDF(
             DIRECTORY_SEPARATOR .
             "images" .
             DIRECTORY_SEPARATOR .
-            "logo.png";
+            "granbylogo.png";
         if (is_file($logoPath)) {
             $pdf->Image($logoPath, 15, 15, 23);
         }
@@ -1148,7 +1148,7 @@ function helperGenerateReportPDF(
             DIRECTORY_SEPARATOR .
             "images" .
             DIRECTORY_SEPARATOR .
-            "logo.png";
+            "granbylogo.png";
         if (is_file($logoPath)) {
             $pdf->Image($logoPath, 15, 15, 23);
         }

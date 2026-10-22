@@ -165,7 +165,7 @@ $textColor = [50, 50, 50];
 $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
 $pdf->Rect(10, 10, 190, 34, "F");
 
-$logoPath = __DIR__ . "/../assets/images/logo.png";
+$logoPath = __DIR__ . "/../assets/images/granbylogo.png";
 if (is_file($logoPath)) {
     $pdf->Image($logoPath, 15, 15, 23);
 }

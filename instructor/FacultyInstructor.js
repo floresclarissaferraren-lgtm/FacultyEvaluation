@@ -1573,6 +1573,10 @@ function showPerSubjectReport() {
       });
 
       modalContent.innerHTML = buildPerSubjectReportHtml(data.departments);
+      const subjectSearch = modalContent.querySelector(".psm-subject-search");
+      subjectSearch?.addEventListener("input", () => {
+        filterPerSubjectReportSubjects(modalContent, subjectSearch.value);
+      });
     })
     .catch((err) => {
       console.error("Per-subject report error:", err);
@@ -1662,6 +1666,34 @@ function closePerSubjectReport() {
   }
 }
 
+function filterPerSubjectReportSubjects(container, query) {
+  const searchTerm = query.trim().toLocaleLowerCase();
+  let visibleSubjectCount = 0;
+
+  container.querySelectorAll(".psm-dept").forEach((department) => {
+    const subjectCards = department.querySelectorAll(".psm-subject-card");
+    let visibleDepartmentCount = 0;
+
+    subjectCards.forEach((card) => {
+      const subjectTitle =
+        card.querySelector(".psm-subject-title-row")?.textContent || "";
+      const matches = subjectTitle.toLocaleLowerCase().includes(searchTerm);
+      card.hidden = !matches;
+      if (matches) {
+        visibleDepartmentCount += 1;
+        visibleSubjectCount += 1;
+      }
+    });
+
+    department.hidden = searchTerm.length > 0 && visibleDepartmentCount === 0;
+  });
+
+  const emptyMessage = container.querySelector(".psm-search-empty");
+  if (emptyMessage) {
+    emptyMessage.hidden = searchTerm.length === 0 || visibleSubjectCount > 0;
+  }
+}
+
 /**
  * Build the inner HTML for the per-subject report modal.
  */
@@ -1708,6 +1740,15 @@ function buildPerSubjectReportHtml(departments) {
 
     <div class="psm-body">
       <div class="psm-subjects-section">
+        ${
+          departments?.some((department) => department.subjects?.length)
+            ? `<label class="psm-search-wrap">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <input class="psm-subject-search" type="search" placeholder="Search subjects..." aria-label="Search subjects">
+        </label>
+        <p class="psm-search-empty" role="status" hidden>No subjects match your search.</p>`
+            : ""
+        }
         ${deptHtml}
       </div>
 

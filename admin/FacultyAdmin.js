@@ -209,105 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const sectionSkeletons = {
-    "dashboard-section": `
-      <div class="admin-welcome-box admin-skeleton-card admin-skeleton-welcome">
-        <div class="admin-welcome-copy">
-          <div class="admin-skeleton-welcome-heading">
-            <span class="admin-skeleton-line title"></span>
-            <span class="admin-skeleton-line datetime"></span>
-          </div>
-          <div class="admin-skeleton-welcome-copy">
-            <span class="admin-skeleton-line meta"></span>
-            <span class="admin-skeleton-line meta short"></span>
-          </div>
-        </div>
-        <span class="admin-skeleton-welcome-image"></span>
-      </div>
-      <div class="dashboard admin-skeleton-grid">
-        ${Array.from({ length: 3 })
-          .map(
-            () => `
-          <div class="dashboard-card admin-skeleton-card">
-            <div class="dashboard-content">
-              <div class="admin-skeleton-stack">
-                <span class="admin-skeleton-line title"></span>
-                <span class="admin-skeleton-line value"></span>
-                <span class="admin-skeleton-line meta"></span>
-              </div>
-              <span class="icon-box admin-skeleton-icon"></span>
-            </div>
-          </div>
-        `,
-          )
-          .join("")}
-        <div class="admin-period-summary admin-skeleton-card admin-skeleton-overview">
-          <span class="admin-skeleton-line title"></span>
-          ${Array.from({ length: 3 })
-            .map(
-              () => `
-                <div class="admin-period-item admin-skeleton-card">
-                  <span class="admin-skeleton-line label"></span>
-                  <span class="admin-skeleton-line meta"></span>
-                </div>
-              `,
-            )
-            .join("")}
-        </div>
-      </div>
-      <div class="dashboard-row-2 admin-skeleton-grid">
-        <div class="dashboard-card admin-skeleton-card admin-skeleton-chart-card">
-          <div class="dashboard-content">
-            <span class="admin-skeleton-line title"></span>
-            <span class="admin-skeleton-chart"></span>
-            <div class="admin-skeleton-list">${Array.from({ length: 5 })
-              .map(() => `<span class="admin-skeleton-line"></span>`)
-              .join("")}</div>
-          </div>
-        </div>
-        <div class="dashboard-card admin-skeleton-card">
-          <div class="dashboard-content">
-            <span class="admin-skeleton-line title"></span>
-            <div class="admin-skeleton-list">${Array.from({ length: 5 })
-              .map(
-                () => `
-                  <div class="admin-skeleton-progress-row">
-                    <div class="admin-skeleton-progress-heading">
-                      <span class="admin-skeleton-line code"></span>
-                      <span class="admin-skeleton-line description"></span>
-                      <span class="admin-skeleton-line percent"></span>
-                    </div>
-                    <span class="admin-skeleton-progress-bar"></span>
-                  </div>
-                `,
-              )
-              .join("")}</div>
-            <div class="admin-skeleton-progress-summary">
-              ${Array.from({ length: 3 })
-                .map(
-                  () => `
-                    <div>
-                      <span class="admin-skeleton-line value"></span>
-                      <span class="admin-skeleton-line label"></span>
-                    </div>
-                  `,
-                )
-                .join("")}
-            </div>
-          </div>
-        </div>
-        <div class="dashboard-card admin-skeleton-card">
-          <div class="dashboard-content">
-            <span class="admin-skeleton-line title"></span>
-            <div class="admin-skeleton-ranking-card">
-              <span class="admin-skeleton-ranking-avatar"></span>
-              <span class="admin-skeleton-line ranking-name"></span>
-              <span class="admin-skeleton-line ranking-score"></span>
-              <span class="admin-skeleton-line ranking-place"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `,
     "programs-section": `
       <div class="programs-container-box admin-skeleton-card">
         <div class="programs-header">
@@ -1280,10 +1181,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const cancelBtn = logoutModal.querySelector(".cancel-btn");
   const submitBtn = logoutModal.querySelector(".logout-btn");
   const logoutLink = document.getElementById("logoutLink");
+  const adminProfileToggle = document.getElementById("adminProfileToggle");
+  const sidebarBottom = adminProfileToggle?.closest(".sidebar-bottom");
+
+  function setProfileMenuOpen(isOpen) {
+    logoutLink?.classList.toggle("is-open", isOpen);
+    logoutLink?.setAttribute("aria-hidden", String(!isOpen));
+    adminProfileToggle?.setAttribute("aria-expanded", String(isOpen));
+  }
+
+  adminProfileToggle?.addEventListener("click", () => {
+    setProfileMenuOpen(!logoutLink?.classList.contains("is-open"));
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!sidebarBottom?.contains(event.target)) setProfileMenuOpen(false);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setProfileMenuOpen(false);
+  });
 
   function showLogoutModal(e) {
     e.preventDefault();
     e.stopPropagation();
+    setProfileMenuOpen(false);
     logoutModal.style.display = "flex";
     logoutModal.style.zIndex = "10002";
     logoutModal.style.position = "fixed";
@@ -4202,7 +4124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const current = normalizeStatusValue(currentStatus);
     return `
     <div class="status-action-menu">
-      <button class="action-icon-btn settings-btn" title="Change Status"><i class="ph ph-gear-six"></i></button>
+      <button type="button" class="action-icon-btn settings-btn" title="Setting" aria-label="Setting"><i class="ph ph-gear-six"></i><span>Setting</span></button>
       <div class="status-dropdown-menu">
         ${options
           .map(
@@ -4597,14 +4519,14 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class="action-cell">
             <div class="table-row-actions">
               <button type="button" class="table-row-actions-trigger" aria-label="More faculty actions" aria-haspopup="true" aria-expanded="false" title="More actions">
-                <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
+                <span class="table-action-dots" aria-hidden="true">•••</span>
               </button>
               <div class="table-row-actions-menu" role="group" aria-label="Faculty actions">
                 <div class="action-buttons">
-                  <button type="button" class="action-icon-btn view-btn" title="View Subjects" aria-label="View Subjects"><i class="ph ph-eye"></i></button>
-                  <button type="button" class="action-icon-btn edit-btn" title="Edit Faculty" aria-label="Edit Faculty"><i class="ph ph-note-pencil"></i></button>
+                  <button type="button" class="action-icon-btn view-btn" title="View" aria-label="View"><i class="ph ph-eye"></i><span>View</span></button>
+                  <button type="button" class="action-icon-btn edit-btn" title="Edit" aria-label="Edit"><i class="ph ph-note-pencil"></i><span>Edit</span></button>
                   ${statusMenuHtml("faculty", f.status)}
-                  <button type="button" class="action-icon-btn archive-btn" title="Archive Faculty" aria-label="Archive Faculty"><i class="ph ph-archive"></i></button>
+                  <button type="button" class="action-icon-btn archive-btn" title="Archived" aria-label="Archived"><i class="ph ph-archive"></i><span>Archived</span></button>
                 </div>
               </div>
             </div>
@@ -7381,14 +7303,14 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class="action-cell">
             <div class="table-row-actions">
               <button type="button" class="table-row-actions-trigger" aria-label="More student actions" aria-haspopup="true" aria-expanded="false" title="More actions">
-                <i class="ph ph-dots-three-vertical" aria-hidden="true"></i>
+                <span class="table-action-dots" aria-hidden="true">•••</span>
               </button>
               <div class="table-row-actions-menu" role="group" aria-label="Student actions">
                 <div class="action-buttons">
-                  <button type="button" class="action-icon-btn view-subjects-btn" title="View Subjects" aria-label="View Subjects"><i class="ph ph-eye"></i></button>
-                  <button type="button" class="action-icon-btn edit-btn" title="Edit Student" aria-label="Edit Student"><i class="ph ph-note-pencil"></i></button>
+                  <button type="button" class="action-icon-btn view-subjects-btn" title="View" aria-label="View"><i class="ph ph-eye"></i><span>View</span></button>
+                  <button type="button" class="action-icon-btn edit-btn" title="Edit" aria-label="Edit"><i class="ph ph-note-pencil"></i><span>Edit</span></button>
                   ${statusMenuHtml("student", stu.status)}
-                  <button type="button" class="action-icon-btn archive-btn" title="Archive Student" aria-label="Archive Student"><i class="ph ph-archive"></i></button>
+                  <button type="button" class="action-icon-btn archive-btn" title="Archived" aria-label="Archived"><i class="ph ph-archive"></i><span>Archived</span></button>
                 </div>
               </div>
             </div>
@@ -10789,10 +10711,7 @@ function drawRatingDonutChart(canvas, data) {
         },
       },
       cutout: "60%", // Creates the donut effect
-      animation: {
-        animateRotate: true,
-        animateScale: false,
-      },
+      animation: false,
     },
   });
 }

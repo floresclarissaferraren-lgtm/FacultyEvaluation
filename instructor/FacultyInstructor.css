@@ -2174,7 +2174,7 @@ body {
   margin: 0;
   color: #12336b;
   font-family: var(--font-body);
-  font-size: 1.12rem;
+  font-size: 1.06rem;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -2183,7 +2183,7 @@ body {
 .psm-subtitle {
   margin: 5px 0 0;
   color: #64748b;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .close-report-btn,
@@ -2480,7 +2480,7 @@ body {
 .report-header-actions .download-pdf-btn,
 .psm-header-actions .psm-download-btn {
   padding: 10px 14px;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   transition:
     background-color 0.15s ease,
     box-shadow 0.15s ease;
@@ -2538,6 +2538,56 @@ body {
   border: 1px solid #e5eaf0;
   border-radius: 12px;
   background: #fff;
+}
+
+.psm-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 0 12px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #fff;
+  color: #64748b;
+}
+
+.psm-search-wrap:focus-within {
+  border-color: #0b90e0;
+  box-shadow: 0 0 0 3px rgba(11, 144, 224, 0.12);
+}
+
+.psm-search-wrap > i {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+
+.psm-subject-search {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1f2937;
+  font: 400 0.88rem var(--font-body);
+}
+
+.psm-subject-search::placeholder {
+  color: #94a3b8;
+}
+
+.psm-search-empty {
+  margin: 0 0 14px;
+  color: #64748b;
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.psm-search-empty[hidden],
+.psm-dept[hidden],
+.psm-subject-card[hidden] {
+  display: none !important;
 }
 
 .psm-dept-header {
