@@ -119,6 +119,52 @@ function setButtonLoading(
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const studentFilterMenu = document.querySelector(
+    "#students-section .student-filter-menu",
+  );
+  const studentFilterToggle = studentFilterMenu?.querySelector("summary");
+  const studentFilterOptions = studentFilterMenu?.querySelector(
+    ".student-filter-options",
+  );
+  const positionStudentFilterOptions = () => {
+    if (!studentFilterMenu?.open || !studentFilterToggle || !studentFilterOptions)
+      return;
+
+    const toggleRect = studentFilterToggle.getBoundingClientRect();
+    const panelWidth = Math.min(340, window.innerWidth - 24);
+    const left = Math.max(
+      12,
+      Math.min(toggleRect.right - panelWidth, window.innerWidth - panelWidth - 12),
+    );
+    const top = Math.min(
+      toggleRect.bottom + 8,
+      Math.max(12, window.innerHeight - studentFilterOptions.offsetHeight - 12),
+    );
+
+    studentFilterOptions.style.left = `${left}px`;
+    studentFilterOptions.style.setProperty("top", `${top}px`, "important");
+    studentFilterOptions.style.maxHeight = `${Math.max(120, window.innerHeight - top - 12)}px`;
+  };
+
+  studentFilterMenu?.addEventListener("toggle", positionStudentFilterOptions);
+  document.addEventListener("pointerdown", (event) => {
+    if (
+      studentFilterMenu?.open &&
+      event.target instanceof Node &&
+      !studentFilterMenu.contains(event.target)
+    ) {
+      studentFilterMenu.open = false;
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && studentFilterMenu?.open) {
+      studentFilterMenu.open = false;
+      studentFilterToggle?.focus();
+    }
+  });
+  window.addEventListener("resize", positionStudentFilterOptions);
+  window.addEventListener("scroll", positionStudentFilterOptions, true);
+
   const adminOverviewTime = document.getElementById("adminOverviewTime");
   if (adminOverviewTime) {
     const updateAdminOverviewTime = () => {
@@ -803,7 +849,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "manage-search",
       "manage-subjects-search",
       "manage-subjects-semester-filter",
-      "manage-subjects-year-filter",
       "subjects-search",
       "subjects-year-filter",
       "faculty-search",
@@ -2442,8 +2487,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showTable(tab);
 
     if (tab === "subjects") {
-      const yearFilter = document.getElementById("manage-subjects-year-filter");
-      if (yearFilter) yearFilter.value = year;
       loadSubjects(false);
       return;
     }
@@ -2632,12 +2675,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const semesterFilter = document.getElementById(
       "manage-subjects-semester-filter",
     );
-    const yearFilter = document.getElementById("manage-subjects-year-filter");
-
     if (resetFilters) {
       if (searchInput) searchInput.value = "";
       if (semesterFilter) semesterFilter.value = "";
-      if (yearFilter) yearFilter.value = "";
     }
 
     fetch(`subject_crud.php?action=get&program_id=${requestedProgramId}`)
@@ -2670,18 +2710,15 @@ document.addEventListener("DOMContentLoaded", () => {
       .trim();
     const semester =
       document.getElementById("manage-subjects-semester-filter")?.value || "";
-    const year =
-      document.getElementById("manage-subjects-year-filter")?.value || "";
-
     subjectsFilteredData = subjectsAllData.filter((s) => {
       const text =
         `${s.subject_code} ${s.subject_desc} ${s.semester} ${s.year_level}`.toLowerCase();
       return (
         (!searchTerm || text.includes(searchTerm)) &&
         (!semester || s.semester === semester) &&
-        (!(selectedManageYear || year) ||
+        (!selectedManageYear ||
           normalizeManageYearLevel(s.year_level) ===
-            normalizeManageYearLevel(selectedManageYear || year))
+            normalizeManageYearLevel(selectedManageYear))
       );
     });
 
@@ -2711,6 +2748,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderManageSubjectsTable() {
     if (!subjectsTableBody) return;
+
+    const subjectsScrollContainer = subjectsTableBody.closest(
+      ".table-scroll-container",
+    );
+    if (subjectsScrollContainer) subjectsScrollContainer.scrollLeft = 0;
 
     const total = subjectsFilteredData.length;
 
@@ -2864,7 +2906,6 @@ document.addEventListener("DOMContentLoaded", () => {
   [
     "manage-subjects-search",
     "manage-subjects-semester-filter",
-    "manage-subjects-year-filter",
   ].forEach((id) => {
     document
       .getElementById(id)
@@ -3549,8 +3590,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (
       subjectsVisible &&
       (document.getElementById("manage-subjects-search") ||
-        document.getElementById("manage-subjects-semester-filter") ||
-        document.getElementById("manage-subjects-year-filter"))
+        document.getElementById("manage-subjects-semester-filter"))
     ) {
       applyManageSubjectFilters();
       return;
@@ -4360,7 +4400,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const archivedSearch = document.getElementById("archived-faculty-search");
       if (archivedSearch && !archivedSearch._searchBound) {
         archivedSearch._searchBound = true;
-        const clearBtn = document.getElementById("archived-faculty-clear-btn");
 
         function runArchivedFacultyFilter() {
           const term = archivedSearch.value.toLowerCase().trim();
@@ -4380,14 +4419,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         archivedSearch.addEventListener("input", runArchivedFacultyFilter);
-
-        if (clearBtn) {
-          clearBtn.addEventListener("click", () => {
-            archivedSearch.value = "";
-            runArchivedFacultyFilter();
-            archivedSearch.focus();
-          });
-        }
       }
     }
   }
@@ -6741,7 +6772,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const archivedSearch = document.getElementById("archived-student-search");
       if (archivedSearch && !archivedSearch._searchBound) {
         archivedSearch._searchBound = true;
-        const clearBtn = document.getElementById("archived-student-clear-btn");
 
         function runArchivedFilter() {
           const term = archivedSearch.value.toLowerCase().trim();
@@ -6761,14 +6791,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         archivedSearch.addEventListener("input", runArchivedFilter);
-
-        if (clearBtn) {
-          clearBtn.addEventListener("click", () => {
-            archivedSearch.value = "";
-            runArchivedFilter();
-            archivedSearch.focus();
-          });
-        }
       }
     }
   }
@@ -9100,7 +9122,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ========================= Criteria Search Functionality =========================
   const criteriaSearchInput = document.getElementById("criteria-search-input");
-  const criteriaSearchClear = document.getElementById("criteria-search-clear");
   if (criteriaSearchInput) {
     const filterCriteria = () => {
       const searchTerm = criteriaSearchInput.value.toLowerCase().trim();
@@ -9116,11 +9137,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     criteriaSearchInput.addEventListener("input", filterCriteria);
-    criteriaSearchClear?.addEventListener("click", () => {
-      criteriaSearchInput.value = "";
-      filterCriteria();
-      criteriaSearchInput.focus();
-    });
   }
 
   // ========================= Weight Distribution Visualization =========================

@@ -443,7 +443,7 @@ $adminOverviewNow = new DateTimeImmutable(
     <!-- Programs Header -->
     <div class="programs-header">
       <div class="programs-stats">
-        <div class="stats-icon">
+        <div class="stats-icon" aria-hidden="true">
           <i class="ph-fill ph-graduation-cap"></i>
         </div>
         <div class="stats-info">
@@ -452,9 +452,6 @@ $adminOverviewNow = new DateTimeImmutable(
         </div>
       </div>
       <div class="programs-actions">
-        <button type="button" class="clear-search-btn" data-clear-targets="program-search" title="Clear search" aria-label="Clear program search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
         <div class="search-wrapper">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="program-search" placeholder="Search program..."/>
@@ -518,8 +515,8 @@ $adminOverviewNow = new DateTimeImmutable(
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
   <div class="manage-program-banner">
-    <button type="button" class="back-btn manage-back-programs">
-      <i class="ph ph-arrow-left"></i>
+    <button type="button" class="back-btn manage-back-programs" aria-label="Back to all programs" title="Back to all programs">
+      <i class="ph ph-arrow-left" aria-hidden="true"></i>
       <span>Back to all programs</span>
     </button>
     <div class="program-banner-header">
@@ -546,17 +543,33 @@ $adminOverviewNow = new DateTimeImmutable(
     </div>
   </div>
 
+  <div class="manage-subjects-panel">
   <div class="manage-curriculum-heading">
     <div>
       <p class="manage-section-eyebrow">Curriculum Structure</p>
+      <button type="button" id="manageDetailBack" class="manage-detail-back-btn" aria-label="Back to year levels" title="Back to year levels" hidden>
+        <i class="ph ph-arrow-left" aria-hidden="true"></i>
+      </button>
       <span class="manage-class-heading-icon" aria-hidden="true"><i class="ph ph-book-open"></i></span>
       <h3 id="manageContentTitle">Explore by year level<span id="manageSubjectsResultCount" class="manage-subject-count-badge"><span class="manage-subject-count-dot" aria-hidden="true"></span><span class="manage-subject-count-text"></span></span></h3>
       <p id="manageContentSubtitle" class="manage-content-subtitle"></p>
     </div>
     <div class="manage-content-actions">
-      <button type="button" id="manageDetailBack" class="manage-detail-back-btn" hidden>
-        <i class="ph ph-arrow-left"></i> Back to year levels
-      </button>
+      <div class="subject-control-box manage-subject-control-box">
+        <div class="search-wrapper">
+          <i class="ph ph-magnifying-glass manage-subject-search-icon" aria-hidden="true"></i>
+          <input type="text" id="manage-subjects-search" placeholder="Search subjects...">
+        </div>
+        <div class="program-filter-wrapper manage-semester-filter-wrapper">
+          <i class="ph ph-calendar-blank" aria-hidden="true"></i>
+          <select id="manage-subjects-semester-filter" class="program-dropdown">
+            <option value="">All Semesters</option>
+            <option value="1st Semester">1st Semester</option>
+            <option value="2nd Semester">2nd Semester</option>
+            <option value="Summer">Summer</option>
+          </select>
+        </div>
+      </div>
       <button class="add-manage-btn button-gradient"><i class="ph ph-plus"></i> Add New Subject</button>
     </div>
   </div>
@@ -576,34 +589,6 @@ $adminOverviewNow = new DateTimeImmutable(
 
   <div class="manage-body">
     <div id="subjects" class="table-wrapper">
-      <div class="subject-control-box manage-subject-control-box">
-        <button type="button" class="clear-search-btn manage-subject-clear-btn" data-clear-targets="manage-subjects-search,manage-subjects-semester-filter,manage-subjects-year-filter" title="Clear subject filters" aria-label="Clear subject filters">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
-        <div class="search-wrapper">
-          <i class="ph ph-magnifying-glass manage-subject-search-icon" aria-hidden="true"></i>
-          <input type="text" id="manage-subjects-search" placeholder="Search subjects...">
-        </div>
-        <div class="program-filter-wrapper manage-semester-filter-wrapper">
-          <i class="ph ph-calendar-blank"></i>
-          <select id="manage-subjects-semester-filter" class="program-dropdown">
-            <option value="">All Semesters</option>
-            <option value="1st Semester">1st Semester</option>
-            <option value="2nd Semester">2nd Semester</option>
-            <option value="Summer">Summer</option>
-          </select>
-        </div>
-        <div class="program-filter-wrapper manage-year-filter-wrapper">
-          <i class="ph ph-graduation-cap"></i>
-          <select id="manage-subjects-year-filter" class="program-dropdown">
-            <option value="">All Year Levels</option>
-            <option value="1st Year">1st Year</option>
-            <option value="2nd Year">2nd Year</option>
-            <option value="3rd Year">3rd Year</option>
-            <option value="4th Year">4th Year</option>
-          </select>
-        </div>
-      </div>
       <div class="table-scroll-container">
         <table class="subjects-table"><thead><tr>
           <th>Subject Code</th><th>Description</th><th>Semester</th><th>Year</th><th>Action</th>
@@ -624,6 +609,7 @@ $adminOverviewNow = new DateTimeImmutable(
       </div>
     </div>
     </div>
+  </div>
   </div>
 </div>
 
@@ -822,7 +808,7 @@ $adminOverviewNow = new DateTimeImmutable(
         <div class="search-filters-container">
           <div class="search-wrapper">
             <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-            <input id="faculty-search" placeholder="Search faculty...">
+            <input id="faculty-search" placeholder="Search ID or Name...">
           </div>
           <div class="program-filter-wrapper">
             <i class="ph ph-funnel"></i>
@@ -835,8 +821,8 @@ $adminOverviewNow = new DateTimeImmutable(
           </div>
         </div>
       </div>
-      <button class="show-archived-faculty-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
       <button class="add-faculty-btn button-gradient"><i class="ph ph-plus"></i> Add New Faculty</button>
+      <button class="show-archived-faculty-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
       </div>
     </div>
 
@@ -855,13 +841,9 @@ $adminOverviewNow = new DateTimeImmutable(
   <div class="archived-faculty-section" hidden>
     <div class="archived-faculty-header">
       <div>
-        <h3>Archived Faculty</h3>
-        <span>Faculty records moved out of the active list</span>
+        <h3>Archived Faculty List</h3>
       </div>
       <div class="archived-faculty-header-actions">
-        <button class="clear-search-btn" id="archived-faculty-clear-btn" type="button" title="Clear search" aria-label="Clear archived search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
         <div class="archived-search-wrapper">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="archived-faculty-search" placeholder="Search archived faculty...">
@@ -997,16 +979,12 @@ $adminOverviewNow = new DateTimeImmutable(
 
 <!-- ===================== Students Section ===================== -->
 <div id="students-section" class="section" style="display:none;">
-  <div class="student-page-heading-box">
+  <div class="student-table-box">
     <div class="student-page-heading">
       <div class="student-page-heading-copy">
         <h1>
-          <i class="ph ph-student" aria-hidden="true"></i>
           <span>Student List</span>
           <span class="student-count-summary" aria-live="polite">
-            <span class="student-count-item"><span class="student-count-dot total" aria-hidden="true"></span>Total Students: <strong id="totalStudentsCount"><?php echo (int) $studentStats[
-                "total_students"
-            ]; ?></strong></span>
             <span class="student-count-item"><span class="student-count-dot regular" aria-hidden="true"></span>Regular: <strong id="regularStudentsCount"><?php echo (int) $studentStats[
                 "regular_students"
             ]; ?></strong></span>
@@ -1015,45 +993,43 @@ $adminOverviewNow = new DateTimeImmutable(
             ]; ?></strong></span>
           </span>
         </h1>
-        <p>Organize student profiles, year levels, and section</p>
       </div>
       <div class="student-heading-actions">
-        <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
+        <div class="student-toolbar">
+          <div class="student-filter-row">
+            <div class="search-wrapper">
+              <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+              <input id="student-search" placeholder="Search by ID or Name...">
+            </div>
+            <details class="student-filter-menu">
+              <summary class="student-filter-toggle"><i class="ph ph-funnel-simple" aria-hidden="true"></i><span>Filter</span></summary>
+              <div class="student-filter-options">
+                <label for="student-program-filter">Program</label>
+                <div class="program-filter-wrapper">
+                  <i class="ph ph-funnel" aria-hidden="true"></i>
+                  <select id="student-program-filter" class="program-dropdown">
+                    <option value="">All Programs</option>
+                  </select>
+                </div>
+                <label for="student-yearlevel-filter">Year Level</label>
+                <div class="program-filter-wrapper">
+                  <i class="ph ph-graduation-cap" aria-hidden="true"></i>
+                  <select id="student-yearlevel-filter" class="program-dropdown">
+                    <option value="">-- All Year Levels --</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                    <option value="irregular">Irregular</option>
+                  </select>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
         <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
+        <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
       </div>
-    </div>
-  </div>
-
-  <div class="student-table-box">
-    <div class="student-toolbar-box">
-    <div class="student-toolbar">
-      <div class="student-filter-row">
-        <button type="button" class="clear-search-btn" data-clear-targets="student-search,student-program-filter,student-yearlevel-filter" title="Clear search" aria-label="Clear student search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input id="student-search" placeholder="Search student...">
-        </div>
-        <div class="program-filter-wrapper">
-          <i class="ph ph-funnel"></i>
-          <select id="student-program-filter" class="program-dropdown">
-            <option value="">All Programs</option>
-          </select>
-        </div>
-        <div class="program-filter-wrapper">
-          <i class="ph ph-graduation-cap"></i>
-          <select id="student-yearlevel-filter" class="program-dropdown">
-            <option value="">-- All Year Levels --</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-            <option value="irregular">Irregular</option>
-          </select>
-        </div>
-      </div>
-    </div>
     </div>
 
     <div class="table-wrapper">
@@ -1071,13 +1047,9 @@ $adminOverviewNow = new DateTimeImmutable(
   <div class="archived-student-section" hidden>
     <div class="archived-student-header">
       <div>
-        <h3>Archived Students</h3>
-        <span>Student records moved out of the active list</span>
+        <h3>Archived Students List</h3>
       </div>
       <div class="archived-student-header-actions">
-        <button class="clear-search-btn" id="archived-student-clear-btn" type="button" title="Clear search" aria-label="Clear archived search">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
         <div class="archived-search-wrapper">
           <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
           <input type="text" id="archived-student-search" placeholder="Search archived students...">
@@ -1247,20 +1219,8 @@ $adminOverviewNow = new DateTimeImmutable(
 <div id="criteria-section" class="section" style="display:none;">
   <div class="section-header criteria-header-enhanced">
     <div class="criteria-header-top">
-      <div class="header-title-section">
-        <h2 class="section-title">
-          <i class="ph ph-clipboard-text"></i>
-          <span>Criteria List</span>
-        </h2>
-        <p class="section-subtitle">
-          Manage the standards used to evaluate faculty performance.
-        </p>
-      </div>
       <div class="criteria-header-controls">
         <div class="criteria-search-container">
-          <button type="button" class="clear-search-btn" id="criteria-search-clear" title="Clear search" aria-label="Clear criteria search">
-            <i class="ph ph-arrow-clockwise"></i>
-          </button>
           <div class="search-wrapper">
             <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
             <input type="text" id="criteria-search-input" placeholder="Search categories...">
@@ -1387,35 +1347,22 @@ $adminOverviewNow = new DateTimeImmutable(
 <!-- Academic Year Section =========================================================================================================-->
 <div id="academic-year-section" class="section" style="display:none;">
 
+  <div class="academic-year-list-box">
   <div class="academic-year-page-heading-box">
     <div class="academic-year-page-heading">
       <div class="academic-year-page-heading-copy">
-        <h1><i class="ph ph-calendar-blank" aria-hidden="true"></i><span>Academic Year List</span></h1>
-        <p>Manage academic years, semesters, and evaluation periods.</p>
+        <h1>Academic Year List</h1>
       </div>
-      <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
-        <i class="ph ph-plus"></i> Add Academic Year
-      </button>
-    </div>
-  </div>
-
-  <div class="academic-year-list-box">
-  <!-- Table Header with Search and Filters -->
-  <div class="table-wrapper academic-year-controls">
-    <div class="table-header">
-      <div class="search-filters-container">
+      <div class="academic-year-heading-actions">
         <div class="academic-year-filter-pair">
-          <button type="button" class="clear-search-btn" data-clear-targets="academic-year-filter,semester-filter" title="Clear filters" aria-label="Clear academic year filters">
-            <i class="ph ph-arrow-clockwise"></i>
-          </button>
           <div class="program-filter-wrapper academic-year-select-wrapper">
-            <i class="ph ph-calendar-blank"></i>
+            <i class="ph ph-calendar-blank" aria-hidden="true"></i>
             <select id="academic-year-filter" class="program-dropdown">
               <option value="">Academic Year</option>
             </select>
           </div>
           <div class="program-filter-wrapper semester-select-wrapper">
-            <i class="ph ph-calendar"></i>
+            <i class="ph ph-calendar" aria-hidden="true"></i>
             <select id="semester-filter" class="program-dropdown">
               <option value="">All Semesters</option>
               <option value="1st Semester">1st Semester</option>
@@ -1424,9 +1371,11 @@ $adminOverviewNow = new DateTimeImmutable(
             </select>
           </div>
         </div>
+        <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
+          <i class="ph ph-plus"></i> Add Academic Year
+        </button>
       </div>
     </div>
-
   </div>
 
   <!-- Academic Year Table -->
@@ -1487,21 +1436,16 @@ $adminOverviewNow = new DateTimeImmutable(
   <div class="table-wrapper">
     <div class="table-header">
       <div class="search-filters-container">
-        <button type="button" class="clear-search-btn report-clear-btn" data-clear-targets="searchInput,report-ay-filter,report-semester-filter" title="Clear report filters" aria-label="Clear report filters">
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
         <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
+          <button type="button" class="search-btn" aria-label="Search reports"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></button>
           <input type="text" id="searchInput" placeholder="Search Faculty...">
         </div>
         <div class="program-filter-wrapper">
-          <i class="ph ph-calendar-blank"></i>
           <select id="report-ay-filter" class="program-dropdown">
             <option value="">Academic Year</option>
           </select>
         </div>
         <div class="program-filter-wrapper">
-          <i class="ph ph-calendar"></i>
           <select id="report-semester-filter" class="program-dropdown">
             <option value="">All Semesters</option>
             <option value="1st Semester">1st Semester</option>
@@ -1512,7 +1456,7 @@ $adminOverviewNow = new DateTimeImmutable(
       </div>
       <div class="header-actions">
         <button class="generate-report-btn" onclick="generateEvaluationReport()">
-          <i class="ph ph-download-simple"></i> Generate Report
+          Generate Report
         </button>
       </div>
     </div>

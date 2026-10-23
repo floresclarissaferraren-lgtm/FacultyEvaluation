@@ -1874,6 +1874,82 @@ main.full {
   }
 }
 
+/* Keep the student dropdown above the table and size actions like Faculty List. */
+#students-section > .student-table-box {
+  overflow: visible !important;
+}
+
+#students-section .student-page-heading {
+  position: relative;
+  z-index: 4;
+  overflow: visible;
+  align-items: center;
+}
+
+#students-section .student-heading-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+#students-section .student-filter-row {
+  flex-wrap: nowrap;
+}
+
+#students-section .student-filter-menu {
+  z-index: 10;
+}
+
+#students-section .student-filter-menu[open] {
+  z-index: 30;
+}
+
+#students-section .student-filter-options {
+  z-index: 40;
+  top: auto;
+  bottom: calc(100% + 8px);
+  max-height: min(70vh, 360px);
+  overflow-y: auto;
+}
+
+#students-section .student-heading-actions > .show-archived-student-btn {
+  width: auto !important;
+  min-width: max-content !important;
+  padding: 0 16px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+#students-section .student-heading-actions > .show-archived-student-btn:hover {
+  background: #f9fafb !important;
+}
+
+#students-section .student-heading-actions > .add-student-btn {
+  width: auto !important;
+  min-width: max-content !important;
+  padding: 0 16px !important;
+}
+
+#students-section > .student-table-box > .table-wrapper {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 0 0 12px 12px;
+}
+
+@media (max-width: 1250px) {
+  #students-section .student-page-heading {
+    align-items: flex-start;
+  }
+
+  #students-section .student-heading-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
 /* Period toolbar */
 .dashboard-period-selectors {
   display: grid;
@@ -19626,6 +19702,55 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   }
 }
 
+/* Match archived actions across the faculty and student lists. */
+#faculties-section .show-archived-faculty-btn,
+#students-section .show-archived-student-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease !important;
+}
+
+#faculties-section .show-archived-faculty-btn > i,
+#students-section .show-archived-student-btn > i {
+  color: inherit !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+#faculties-section .show-archived-faculty-btn:hover,
+#students-section .show-archived-student-btn:hover,
+#faculties-section .show-archived-faculty-btn:focus-visible,
+#students-section .show-archived-student-btn:focus-visible {
+  border-color: #93c5fd !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  outline: none !important;
+}
+
+#faculties-section .show-archived-faculty-btn:active,
+#students-section .show-archived-student-btn:active {
+  border-color: #60a5fa !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #manage-section .manage-year-card,
   #manage-section .manage-year-card-actions button {
@@ -21151,6 +21276,179 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   #manage-section.manage-year-overview .program-stat-item i {
     flex: 0 0 auto;
     font-size: clamp(0.82rem, 3.8vw, 1rem);
+  }
+}
+
+/* Match the Program search and add controls to the compact Faculty toolbar. */
+#programs-section .programs-header {
+  align-items: center;
+  gap: 16px;
+}
+
+#programs-section .programs-stats {
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+#programs-section .programs-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+#programs-section .programs-actions > .search-wrapper {
+  display: flex !important;
+  flex: 0 0 220px !important;
+  align-items: center;
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  box-sizing: border-box;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff;
+  box-shadow: none;
+}
+
+#programs-section .programs-actions > .search-wrapper:focus-within {
+  border-color: #9ca3af !important;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15) !important;
+}
+
+#programs-section .programs-actions > .search-wrapper .search-btn {
+  display: inline-flex;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#programs-section .programs-actions > .search-wrapper .search-btn i {
+  color: #64748b;
+  font-size: 18px;
+}
+
+#programs-section .programs-actions > .search-wrapper input {
+  min-width: 0;
+  height: 34px;
+  padding: 0;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600;
+}
+
+#programs-section .programs-actions > .search-wrapper input::placeholder {
+  font-size: 13px !important;
+  font-weight: 400;
+}
+
+#programs-section .programs-actions > .add-program-btn {
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+
+/* Compact archived-list search and Back controls without changing table content. */
+#faculties-section .archived-faculty-header-actions,
+#students-section .archived-student-header-actions {
+  gap: 8px;
+}
+
+#faculties-section .archived-search-wrapper,
+#students-section .archived-search-wrapper {
+  flex: 0 0 220px !important;
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff;
+  box-shadow: none;
+}
+
+#faculties-section .archived-search-wrapper:focus-within,
+#students-section .archived-search-wrapper:focus-within {
+  border-color: #9ca3af !important;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15) !important;
+}
+
+#faculties-section .archived-search-wrapper input,
+#students-section .archived-search-wrapper input {
+  height: 34px;
+  padding: 0;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+}
+
+#faculties-section .back-to-faculty-btn,
+#students-section .back-to-student-btn {
+  flex: 0 0 auto;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  #faculties-section .archived-search-wrapper,
+  #students-section .archived-search-wrapper {
+    flex: 1 1 220px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #programs-section .programs-header {
+    align-items: stretch;
+  }
+
+  #programs-section .programs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  #programs-section .programs-actions > .search-wrapper {
+    flex: 1 1 220px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  #programs-section .programs-actions > .add-program-btn {
+    flex: 0 0 auto;
+    width: max-content !important;
   }
 }
 
@@ -22854,6 +23152,28 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  #criteria-section .criteria-header-controls {
+    flex-wrap: wrap;
+  }
+
+  #criteria-section .criteria-search-container {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  #criteria-section .criteria-search-container > .search-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  #criteria-section .criteria-header-controls .header-actions,
+  #criteria-section .criteria-header-controls .header-actions .add-program-btn {
+    width: 100%;
+  }
 }
 
 #dashboard-section .program-progress-count {
@@ -28464,7 +28784,7 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   border-bottom: 1px solid #edf0f3;
   background: #fff !important;
   color: #334155;
-  font-size: 0.875rem !important;
+  font-size: 0.8rem !important;
   vertical-align: middle;
 }
 
@@ -32898,4 +33218,3189 @@ body:has(> main > #dashboard-section.admin-section-loading)
 
 #faculties-section > .faculty-list-box .faculties-table thead th {
   color: #000 !important;
+}
+
+/* Keep the student search and reset visible while filters are collapsed. */
+#students-section .student-filter-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+#students-section .student-filter-toggle {
+  min-height: 42px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+  border: 1px solid #d9e0ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #25324b;
+  font: inherit;
+  font-weight: 600;
+}
+
+#students-section .student-filter-toggle::-webkit-details-marker {
+  display: none;
+}
+
+#students-section .student-filter-menu[open] .student-filter-toggle > .ph-caret-down {
+  transform: rotate(180deg);
+}
+
+#students-section .student-filter-toggle > .ph-caret-down {
+  transition: transform 150ms ease;
+}
+
+#students-section .student-filter-options {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(290px, calc(100vw - 32px));
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e0e6ef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(24 39 75 / 14%);
+}
+
+#students-section .student-filter-options > label {
+  margin-top: 4px;
+  color: #4b5870;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#students-section .student-filter-options .program-filter-wrapper {
+  width: 100%;
+}
+
+/* Match Faculty List: heading, controls, actions, and table share one card. */
+#students-section > .student-table-box {
+  margin: 0;
+  padding: 0;
+  border: 1px solid #edf1f7 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06) !important;
+}
+
+#students-section .student-page-heading {
+  min-height: 80px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+#students-section .student-page-heading h1 {
+  margin: 0;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-weight: 700;
+}
+
+#students-section .student-page-heading h1 > i {
+  font-size: 1.35em;
+}
+
+#students-section .student-page-heading .student-count-item {
+  padding: 6px 9px;
+  font-size: 0.7rem;
+}
+
+#students-section .student-heading-actions {
+  display: flex;
+  flex: 0 1 auto !important;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+#students-section .student-toolbar {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#students-section .student-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+#students-section .student-filter-row .search-wrapper {
+  width: min(220px, 20vw);
+  min-width: 150px;
+  height: 40px;
+}
+
+#students-section .student-filter-row .clear-search-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  margin: 0;
+}
+
+#students-section .student-heading-actions > .show-archived-student-btn,
+#students-section .student-heading-actions > .add-student-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+#students-section > .student-table-box > .table-wrapper {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1250px) {
+  #students-section .student-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #students-section .student-heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  #students-section .student-heading-actions {
+    align-items: stretch;
+  }
+
+  #students-section .student-filter-row {
+    flex: 1 1 100%;
+  }
+
+  #students-section .student-filter-row .search-wrapper {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+}
+
+/* Overlay the student filter menu so opening it never moves the list controls. */
+#students-section .student-filter-options {
+  position: fixed !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: min(340px, calc(100vw - 24px)) !important;
+  max-height: min(360px, calc(100vh - 24px)) !important;
+  overflow-y: auto !important;
+  z-index: 10000 !important;
+}
+
+/* Match the Faculty List search, status, archive, and add control sizing. */
+#students-section .student-filter-row .search-wrapper,
+#students-section .student-filter-toggle,
+#students-section .student-heading-actions > .show-archived-student-btn,
+#students-section .student-heading-actions > .add-student-btn {
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  font-size: 13px !important;
+}
+
+#students-section .student-filter-row .search-wrapper {
+  width: 220px !important;
+  min-width: 220px !important;
+  padding: 0 10px !important;
+}
+
+#students-section .student-filter-toggle {
+  width: 160px;
+  padding: 0 10px;
+  justify-content: space-between;
+  border-color: #d1d5db;
+  border-radius: 6px;
+}
+
+#students-section .student-heading-actions > .show-archived-student-btn,
+#students-section .student-heading-actions > .add-student-btn {
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+}
+
+#students-section .student-filter-row .clear-search-btn {
+  box-sizing: border-box;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+}
+
+#students-section .student-heading-actions .student-filter-row .search-wrapper {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  gap: 8px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+#students-section .student-heading-actions .student-filter-row .search-wrapper input {
+  height: 100%;
+  padding: 0 6px;
+  color: #1e293b;
+  font-size: 13px !important;
+  font-weight: 400;
+}
+
+#students-section .student-heading-actions .student-filter-row .search-wrapper input::placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+#students-section .student-heading-actions .student-filter-row .search-wrapper:focus-within {
+  border-color: #9ca3af !important;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15) !important;
+}
+
+#students-section .student-heading-actions .student-filter-row .search-btn {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#students-section .student-heading-actions .student-filter-row .search-btn i {
+  color: #64748b;
+  font-size: 16px;
+}
+
+#students-section .student-page-heading h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-weight: 700;
+}
+
+#students-section .student-page-heading h1 > span:first-child {
+  white-space: nowrap;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: inherit;
+  font-weight: 700 !important;
+}
+
+#students-section .student-page-heading .student-count-summary {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#students-section .student-page-heading .student-count-summary::before,
+#students-section .student-page-heading .student-count-summary::after {
+  color: #64748b;
+  font-weight: 400;
+}
+
+#students-section .student-page-heading .student-count-summary::before {
+  content: "(";
+  margin-right: -8px;
+}
+
+#students-section .student-page-heading .student-count-summary::after {
+  content: ")";
+  margin-left: -8px;
+}
+
+#students-section .student-page-heading .student-count-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+#students-section .student-page-heading .student-count-item strong {
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+#students-section .student-page-heading .student-count-dot {
+  width: 7px;
+  height: 7px;
+  margin: 0 1px 0 0;
+}
+
+#students-section .student-filter-toggle {
+  display: grid;
+  grid-template-columns: 18px 1fr 14px;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #334155;
+  font-family: inherit;
+  font-weight: 500;
+  text-align: left;
+}
+
+#students-section .student-filter-toggle > i:first-child {
+  color: #475569;
+}
+
+#students-section .student-filter-toggle > .ph-caret-down {
+  justify-self: end;
+  font-size: 12px;
+}
+
+#students-section .student-filter-toggle {
+  border-color: #2563eb !important;
+  background: linear-gradient(135deg, #2878f0, #1767df) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.22);
+}
+
+#students-section .student-filter-toggle:hover,
+#students-section .student-filter-toggle:focus-visible {
+  border-color: #1d4ed8 !important;
+  background: linear-gradient(135deg, #1f6fe8, #1558c6) !important;
+  color: #fff !important;
+}
+
+#students-section .student-filter-toggle > i {
+  color: #fff !important;
+}
+
+#students-section .student-filter-toggle {
+  width: max-content !important;
+  grid-template-columns: 18px auto;
+  gap: 4px;
+  justify-content: flex-start;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+@media (max-width: 1250px) {
+  #students-section .student-page-heading h1 {
+    flex-wrap: wrap;
+  }
+}
+
+#students-section .student-count-dot.regular,
+#students-section .student-count-dot.irregular {
+  box-shadow: none !important;
+}
+
+/* Match the Evaluation Criteria title and toolbar to the Faculty List controls. */
+#criteria-section .criteria-header-enhanced .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-weight: 700 !important;
+}
+
+#criteria-section .criteria-header-enhanced .section-title > span {
+  color: inherit;
+  font-family: inherit;
+  font-weight: 700 !important;
+}
+
+#criteria-section .criteria-header-controls {
+  gap: 8px;
+}
+
+#criteria-section .criteria-search-container {
+  display: block;
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+}
+
+#criteria-section .criteria-search-container > .search-wrapper {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 220px;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-width: 220px;
+  padding: 0 10px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+#criteria-section .criteria-search-container > .search-wrapper:focus-within {
+  border-color: #9ca3af !important;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15) !important;
+}
+
+#criteria-section .criteria-search-container .search-btn {
+  position: static;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#criteria-section .criteria-search-container .search-btn i {
+  color: #64748b;
+  font-size: 16px;
+}
+
+#criteria-section .criteria-search-container input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px;
+  color: #1e293b;
+  font-size: 13px !important;
+  font-weight: 400;
+}
+
+#criteria-section .criteria-search-container input::placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+#criteria-section .criteria-header-controls .header-actions .add-program-btn {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 0;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+#criteria-section > .section-header.criteria-header-enhanced {
+  min-height: 0;
+  margin: 0 0 12px;
+  padding: 10px 16px !important;
+}
+
+#criteria-section .criteria-header-top {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+#criteria-section .criteria-header-enhanced .header-title-section {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+#criteria-section .criteria-header-controls {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  #criteria-section .criteria-header-top {
+    flex-wrap: wrap;
+  }
+
+  #criteria-section .criteria-header-controls {
+    width: 100%;
+  }
+}
+
+#criteria-section .criteria-header-enhanced .section-subtitle {
+  margin: 3px 0 0 !important;
+  padding: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+#criteria-section > .section-header.criteria-header-enhanced {
+  min-height: 0;
+  margin: 0 0 16px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#criteria-section .criteria-header-top {
+  justify-content: flex-end;
+}
+
+#criteria-section .criteria-header-controls {
+  width: auto;
+  margin-left: auto;
+}
+
+/* Academic Year heading controls match the Faculty List toolbar. */
+#academic-year-section > .academic-year-page-heading-box {
+  margin: 0 0 8px;
+  padding: 14px 18px;
+  border-color: #edf1f7;
+  border-radius: 12px;
+}
+
+#academic-year-section .academic-year-page-heading {
+  gap: 16px;
+}
+
+#academic-year-section .academic-year-page-heading-copy {
+  flex: 0 0 auto;
+}
+
+#academic-year-section .academic-year-page-heading h1 {
+  margin: 0;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-weight: 700 !important;
+  letter-spacing: 0;
+}
+
+#academic-year-section .academic-year-heading-actions,
+#academic-year-section .academic-year-filter-pair {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+#academic-year-section .academic-year-heading-actions {
+  margin-left: auto;
+}
+
+#academic-year-section .academic-year-heading-actions .program-filter-wrapper {
+  box-sizing: border-box;
+  width: 160px;
+  min-width: 160px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff;
+  box-shadow: none;
+}
+
+#academic-year-section .academic-year-heading-actions .program-filter-wrapper select {
+  min-width: 0;
+  font-size: 13px !important;
+}
+
+#academic-year-section .academic-year-heading-actions .program-filter-wrapper > i {
+  color: #64748b;
+  font-size: 16px;
+}
+
+#academic-year-section .academic-year-heading-actions #addAcademicYearBtn {
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  #academic-year-section .academic-year-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #academic-year-section .academic-year-heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  #academic-year-section .academic-year-filter-pair {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #academic-year-section .academic-year-heading-actions .program-filter-wrapper {
+    flex: 1 1 140px;
+    width: auto;
+    min-width: 0;
+  }
+
+  #academic-year-section .academic-year-heading-actions #addAcademicYearBtn {
+    width: 100%;
+  }
+}
+
+#academic-year-section > .academic-year-list-box {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #edf1f7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+}
+
+#academic-year-section .academic-year-list-box > .academic-year-page-heading-box {
+  margin: 0;
+  padding: 14px 18px;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+#academic-year-section .academic-year-list-box > .academic-year-results {
+  border-top: 0;
+}
+
+#academic-year-section .academic-year-heading-actions .academic-year-select-wrapper,
+#academic-year-section .academic-year-heading-actions .semester-select-wrapper {
+  box-sizing: border-box;
+  flex: 0 0 190px;
+  width: 190px !important;
+  min-width: 190px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+}
+
+/* Align report filters and action on the right, with Faculty List control sizing. */
+#report-section > .table-wrapper > .table-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+#report-section .table-header > .search-filters-container {
+  display: flex !important;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+#report-section .search-filters-container > .search-wrapper,
+#report-section .search-filters-container > .program-filter-wrapper {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 10px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+#report-section .search-filters-container > .search-wrapper {
+  width: 220px;
+}
+
+#report-section .search-filters-container > .program-filter-wrapper {
+  width: 190px;
+}
+
+#report-section .search-filters-container input,
+#report-section .search-filters-container select {
+  font-size: 13px !important;
+  font-weight: 400;
+}
+
+#report-section .search-filters-container input {
+  padding: 0 6px;
+}
+
+#report-section .search-filters-container input::placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+#report-section .table-header > .header-actions {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+#report-section .generate-report-btn {
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+
+#report-section .search-filters-container > .program-filter-wrapper > select {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0 30px 0 6px !important;
+  line-height: normal;
+  vertical-align: middle;
+}
+
+@media (max-width: 900px) {
+  #report-section > .table-wrapper > .table-header {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  #report-section .table-header > .search-filters-container {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 560px) {
+  #report-section .search-filters-container > .search-wrapper {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  #report-section .search-filters-container > .program-filter-wrapper {
+    flex: 1 1 145px;
+    width: auto;
+  }
+
+  #report-section .table-header > .header-actions,
+  #report-section .generate-report-btn {
+    width: 100%;
+  }
+}
+
+/* Compact and right-align the Manage Program subject filters. */
+#manage-section #subjects > .manage-subject-control-box {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+#manage-section #subjects .manage-subject-control-box > .search-wrapper {
+  box-sizing: border-box;
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: none;
+}
+
+#manage-section #subjects .manage-subject-control-box > .manage-semester-filter-wrapper,
+#manage-section #subjects .manage-subject-control-box > .manage-year-filter-wrapper {
+  box-sizing: border-box;
+  flex: 0 0 190px;
+  width: 190px;
+  min-width: 190px;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+#manage-section #subjects .manage-subject-control-box .program-dropdown {
+  height: 100%;
+  line-height: normal;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  #manage-section #subjects > .manage-subject-control-box {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  #manage-section #subjects .manage-subject-control-box > .search-wrapper {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  #manage-section #subjects .manage-subject-control-box > .manage-semester-filter-wrapper,
+  #manage-section #subjects .manage-subject-control-box > .manage-year-filter-wrapper {
+    flex: 1 1 170px;
+    width: auto;
+    min-width: 0;
+  }
+}
+
+/* Put the specific-year back button, title, filters, and add action in one row. */
+#manage-section .manage-subjects-panel {
+  display: contents;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subjects-panel {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dce7f7;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(30, 64, 110, 0.07);
+}
+
+#manage-section .manage-content-actions > .manage-subject-control-box {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading {
+  grid-template-columns: 36px minmax(0, 1fr) auto auto !important;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid #dce7f7;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-year-level-view {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-detail-view,
+#manage-section.manage-specific-year.manage-subjects-view .manage-body,
+#manage-section.manage-specific-year.manage-subjects-view #subjects {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view #manageContentTitle {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  margin: 0;
+  color: #1e3a8a !important;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view #manageSubjectsResultCount,
+#manage-section.manage-specific-year.manage-subjects-view #manageContentSubtitle {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-detail-back-btn {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  display: inline-grid;
+  align-items: center;
+  justify-items: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 7px;
+  font-size: 0;
+  white-space: nowrap;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-detail-back-btn i {
+  font-size: 16px;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-content-actions > .manage-subject-control-box {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .search-wrapper {
+  flex: 0 0 220px !important;
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff;
+  box-shadow: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .manage-semester-filter-wrapper {
+  flex: 0 0 160px !important;
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff;
+  box-shadow: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .search-wrapper:focus-within,
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .manage-semester-filter-wrapper:focus-within {
+  border-color: #9ca3af !important;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15) !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .search-wrapper input,
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .program-dropdown {
+  height: 38px;
+  min-height: 38px;
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .program-dropdown {
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 20px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .search-wrapper input,
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .program-dropdown {
+  height: 34px !important;
+  min-height: 34px !important;
+  line-height: 34px !important;
+  box-sizing: border-box;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .search-wrapper input,
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .search-wrapper input::placeholder {
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .search-wrapper input {
+  font-weight: 600 !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .search-wrapper input::placeholder {
+  font-weight: 400 !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading > .manage-content-actions > .add-manage-btn {
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box .manage-subject-search-icon,
+#manage-section.manage-specific-year.manage-subjects-view .manage-semester-filter-wrapper > i {
+  flex: 0 0 auto;
+  color: #64748b;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .manage-year-filter-wrapper {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading > .manage-content-actions > .add-manage-btn {
+  grid-column: 4 !important;
+  grid-row: 1 !important;
+  width: max-content;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  #manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading {
+    grid-template-columns: max-content minmax(140px, 1fr) auto !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-content-actions > .manage-subject-control-box {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-content: flex-start;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading > .manage-content-actions > .add-manage-btn {
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+  }
+}
+
+/* Keep the Class Sections add action compact like the Faculty List button. */
+#manage-section.manage-classes-view .manage-curriculum-heading > .manage-content-actions > .add-manage-btn {
+  width: max-content !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+#manage-section.manage-classes-view .manage-curriculum-heading > .manage-content-actions > .add-manage-btn i {
+  font-size: 14px !important;
+}
+
+/* Keep the program code and name together with an icon-only back action. */
+#manage-section.manage-year-overview .manage-program-banner {
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 76px;
+  padding: 14px 18px !important;
+  border: 1px solid #dce7f7 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 12px rgba(30, 64, 110, 0.07) !important;
+}
+
+#manage-section.manage-year-overview .manage-back-programs {
+  position: static !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  display: inline-grid !important;
+  place-items: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #475569 !important;
+  font-size: 0 !important;
+  box-shadow: none !important;
+}
+
+#manage-section.manage-year-overview .manage-back-programs > span {
+  display: none !important;
+}
+
+#manage-section.manage-year-overview .manage-back-programs > i {
+  font-size: 16px !important;
+}
+
+#manage-section.manage-year-overview .program-banner-header {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  gap: 12px;
+}
+
+#manage-section.manage-year-overview .program-badge {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
+  border: 1px solid #dce7f7;
+  border-radius: 10px;
+  background: #f1f6ff;
+  color: #1e3a8a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#manage-section.manage-year-overview .program-info h2 {
+  margin: 0;
+  color: #1e3a8a;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+#manage-section.manage-year-overview .program-stats-row {
+  display: none !important;
+}
+
+@media (max-width: 560px) {
+  #manage-section.manage-year-overview .manage-program-banner {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  #manage-section.manage-year-overview .program-banner-header {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+}
+
+/* Keep archived actions visually consistent on both management lists. */
+#faculties-section .show-archived-faculty-btn,
+#students-section .show-archived-student-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease !important;
+}
+
+#faculties-section .show-archived-faculty-btn > i,
+#students-section .show-archived-student-btn > i {
+  color: inherit !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+#faculties-section .show-archived-faculty-btn:hover,
+#students-section .show-archived-student-btn:hover,
+#faculties-section .show-archived-faculty-btn:focus-visible,
+#students-section .show-archived-student-btn:focus-visible {
+  border-color: #93c5fd !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  outline: none !important;
+}
+
+#faculties-section .show-archived-faculty-btn:active,
+#students-section .show-archived-student-btn:active {
+  border-color: #60a5fa !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Final, equally specific archived-button rules for the current list headers. */
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions .show-archived-faculty-btn,
+#students-section > .student-page-heading-box .student-heading-actions .show-archived-student-btn {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease !important;
+}
+
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions .show-archived-faculty-btn > i,
+#students-section > .student-page-heading-box .student-heading-actions .show-archived-student-btn > i {
+  color: inherit !important;
+  font-size: 14px !important;
+}
+
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions .show-archived-faculty-btn:hover,
+#students-section > .student-page-heading-box .student-heading-actions .show-archived-student-btn:hover,
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions .show-archived-faculty-btn:focus-visible,
+#students-section > .student-page-heading-box .student-heading-actions .show-archived-student-btn:focus-visible {
+  border-color: #93c5fd !important;
+  background: #eff6ff !important;
+  background-image: none !important;
+  color: #1d4ed8 !important;
+  outline: none !important;
+}
+
+#faculties-section > .faculty-page-heading-box .faculty-heading-actions .show-archived-faculty-btn:active,
+#students-section > .student-page-heading-box .student-heading-actions .show-archived-student-btn:active {
+  border-color: #60a5fa !important;
+  background: #dbeafe !important;
+  background-image: none !important;
+  color: #1d4ed8 !important;
+}
+
+/* Match the archived buttons using their actual faculty and student header wrappers. */
+#faculties-section > .faculty-list-box > .faculty-list-toolbar .faculty-heading-actions .show-archived-faculty-btn,
+#students-section > .student-table-box > .student-page-heading .student-heading-actions .show-archived-student-btn {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 175px !important;
+  min-width: 175px !important;
+  max-width: 175px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease !important;
+}
+
+#faculties-section > .faculty-list-box > .faculty-list-toolbar .faculty-heading-actions .show-archived-faculty-btn > i,
+#students-section > .student-table-box > .student-page-heading .student-heading-actions .show-archived-student-btn > i {
+  color: inherit !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+#faculties-section > .faculty-list-box > .faculty-list-toolbar .faculty-heading-actions .show-archived-faculty-btn:hover,
+#students-section > .student-table-box > .student-page-heading .student-heading-actions .show-archived-student-btn:hover,
+#faculties-section > .faculty-list-box > .faculty-list-toolbar .faculty-heading-actions .show-archived-faculty-btn:focus-visible,
+#students-section > .student-table-box > .student-page-heading .student-heading-actions .show-archived-student-btn:focus-visible {
+  border-color: #93c5fd !important;
+  background: #eff6ff !important;
+  background-image: none !important;
+  color: #1d4ed8 !important;
+  outline: none !important;
+}
+
+#faculties-section > .faculty-list-box > .faculty-list-toolbar .faculty-heading-actions .show-archived-faculty-btn:active,
+#students-section > .student-table-box > .student-page-heading .student-heading-actions .show-archived-student-btn:active {
+  border-color: #60a5fa !important;
+  background: #dbeafe !important;
+  background-image: none !important;
+  color: #1d4ed8 !important;
+}
+
+/* Archived list headings use the same typography as the Faculty List label. */
+.archived-faculty-header h3,
+.archived-student-header h3 {
+  margin: 0 !important;
+  color: #1e3a8a !important;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.3 !important;
+}
+
+/* Give the admin page canvas a slightly stronger blue tint. */
+html,
+body,
+body > main,
+main,
+main > .section {
+  background-color: #e8f1ff !important;
+  background-image: none !important;
+}
+
+/* Stronger admin canvas tint; repeat the dashboard visibility selectors at equal specificity. */
+html,
+body,
+body > main,
+main,
+main > .section,
+body > main > #dashboard-section,
+body:has(> main > #dashboard-section[style*="display: none"]),
+body:has(> main > #dashboard-section[style*="display: none"]) > main,
+body:has(> main > #dashboard-section[style*="display: none"]) > main > .section,
+body:has(> main > #dashboard-section:not([style*="display: none"])),
+body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
+  background-color: #dbeafe !important;
+  background-image: none !important;
+}
+
+/* Soften the admin canvas blue while keeping its visible tint. */
+html,
+body,
+body > main,
+main,
+main > .section,
+body > main > #dashboard-section,
+body:has(> main > #dashboard-section[style*="display: none"]),
+body:has(> main > #dashboard-section[style*="display: none"]) > main,
+body:has(> main > #dashboard-section[style*="display: none"]) > main > .section,
+body:has(> main > #dashboard-section:not([style*="display: none"])),
+body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
+  background-color: #e8f1ff !important;
+  background-image: none !important;
+}
+
+/* Keep the admin dashboard canvas white; other sections retain the blue canvas. */
+body:has(> main > #dashboard-section:not([style*="display: none"])),
+body:has(> main > #dashboard-section:not([style*="display: none"])) > main,
+body:has(> main > #dashboard-section:not([style*="display: none"])) > main > #dashboard-section {
+  background-color: #fff !important;
+  background-image: none !important;
+}
+
+/* Clear, consistent gray outlines for the main admin section cards and tables. */
+#programs-section .programs-container-box,
+#programs-section .program-card,
+#faculties-section > .faculty-list-box,
+#students-section > .student-table-box,
+#manage-section .manage-program-banner,
+#manage-section .manage-subjects-panel,
+#manage-section .manage-detail-view > .manage-body > .table-wrapper,
+#manage-section .manage-year-card,
+#criteria-section .criteria-category,
+#criteria-section .summary-panel,
+#academic-year-section .academic-year-list-box,
+#report-section > .table-wrapper {
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Unified responsive layout for the admin workspace. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+main,
+main > .section,
+#programs-section,
+#faculties-section,
+#students-section,
+#manage-section,
+#criteria-section,
+#academic-year-section,
+#report-section {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.table-scroll-container,
+#manage-section .table-wrapper,
+#report-section .table-wrapper,
+#academic-year-section .table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#programs-section .programs-container-box,
+#faculties-section > .faculty-list-box,
+#students-section > .student-table-box,
+#academic-year-section .academic-year-list-box,
+#report-section > .table-wrapper,
+#manage-section .manage-program-banner,
+#manage-section .manage-subjects-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 769px) and (max-width: 992px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .sidebar.collapsed {
+    width: 72px;
+  }
+
+  main {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  #programs-section .programs-cards-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #criteria-section .criteria-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr);
+    gap: 16px !important;
+  }
+
+  #faculties-section .faculty-list-toolbar,
+  #students-section .student-page-heading,
+  #academic-year-section .academic-year-page-heading-box,
+  #report-section .table-header,
+  #manage-section .manage-curriculum-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  #faculties-section .faculty-heading-actions,
+  #students-section .student-heading-actions {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 82px 12px 20px !important;
+  }
+
+  .navbar {
+    height: 64px !important;
+    padding: 0 12px !important;
+  }
+
+  #programs-section .programs-header,
+  #faculties-section .faculty-list-toolbar,
+  #students-section .student-page-heading,
+  #academic-year-section .academic-year-page-heading-box,
+  #report-section .table-header,
+  #manage-section .manage-curriculum-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  #programs-section .programs-stats,
+  #faculties-section .faculty-list-title,
+  #students-section .student-page-heading-copy,
+  #academic-year-section .academic-year-list-title {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #programs-section .programs-actions,
+  #faculties-section .faculty-heading-actions,
+  #students-section .student-heading-actions,
+  #academic-year-section .academic-year-controls,
+  #report-section .table-header > .search-filters-container,
+  #report-section .table-header > .header-actions,
+  #manage-section .manage-content-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  #faculties-section .faculty-heading-actions .faculty-toolbar,
+  #students-section .student-heading-actions .student-toolbar,
+  #manage-section .manage-content-actions > .manage-subject-control-box {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  #faculties-section .faculty-toolbar .search-filters-container,
+  #students-section .student-filter-row,
+  #manage-section .manage-subject-control-box {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(125px, 0.8fr);
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  #faculties-section .faculty-toolbar .search-wrapper,
+  #faculties-section .faculty-toolbar .program-filter-wrapper,
+  #students-section .student-filter-row .search-wrapper,
+  #students-section .student-filter-row .student-filter-menu,
+  #manage-section .manage-subject-control-box > .search-wrapper,
+  #manage-section .manage-subject-control-box > .manage-semester-filter-wrapper {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #programs-section .programs-actions > *,
+  #faculties-section .faculty-heading-actions > .add-faculty-btn,
+  #faculties-section .faculty-heading-actions > .show-archived-faculty-btn,
+  #students-section .student-heading-actions > .add-student-btn,
+  #students-section .student-heading-actions > .show-archived-student-btn,
+  #academic-year-section .academic-year-controls > *,
+  #report-section .table-header > .search-filters-container > *,
+  #report-section .table-header > .header-actions > *,
+  #manage-section .manage-content-actions > .add-manage-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #criteria-section .criteria-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px !important;
+    margin-top: 14px;
+  }
+
+  #criteria-section .categories-column,
+  #criteria-section .summary-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #criteria-section .criteria-header-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  #criteria-section .criteria-search-container,
+  #criteria-section .criteria-search-container > .search-wrapper,
+  #criteria-section .criteria-search-container input {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #programs-section .programs-cards-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+    overflow: visible;
+  }
+
+  #manage-section .manage-program-banner {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  #manage-section .manage-year-level-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  main {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+
+  #programs-section .programs-container-box,
+  #faculties-section > .faculty-list-box,
+  #students-section > .student-table-box,
+  #academic-year-section .academic-year-list-box,
+  #report-section > .table-wrapper,
+  #manage-section .manage-subjects-panel {
+    border-radius: 10px;
+  }
+
+  #programs-section .programs-cards-container,
+  #manage-section .manage-year-level-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #faculties-section .faculty-toolbar .search-filters-container,
+  #students-section .student-filter-row,
+  #manage-section .manage-subject-control-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #faculties-section .faculty-heading-actions,
+  #students-section .student-heading-actions,
+  #academic-year-section .academic-year-controls,
+  #report-section .table-header > .search-filters-container,
+  #report-section .table-header > .header-actions,
+  #manage-section .manage-content-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #faculties-section .faculty-heading-actions .faculty-toolbar,
+  #students-section .student-heading-actions .student-toolbar,
+  #manage-section .manage-content-actions > .manage-subject-control-box {
+    grid-column: auto;
+  }
+
+  #criteria-section .criteria-header-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #criteria-section .criteria-header-controls .header-actions,
+  #criteria-section .criteria-header-controls .add-program-btn {
+    width: 100%;
+  }
+
+  .archived-faculty-header,
+  .archived-student-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .archived-faculty-header-actions,
+  .archived-student-header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .archived-search-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  #faculties-section .faculties-table,
+  #faculties-section .archived-faculty-table {
+    min-width: 680px;
+  }
+
+  #students-section .students-table,
+  #students-section .archived-student-table {
+    min-width: 760px;
+  }
+
+  #academic-year-section .academic-year-table {
+    min-width: 640px;
+  }
+
+  #report-section .evaluation-table {
+    min-width: 820px;
+  }
+
+  #manage-section .subjects-table,
+  #manage-section .classes-table {
+    min-width: 720px;
+  }
+}
+
+@media (max-width: 768px) {
+  #academic-year-section .academic-year-page-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  #academic-year-section .academic-year-heading-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+
+  #academic-year-section .academic-year-filter-pair {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  #academic-year-section .academic-year-filter-pair > *,
+  #academic-year-section .academic-year-heading-actions > #addAcademicYearBtn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Keep the Subject Offered table in its normal column layout on narrow screens. */
+@media (max-width: 768px) {
+  #manage-section.manage-subjects-view #subjects,
+  #manage-section.manage-subjects-view #subjects > .table-scroll-container {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #manage-section.manage-subjects-view #subjects > .table-scroll-container > .subjects-table {
+    display: table !important;
+    width: 780px !important;
+    min-width: 780px !important;
+    max-width: none !important;
+    table-layout: fixed !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table thead {
+    display: table-header-group !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table tbody {
+    display: table-row-group !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table tr {
+    display: table-row !important;
+    width: auto !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table th,
+  #manage-section.manage-subjects-view #subjects .subjects-table td {
+    display: table-cell !important;
+    box-sizing: border-box;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(1),
+  #manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(1) {
+    width: 120px !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(2),
+  #manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(2) {
+    width: 300px !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(3),
+  #manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(3),
+  #manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(4),
+  #manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(4) {
+    width: 130px !important;
+  }
+
+  #manage-section.manage-subjects-view #subjects .subjects-table th:nth-child(5),
+  #manage-section.manage-subjects-view #subjects .subjects-table td:nth-child(5) {
+    width: 100px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #academic-year-section .academic-year-heading-actions,
+  #academic-year-section .academic-year-filter-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #academic-year-section .academic-year-filter-pair {
+    grid-column: auto;
+  }
+}
+
+/* Keep the Subject Offered icon beside its title at every viewport width. */
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading {
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto !important;
+  grid-template-rows: minmax(36px, auto) !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading
+  > div:first-child,
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-content-actions {
+  display: contents !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-section-eyebrow,
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-content-subtitle {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-detail-back-btn {
+  position: static !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  transform: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-class-heading-icon {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  justify-self: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin: 0 !important;
+  border-radius: 9px !important;
+  background: #eff5ff !important;
+  color: #2452e8 !important;
+  font-size: 1rem !important;
+  pointer-events: none;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  #manageContentTitle {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-content-actions
+  > .manage-subject-control-box {
+  grid-column: 4 !important;
+  grid-row: 1 !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading
+  > .manage-content-actions
+  > .add-manage-btn {
+  grid-column: 4 !important;
+  grid-row: 1 !important;
+}
+
+@media (max-width: 1180px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(36px, auto) auto auto !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-content-actions
+    > .manage-subject-control-box {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    gap: 8px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .search-wrapper,
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .manage-semester-filter-wrapper {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    flex: 0 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+    column-gap: 6px !important;
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-detail-back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-class-heading-icon {
+    display: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    #manageContentTitle {
+    font-size: 0.9rem !important;
+  }
+}
+
+#manage-section.manage-classes-view #manageSubjectsResultCount,
+#manage-section.manage-classes-view .manage-content-subtitle {
+  display: none !important;
+}
+
+#manage-section.manage-classes-view #manageContentTitle {
+  color: #1e3a8a !important;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(1rem, 1.4vw, 1.25rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+  line-height: 1.2 !important;
+}
+
+@media (max-width: 768px) {
+  #manage-section.manage-classes-view > .manage-program-banner {
+    display: none !important;
+  }
+
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) auto !important;
+    grid-template-rows: minmax(36px, auto) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  #manage-section.manage-classes-view #manageContentTitle {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-classes-view .manage-curriculum-heading .add-manage-btn {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+
+  #manage-section.manage-classes-view #manageContentTitle {
+    grid-column: 2 !important;
+    font-size: clamp(1rem, 4.5vw, 1.25rem) !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1181px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    #manageContentTitle {
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-content-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    margin: 0 !important;
+  }
+}
+
+@media (min-width: 1181px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  #manage-section.manage-classes-view .manage-curriculum-heading > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn,
+  #manage-section.manage-classes-view #manageContentTitle {
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-classes-view .manage-content-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+}
+
+/* Keep Program search and Add New Program on one line on small screens. */
+@media (max-width: 520px) {
+  #programs-section .programs-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  #programs-section .programs-actions > .search-wrapper {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #programs-section .programs-actions > .add-program-btn {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+}
+
+
+/* Student toolbar: keep search and filter together, with actions aligned beneath. */
+@media (max-width: 768px) {
+  #students-section .student-page-heading {
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  #students-section .student-page-heading-copy,
+  #students-section .student-page-heading h1 {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #students-section .student-page-heading h1 {
+    flex-wrap: wrap !important;
+    row-gap: 6px !important;
+  }
+
+  #students-section .student-heading-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+
+  #students-section .student-heading-actions > .student-toolbar {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 112px !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-row > .search-wrapper {
+    grid-column: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-row > .student-filter-menu {
+    grid-column: 2 !important;
+    width: 112px !important;
+    min-width: 0 !important;
+    max-width: 112px !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-toggle {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 0 8px !important;
+    white-space: nowrap !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-row .search-btn {
+    display: inline-flex !important;
+    flex: 0 0 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    height: 20px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #students-section .student-heading-actions > .add-student-btn,
+  #students-section .student-heading-actions > .show-archived-student-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 8px !important;
+    font-size: clamp(11px, 2.5vw, 13px) !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #students-section .student-page-heading {
+    padding: 12px !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-row {
+    grid-template-columns: minmax(0, 1fr) 100px !important;
+    gap: 6px !important;
+  }
+
+  #students-section .student-heading-actions .student-filter-row > .student-filter-menu {
+    width: 100px !important;
+    max-width: 100px !important;
+  }
+
+  #students-section .student-heading-actions > .add-student-btn,
+  #students-section .student-heading-actions > .show-archived-student-btn {
+    font-size: 10.5px !important;
+    gap: 4px !important;
+  }
+}
+
+/* Let Add Student and View Archived fill equal halves of their own row. */
+@media (max-width: 768px) {
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .add-student-btn,
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .show-archived-student-btn {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+
+/* Give Faculty Add and Archive actions equal widths on small screens. */
+@media (max-width: 768px) {
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .add-faculty-btn,
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .show-archived-faculty-btn {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+
+/* Keep Faculty and Student action buttons on the same two-column row. */
+@media (max-width: 768px) {
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions,
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .add-faculty-btn,
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .show-archived-faculty-btn,
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .add-student-btn,
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .show-archived-student-btn {
+    grid-column: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+
+/* Mobile control rows: Search + Status/Filter, followed by Add + View. */
+@media (max-width: 768px) {
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar .search-filters-container {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar .search-wrapper,
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar .program-filter-wrapper {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .add-faculty-btn,
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .show-archived-faculty-btn,
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .add-student-btn,
+  #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .show-archived-student-btn {
+    grid-row: auto !important;
+  }
+}
+
+/* Widen only the Faculty search field on small screens. */
+@media (max-width: 768px) {
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar > .search-filters-container > .search-wrapper {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
+/* Give the Faculty search its full row width on narrow screens only. */
+@media (max-width: 768px) {
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar > .search-filters-container {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #faculties-section > .faculty-list-box > .faculty-list-toolbar > .faculty-heading-actions > .faculty-toolbar > .search-filters-container > .search-wrapper {
+    grid-column: 1 / -1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Match Evaluation Criteria search and Add button widths on small screens. */
+@media (max-width: 768px) {
+  #criteria-section .criteria-header-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #criteria-section .criteria-search-container,
+  #criteria-section .criteria-header-controls > .header-actions,
+  #criteria-section .criteria-search-container > .search-wrapper,
+  #criteria-section .criteria-header-controls > .header-actions > .add-program-btn {
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+/* Force Criteria search and Add Category to share the same full-width column. */
+@media (max-width: 768px) {
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top,
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top > .criteria-header-controls {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 8px !important;
+  }
+
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top > .criteria-header-controls > .criteria-search-container,
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top > .criteria-header-controls > .criteria-search-container > .search-wrapper,
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top > .criteria-header-controls > .header-actions,
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top > .criteria-header-controls > .header-actions > #addCategoryBtn {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  #criteria-section > .section-header.criteria-header-enhanced > .criteria-header-top > .criteria-header-controls > .header-actions {
+    padding: 0 !important;
+  }
+}
+
+/* Keep Academic Year and Semester selectors side by side on mobile. */
+@media (max-width: 768px) {
+  #academic-year-section > .academic-year-list-box > .academic-year-page-heading-box > .academic-year-page-heading > .academic-year-heading-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #academic-year-section > .academic-year-list-box > .academic-year-page-heading-box > .academic-year-page-heading > .academic-year-heading-actions > .academic-year-filter-pair {
+    display: grid !important;
+    grid-column: 1 / -1 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #academic-year-section > .academic-year-list-box > .academic-year-page-heading-box > .academic-year-page-heading > .academic-year-heading-actions > .academic-year-filter-pair > .program-filter-wrapper {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #academic-year-section > .academic-year-list-box > .academic-year-page-heading-box > .academic-year-page-heading > .academic-year-heading-actions > #addAcademicYearBtn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #academic-year-section > .academic-year-list-box > .academic-year-page-heading-box > .academic-year-page-heading > .academic-year-heading-actions > .academic-year-filter-pair {
+    gap: 5px !important;
+  }
+
+  #academic-year-section > .academic-year-list-box > .academic-year-page-heading-box > .academic-year-page-heading > .academic-year-heading-actions > .academic-year-filter-pair > .program-filter-wrapper select {
+    padding-left: 6px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Compact the Evaluation Report filter controls on small screens. */
+@media (max-width: 768px) {
+  #report-section > .table-wrapper > .table-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  #report-section > .table-wrapper > .table-header > .search-filters-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  #report-section > .table-wrapper > .table-header > .search-filters-container > .search-wrapper {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+
+  #report-section > .table-wrapper > .table-header > .search-filters-container > .program-filter-wrapper {
+    box-sizing: border-box !important;
+    grid-column: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding: 0 8px !important;
+  }
+
+  #report-section > .table-wrapper > .table-header > .search-filters-container > .program-filter-wrapper > select {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 24px 0 6px !important;
+    font-size: 12px !important;
+  }
+
+  #report-section > .table-wrapper > .table-header > .header-actions,
+  #report-section > .table-wrapper > .table-header > .header-actions > .generate-report-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Subject Offered mobile order: back/title, search/filter, add, then table. */
+@media (max-width: 768px) {
+  #manage-section.manage-specific-year.manage-subjects-view .manage-program-banner {
+    display: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-auto-flow: row !important;
+    align-items: start !important;
+    gap: 10px !important;
+    padding: 14px 12px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading > div:first-child {
+    display: contents !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #manageContentTitle {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    padding-left: 46px !important;
+    min-height: 36px;
+    display: flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    line-height: 1 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-detail-back-btn {
+    position: absolute !important;
+    top: 32px !important;
+    left: 12px !important;
+    transform: translateY(-50%) !important;
+    z-index: 2;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-content-actions {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+    gap: 8px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    order: 1 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+    gap: 8px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .search-wrapper {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-subject-control-box > .manage-semester-filter-wrapper {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading > .manage-content-actions > .add-manage-btn {
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #manageDetailView,
+  #manage-section.manage-specific-year.manage-subjects-view #manageDetailView > .manage-body,
+  #manage-section.manage-specific-year.manage-subjects-view #subjects {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects > .table-scroll-container {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    direction: ltr !important;
+    border-radius: 0 0 10px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table {
+    display: table !important;
+    width: 780px !important;
+    min-width: 780px !important;
+    max-width: none !important;
+    table-layout: fixed !important;
+    direction: ltr !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table thead {
+    display: table-header-group !important;
+    visibility: visible !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    height: auto !important;
+    opacity: 1 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table tbody {
+    display: table-row-group !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table tr {
+    display: table-row !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table th,
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table td {
+    display: table-cell !important;
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table thead tr,
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table thead th {
+    display: table-row !important;
+    visibility: visible !important;
+    height: 44px !important;
+    opacity: 1 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table thead th {
+    display: table-cell !important;
+    visibility: visible !important;
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    background: #f7f8fa !important;
+    border-bottom: 1px solid #e8ebf0 !important;
+    padding: 10px 12px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    text-indent: 0 !important;
+    text-transform: none !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table thead th::before,
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table thead th::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table td::before,
+  #manage-section.manage-specific-year.manage-subjects-view #subjects .subjects-table td::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    grid-template-columns: 36px 32px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(36px, auto) auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-detail-back-btn {
+    position: static !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    transform: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-class-heading-icon {
+    display: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    #manageContentTitle {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-content-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+}
+
+#manage-section .manage-detail-back-btn[hidden] {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading {
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto !important;
+  grid-template-rows: minmax(36px, auto) !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading
+  > div:first-child,
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading
+  > .manage-content-actions {
+  display: contents !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-section-eyebrow,
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-content-subtitle {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-detail-back-btn {
+  position: static !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-detail-back-btn
+  i {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  transform: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-class-heading-icon {
+  display: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  #manageContentTitle {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-subject-control-box {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-curriculum-heading
+  > .manage-content-actions
+  > .add-manage-btn {
+  grid-column: 4 !important;
+  grid-row: 1 !important;
+}
+
+@media (max-width: 1180px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(36px, auto) auto auto !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    gap: 8px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .search-wrapper,
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .manage-semester-filter-wrapper {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    flex: 0 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+    column-gap: 6px !important;
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-detail-back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-class-heading-icon {
+    display: none !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    #manageContentTitle {
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    #subjects
+    .subjects-table
+    thead {
+    position: static !important;
+    left: auto !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    white-space: normal !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    #subjects
+    .subjects-table
+    thead
+    th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    height: 44px !important;
+    padding: 10px 12px !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    background: #f7f8fa !important;
+    border-bottom: 1px solid #e8ebf0 !important;
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+    text-indent: 0 !important;
+    white-space: nowrap !important;
+  }
+}
+
+#manage-section.manage-classes-view #manageSubjectsResultCount,
+#manage-section.manage-classes-view .manage-content-subtitle {
+  display: none !important;
+}
+
+#manage-section.manage-classes-view #manageContentTitle {
+  color: #1e3a8a !important;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(1rem, 1.4vw, 1.25rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+  line-height: 1.2 !important;
+}
+
+@media (max-width: 768px) {
+  #manage-section.manage-classes-view > .manage-program-banner {
+    display: none !important;
+  }
+
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) auto !important;
+    grid-template-rows: minmax(36px, auto) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  #manage-section.manage-classes-view #manageContentTitle {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-classes-view .manage-curriculum-heading .add-manage-btn {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+
+  #manage-section.manage-classes-view #manageContentTitle {
+    grid-column: 2 !important;
+    font-size: clamp(1rem, 4.5vw, 1.25rem) !important;
+  }
+
+  #manage-section.manage-classes-view .manage-curriculum-heading .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+  }
+}
+
+@media (min-width: 1181px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    #manageContentTitle {
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-content-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    margin: 0 !important;
+  }
 }
