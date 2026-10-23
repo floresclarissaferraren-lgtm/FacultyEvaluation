@@ -3454,7 +3454,6 @@ table.evaluation-table .view-btn {
   flex: 0 0 8px;
   border-radius: 50%;
   background: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
 }
 
 #faculties-section .faculty-toolbar {
@@ -5697,6 +5696,108 @@ table.evaluation-table .view-btn:hover {
   color: #b91c1c;
 }
 
+.period-state-badge.archived {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+#academic-year-section .archived-academic-year-section[hidden],
+#academic-year-section .academic-year-page-heading-box[hidden],
+#academic-year-section .academic-year-results[hidden] {
+  display: none !important;
+}
+
+#academic-year-section .archived-academic-year-section {
+  margin-top: 20px;
+}
+
+#academic-year-section .archived-academic-year-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+#academic-year-section .archived-academic-year-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+#academic-year-section .archived-academic-year-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#academic-year-section .archived-academic-year-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 260px;
+  padding: 0 12px;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+}
+
+#academic-year-section .archived-academic-year-search input {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1e293b;
+  font: inherit;
+}
+
+#academic-year-section .back-to-academic-year-btn,
+#academic-year-section .show-archived-academic-year-btn {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#academic-year-section .back-to-academic-year-btn:hover,
+#academic-year-section .show-archived-academic-year-btn:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #0765a6;
+}
+
+@media (max-width: 760px) {
+  #academic-year-section .archived-academic-year-header,
+  #academic-year-section .archived-academic-year-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #academic-year-section .archived-academic-year-search {
+    min-width: 0;
+  }
+}
+
 .period-state-badge.setup {
   background: #f1f5f9;
   color: #475569;
@@ -5837,6 +5938,19 @@ table.evaluation-table .view-btn:hover {
 
 .period-confirmation-accept:hover {
   background: #166fe5;
+}
+
+#periodConfirmationModal.is-archive-action .period-confirmation-icon {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+#periodConfirmationModal.is-archive-action .period-confirmation-accept {
+  background: #ea580c;
+}
+
+#periodConfirmationModal.is-archive-action .period-confirmation-accept:hover {
+  background: #c2410c;
 }
 
 .period-confirmation-accept.is-close {
@@ -31210,12 +31324,12 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   td.class-card-section {
   position: relative;
   grid-column: 1 / -1;
-  min-height: 60px;
-  padding: 7px 14px;
+  min-height: 52px;
+  padding: 6px 14px;
   overflow: hidden;
   border: 0;
   border-bottom: 1px solid #e3ebf7;
-  background: linear-gradient(120deg, #f5f8ff 0%, #eaf1ff 100%);
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
 }
 
 #manage-section.manage-classes-view
@@ -32325,6 +32439,7 @@ body > .navbar .navbar-admin-avatar {
 }
 
 #dashboard-section .admin-welcome-heading h1 {
+  font-family: "Poppins", var(--font-sans) !important;
   font-size: clamp(1.05rem, 1.7vw, 1.45rem);
 }
 
@@ -34403,7 +34518,7 @@ body:has(> main > #dashboard-section.admin-section-loading)
   margin: 0;
   color: #1e3a8a;
   font-family: "Poppins", var(--font-sans) !important;
-  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
   font-weight: 700;
   line-height: 1.25;
 }
@@ -35232,10 +35347,11 @@ main > .section,
   display: none !important;
 }
 
-#manage-section.manage-classes-view #manageContentTitle {
+#manage-section.manage-classes-view #manageContentTitle,
+#manage-section.manage-specific-year.manage-subjects-view #manageContentTitle {
   color: #1e3a8a !important;
   font-family: "Poppins", var(--font-sans) !important;
-  font-size: clamp(1rem, 1.4vw, 1.25rem) !important;
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem) !important;
   font-weight: 700 !important;
   letter-spacing: -0.3px !important;
   line-height: 1.2 !important;
@@ -35285,7 +35401,8 @@ main > .section,
     min-height: 32px !important;
   }
 
-  #manage-section.manage-classes-view #manageContentTitle {
+  #manage-section.manage-classes-view #manageContentTitle,
+  #manage-section.manage-specific-year.manage-subjects-view #manageContentTitle {
     grid-column: 2 !important;
     font-size: clamp(1rem, 4.5vw, 1.25rem) !important;
   }
@@ -35402,6 +35519,88 @@ main > .section,
     grid-row: auto !important;
     width: auto !important;
     margin: 0 !important;
+  }
+}
+
+#manage-section.manage-classes-view .manage-subject-control-box {
+  display: none !important;
+}
+
+#manage-section.manage-classes-view .manage-class-search-wrapper {
+  box-sizing: border-box !important;
+  flex: 0 0 220px !important;
+  width: 220px !important;
+  min-width: 220px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 10px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+#manage-section.manage-classes-view .manage-class-search-wrapper:hover {
+  border-color: #cbd5e1 !important;
+}
+
+#manage-section.manage-classes-view .manage-class-search-wrapper:focus-within {
+  border-color: #3b82f6 !important;
+}
+
+#manage-section.manage-classes-view .manage-class-search-wrapper .search-btn {
+  display: grid !important;
+  flex: 0 0 24px !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  place-items: center !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#manage-section.manage-classes-view .manage-class-search-wrapper .search-btn i {
+  color: #64748b !important;
+  font-size: 18px !important;
+}
+
+#manage-section.manage-classes-view .manage-class-search-wrapper input {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: #1e293b !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+@media (max-width: 1180px) {
+  #manage-section.manage-classes-view .manage-content-actions {
+    display: contents !important;
+  }
+
+  #manage-section.manage-classes-view .manage-class-search-wrapper {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading .add-manage-btn {
+    grid-row: 3 !important;
   }
 }
 
@@ -36028,6 +36227,118 @@ main > .section,
   }
 }
 
+/* Archived Academic Year view: one responsive card with a readable toolbar and table. */
+#academic-year-section .archived-academic-year-section {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 !important;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+#academic-year-section .archived-academic-year-header {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 16px 20px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+}
+
+#academic-year-section .archived-academic-year-header h3 {
+  margin: 0 !important;
+  color: #1e3a8a !important;
+  font-family: "Poppins", var(--font-sans) !important;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+}
+
+#academic-year-section .archived-academic-year-header-actions {
+  min-width: 0;
+  gap: 8px !important;
+}
+
+#academic-year-section .archived-academic-year-search {
+  box-sizing: border-box;
+  width: 260px;
+  min-width: 0 !important;
+  height: 40px;
+  padding: 0 12px;
+  border-color: #cbd5e1;
+  border-radius: 6px;
+}
+
+#academic-year-section .archived-academic-year-search input {
+  min-width: 0;
+  height: 38px;
+  font-size: 14px;
+}
+
+#academic-year-section .archived-academic-year-section > .table-wrapper.academic-year-results {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+#academic-year-section .archived-academic-year-section .table-scroll-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#academic-year-section .archived-academic-year-table {
+  min-width: 620px;
+}
+
+#academic-year-section .archived-academic-year-table th,
+#academic-year-section .archived-academic-year-table td {
+  font-size: 0.875rem;
+}
+
+@media (max-width: 760px) {
+  #academic-year-section .archived-academic-year-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px !important;
+  }
+
+  #academic-year-section .archived-academic-year-header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  #academic-year-section .archived-academic-year-search,
+  #academic-year-section .back-to-academic-year-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #academic-year-section .archived-academic-year-table {
+    min-width: 620px;
+  }
+}
+
+@media (max-width: 420px) {
+  #academic-year-section .archived-academic-year-header-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   #manage-section.manage-specific-year.manage-subjects-view
     .manage-curriculum-heading {
@@ -36272,10 +36583,11 @@ main > .section,
   display: none !important;
 }
 
-#manage-section.manage-classes-view #manageContentTitle {
+#manage-section.manage-classes-view #manageContentTitle,
+#manage-section.manage-specific-year.manage-subjects-view #manageContentTitle {
   color: #1e3a8a !important;
   font-family: "Poppins", var(--font-sans) !important;
-  font-size: clamp(1rem, 1.4vw, 1.25rem) !important;
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem) !important;
   font-weight: 700 !important;
   letter-spacing: -0.3px !important;
   line-height: 1.2 !important;
@@ -36325,7 +36637,8 @@ main > .section,
     min-height: 32px !important;
   }
 
-  #manage-section.manage-classes-view #manageContentTitle {
+  #manage-section.manage-classes-view #manageContentTitle,
+  #manage-section.manage-specific-year.manage-subjects-view #manageContentTitle {
     grid-column: 2 !important;
     font-size: clamp(1rem, 4.5vw, 1.25rem) !important;
   }
@@ -36403,4 +36716,883 @@ main > .section,
     min-width: max-content !important;
     margin: 0 !important;
   }
+}
+@media (max-width: 768px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(36px, auto) auto auto !important;
+    align-items: center !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  #manage-section.manage-classes-view #manageContentTitle {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  #manage-section.manage-classes-view .manage-class-search-wrapper {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+
+  #manage-section.manage-classes-view .manage-detail-back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .action-buttons {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  width: 100% !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .view-subjects-btn {
+  order: 0 !important;
+  margin-right: auto !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .edit-btn,
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .delete-btn {
+  order: 1 !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+#manage-section.manage-classes-view #classes .classes-table tbody tr {
+  border-radius: 10px !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .view-subjects-btn {
+  border-radius: 8px !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .action-buttons {
+  gap: 0 !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .edit-btn,
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .delete-btn {
+  width: 26px !important;
+  min-width: 26px !important;
+  margin: 0 !important;
+}
+
+#dashboard-section .admin-welcome-box {
+  border-left: 3px solid #3b82f6 !important;
+}
+
+#dashboard-section .dashboard-card.faculty::before,
+#dashboard-section .dashboard-card.students::before,
+#dashboard-section .dashboard-card.evaluations::before,
+#dashboard-section .dashboard-card.faculty::after,
+#dashboard-section .dashboard-card.students::after,
+#dashboard-section .dashboard-card.evaluations::after {
+  display: none !important;
+  content: none !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete i {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:hover,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:hover i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus-visible,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus-visible i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:active,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:active i {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:hover,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:hover i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus-visible,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus-visible i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:active,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:active i {
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#categoriesColumn .question-item .actions .edit-btn,
+#categoriesColumn .question-item .actions .edit-btn i,
+#categoriesColumn .question-item .actions .delete-btn,
+#categoriesColumn .question-item .actions .delete-btn i,
+#academic-year-section .academic-year-table .action-buttons .edit-btn,
+#academic-year-section .academic-year-table .action-buttons .edit-btn i,
+#academic-year-section .academic-year-table .action-buttons .delete-btn,
+#academic-year-section .academic-year-table .action-buttons .delete-btn i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn i {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+#categoriesColumn .question-item .actions .edit-btn:hover,
+#categoriesColumn .question-item .actions .edit-btn:hover i,
+#categoriesColumn .question-item .actions .edit-btn:focus-visible,
+#categoriesColumn .question-item .actions .edit-btn:focus-visible i,
+#categoriesColumn .question-item .actions .edit-btn:active,
+#categoriesColumn .question-item .actions .edit-btn:active i,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:hover i,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus-visible i,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:active,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:active i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:hover i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus-visible,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus-visible i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:active i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:hover i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus-visible,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus-visible i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:active i {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+#categoriesColumn .question-item .actions .delete-btn:hover,
+#categoriesColumn .question-item .actions .delete-btn:hover i,
+#categoriesColumn .question-item .actions .delete-btn:focus-visible,
+#categoriesColumn .question-item .actions .delete-btn:focus-visible i,
+#categoriesColumn .question-item .actions .delete-btn:active,
+#categoriesColumn .question-item .actions .delete-btn:active i,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:hover i,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus-visible i,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:active,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:active i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:hover i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus-visible,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus-visible i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:active i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:hover i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus-visible,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus-visible i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:active i {
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+}
+
+#academic-year-section .academic-year-table .action-buttons {
+  gap: 2px !important;
+}
+
+#manage-section.manage-classes-view #classes .class-card-icon,
+#manage-section.manage-classes-view #classes .class-card-icon i {
+  color: #666 !important;
+}
+
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn i,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn i {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn i {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:hover i,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus i,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus-visible i,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:active i {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus-visible,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:hover i,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus i,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus-visible i,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:active i {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus-visible,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:hover i,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus i,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus-visible i,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:active i {
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+}
+
+#report-section .evaluation-table .action-buttons .view-btn,
+#report-section .evaluation-table .action-buttons .view-btn i {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+#report-section .evaluation-table .action-buttons .view-btn:hover,
+#report-section .evaluation-table .action-buttons .view-btn:hover i,
+#report-section .evaluation-table .action-buttons .view-btn:focus-visible,
+#report-section .evaluation-table .action-buttons .view-btn:focus-visible i,
+#report-section .evaluation-table .action-buttons .view-btn:active,
+#report-section .evaluation-table .action-buttons .view-btn:active i {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+#categoriesColumn .question-item .actions .edit-btn:hover,
+#categoriesColumn .question-item .actions .edit-btn:focus,
+#categoriesColumn .question-item .actions .edit-btn:focus-visible,
+#categoriesColumn .question-item .actions .edit-btn:active,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus-visible,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus-visible,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:active {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #93c5fd !important;
+}
+
+#categoriesColumn .question-item .actions .delete-btn:hover,
+#categoriesColumn .question-item .actions .delete-btn:focus,
+#categoriesColumn .question-item .actions .delete-btn:focus-visible,
+#categoriesColumn .question-item .actions .delete-btn:active,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus-visible,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus-visible,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:active {
+  background: rgba(254, 226, 226, 0.75) !important;
+  background-color: rgba(254, 226, 226, 0.75) !important;
+  border-color: #fca5a5 !important;
+}
+
+#report-section .evaluation-table .action-buttons .view-btn:hover,
+#report-section .evaluation-table .action-buttons .view-btn:focus,
+#report-section .evaluation-table .action-buttons .view-btn:focus-visible,
+#report-section .evaluation-table .action-buttons .view-btn:active {
+  background: rgba(219, 234, 254, 0.65) !important;
+  background-color: rgba(219, 234, 254, 0.65) !important;
+  border-color: #93c5fd !important;
+}
+
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn i {
+  color: #666 !important;
+  -webkit-text-fill-color: #666 !important;
+}
+
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:active,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:hover i,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus i,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus-visible i,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:active i {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:hover,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus-visible,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:active,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:hover,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus-visible,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:active,
+#categoriesColumn .question-item .actions .edit-btn:hover,
+#categoriesColumn .question-item .actions .edit-btn:focus,
+#categoriesColumn .question-item .actions .edit-btn:focus-visible,
+#categoriesColumn .question-item .actions .edit-btn:active,
+#categoriesColumn .question-item .actions .delete-btn:hover,
+#categoriesColumn .question-item .actions .delete-btn:focus,
+#categoriesColumn .question-item .actions .delete-btn:focus-visible,
+#categoriesColumn .question-item .actions .delete-btn:active,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:active,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:active,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus-visible,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus-visible,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus-visible,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus-visible,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus-visible,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus-visible,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus-visible,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus-visible,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:active,
+#report-section .evaluation-table .action-buttons .view-btn:hover,
+#report-section .evaluation-table .action-buttons .view-btn:focus,
+#report-section .evaluation-table .action-buttons .view-btn:focus-visible,
+#report-section .evaluation-table .action-buttons .view-btn:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit i,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete i,
+#categoriesColumn .question-item .actions .edit-btn,
+#categoriesColumn .question-item .actions .edit-btn i,
+#categoriesColumn .question-item .actions .delete-btn,
+#categoriesColumn .question-item .actions .delete-btn i,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn i,
+#academic-year-section .academic-year-table .action-buttons .edit-btn,
+#academic-year-section .academic-year-table .action-buttons .edit-btn i,
+#academic-year-section .academic-year-table .action-buttons .delete-btn,
+#academic-year-section .academic-year-table .action-buttons .delete-btn i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn i,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn i,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn i,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn i,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn i,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn i,
+#report-section .evaluation-table .action-buttons .view-btn,
+#report-section .evaluation-table .action-buttons .view-btn i {
+  transform: none !important;
+  animation: none !important;
+  transition: color 0.18s ease, -webkit-text-fill-color 0.18s ease !important;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:hover,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:focus,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-edit:active,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:hover,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:focus,
+#programs-section #programsCardsContainer .program-card .program-card-actions .right-buttons .btn-delete:active,
+#categoriesColumn .question-item .actions .edit-btn:hover,
+#categoriesColumn .question-item .actions .edit-btn:focus,
+#categoriesColumn .question-item .actions .edit-btn:active,
+#categoriesColumn .question-item .actions .delete-btn:hover,
+#categoriesColumn .question-item .actions .delete-btn:focus,
+#categoriesColumn .question-item .actions .delete-btn:active,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .manage-period-btn:active,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .edit-btn:active,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:hover,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:focus,
+#academic-year-section .academic-year-table .action-buttons .delete-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:focus,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .edit-btn:active,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:hover,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:focus,
+#subjects-section > .table-wrapper .subjects-table .action-buttons .delete-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:focus,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .edit-btn:active,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:hover,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:focus,
+#manage-section.manage-subjects-view #subjects .subjects-table .action-buttons .delete-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .edit-btn:active,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:hover,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:focus,
+#manage-section.manage-classes-view #classes .class-card-actions .delete-btn:active,
+#report-section .evaluation-table .action-buttons .view-btn:hover,
+#report-section .evaluation-table .action-buttons .view-btn:focus,
+#report-section .evaluation-table .action-buttons .view-btn:active {
+  transform: none !important;
+  animation: none !important;
+}
+
+#faculties-section .faculty-list-title .faculty-count-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 2px 1px 4px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  vertical-align: middle;
+}
+
+#programs-section #programsCardsContainer .program-card .program-card-header {
+  min-height: 64px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+}
+
+#programs-section #programsCardsContainer .program-card .program-icon {
+  height: 40px;
+}
+
+@media (max-width: 480px) {
+  #programs-section #programsCardsContainer .program-card .program-card-header {
+    min-height: 60px;
+    padding: 8px 16px;
+  }
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-section {
+  min-height: 52px !important;
+  padding: 6px 14px !important;
+  background: linear-gradient(115deg, #087fd1 0%, #0765a6 100%) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+#manage-section.manage-classes-view .class-card-section .class-card-title {
+  color: #fff !important;
+}
+
+#manage-section.manage-classes-view .class-card-section .class-card-block {
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+@media (max-width: 480px) {
+  #manage-section.manage-classes-view
+    #classes
+    .classes-table
+    tbody
+    td.class-card-section {
+    min-height: 52px !important;
+    padding: 6px 10px !important;
+  }
+}
+
+#manage-section.manage-classes-view
+  .manage-curriculum-heading
+  > .manage-content-actions
+  > .manage-class-semester-filter-wrapper {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex: 0 0 160px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 160px !important;
+  min-width: 160px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+}
+
+#manage-section.manage-classes-view
+  .manage-class-semester-filter-wrapper
+  > i {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 16px;
+}
+
+#manage-section.manage-classes-view
+  .manage-class-semester-filter-wrapper
+  select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  padding: 0 2px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: #1e293b !important;
+  font-size: 13px !important;
+}
+
+@media (max-width: 1180px) {
+  #manage-section.manage-classes-view
+    .manage-class-semester-filter-wrapper {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+#sidebar .sidebar-profile-avatar {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+#academic-year-section .archived-academic-year-section:not([hidden]) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10020 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  overflow: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(15, 23, 42, 0.48) !important;
+  box-shadow: none !important;
+}
+
+#academic-year-section .archived-academic-year-dialog {
+  box-sizing: border-box;
+  width: min(680px, calc(100vw - 32px)) !important;
+  max-width: 680px !important;
+  max-height: min(80vh, 720px);
+  max-height: min(80dvh, 720px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24);
+}
+
+#academic-year-section .archived-academic-year-dialog > .table-wrapper {
+  max-height: min(55vh, 480px);
+  min-height: 0;
+  overflow: auto;
+}
+
+#academic-year-section .archived-academic-year-dialog .archived-academic-year-header {
+  align-items: center !important;
+}
+
+#academic-year-section .archived-academic-year-dialog .archived-academic-year-header-actions {
+  flex: 0 1 320px;
+  width: min(320px, 100%);
+}
+
+#academic-year-section .archived-academic-year-dialog .archived-academic-year-search {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#academic-year-section .close-archived-academic-year-btn {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #cbd5e1 !important;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#academic-year-section .close-archived-academic-year-btn:hover {
+  border: 0;
+  background: transparent;
+  color: #1d4ed8 !important;
+}
+
+#academic-year-section .archived-academic-year-table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+#academic-year-section .archived-academic-year-table th:nth-child(1),
+#academic-year-section .archived-academic-year-table td:nth-child(1) {
+  width: 38%;
+}
+
+#academic-year-section .archived-academic-year-table th:nth-child(2),
+#academic-year-section .archived-academic-year-table td:nth-child(2) {
+  width: 38%;
+}
+
+#academic-year-section .archived-academic-year-table th:nth-child(3),
+#academic-year-section .archived-academic-year-table td:nth-child(3) {
+  width: 24%;
+}
+
+@media (max-width: 760px) {
+  #academic-year-section .archived-academic-year-section:not([hidden]) {
+    align-items: center !important;
+    padding: 12px !important;
+  }
+
+  #academic-year-section .archived-academic-year-dialog {
+    max-height: 88vh;
+    max-height: 88dvh;
+  }
+
+  #academic-year-section .archived-academic-year-dialog > .table-wrapper {
+    max-height: 60vh;
+    max-height: 60dvh;
+  }
+
+  #academic-year-section .archived-academic-year-dialog .archived-academic-year-header {
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  #academic-year-section .archived-academic-year-dialog .archived-academic-year-header-actions {
+    flex: 0 0 auto;
+    min-width: 0;
+    gap: 8px !important;
+  }
+
+  #academic-year-section .archived-academic-year-dialog .archived-academic-year-header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    width: 100%;
+  }
+
+  #academic-year-section .archived-academic-year-dialog {
+    width: min(100%, calc(100vw - 24px)) !important;
+  }
+
+  #academic-year-section .archived-academic-year-table {
+    min-width: 520px !important;
+  }
+
+  #academic-year-section .archived-academic-year-table th,
+  #academic-year-section .archived-academic-year-table td {
+    padding: 12px 10px !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  #academic-year-section .archived-academic-year-section:not([hidden]) {
+    padding: 8px !important;
+  }
+
+  #academic-year-section .archived-academic-year-dialog {
+    width: calc(100vw - 16px) !important;
+    border-radius: 10px;
+  }
+
+  #academic-year-section .archived-academic-year-dialog .archived-academic-year-header h3 {
+    font-size: 0.95rem !important;
+  }
+
+  #academic-year-section .archived-academic-year-search {
+    padding: 0 8px;
+  }
+
+  #academic-year-section .archived-academic-year-search input {
+    font-size: 13px;
+  }
+}
+
+.academic-year-table .period-archive-btn,
+.academic-year-table .period-archive-btn:hover,
+.academic-year-table .period-archive-btn:focus,
+.academic-year-table .period-archive-btn:focus-visible,
+.academic-year-table .period-archive-btn:active {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Keep archive confirmation button interactions consistently orange. */
+#archiveModal .archive-btn-cancel:hover,
+#archiveModal .archive-btn-cancel:focus-visible {
+  background: #ffedd5 !important;
+  border-color: #fdba74 !important;
+  color: #c2410c !important;
+  outline: none;
+}
+
+#archiveModal .archive-btn-cancel:active {
+  background: #fed7aa !important;
+  border-color: #fb923c !important;
+  color: #9a3412 !important;
+}
+
+#archiveModal .archive-btn-confirm:hover,
+#archiveModal .archive-btn-confirm:focus-visible {
+  background: #ea8a00 !important;
+  border-color: #c96b00 !important;
+  color: #fff !important;
+  outline: none;
+}
+
+#archiveModal .archive-btn-confirm:active {
+  background: #c96b00 !important;
+  border-color: #9a4d00 !important;
+  color: #fff !important;
 }

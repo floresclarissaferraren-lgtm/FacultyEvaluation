@@ -906,7 +906,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("deleteMessage").innerText =
       `Do you want to delete ${type}? \n${name}`;
     document.getElementById("deleteWarning").innerText =
-      `Warning: All details about this ${type} will be deleted.`;
+      type === "period"
+        ? "Academic periods with linked classes or evaluation records cannot be deleted. Archive the period to preserve its history."
+        : `Warning: All details about this ${type} will be deleted.`;
 
     // Add wider class for subjects delete modal
     const deleteModalCard = document.querySelector(".delete-modal-card");
@@ -1012,7 +1014,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     fetch(cfg.url, fetchOptions)
-      .then((r) => r.json())
+      .then(async (response) => {
+        const responseText = await response.text();
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          throw new Error(
+            `Server returned an invalid response (HTTP ${response.status}).`,
+          );
+        }
+        if (!response.ok && !result.message && !result.error) {
+          throw new Error(`Request failed (HTTP ${response.status}).`);
+        }
+        return result;
+      })
       .then(async (resp) => {
         if (resp.success || resp.status === "success") {
           if (deleteType === "class_subject") {
@@ -1097,7 +1113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((err) => {
         console.error(err);
         showNotification(
-          "Unexpected error occurred while deleting",
+          err.message || "Unexpected error occurred while deleting",
           "#f44336",
           5000,
         );
@@ -1156,16 +1172,30 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===================== Archive Confirmation Modal ==========================================================
   let _archivePending = null; // stores { row, record, statusMenu, type }
 
-  function openArchiveModal(row, record, statusMenu, type = "faculty") {
-    _archivePending = { row, record, statusMenu, type };
+  function openArchiveModal(
+    row,
+    record,
+    statusMenu,
+    type = "faculty",
+    onConfirm = null,
+  ) {
+    _archivePending = { row, record, statusMenu, type, onConfirm };
     const overlay = document.getElementById("archiveModal");
-    const label = type === "student" ? "Student" : "Faculty";
+    const label =
+      type === "student"
+        ? "Student"
+        : type === "academicYear"
+          ? "Academic Year"
+          : "Faculty";
     const title = overlay.querySelector(".archive-modal-title");
     const message = overlay.querySelector(".archive-modal-message");
     const confirmBtn = document.getElementById("archiveConfirmBtn");
     if (title) title.textContent = `Archive ${label}`;
     if (message)
-      message.textContent = `Archive this ${label.toLowerCase()} account?`;
+      message.textContent =
+        type === "academicYear"
+          ? `Archive academic year ${record.ay} - ${record.semester}?`
+          : `Archive this ${label.toLowerCase()} account?`;
     if (confirmBtn) confirmBtn.textContent = `Yes, Archive`;
     overlay.classList.add("show");
   }
@@ -1175,14 +1205,24 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.classList.remove("show");
     _archivePending = null;
   }
+  window.openArchiveModal = openArchiveModal;
   window.closeArchiveModal = closeArchiveModal;
 
   document
     .getElementById("archiveConfirmBtn")
     .addEventListener("click", async () => {
       if (!_archivePending) return;
-      const { row, record, statusMenu, type } = _archivePending;
+      const { row, record, statusMenu, type, onConfirm } = _archivePending;
       closeArchiveModal();
+      if (typeof onConfirm === "function") {
+        try {
+          await onConfirm();
+        } catch (error) {
+          console.error("Archive confirmation action failed:", error);
+          showNotification(error.message || "Unable to archive this record.", "#f44336");
+        }
+        return;
+      }
       try {
         const result = await updateStatus(type, record.id, "archived");
         if (result.success) {
@@ -1741,6 +1781,7 @@ document.addEventListener("DOMContentLoaded", () => {
     messageText,
     confirmText,
     iconClass = "ph-calendar-check",
+    archiveAction = false,
   }) {
     const modal = document.getElementById("periodConfirmationModal");
     const title = document.getElementById("periodConfirmationTitle");
@@ -1780,6 +1821,7 @@ document.addEventListener("DOMContentLoaded", () => {
       confirmText || (opening ? "Open Period" : "Close Period");
     acceptButton.classList.toggle("is-close", !opening && !confirmText);
     modal.classList.toggle("is-close-action", !opening && !confirmText);
+    modal.classList.toggle("is-archive-action", archiveAction);
     const icon = modal.querySelector(".period-confirmation-icon i");
     if (icon) icon.className = `ph-fill ${iconClass}`;
     modal.hidden = false;
@@ -2127,7 +2169,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const data = await response.json();
       classPeriods =
-        data && data.success && Array.isArray(data.periods) ? data.periods : [];
+        data && data.success && Array.isArray(data.periods)
+          ? data.periods.filter((period) => !period.is_archived)
+          : [];
     } catch (_) {
       classPeriods = [];
     }
@@ -2339,6 +2383,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailSubtitle = document.getElementById("manageContentSubtitle");
     const detailBack = document.getElementById("manageDetailBack");
     const manageAddButton = document.querySelector(".add-manage-btn");
+    const classSearchWrapper = document.querySelector(
+      "#manage-section .manage-class-search-wrapper",
+    );
+    if (classSearchWrapper) {
+      classSearchWrapper.style.display = tab === "classes" ? "flex" : "none";
+    }
     const setDetailHeading = (text) => {
       if (!detailTitle) return;
       const countBadge =
@@ -2467,6 +2517,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const classesTab = document.querySelector(".classes-btn");
     const addButton = document.querySelector(".add-manage-btn");
 
+    if (manageClassSearchInput) manageClassSearchInput.value = "";
+    if (manageClassSemesterFilter) manageClassSemesterFilter.value = "";
     overview?.removeAttribute("hidden");
     detail?.setAttribute("hidden", "");
     detailBack?.setAttribute("hidden", "");
@@ -2491,6 +2543,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (manageClassSearchInput) manageClassSearchInput.value = "";
+    if (manageClassSemesterFilter) manageClassSemesterFilter.value = "";
     if (manageSearchInput) manageSearchInput.value = "";
     loadClasses();
   }
@@ -3319,16 +3373,44 @@ document.addEventListener("DOMContentLoaded", () => {
       requestedYear || "all",
     );
 
-    fetch(`classes_crud.php?action=get&program_id=${requestedProgramId}`)
-      .then((r) => {
-        console.log("Response status:", r.status);
-        console.log("Response headers:", r.headers);
-        if (!r.ok) {
-          throw new Error(`HTTP error! status: ${r.status}`);
+    fetch("../shared/periods_api.php?action=status", {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load evaluation period status (HTTP ${response.status}).`,
+          );
         }
-        return r.json();
+        return response.json();
       })
-      .then((data) => {
+      .then((periodStatus) => {
+        if (!periodStatus?.success) {
+          throw new Error(
+            periodStatus?.message ||
+              "Unable to determine the current evaluation period.",
+          );
+        }
+        return fetch(
+          `classes_crud.php?action=get&program_id=${requestedProgramId}`,
+          {
+            cache: "no-store",
+            credentials: "same-origin",
+          },
+        ).then((classesResponse) => {
+          if (!classesResponse.ok) {
+            throw new Error(
+              `Failed to load classes (HTTP ${classesResponse.status}).`,
+            );
+          }
+          return classesResponse.json().then((data) => ({
+            data,
+            periodStatus,
+          }));
+        });
+      })
+      .then(({ data, periodStatus }) => {
         if (
           requestId !== manageClassesLoadRequestId ||
           requestedProgramId !== currentProgramId
@@ -3336,6 +3418,28 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         console.log("Classes data received:", data);
         classesAllData = Array.isArray(data) ? data : [];
+        const evaluationIsOpen = Boolean(periodStatus.evaluation_open);
+        if (manageClassSemesterFilter) {
+          if (evaluationIsOpen) {
+            const activeSemester = String(
+              periodStatus.active_semester || "",
+            ).trim();
+            manageClassSemesterFilter.value = Array.from(
+              manageClassSemesterFilter.options,
+            ).some(
+              (option) =>
+                option.value.toLowerCase() === activeSemester.toLowerCase(),
+            )
+              ? activeSemester
+              : "";
+          } else if (manageClassSemesterFilter.disabled) {
+            manageClassSemesterFilter.value = "";
+          }
+          manageClassSemesterFilter.disabled = evaluationIsOpen;
+          manageClassSemesterFilter.title = evaluationIsOpen
+            ? `Classes are limited to the open ${periodStatus.active_semester || "evaluation"} period.`
+            : "Filter classes by semester";
+        }
 
         if (!classesTableBody) {
           console.error("classesTableBody not found");
@@ -3389,17 +3493,29 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = document.createElement("tr");
           row.dataset.id = c.id;
           row.dataset.yearLevel = normalizeManageYearLevel(c.year_level);
-          row.dataset.searchKey = `${(c.block || "").toLowerCase()} ${(c.year_level || "").toLowerCase()}`;
+          row.dataset.semester = String(c.period_semester || c.semester || "")
+            .trim()
+            .toLowerCase();
+          row.dataset.searchKey = [
+            c.section_name,
+            c.block,
+            c.year_level,
+            c.academic_year,
+            c.period_semester,
+            currentProgramCode,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
           const academicYear = c.academic_year
             ? escapeHtml(c.academic_year)
             : "";
           const semester = c.period_semester
             ? escapeHtml(c.period_semester)
             : "";
-          const academicTerm =
-            academicYear && semester
-              ? `<strong>${academicYear}</strong><small>${semester}</small>`
-              : "<strong>Term not assigned</strong>";
+          const academicTerm = semester
+            ? `<strong>${semester}</strong>`
+            : "<strong>Term not assigned</strong>";
           const block = escapeHtml(c.block || "");
           const yearLevel = escapeHtml(
             normalizeManageYearLevel(c.year_level) || c.year_level || "",
@@ -3419,14 +3535,12 @@ document.addEventListener("DOMContentLoaded", () => {
               <td class="class-card-term">
                 <span class="class-card-icon"><i class="ph ph-calendar-blank" aria-hidden="true"></i></span>
                 <span class="class-card-info">
-                  <span class="class-card-info-label">Academic Term</span>
                   ${academicTerm}
                 </span>
               </td>
               <td class="class-card-assigned">
                 <span class="class-card-icon"><i class="ph ph-book-open" aria-hidden="true"></i></span>
                 <span class="class-card-info">
-                  <span class="class-card-info-label">Assigned</span>
                   <strong class="class-card-subject-count">Loading...</strong>
                   <small class="class-card-load-state">Subjects assigned</small>
                 </span>
@@ -3434,8 +3548,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <td class="class-card-enrolled">
                 <span class="class-card-icon"><i class="ph ph-users-three" aria-hidden="true"></i></span>
                 <span class="class-card-info">
-                  <span class="class-card-info-label">Enrolled</span>
                   <strong>${enrolledStudentCount}</strong>
+                  <small>Enrolled</small>
                 </span>
               </td>
               <td class="action-cell class-card-actions">
@@ -3581,10 +3695,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ========================= Manage Search (Subjects / Classes) =========================
   const manageSearchInput = document.getElementById("manage-search");
+  const manageClassSearchInput = document.getElementById("manage-class-search");
+  const manageClassSemesterFilter = document.getElementById(
+    "manage-class-semester-filter",
+  );
+  const manageClassSearchButton = document.getElementById(
+    "manage-class-search-button",
+  );
   function applyManageSearchFilter() {
-    const term = (manageSearchInput?.value || "").toLowerCase().trim();
     const subjectsVisible =
       document.getElementById("subjects")?.style.display !== "none";
+    const term = (
+      subjectsVisible
+        ? manageSearchInput?.value
+        : (manageClassSearchInput?.value ?? manageSearchInput?.value)
+    )
+      ?.toLowerCase()
+      .trim() || "";
     const targetTbody = subjectsVisible ? subjectsTableBody : classesTableBody;
     if (!targetTbody) return;
     if (
@@ -3604,13 +3731,21 @@ document.addEventListener("DOMContentLoaded", () => {
         row.style.display = "none";
         return;
       }
-      if (!term) {
-        row.style.display = "";
+      if (!subjectsVisible) {
+        const selectedSemester = (
+          manageClassSemesterFilter?.value || ""
+        )
+          .trim()
+          .toLowerCase();
+        const matchesSemester =
+          !selectedSemester || row.dataset.semester === selectedSemester;
+        const key = (row.dataset.searchKey || "").toLowerCase();
+        row.style.display =
+          matchesSemester && (!term || key.includes(term)) ? "" : "none";
         return;
       }
-      if (!subjectsVisible) {
-        const key = (row.dataset.searchKey || "").toLowerCase();
-        row.style.display = key.includes(term) ? "" : "none";
+      if (!term) {
+        row.style.display = "";
         return;
       }
       row.style.display = row.textContent.toLowerCase().includes(term)
@@ -3621,6 +3756,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   manageSearchInput?.addEventListener("input", (e) => {
     applyManageSearchFilter();
+  });
+  manageClassSearchInput?.addEventListener("input", applyManageSearchFilter);
+  manageClassSemesterFilter?.addEventListener(
+    "change",
+    applyManageSearchFilter,
+  );
+  manageClassSearchButton?.addEventListener("click", () => {
+    manageClassSearchInput?.focus();
   });
 
   // ========================= CLOSE CLASS MODAL =========================
@@ -4708,6 +4851,7 @@ document.addEventListener("DOMContentLoaded", () => {
               openArchiveModal(row, f, statusMenu);
             });
         });
+        applyManageSearchFilter();
       })
       .then(() => {
         if (facultyTbody && facultyTbody.rows.length === 0) {
@@ -9915,22 +10059,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const duration = formatRange(p.start_date, p.end_date);
 
       const states = {
+        archived: { label: "Archived", className: "archived" },
         setup: { label: "Dates needed", className: "setup" },
         expired: { label: "Expired", className: "expired" },
         scheduled: { label: "Scheduled", className: "scheduled" },
         open: { label: "Open", className: "open" },
         ready: { label: "Ready to open", className: "ready" },
       };
-      const state = states[p.status] || states.setup;
       const action = p.is_active ? "deactivate" : "set-active";
       const actionLabel = p.is_active ? "Close" : "Open";
       const actionDisabled =
-        !p.is_active && ["setup", "expired"].includes(p.status);
+        !p.is_active &&
+        (p.is_archived || ["setup", "expired"].includes(p.status));
       const actionTitle = actionDisabled
-        ? !p.start_date || !p.end_date
+        ? p.is_archived
+          ? "Restore this academic year before opening it"
+          : !p.start_date || !p.end_date
           ? "Set start and end dates before opening this period"
           : "Expired periods cannot be opened"
         : `${actionLabel} evaluation period`;
+      const periodState = p.is_archived
+        ? states.archived
+        : states[p.status] || states.setup;
       const statusHtml = `
         <div class="period-status-cell">
           <button type="button" class="period-status-btn ${p.is_active ? "active" : "inactive"}"
@@ -9938,7 +10088,7 @@ document.addEventListener("DOMContentLoaded", () => {
             aria-label="${actionLabel} evaluation for ${periodName}, ${ay}" ${actionDisabled ? "disabled" : ""}>
             ${actionLabel}
           </button>
-          <span class="period-state-badge ${state.className}">${state.label}</span>
+          <span class="period-state-badge ${periodState.className}">${periodState.label}</span>
         </div>`;
 
       tr.innerHTML = `
@@ -9961,7 +10111,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `
                 : ""
             }
-            <button type="button" class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="Edit Period" aria-label="Edit ${periodName}, ${ay}">
+            <button type="button" class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="${p.is_archived ? "Restore this period before editing" : "Edit Period"}" aria-label="Edit ${periodName}, ${ay}" ${p.is_archived ? "disabled" : ""}>
               <i class="ph ph-note-pencil"></i>
               <span class="period-action-label">Edit</span>
             </button>
@@ -10749,7 +10899,79 @@ document.addEventListener("DOMContentLoaded", function () {
     "academic-year-duplicate-message",
   );
   const tableBody = document.getElementById("academicYearTableBody");
+  const archivedTableBody = document.getElementById(
+    "archivedAcademicYearTableBody",
+  );
+  const archivedAcademicYearSection = document.querySelector(
+    "#academic-year-section .archived-academic-year-section",
+  );
+  const showArchivedAcademicYearsBtn = document.getElementById(
+    "showArchivedAcademicYearsBtn",
+  );
+  const archivedAcademicYearSearch = document.getElementById(
+    "archived-academic-year-search",
+  );
+  const closeArchivedAcademicYearBtn = document.querySelector(
+    "#academic-year-section .close-archived-academic-year-btn",
+  );
   let academicPeriods = [];
+
+  function showArchivedAcademicYearView() {
+    if (archivedAcademicYearSection) {
+      archivedAcademicYearSection.hidden = false;
+      archivedAcademicYearSection.style.display = "flex";
+    }
+    if (archivedAcademicYearSearch) {
+      archivedAcademicYearSearch.value = "";
+      filterArchivedAcademicYears();
+      requestAnimationFrame(() => archivedAcademicYearSearch.focus());
+    }
+  }
+
+  showArchivedAcademicYearsBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    showArchivedAcademicYearView();
+  });
+
+  function closeArchivedAcademicYearView() {
+    if (archivedAcademicYearSection) {
+      archivedAcademicYearSection.hidden = true;
+      archivedAcademicYearSection.style.display = "none";
+    }
+  }
+
+  closeArchivedAcademicYearBtn?.addEventListener(
+    "click",
+    closeArchivedAcademicYearView,
+  );
+
+  archivedAcademicYearSection?.addEventListener("click", (event) => {
+    if (event.target !== archivedAcademicYearSection) return;
+    closeArchivedAcademicYearView();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && archivedAcademicYearSection && !archivedAcademicYearSection.hidden) {
+      closeArchivedAcademicYearView();
+    }
+  });
+
+  function filterArchivedAcademicYears() {
+    if (!archivedAcademicYearSearch || !archivedTableBody) return;
+    const searchTerm = archivedAcademicYearSearch.value.trim().toLowerCase();
+    archivedTableBody
+      .querySelectorAll("tr[data-academic-year]")
+      .forEach((row) => {
+        const text =
+          `${row.dataset.academicYear || ""} ${row.dataset.semester || ""}`.toLowerCase();
+        row.style.display =
+          !searchTerm || text.includes(searchTerm) ? "" : "none";
+      });
+  }
+  archivedAcademicYearSearch?.addEventListener(
+    "input",
+    filterArchivedAcademicYears,
+  );
 
   function hideAcademicYearDuplicateMessage() {
     if (duplicateMessage) duplicateMessage.hidden = true;
@@ -10898,11 +11120,12 @@ document.addEventListener("DOMContentLoaded", function () {
     row.setAttribute("data-academic-year", period.ay);
     row.setAttribute("data-semester", period.semester);
     const isActive = Boolean(Number(period.is_active));
+    const isArchived = Boolean(Number(period.is_archived));
     row.innerHTML = `
       <td>${escapeAcademicHtml(period.ay)}</td>
       <td>${escapeAcademicHtml(period.semester)}</td>
-      <td><span class="status-badge ${isActive ? "active" : "inactive"}"><span class="status-dot" aria-hidden="true"></span>${isActive ? "Active" : "Inactive"}</span></td>
-      <td class="action-cell">
+      <td><span class="status-badge ${isArchived ? "inactive" : isActive ? "active" : "inactive"}"><span class="status-dot" aria-hidden="true"></span>${isArchived ? "Archived" : isActive ? "Active" : "Inactive"}</span></td>
+      ${!isArchived ? `<td class="action-cell">
         <div class="action-buttons">
           <button class="manage-period-btn" title="Manage Period" aria-label="Manage Period">
             <i class="ph ph-calendar-dots"></i>
@@ -10910,24 +11133,32 @@ document.addEventListener("DOMContentLoaded", function () {
           <button class="action-icon-btn edit-btn" title="Edit" aria-label="Edit Academic Year">
             <i class="ph ph-note-pencil"></i>
           </button>
-          <button class="action-icon-btn delete-btn" title="Delete" aria-label="Delete Academic Year">
-            <i class="ph ph-trash"></i>
+          <button class="action-icon-btn period-archive-btn" title="Archive" aria-label="Archive Academic Year">
+            <i class="ph ph-archive"></i>
           </button>
         </div>
-      </td>
+      </td>` : ""}
     `;
 
     const managePeriodBtn = row.querySelector(".manage-period-btn");
     const editBtn = row.querySelector(".edit-btn");
-    const deleteBtn = row.querySelector(".delete-btn");
+    const archiveBtn = row.querySelector(".period-archive-btn");
 
     managePeriodBtn?.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
+      if (isArchived) {
+        showNotification("Restore this academic year before managing its period.", "#64748b");
+        return;
+      }
       window.openManagePeriodsModal(period);
     });
 
     editBtn?.addEventListener("click", function () {
+      if (isArchived) {
+        showNotification("Restore this academic year before editing it.", "#64748b");
+        return;
+      }
       academicYearInput.value = period.ay || "";
       semesterSelect.value = period.semester || "";
       addAcademicYearModal.dataset.editingId = String(period.id || "");
@@ -10939,13 +11170,74 @@ document.addEventListener("DOMContentLoaded", function () {
       addAcademicYearModal.style.display = "flex";
     });
 
-    deleteBtn?.addEventListener("click", function () {
-      if (typeof window.openDeleteModal === "function") {
-        window.openDeleteModal(
-          "period",
-          `${period.ay} - ${period.semester}`,
-          row,
-        );
+    archiveBtn?.addEventListener("click", async function () {
+      const nextArchived = !isArchived;
+      const actionText = nextArchived ? "archive" : "restore";
+      if (nextArchived) {
+        window.openArchiveModal(row, period, null, "academicYear", async () => {
+          archiveBtn.disabled = true;
+          try {
+            const response = await fetch(
+              "../shared/periods_api.php?action=archive",
+              {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: period.id, archived: 1 }),
+              },
+            );
+            const result = await response.json().catch(() => null);
+            if (!response.ok || !result?.success) {
+              throw new Error(
+                result?.message || "Unable to archive this academic year.",
+              );
+            }
+            showNotification(result.message, "#087fd1", 4000);
+            await loadAcademicYearSection();
+          } finally {
+            archiveBtn.disabled = false;
+          }
+        });
+        return;
+      }
+
+      const warning = nextArchived
+        ? "Linked classes and evaluation records will remain associated with this period. Archived periods cannot be activated."
+        : "This period will become available for editing and activation again.";
+      const confirmed = await confirmPeriodAction({
+        opening: !nextArchived,
+        periodName: `${period.ay} - ${period.semester}`,
+        titleText: nextArchived
+          ? "Archive academic year?"
+          : "Restore academic year?",
+        messageText: warning,
+        confirmText: nextArchived ? "Archive Period" : "Restore Period",
+        iconClass: nextArchived ? "ph-archive-box" : "ph-arrow-counter-clockwise",
+        archiveAction: nextArchived,
+      });
+      if (!confirmed) {
+        return;
+      }
+
+      archiveBtn.disabled = true;
+      try {
+        const response = await fetch("../shared/periods_api.php?action=archive", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: period.id, archived: nextArchived ? 1 : 0 }),
+        });
+        const result = await response.json().catch(() => null);
+        if (!response.ok || !result?.success) {
+          throw new Error(result?.message || `Unable to ${actionText} this academic year.`);
+        }
+        showNotification(result.message, "#087fd1", 4000);
+        await loadAcademicYearSection();
+      } catch (error) {
+        console.error(`Failed to ${actionText} academic year:`, error);
+        showNotification(error.message || `Unable to ${actionText} this academic year.`, "#f44336", 5000);
+      } finally {
+        archiveBtn.disabled = false;
       }
     });
 
@@ -10967,10 +11259,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!filterSelect) return;
 
     const academicYears = new Set();
-    academicPeriods.forEach((period) => {
-      const ay = String(period?.ay ?? "").trim();
-      if (ay) academicYears.add(ay);
-    });
+    academicPeriods
+      .filter((period) => !period.is_archived)
+      .forEach((period) => {
+        const ay = String(period?.ay ?? "").trim();
+        if (ay) academicYears.add(ay);
+      });
 
     const previousValue = String(filterSelect.value || "").trim();
     filterSelect.innerHTML = '<option value="">Academic Year</option>';
@@ -11035,17 +11329,35 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await res.json().catch(() => null);
       academicPeriods =
         data && data.success && Array.isArray(data.periods) ? data.periods : [];
+      const activePeriods = academicPeriods.filter(
+        (period) => !period.is_archived,
+      );
+      const archivedPeriods = academicPeriods.filter(
+        (period) => Boolean(period.is_archived),
+      );
 
-      if (academicPeriods.length === 0) {
+      if (activePeriods.length === 0) {
         updateAcademicYearFilter();
         showAcademicYearEmpty();
-        return;
+      } else {
+        tableBody.innerHTML = "";
+        activePeriods.forEach((period) =>
+          tableBody.appendChild(renderAcademicYearRow(period)),
+        );
       }
 
-      tableBody.innerHTML = "";
-      academicPeriods.forEach((period) =>
-        tableBody.appendChild(renderAcademicYearRow(period)),
-      );
+      if (archivedTableBody) {
+        archivedTableBody.innerHTML = "";
+        if (archivedPeriods.length === 0) {
+          archivedTableBody.innerHTML =
+          '<tr><td colspan="3" class="admin-empty-state">No archived academic years.</td></tr>';
+        } else {
+          archivedPeriods.forEach((period) =>
+            archivedTableBody.appendChild(renderAcademicYearRow(period)),
+          );
+        }
+        filterArchivedAcademicYears();
+      }
       updateAcademicYearFilter();
       filterTable();
     } catch (err) {

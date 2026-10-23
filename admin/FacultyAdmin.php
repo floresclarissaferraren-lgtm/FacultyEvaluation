@@ -555,6 +555,21 @@ $adminOverviewNow = new DateTimeImmutable(
       <p id="manageContentSubtitle" class="manage-content-subtitle"></p>
     </div>
     <div class="manage-content-actions">
+      <div class="search-wrapper manage-class-search-wrapper">
+        <button type="button" class="search-btn" id="manage-class-search-button" aria-label="Focus class search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        </button>
+        <input type="search" id="manage-class-search" placeholder="Search class sections..." aria-label="Search class sections">
+      </div>
+      <div class="program-filter-wrapper manage-class-semester-filter-wrapper">
+        <i class="ph ph-calendar-blank" aria-hidden="true"></i>
+        <select id="manage-class-semester-filter" class="program-dropdown" aria-label="Filter classes by semester">
+          <option value="">All Semesters</option>
+          <option value="1st Semester">1st Semester</option>
+          <option value="2nd Semester">2nd Semester</option>
+          <option value="Summer">Summer</option>
+        </select>
+      </div>
       <div class="subject-control-box manage-subject-control-box">
         <div class="search-wrapper">
           <i class="ph ph-magnifying-glass manage-subject-search-icon" aria-hidden="true"></i>
@@ -799,7 +814,7 @@ $adminOverviewNow = new DateTimeImmutable(
     <div class="faculty-list-toolbar">
       <div class="faculty-list-title">
         <h1>Faculty List</h1>
-        <span class="faculty-title-count" aria-live="polite">(Total Faculty: <strong id="facultyMemberCount"><?php echo (int) $facultyStats[
+        <span class="faculty-title-count" aria-live="polite">(<span class="faculty-count-dot" aria-hidden="true"></span> Total Faculty: <strong id="facultyMemberCount"><?php echo (int) $facultyStats[
             "total_faculty"
         ]; ?></strong>)</span>
       </div>
@@ -1374,6 +1389,9 @@ $adminOverviewNow = new DateTimeImmutable(
         <button class="add-program-btn button-gradient" id="addAcademicYearBtn">
           <i class="ph ph-plus"></i> Add Academic Year
         </button>
+        <button type="button" id="showArchivedAcademicYearsBtn" class="show-archived-academic-year-btn">
+          <i class="ph ph-archive" aria-hidden="true"></i> View Archived
+        </button>
       </div>
     </div>
   </div>
@@ -1400,6 +1418,41 @@ $adminOverviewNow = new DateTimeImmutable(
       </table>
     </div>
   </div>
+
+    <div class="archived-academic-year-section" hidden>
+      <div class="archived-academic-year-dialog" role="dialog" aria-modal="true" aria-labelledby="archivedAcademicYearTitle">
+        <div class="archived-academic-year-header">
+          <div>
+            <h3 id="archivedAcademicYearTitle">Archived Academic Years</h3>
+          </div>
+          <div class="archived-academic-year-header-actions">
+            <div class="archived-academic-year-search">
+              <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+              <input type="search" id="archived-academic-year-search" placeholder="Search Academic year">
+            </div>
+            <button type="button" class="close-archived-academic-year-btn" aria-label="Close archived academic years" title="Close">
+              <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="table-wrapper academic-year-results">
+          <div class="table-scroll-container">
+            <table class="academic-year-table archived-academic-year-table">
+              <thead>
+                <tr>
+                  <th>Academic Year</th>
+                  <th>Semester</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="archivedAcademicYearTableBody">
+                <tr><td colspan="3" class="admin-empty-state">No archived academic years.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

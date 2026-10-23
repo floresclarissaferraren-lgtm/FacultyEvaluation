@@ -28,6 +28,7 @@ function ensurePeriodTables(mysqli $conn): void
             start_date DATE NULL,
             end_date DATE NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 0,
+            is_archived TINYINT(1) NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             KEY idx_active (is_active)
@@ -37,6 +38,11 @@ function ensurePeriodTables(mysqli $conn): void
     // Modify existing columns to allow NULL
     $conn->query("ALTER TABLE evaluation_periods MODIFY start_date DATE NULL");
     $conn->query("ALTER TABLE evaluation_periods MODIFY end_date DATE NULL");
+    if (!tableColumnExists($conn, "evaluation_periods", "is_archived")) {
+        $conn->query(
+            "ALTER TABLE evaluation_periods ADD COLUMN is_archived TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active",
+        );
+    }
 
     $conn->query("
         CREATE TABLE IF NOT EXISTS evaluation_settings (
@@ -346,7 +352,7 @@ requireAdmin();
 
 if ($action === "list") {
     $res = $conn->query(
-        "SELECT id, ay, semester, start_date, end_date, is_active FROM evaluation_periods ORDER BY created_at DESC, id DESC",
+        "SELECT id, ay, semester, start_date, end_date, is_active, is_archived FROM evaluation_periods ORDER BY created_at DESC, id DESC",
     );
     $periods = [];
     if ($res) {
@@ -354,7 +360,9 @@ if ($action === "list") {
         while ($row = $res->fetch_assoc()) {
             $startDate = $row["start_date"] ?? null;
             $endDate = $row["end_date"] ?? null;
-            if (empty($startDate) || empty($endDate)) {
+            if (intval($row["is_archived"]) === 1) {
+                $status = "archived";
+            } elseif (empty($startDate) || empty($endDate)) {
                 $status = "setup";
             } elseif ($endDate < $today) {
                 $status = "expired";
@@ -373,6 +381,7 @@ if ($action === "list") {
                 "start_date" => $startDate,
                 "end_date" => $endDate,
                 "is_active" => intval($row["is_active"]) === 1,
+                "is_archived" => intval($row["is_archived"]) === 1,
                 "status" => $status,
             ];
         }
@@ -600,6 +609,25 @@ if ($action === "update") {
         exit();
     }
 
+    $archivedStmt = $conn->prepare(
+        "SELECT is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
+    );
+    $archivedStmt->bind_param("i", $id);
+    $archivedStmt->execute();
+    $existingPeriod = $archivedStmt->get_result()->fetch_assoc();
+    $archivedStmt->close();
+    if (!$existingPeriod) {
+        echo json_encode(["success" => false, "message" => "Period not found"]);
+        exit();
+    }
+    if (intval($existingPeriod["is_archived"]) === 1) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Restore this academic year period before editing it.",
+        ]);
+        exit();
+    }
+
     if (!preg_match('/^\d{4}-\d{4}$/', $ay)) {
         echo json_encode([
             "success" => false,
@@ -625,7 +653,7 @@ if ($action === "update") {
     // If dates are omitted, use the saved range for the conflict check.
     if ($startDate === "" || $endDate === "") {
         $existingStmt = $conn->prepare(
-            "SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1",
+            "SELECT start_date, end_date, is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
         );
         $existingStmt->bind_param("i", $id);
         $existingStmt->execute();
@@ -693,6 +721,59 @@ if ($action === "update") {
     exit();
 }
 
+if ($action === "archive") {
+    $id = intval($payload["id"] ?? 0);
+    $archived = intval($payload["archived"] ?? 1) === 1 ? 1 : 0;
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid id"]);
+        exit();
+    }
+
+    $periodStmt = $conn->prepare(
+        "SELECT p.is_active, es.active_period_id
+         FROM evaluation_periods p
+         LEFT JOIN evaluation_settings es ON es.id = 1
+         WHERE p.id = ? LIMIT 1",
+    );
+    $periodStmt->bind_param("i", $id);
+    $periodStmt->execute();
+    $period = $periodStmt->get_result()->fetch_assoc();
+    $periodStmt->close();
+    if (!$period) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Academic year period not found.",
+        ]);
+        exit();
+    }
+    if (
+        $archived &&
+        (intval($period["is_active"]) === 1 ||
+            intval($period["active_period_id"] ?? 0) === $id)
+    ) {
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                "Close the active evaluation period before archiving it.",
+        ]);
+        exit();
+    }
+
+    $archiveStmt = $conn->prepare(
+        "UPDATE evaluation_periods SET is_archived = ? WHERE id = ?",
+    );
+    $archiveStmt->bind_param("ii", $archived, $id);
+    $ok = $archiveStmt->execute();
+    $archiveStmt->close();
+    echo json_encode([
+        "success" => $ok,
+        "message" => $archived
+            ? "Academic year period archived."
+            : "Academic year period restored.",
+    ]);
+    exit();
+}
+
 if ($action === "delete") {
     $id = intval($payload["id"] ?? 0);
     if ($id <= 0) {
@@ -700,26 +781,100 @@ if ($action === "delete") {
         exit();
     }
 
-    $settingsRes = $conn->query(
-        "SELECT active_period_id FROM evaluation_settings WHERE id = 1 LIMIT 1",
-    );
-    $settings = $settingsRes ? $settingsRes->fetch_assoc() : null;
-    $activePeriodId = $settings
-        ? intval($settings["active_period_id"] ?? 0)
-        : 0;
-
-    $stmt = $conn->prepare("DELETE FROM evaluation_periods WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $ok = $stmt->execute();
-    $stmt->close();
-
-    if ($ok && $activePeriodId === $id) {
-        $conn->query(
-            "UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1",
+    $transactionStarted = false;
+    try {
+        $conn->begin_transaction();
+        $transactionStarted = true;
+        $periodStmt = $conn->prepare(
+            "SELECT id FROM evaluation_periods WHERE id = ? FOR UPDATE",
         );
-    }
+        $periodStmt->bind_param("i", $id);
+        $periodStmt->execute();
+        $period = $periodStmt->get_result()->fetch_assoc();
+        $periodStmt->close();
 
-    echo json_encode(["success" => $ok]);
+        if (!$period) {
+            $conn->rollback();
+            echo json_encode([
+                "success" => false,
+                "message" => "Academic year period not found.",
+            ]);
+            exit();
+        }
+
+        $classCount = 0;
+        if (tableColumnExists($conn, "add_classes", "period_id")) {
+            $classStmt = $conn->prepare(
+                "SELECT COUNT(*) AS count FROM add_classes WHERE period_id = ?",
+            );
+            $classStmt->bind_param("i", $id);
+            $classStmt->execute();
+            $classCount = intval(
+                $classStmt->get_result()->fetch_assoc()["count"] ?? 0,
+            );
+            $classStmt->close();
+        }
+
+        $evaluationCount = 0;
+        if (tableColumnExists($conn, "evaluations", "period_id")) {
+            $evaluationStmt = $conn->prepare(
+                "SELECT COUNT(*) AS count FROM evaluations WHERE period_id = ?",
+            );
+            $evaluationStmt->bind_param("i", $id);
+            $evaluationStmt->execute();
+            $evaluationCount = intval(
+                $evaluationStmt->get_result()->fetch_assoc()["count"] ?? 0,
+            );
+            $evaluationStmt->close();
+        }
+
+        if ($classCount > 0 || $evaluationCount > 0) {
+            $conn->rollback();
+            $transactionStarted = false;
+            echo json_encode([
+                "success" => false,
+                "message" =>
+                    "This academic year period has linked classes or evaluation records. Archive it to preserve its history.",
+            ]);
+            exit();
+        }
+
+        $settingsStmt = $conn->prepare(
+            "UPDATE evaluation_settings
+             SET evaluation_open = 0, active_period_id = NULL
+             WHERE id = 1 AND active_period_id = ?",
+        );
+        $settingsStmt->bind_param("i", $id);
+        $settingsStmt->execute();
+        $settingsStmt->close();
+
+        $deleteStmt = $conn->prepare(
+            "DELETE FROM evaluation_periods WHERE id = ?",
+        );
+        $deleteStmt->bind_param("i", $id);
+        $deleteStmt->execute();
+        $deleted = $deleteStmt->affected_rows === 1;
+        $deleteStmt->close();
+
+        if (!$deleted) {
+            throw new RuntimeException("Academic year period was not deleted.");
+        }
+
+        $conn->commit();
+        $transactionStarted = false;
+        echo json_encode(["success" => true]);
+    } catch (Throwable $error) {
+        if ($transactionStarted) {
+            $conn->rollback();
+        }
+        error_log("Failed to delete academic year period {$id}: " . $error->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                "Unable to delete this academic year period. Please try again or contact support.",
+        ]);
+    }
     exit();
 }
 
@@ -731,7 +886,7 @@ if ($action === "set_active") {
     }
 
     $periodStmt = $conn->prepare(
-        "SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1",
+        "SELECT start_date, end_date, is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
     );
     $periodStmt->bind_param("i", $id);
     $periodStmt->execute();
@@ -740,6 +895,13 @@ if ($action === "set_active") {
 
     if (!$period) {
         echo json_encode(["success" => false, "message" => "Period not found"]);
+        exit();
+    }
+    if (intval($period["is_archived"] ?? 0) === 1) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Archived periods cannot be activated. Restore it first.",
+        ]);
         exit();
     }
 

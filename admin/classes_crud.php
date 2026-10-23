@@ -537,8 +537,19 @@ if ($action === "get") {
             ) AS enrolled_students
         FROM add_classes ac
         LEFT JOIN add_programs p ON p.id = ac.program_id
+        LEFT JOIN evaluation_settings es ON es.id = 1
         LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
         WHERE ac.program_id = ?
+            AND (
+                COALESCE(es.evaluation_open, 0) = 0
+                OR (
+                    es.evaluation_open = 1
+                    AND es.active_period_id = ac.period_id
+                    AND ep.is_active = 1
+                    AND ep.start_date <= CURRENT_DATE
+                    AND ep.end_date >= CURRENT_DATE
+                )
+            )
         ORDER BY ac.year_level ASC, ep.ay DESC, ac.semester ASC, ac.block ASC
     ");
 
