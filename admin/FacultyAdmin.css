@@ -5443,6 +5443,14 @@ table.evaluation-table .view-btn:hover {
   box-shadow: inset 0 0 0 1px var(--accent-300);
 }
 
+.calendar-day.disabled-before-start,
+.calendar-day.today.disabled-before-start {
+  background: transparent;
+  color: #d1d5db;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .period-tooltip {
   position: absolute;
   top: 100%;
@@ -5784,6 +5792,16 @@ table.evaluation-table .view-btn:hover {
   border-color: #93c5fd;
   background: #eff6ff;
   color: #0765a6;
+}
+
+#academic-year-section .show-archived-academic-year-btn,
+#academic-year-section .show-archived-academic-year-btn:hover,
+#academic-year-section .show-archived-academic-year-btn:focus,
+#academic-year-section .show-archived-academic-year-btn:focus-visible,
+#academic-year-section .show-archived-academic-year-btn:active {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 @media (max-width: 760px) {
@@ -28968,6 +28986,86 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   text-align: center !important;
 }
 
+#viewFacultySubjectsModal .faculty-program-code {
+  color: #000 !important;
+}
+
+/* Match Select Faculty Subjects to the Add Student modal styling. */
+#facultySubjectSelectionModal .faculty-subject-selection-content {
+  width: min(900px, 90vw);
+  max-width: 900px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+#facultySubjectSelectionModal .modal-header {
+  align-items: center;
+  background: #fff !important;
+  color: #1e3a5f !important;
+  border-bottom: 1px solid #dbeafe;
+}
+
+#facultySubjectSelectionModal .modal-header h3 {
+  color: #1e3a5f !important;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+#facultySubjectSelectionModal .modal-header .close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #cbd5e1 !important;
+}
+
+#facultySubjectSelectionModal .modal-header .close-btn:hover {
+  border: 0;
+  background: transparent;
+  color: #1d4ed8 !important;
+}
+
+#facultySubjectSelectionModal .modal-body {
+  background: #fff;
+}
+
+#facultySubjectSelectionModal .modal-body .form-row label {
+  color: #6b7280;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.send-reports-btn.no-evaluations {
+  opacity: 0.48;
+}
+
+.send-reports-btn.no-evaluations:hover {
+  opacity: 0.72;
+}
+
+#facultySubjectSelectionModal .modal-body .form-row input,
+#facultySubjectSelectionModal .modal-body .form-row select {
+  height: 36px;
+  min-height: 36px;
+  border-color: #d1d5db;
+  background-color: #f9fafb;
+  color: #4b5563;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  #facultySubjectSelectionModal .faculty-subject-selection-content {
+    width: 95vw;
+    max-width: 95vw;
+  }
+}
+
 #manage-section.manage-subjects-view #subjects .subjects-table .action-buttons {
   justify-content: center;
 }
@@ -34219,6 +34317,31 @@ body:has(> main > #dashboard-section.admin-section-loading)
   box-shadow: 0 4px 12px rgba(30, 64, 110, 0.07);
 }
 
+/* The class-list semester filter is not used in the Subjects view. */
+#manage-section.manage-subjects-view .manage-class-semester-filter-wrapper {
+  display: none !important;
+}
+
+/* Keep the subjects empty state as one centered horizontal table row on mobile. */
+#manage-section.manage-subjects-view
+  #subjects
+  .subjects-table
+  tbody
+  tr.table-empty-row {
+  display: table-row !important;
+}
+
+#manage-section.manage-subjects-view
+  #subjects
+  .subjects-table
+  tbody
+  td.table-empty-message {
+  display: table-cell !important;
+  width: 100% !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
 #manage-section .manage-content-actions > .manage-subject-control-box {
   display: none !important;
 }
@@ -36986,16 +37109,16 @@ main > .section,
 }
 
 #manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn i {
-  color: #666 !important;
-  -webkit-text-fill-color: #666 !important;
+  color: #2459c6 !important;
+  -webkit-text-fill-color: #2459c6 !important;
 }
 
 #manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:hover i,
 #manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus i,
 #manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:focus-visible i,
 #manage-section.manage-classes-view #classes .class-card-actions .view-subjects-btn:active i {
-  color: #1d4ed8 !important;
-  -webkit-text-fill-color: #1d4ed8 !important;
+  color: #2459c6 !important;
+  -webkit-text-fill-color: #2459c6 !important;
 }
 
 #manage-section.manage-classes-view #classes .class-card-actions .edit-btn:hover,
@@ -37304,6 +37427,25 @@ main > .section,
   background: rgba(255, 255, 255, 0.18) !important;
   box-shadow: none !important;
   color: #fff !important;
+  text-transform: uppercase;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-term,
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-assigned,
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-enrolled {
+  border-bottom: 0 !important;
 }
 
 @media (max-width: 480px) {
@@ -37566,6 +37708,20 @@ main > .section,
 .academic-year-table .period-archive-btn:active {
   transform: none !important;
   transition: none !important;
+}
+
+#academic-year-section .academic-year-table .period-archive-btn,
+#academic-year-section .academic-year-table .period-archive-btn:hover,
+#academic-year-section .academic-year-table .period-archive-btn:focus,
+#academic-year-section .academic-year-table .period-archive-btn:focus-visible,
+#academic-year-section .academic-year-table .period-archive-btn:active,
+#academic-year-section .academic-year-table .period-archive-btn i,
+#academic-year-section .academic-year-table .period-archive-btn:hover i,
+#academic-year-section .academic-year-table .period-archive-btn:focus-visible i,
+#academic-year-section .academic-year-table .period-archive-btn:active i {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 /* Keep archive confirmation button interactions consistently orange. */

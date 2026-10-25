@@ -352,7 +352,15 @@ requireAdmin();
 
 if ($action === "list") {
     $res = $conn->query(
-        "SELECT id, ay, semester, start_date, end_date, is_active, is_archived FROM evaluation_periods ORDER BY created_at DESC, id DESC",
+        "SELECT id, ay, semester, start_date, end_date, is_active, is_archived,
+                (SELECT COUNT(*) FROM evaluations e
+                 WHERE e.period_id = evaluation_periods.id
+                    OR (e.period_id IS NULL
+                        AND evaluation_periods.start_date IS NOT NULL
+                        AND evaluation_periods.end_date IS NOT NULL
+                        AND DATE(e.created_at) BETWEEN evaluation_periods.start_date AND evaluation_periods.end_date)
+                ) AS evaluation_count
+         FROM evaluation_periods ORDER BY created_at DESC, id DESC",
     );
     $periods = [];
     if ($res) {
@@ -383,6 +391,7 @@ if ($action === "list") {
                 "is_active" => intval($row["is_active"]) === 1,
                 "is_archived" => intval($row["is_archived"]) === 1,
                 "status" => $status,
+                "evaluation_count" => intval($row["evaluation_count"] ?? 0),
             ];
         }
     }
@@ -436,6 +445,33 @@ if ($action === "send_reports") {
             "success" => false,
             "message" =>
                 "Only a closed evaluation period can have its reports sent.",
+        ]);
+        exit();
+    }
+
+    $evaluationCountStmt = $conn->prepare("
+        SELECT COUNT(*) AS total
+        FROM evaluations e
+        WHERE e.period_id = ?
+           OR (e.period_id IS NULL AND EXISTS (
+                SELECT 1 FROM evaluation_periods ep
+                WHERE ep.id = ?
+                  AND ep.start_date IS NOT NULL
+                  AND ep.end_date IS NOT NULL
+                  AND DATE(e.created_at) BETWEEN ep.start_date AND ep.end_date
+           ))
+    ");
+    $evaluationCountStmt->bind_param("ii", $periodId, $periodId);
+    $evaluationCountStmt->execute();
+    $evaluationCount = intval(
+        $evaluationCountStmt->get_result()->fetch_assoc()["total"] ?? 0,
+    );
+    $evaluationCountStmt->close();
+    if ($evaluationCount === 0) {
+        http_response_code(409);
+        echo json_encode([
+            "success" => false,
+            "message" => "Evaluation Period not started: No evaluations have been submitted yet.",
         ]);
         exit();
     }

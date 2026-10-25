@@ -120,6 +120,9 @@ if ($subjectStmt) {
   ) ?>">
   <title>Faculty Evaluation System</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="FacultyInstructor.css?v=<?= time() ?>&fix=<?= rand(
     1000,
     9999,
@@ -165,7 +168,7 @@ if ($subjectStmt) {
           ?></span>
         </div>
         <div class="dropdown-user-details">
-          <div class="dropdown-user-name"><?php echo htmlspecialchars(
+          <div class="dropdown-user-name" style="font-family: Poppins, sans-serif; font-weight: 900 !important;"><?php echo htmlspecialchars(
               $faculty_name,
           ); ?></div>
           <div class="dropdown-user-email"><?php echo htmlspecialchars(
@@ -179,6 +182,9 @@ if ($subjectStmt) {
       </a>
       <a href="#" onclick="showProfile(event)">
         <i class="ph ph-user"></i> Profile
+      </a>
+      <a href="#" onclick="showEvaluationHistory(event)">
+        <i class="ph ph-clock-counter-clockwise"></i> Evaluation History
       </a>
       <hr class="dropdown-divider">
       <a href="#" class="logout-link" onclick="logout(event)">
@@ -216,7 +222,7 @@ if ($subjectStmt) {
     <div class="welcome-content">
       <div class="welcome-right">
         <div class="welcome-header-inline">
-          <h1 class="student-name-title">Welcome, <?php echo htmlspecialchars(
+          <h1 class="student-name-title" style="font-family: Poppins, sans-serif; font-weight: 900;">Welcome, <?php echo htmlspecialchars(
               $faculty_name,
           ); ?>!</h1>
           <!-- Debug info (remove this after fixing) -->

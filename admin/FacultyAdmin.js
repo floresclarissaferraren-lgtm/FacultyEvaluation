@@ -2812,7 +2812,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (total === 0) {
       subjectsTableBody.innerHTML =
-        '<tr class="table-empty-row"><td colspan="5" class="admin-empty-state table-empty-message">No Subject found for this program</td></tr>';
+        '<tr class="table-empty-row"><td colspan="5" class="admin-empty-state table-empty-message">No subjects found for this program</td></tr>';
       renderManageSubjectsPagination(0);
       return;
     }
@@ -10057,6 +10057,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const ay = escapeHtml(p.ay);
       const duration = formatRange(p.start_date, p.end_date);
+      const evaluationCount = Number(p.evaluation_count || 0);
+      const noEvaluations = evaluationCount === 0;
 
       const states = {
         archived: { label: "Archived", className: "archived" },
@@ -10105,7 +10107,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ${
               !p.is_active
                 ? `
-              <button type="button" class="action-icon-btn send-reports-btn" data-id="${p.id}" title="Generate and send both faculty report PDFs" aria-label="Send reports for ${periodName}, ${ay}">
+              <button type="button" class="action-icon-btn send-reports-btn${noEvaluations ? " no-evaluations" : ""}" data-id="${p.id}" data-evaluation-count="${evaluationCount}" title="${noEvaluations ? "Evaluation Period not started: No evaluations have been submitted yet." : "Generate and send both faculty report PDFs"}" aria-label="Send reports for ${periodName}, ${ay}" aria-disabled="${noEvaluations ? "true" : "false"}">
                 <i class="ph ph-envelope-simple"></i>
               </button>
             `
@@ -10303,6 +10305,15 @@ document.addEventListener("DOMContentLoaded", () => {
         (item) => Number(item.id) === id,
       );
       if (!id || !period) return;
+
+      if (Number(period.evaluation_count || 0) === 0) {
+        showNotification(
+          "Evaluation Period not started: No evaluations have been submitted yet.",
+          "#f59e0b",
+          7000,
+        );
+        return;
+      }
 
       const periodName = `${period.semester} ${period.ay}`;
       if (
@@ -10679,6 +10690,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const isPastPeriodDate =
         (targetId === "period-start" || targetId === "period-end") &&
         isPastDate(formattedDate);
+      const startDate = document.getElementById("period-start")?.value || "";
+      const isBeforeOrSameAsStart =
+        targetId === "period-end" &&
+        startDate !== "" &&
+        formattedDate <= startDate;
 
       // Highlight today
       if (
@@ -10689,8 +10705,13 @@ document.addEventListener("DOMContentLoaded", () => {
         dayElement.classList.add("today");
       }
 
-      if (isPastPeriodDate) {
+      if (isPastPeriodDate || isBeforeOrSameAsStart) {
         dayElement.classList.add("disabled");
+        if (isBeforeOrSameAsStart) {
+          dayElement.classList.add("disabled-before-start");
+          dayElement.title = "End date must be after the start date";
+          dayElement.setAttribute("aria-disabled", "true");
+        }
         grid.appendChild(dayElement);
         continue;
       }
@@ -10698,6 +10719,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Add click event
       dayElement.addEventListener("click", () => {
         document.getElementById(targetId).value = formattedDate;
+        if (targetId === "period-start") {
+          const endInput = document.getElementById("period-end");
+          if (endInput?.value && endInput.value <= formattedDate) {
+            endInput.value = "";
+          }
+        }
         calendar.style.display = "none";
         calendar.classList.remove("active");
       });

@@ -54,6 +54,9 @@ $conn->close();
       "UTF-8",
   ) ?>">
   <title>Faculty Evaluation System - Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="FacultyUser.css?v=<?= time() ?>">
   <link rel="stylesheet" href="../shared/assets/unified_notifications.css?v=<?= time() ?>">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
@@ -109,7 +112,7 @@ $conn->close();
           ?></span>
         </div>
         <div class="dropdown-user-details">
-          <span class="dropdown-user-name"><?php echo htmlspecialchars(
+          <span class="dropdown-user-name" style="font-family: Poppins, sans-serif; font-weight: 900 !important;"><?php echo htmlspecialchars(
               $studentName ?: "Student",
           ); ?></span>
           <span class="dropdown-user-email"><?php
@@ -254,7 +257,7 @@ $conn->close();
     <div class="welcome-content">
       <div class="welcome-right">
         <div class="welcome-header-inline">
-          <h1 class="student-name-title" style="font-family: Arial, Helvetica, sans-serif; font-weight: 800;">Welcome, <?php echo htmlspecialchars(
+          <h1 class="student-name-title" style="font-family: Poppins, sans-serif; font-weight: 900;">Welcome, <?php echo htmlspecialchars(
               $studentName ?: "Student",
           ); ?>!</h1>
           <span id="studentAcademicPeriod" class="welcome-period-subtitle" hidden>

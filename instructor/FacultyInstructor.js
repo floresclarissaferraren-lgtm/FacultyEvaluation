@@ -955,20 +955,21 @@ async function loadFacultyReportPeriods() {
   }
 }
 
-function showEvaluationReport() {
+function showEvaluationReport(periodId = null) {
+  const reportPeriodId = Number(periodId || selectedFacultyReportPeriod || 0);
   if (isFacultyInactive()) {
     alert(
       "Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.",
     );
     return;
   }
-  if (isEvaluationOngoing()) {
+  if (!periodId && isEvaluationOngoing()) {
     alert(
       "Evaluation results are unavailable while the evaluation process is still ongoing.",
     );
     return;
   }
-  if (!selectedFacultyReportPeriod) {
+  if (!reportPeriodId) {
     alert("There are no closed evaluation period results available yet.");
     return;
   }
@@ -1024,7 +1025,7 @@ function showEvaluationReport() {
     body: JSON.stringify({
       faculty_id: facultyId,
       program_filter: selectedProgram !== "all" ? selectedProgram : "",
-      period_id: selectedFacultyReportPeriod,
+      period_id: reportPeriodId,
     }),
   })
     .then(async (response) => {
@@ -1185,7 +1186,7 @@ function showEvaluationReport() {
         data.feedback_comments || [],
       );
       reportModal.dataset.evaluationPeriod = evaluationPeriod;
-      reportModal.dataset.periodId = String(selectedFacultyReportPeriod);
+      reportModal.dataset.periodId = String(reportPeriodId);
       reportModal.dataset.academicYear = data.period?.academic_year || "";
       reportModal.dataset.semester = data.period?.semester || "";
       reportModal.dataset.categoryTotals = JSON.stringify(categoryTotals);
@@ -1329,6 +1330,120 @@ function closeEvaluationReport() {
 }
 
 // Add event listener for password form back button
+function showEvaluationHistoryLegacy(event) {
+  event?.preventDefault();
+  document.getElementById("dropdownMenu").style.display = "none";
+  let modal = document.getElementById("evaluationHistoryModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "evaluationHistoryModal";
+    modal.className = "evaluation-history-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.innerHTML = `<section class="evaluation-history-panel" aria-labelledby="evaluationHistoryTitle">
+      <header class="evaluation-history-header"><div><h2 id="evaluationHistoryTitle">Evaluation History</h2><p>Your past evaluation reports</p></div>
+      <button type="button" class="evaluation-history-close" aria-label="Close" onclick="closeEvaluationHistory()"><i class="ph ph-x"></i></button></header>
+      <div id="evaluationHistoryList" class="evaluation-history-list" aria-live="polite"></div></section>`;
+    document.body.appendChild(modal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeEvaluationHistory(); });
+  }
+  modal.style.display = "flex";
+  document.body.classList.add("modal-open");
+  const container = document.getElementById("evaluationHistoryList");
+  container.innerHTML = '<p class="evaluation-history-state"><i class="ph ph-circle-notch"></i> Loading reports...</p>';
+  fetch("get_uploaded_reports.php", { credentials: "same-origin" })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) throw new Error(data.message || "Unable to load reports");
+      if (!data.reports?.length) {
+        container.innerHTML = '<p class="evaluation-history-state">No past evaluation reports are available yet.</p>';
+        return;
+      }
+      container.innerHTML = data.reports.map((report) => `<article class="evaluation-history-item">
+        <div class="evaluation-history-file"><i class="ph ph-file-pdf"></i></div>
+        <div class="evaluation-history-details"><strong>${escapeHtml(report.academic_year)} · ${escapeHtml(report.semester)}</strong><span>${escapeHtml(report.file_name)}</span></div>
+        <a class="evaluation-history-download" href="../shared/download_report.php?id=${encodeURIComponent(report.id)}"><i class="ph ph-download-simple"></i><span>Download</span></a>
+      </article>`).join("");
+    })
+    .catch((error) => {
+      console.error("Unable to load evaluation history:", error);
+      container.innerHTML = '<p class="evaluation-history-state error">Could not load reports. Please try again.</p>';
+    });
+}
+
+function showEvaluationHistory(event) {
+  event?.preventDefault();
+  document.getElementById("dropdownMenu").style.display = "none";
+  let modal = document.getElementById("evaluationHistoryModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "evaluationHistoryModal";
+    modal.className = "evaluation-history-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    document.body.appendChild(modal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeEvaluationHistory(); });
+  }
+  modal.innerHTML = `<section class="evaluation-history-panel" aria-labelledby="evaluationHistoryTitle">
+    <header class="evaluation-history-header"><div><h2 id="evaluationHistoryTitle">Evaluation History</h2><p>Choose a past period to view or download its reports.</p></div>
+    <button type="button" class="evaluation-history-close" aria-label="Close" onclick="closeEvaluationHistory()"><i class="ph ph-x"></i></button></header>
+    <div class="evaluation-history-filters"><label>Academic year<select id="historyAcademicYear"><option value="">All academic years</option></select></label>
+    <label>Semester<select id="historySemester"><option value="">All semesters</option></select></label></div>
+    <div id="evaluationHistoryList" class="evaluation-history-list" aria-live="polite"></div></section>`;
+  modal.style.display = "flex";
+  document.body.classList.add("modal-open");
+  const container = document.getElementById("evaluationHistoryList");
+  container.innerHTML = '<p class="evaluation-history-state">Loading evaluation periods...</p>';
+  Promise.all([
+    fetch("../shared/periods_api.php?action=faculty_periods", { credentials: "same-origin", cache: "no-store" }).then((r) => r.json()),
+    fetch("get_uploaded_reports.php", { credentials: "same-origin" }).then((r) => r.json()),
+  ]).then(([periodData, reportData]) => {
+    if (!periodData.success || !reportData.success) throw new Error("Unable to load evaluation history");
+    const periods = periodData.periods || [];
+    const reports = reportData.reports || [];
+    const aySelect = document.getElementById("historyAcademicYear");
+    const semesterSelect = document.getElementById("historySemester");
+    [...new Set(periods.map((p) => p.academic_year))].forEach((ay) => aySelect.add(new Option(ay, ay)));
+    [...new Set(periods.map((p) => p.semester))].forEach((semester) => semesterSelect.add(new Option(semester, semester)));
+    const render = () => {
+      const filtered = periods.filter((p) => (!aySelect.value || p.academic_year === aySelect.value) && (!semesterSelect.value || p.semester === semesterSelect.value));
+      if (!filtered.length) {
+        container.innerHTML = '<p class="evaluation-history-state">No past evaluation periods found for this filter.</p>';
+        return;
+      }
+      container.innerHTML = filtered.map((period) => {
+        const savedLinks = reports.filter((r) => r.academic_year === period.academic_year && r.semester === period.semester).map((r) => `<a class="evaluation-history-download saved-report" href="../shared/download_report.php?id=${encodeURIComponent(r.id)}"><i class="ph ph-file-pdf"></i><span>Download saved PDF</span></a>`).join("");
+        return `<article class="evaluation-history-item history-period-item"><div class="evaluation-history-file"><i class="ph ph-calendar-dots"></i></div>
+          <div class="evaluation-history-details"><strong>${escapeHtml(period.academic_year)} · ${escapeHtml(period.semester)}</strong><span>${Number(period.response_count || 0)} student responses</span>${savedLinks}</div>
+          <div class="evaluation-history-actions"><button type="button" onclick="openHistoryEvaluationReport(${Number(period.id)})"><i class="ph ph-chart-bar"></i><span>Evaluation Report</span></button>
+          <button type="button" onclick="openHistoryPerSubjectReport(${Number(period.id)})"><i class="ph ph-notebook"></i><span>Per-Subject Report</span></button></div></article>`;
+      }).join("");
+    };
+    aySelect.onchange = render;
+    semesterSelect.onchange = render;
+    render();
+  }).catch((error) => {
+    console.error("Unable to load evaluation history:", error);
+    container.innerHTML = '<p class="evaluation-history-state error">Could not load history. Please try again.</p>';
+  });
+}
+
+function closeEvaluationHistory() {
+  const modal = document.getElementById("evaluationHistoryModal");
+  if (modal) modal.style.display = "none";
+  document.body.classList.remove("modal-open");
+}
+
+function openHistoryEvaluationReport(periodId) {
+  closeEvaluationHistory();
+  showEvaluationReport(periodId);
+}
+
+function openHistoryPerSubjectReport(periodId) {
+  closeEvaluationHistory();
+  showPerSubjectReport(periodId);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {
@@ -1495,7 +1610,6 @@ document.addEventListener("DOMContentLoaded", function () {
     ?.addEventListener("click", showPerSubjectReport);
   loadFacultyReportPeriods();
   startInstructorPeriodRefresh();
-  loadUploadedPDFs();
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1505,20 +1619,21 @@ document.addEventListener("DOMContentLoaded", function () {
 /**
  * Open the per-subject evaluation report modal for the logged-in faculty.
  */
-function showPerSubjectReport() {
+function showPerSubjectReport(periodId = null) {
+  const reportPeriodId = Number(periodId || selectedFacultyReportPeriod || 0);
   if (isFacultyInactive()) {
     alert(
       "Your account has been set to inactive by an admin. You cannot generate or view results until your account is active again.",
     );
     return;
   }
-  if (isEvaluationOngoing()) {
+  if (!periodId && isEvaluationOngoing()) {
     alert(
       "Evaluation results are unavailable while the evaluation process is still ongoing.",
     );
     return;
   }
-  if (!selectedFacultyReportPeriod) {
+  if (!reportPeriodId) {
     alert("There are no closed evaluation period results available yet.");
     return;
   }
@@ -1539,7 +1654,7 @@ function showPerSubjectReport() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       faculty_id: facultyId,
-      period_id: selectedFacultyReportPeriod,
+      period_id: reportPeriodId,
     }),
   })
     .then(async (response) => {
@@ -1567,7 +1682,7 @@ function showPerSubjectReport() {
       modal.dataset.reportData = JSON.stringify({
         facultyName,
         facultyId,
-        periodId: selectedFacultyReportPeriod,
+        periodId: reportPeriodId,
         period: data.period,
         departments: data.departments,
       });
