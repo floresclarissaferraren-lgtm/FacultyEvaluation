@@ -85,16 +85,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["faculty_id"])) {
 
             $subj_sql = "
                 SELECT DISTINCT
-                    s.subject_code,
-                    s.subject_desc,
-                    s.year_level,
-                    p.program_code,
-                    p.program_name
+                s.subject_code,
+                s.subject_desc,
+                s.year_level,
+                p.program_name
                 FROM add_subjects s
                 LEFT JOIN add_programs p ON s.program_id = p.id
                 WHERE s.id IN ($assignmentSql)
                 ORDER BY
-                    COALESCE(p.program_code, p.program_name, 'ZZZ') ASC,
+                    COALESCE(p.program_name, 'ZZZ') ASC,
                     CASE
                         WHEN LOWER(s.year_level) LIKE '1%' THEN 1
                         WHEN LOWER(s.year_level) LIKE '2%' THEN 2
@@ -126,7 +125,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["faculty_id"])) {
                         "code" => $srow["subject_code"],
                         "name" => $srow["subject_desc"],
                         "year_level" => $srow["year_level"],
-                        "program_code" => $srow["program_code"] ?: "N/A",
                         "program_name" =>
                             $srow["program_name"] ?: "Unassigned Program",
                     ];

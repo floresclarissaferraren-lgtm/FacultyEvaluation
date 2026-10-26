@@ -7,10 +7,6 @@ header("Expires: 0");
 require_once __DIR__ . "/../shared/security.php";
 requireDashboardRole("admin");
 include __DIR__ . "/totalstudents_dashcount.php";
-$adminOverviewNow = new DateTimeImmutable(
-    "now",
-    new DateTimeZone("Asia/Manila"),
-);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,7 +97,7 @@ $adminOverviewNow = new DateTimeImmutable(
 
     <div class="logout-icon">
       <span class="icon-bg">
-        <i class="ph ph-sign-out ph-2x"></i>
+        <i class="ph ph-sign-out"></i>
       </span>
     </div>
 
@@ -218,19 +214,6 @@ $adminOverviewNow = new DateTimeImmutable(
     <div class="admin-welcome-copy">
       <div class="admin-welcome-heading">
         <h1>Admin Overview</h1>
-        <div class="admin-overview-date-box" aria-label="Current date and time">
-          <strong class="admin-overview-date-title">Time &amp; Date</strong>
-          <time class="admin-overview-date" datetime="<?= $adminOverviewNow->format(
-              "Y-m-d",
-          ) ?>">
-            <?= $adminOverviewNow->format("F j, Y") ?>
-          </time>
-          <time id="adminOverviewTime" class="admin-overview-time" datetime="<?= $adminOverviewNow->format(
-              "H:i:s",
-          ) ?>">
-            <?= $adminOverviewNow->format("g:i:s A") ?>
-          </time>
-        </div>
       </div>
       <p>Here's an overview of your Faculty Evaluation System. Track faculty performance, monitor evaluation progress, and manage reports and system activities all in one place.</p>
     </div>
@@ -869,7 +852,7 @@ $adminOverviewNow = new DateTimeImmutable(
     <div class="table-scroll-container">
       <table class="faculties-table archived-faculties-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Subject</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -913,10 +896,12 @@ $adminOverviewNow = new DateTimeImmutable(
             
       <div class="section-box">
         <div id="faculty-subjects-list" class="subjects-list">
-          <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
-          <button type="button" id="open-faculty-subject-selection" class="button-gradient">
-            <i class="ph ph-plus"></i> Add Subjects
-          </button>
+          <div class="subject-section-heading">
+            <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
+            <button type="button" id="open-faculty-subject-selection" class="button-gradient">
+              <i class="ph ph-plus"></i> Add Subjects
+            </button>
+          </div>
           <div id="selected-faculty-subjects" class="selected-subjects">
             <p class="empty-subject-message">No subjects selected</p>
           </div>
@@ -1075,7 +1060,7 @@ $adminOverviewNow = new DateTimeImmutable(
     <div class="table-scroll-container">
       <table class="students-table archived-students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year-Section</th><th>Status</th><th>Type</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Subject</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1161,12 +1146,14 @@ $adminOverviewNow = new DateTimeImmutable(
       </div>
 
       <div class="section-box">
-        <h4><i class="ph ph-book"></i> Subjects</h4>
-        <button type="button" id="add-subject-btn" class="button-gradient" style="margin-bottom: 10px;">
-          <i class="ph ph-plus"></i> Add Subject
-        </button>
+        <div class="subject-section-heading">
+          <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
+          <button type="button" id="add-subject-btn" class="button-gradient">
+            <i class="ph ph-plus"></i> Add Subject
+          </button>
+        </div>
         <div id="selected-subjects" class="selected-subjects">
-          <p style="color: #6b7280; font-size: 0.9em;">No subjects selected</p>
+          <p class="empty-subject-message">No subjects selected</p>
         </div>
       </div>
 
@@ -1179,7 +1166,7 @@ $adminOverviewNow = new DateTimeImmutable(
 <div id="subjectSelectionModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>Select Subjects</h3>
+      <h3>Select Student Subjects</h3>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
@@ -1761,7 +1748,7 @@ $adminOverviewNow = new DateTimeImmutable(
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     display: none;
     z-index: 9999;
-    font-family: Inter, Arial, Helvetica, sans-serif;
+    font-family: Poppins, Arial, Helvetica, sans-serif;
     font-size: 14px;
 "></div>
 

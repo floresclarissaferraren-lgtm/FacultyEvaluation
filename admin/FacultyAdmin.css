@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap");
 
 :root {
   --primary-50: #f0f9ff;
@@ -53,7 +53,7 @@
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
-  --font-sans: "Inter", Arial, Helvetica, sans-serif;
+  --font-sans: "Poppins", Arial, Helvetica, sans-serif;
   --dashboard-icon-color: #0b7ac7;
   --rating-excellent: #2563eb;
   --rating-very-good: #16a34a;
@@ -7301,7 +7301,7 @@ table.evaluation-table .view-btn:hover {
   text-align: center;
   min-width: 250px;
   border-top: 6px solid #dc2626;
-  box-shadow: 0 20px 50px rgba(220, 38, 38, 0.2);
+  box-shadow: none;
 }
 
 .logout-buttons {
@@ -8048,7 +8048,7 @@ table.evaluation-table .view-btn:hover {
   font-size: 0.875rem !important;
   font-weight: 600 !important;
   font-family:
-    "Inter",
+    "Poppins",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -10118,8 +10118,8 @@ body:has(> main > #dashboard-section[style*="display: none"])
 }
 
 #viewStudentSubjectsModal .student-profile-avatar {
-  background: #dceeff;
-  color: #1769b0;
+  background: #123b70;
+  color: #ffffff;
   width: 46px;
   height: 46px;
   flex: 0 0 46px;
@@ -10391,8 +10391,8 @@ body:has(> main > #dashboard-section[style*="display: none"])
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: #dceeff;
-  color: #1769b0;
+  background: #123b70;
+  color: #ffffff;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.4px;
@@ -11067,6 +11067,17 @@ body:has(> main > #dashboard-section[style*="display: none"])
 }
 
 #addFacultyModal .empty-subject-message {
+  margin: 0;
+  padding: 12px;
+  color: #6b7280;
+  font-size: 0.9em;
+  text-align: center;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+}
+
+#addStudentModal .empty-subject-message {
   margin: 0;
   padding: 12px;
   color: #6b7280;
@@ -14480,12 +14491,12 @@ main {
   width: 48px;
   height: 48px;
   margin: 0 auto 14px;
-  background: #f1f5f9;
+  background: #fff7ed;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: #f97316;
   font-size: 22px;
 }
 
@@ -16771,7 +16782,7 @@ main,
 .students-table .student-name-cell strong,
 .faculties-table .faculty-name-cell strong {
   font-family:
-    "Inter",
+    "Poppins",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -16806,7 +16817,7 @@ main,
   font-size: 0.875rem;
   font-weight: 600;
   font-family:
-    "Inter",
+    "Poppins",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -18031,6 +18042,8 @@ table thead th {
 }
 
 .program-card-actions .right-buttons button i {
+  font-size: 1rem !important;
+  line-height: 1 !important;
   transition: color 0.18s ease;
 }
 
@@ -23110,7 +23123,7 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
 #report-section .evaluation-table .report-faculty-details strong,
 #report-section .evaluation-table .report-period-year {
   font-family:
-    "Inter",
+    "Poppins",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -23132,7 +23145,7 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
 #report-section .evaluation-table .report-period-semester {
   color: #64748b !important;
   font-family:
-    "Inter",
+    "Poppins",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -23845,7 +23858,7 @@ button:not(:disabled):hover svg {
 #students-section .table-row-actions-trigger .table-action-dots,
 #faculties-section .table-row-actions-trigger .table-action-dots {
   color: #64748b;
-  font-family: Arial, sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -24318,7 +24331,7 @@ button.classes-btn:not(:disabled):hover i {
   background: rgba(255, 255, 255, 0.95);
   border-top: 6px solid #dc2626;
   border-radius: 20px;
-  box-shadow: 0 12px 40px rgba(220, 38, 38, 0.15);
+  box-shadow: none;
 }
 
 #logoutModal .logout-buttons .btn {
@@ -28883,7 +28896,7 @@ main > .section {
   color: #ffffff !important;
 }
 
-/* Keep all admin UI text on the original Inter typeface; preserve icon fonts. */
+/* Keep all admin UI text on Poppins while preserving icon fonts. */
 body,
 body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   font-family: var(--font-sans) !important;
@@ -29430,9 +29443,13 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
 }
 #viewStudentSubjectsModal .student-profile-details h3,
 #viewFacultySubjectsModal .faculty-profile-details h3 {
-  font-size: 1rem;
+  font-size: 1rem !important;
   font-weight: 500;
   line-height: 1.25;
+  padding: 5px 9px;
+  border-radius: 6px;
+  color: #2563eb;
+  background: #ffffff;
 }
 #viewStudentSubjectsModal .student-profile-details p,
 #viewFacultySubjectsModal .faculty-profile-details p {
@@ -29452,8 +29469,8 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
 }
 #viewStudentSubjectsModal .student-profile-summary,
 #viewFacultySubjectsModal .faculty-profile-summary {
-  background: #f8f9fa !important;
-  border: 1px solid #d1d5db !important;
+  background: #ffffff !important;
+  border: 1px solid #60a5fa !important;
 }
 #viewStudentSubjectsModal .student-profile-kicker,
 #viewFacultySubjectsModal .faculty-profile-kicker {
@@ -30798,7 +30815,7 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
 #sidebar .sidebar-logout-btn {
   border-color: transparent !important;
   background: transparent !important;
-  color: #dc2626 !important;
+  color: #b91c1c !important;
 }
 
 #sidebar .sidebar-logout-btn:hover {
@@ -31315,11 +31332,11 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   z-index: 1;
   width: 68px;
   height: 44px;
-  border: 0;
+  border: 1px solid #ffffff;
   border-radius: 12px;
-  background: linear-gradient(145deg, #1689b6, #08658f);
-  box-shadow: 0 12px 24px rgba(0, 106, 145, 0.22);
-  color: #fff;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(8, 85, 177, 0.12);
+  color: #0855b1;
   font-size: 12px;
 }
 
@@ -31427,7 +31444,7 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   overflow: hidden;
   border: 0;
   border-bottom: 1px solid #e3ebf7;
-  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  background: #1c85db;
 }
 
 #manage-section.manage-classes-view
@@ -32007,7 +32024,7 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
 }
 
 #criteria-section .criteria-category .category-header {
-  background: #1086c1 !important;
+  background: #1c85db !important;
 }
 
 #dashboard-section .dashboard-card.faculty .dashboard-content,
@@ -35510,6 +35527,79 @@ main > .section,
   }
 }
 
+#dashboard-section .dashboard-card.faculty .dashboard-content,
+#dashboard-section .dashboard-card.students .dashboard-content,
+#dashboard-section .dashboard-card.evaluations .dashboard-content {
+  align-items: center;
+  flex-direction: row;
+  gap: 12px;
+  padding-right: 0;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content > div:first-child,
+#dashboard-section .dashboard-card.students .dashboard-content > div:first-child,
+#dashboard-section
+  .dashboard-card.evaluations
+  .dashboard-content
+  > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 76px;
+  align-self: stretch;
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content h3,
+#dashboard-section .dashboard-card.students .dashboard-content h3,
+#dashboard-section .dashboard-card.evaluations .dashboard-content h3 {
+  align-self: flex-start;
+  margin: 0;
+  text-align: left;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content .dashboard-value,
+#dashboard-section .dashboard-card.students .dashboard-content .dashboard-value,
+#dashboard-section
+  .dashboard-card.evaluations
+  .dashboard-content
+  .dashboard-value {
+  align-self: flex-start;
+  margin: 2px 0;
+  text-align: left;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content > div:first-child > span,
+#dashboard-section .dashboard-card.students .dashboard-content > div:first-child > span,
+#dashboard-section
+  .dashboard-card.evaluations
+  .dashboard-content
+  > div:first-child
+  > span {
+  align-self: flex-start;
+  margin-top: 4px;
+  text-align: left;
+}
+
+#dashboard-section .dashboard-card.faculty .icon-box,
+#dashboard-section .dashboard-card.students .icon-box,
+#dashboard-section .dashboard-card.evaluations .icon-box {
+  position: relative;
+  top: auto;
+  right: auto;
+  order: -1;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  transform: none;
+}
+
+#dashboard-section .dashboard-card.faculty:hover .icon-box,
+#dashboard-section .dashboard-card.students:hover .icon-box,
+#dashboard-section .dashboard-card.evaluations:hover .icon-box {
+  transform: scale(1.05);
+}
+
 @media (max-width: 480px) {
   #manage-section.manage-classes-view .manage-curriculum-heading {
     grid-template-columns: 32px minmax(0, 1fr) !important;
@@ -36957,7 +37047,7 @@ main > .section,
 }
 
 #dashboard-section .admin-welcome-box {
-  border-left: 3px solid #3b82f6 !important;
+  border-left: 6px solid #3b82f6 !important;
 }
 
 #dashboard-section .dashboard-card.faculty::before,
@@ -37393,7 +37483,7 @@ main > .section,
 #programs-section #programsCardsContainer .program-card .program-card-header {
   min-height: 64px;
   padding: 8px 18px;
-  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  background: #1c85db;
 }
 
 #programs-section #programsCardsContainer .program-card .program-icon {
@@ -37414,7 +37504,7 @@ main > .section,
   td.class-card-section {
   min-height: 52px !important;
   padding: 6px 14px !important;
-  background: linear-gradient(115deg, #087fd1 0%, #0765a6 100%) !important;
+  background: #1c85db !important;
   border-bottom-color: rgba(255, 255, 255, 0.2) !important;
 }
 
@@ -37751,4 +37841,420 @@ main > .section,
   background: #c96b00 !important;
   border-color: #9a4d00 !important;
   color: #fff !important;
+}
+
+/* Unified blue sidebar palette. */
+#sidebar {
+  color: #eaf2ff !important;
+  background: linear-gradient(180deg, #123a75 0%, #0b2856 100%) !important;
+  box-shadow: 4px 0 20px rgba(7, 26, 59, 0.24) !important;
+}
+
+#sidebar::before {
+  background: linear-gradient(145deg, #2463bd 0%, #174887 58%, #123a75 100%) !important;
+}
+
+#sidebar .sidebar-top {
+  background: transparent !important;
+}
+
+#sidebar .title-container h1 {
+  color: #ffffff !important;
+}
+
+#sidebar .title-container .subtitle {
+  color: #c9ddfa !important;
+}
+
+#sidebar .sidebar-menu {
+  background: #123a75 !important;
+  color: #eaf2ff !important;
+  scrollbar-color: #4777b7 transparent;
+}
+
+#sidebar .sidebar-menu a {
+  border-color: transparent !important;
+  color: #d8e7ff !important;
+}
+
+#sidebar .sidebar-menu a i {
+  color: #a9c8f2 !important;
+}
+
+#sidebar .sidebar-menu a:hover,
+#sidebar .sidebar-menu a:focus-visible {
+  border-color: rgba(191, 219, 254, 0.16) !important;
+  background: rgba(96, 165, 250, 0.2) !important;
+  color: #ffffff !important;
+}
+
+#sidebar .sidebar-menu a:hover i,
+#sidebar .sidebar-menu a:focus-visible i {
+  color: #ffffff !important;
+}
+
+#sidebar .sidebar-menu a.active,
+#sidebar .sidebar-menu a.active:hover {
+  border-color: #bfdbfe !important;
+  background: #dbeafe !important;
+  color: #123a75 !important;
+  box-shadow: 0 5px 14px rgba(3, 18, 43, 0.22);
+}
+
+#sidebar .sidebar-menu a.active i,
+#sidebar .sidebar-menu a.active:hover i {
+  color: #1d4ed8 !important;
+}
+
+#sidebar .sidebar-bottom {
+  border-top-color: rgba(191, 219, 254, 0.18) !important;
+  background: #0b2856 !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-profile {
+  background: linear-gradient(135deg, #1d4f91 0%, #1b5ca8 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 5px 14px rgba(3, 18, 43, 0.2);
+}
+
+#sidebar .sidebar-bottom .sidebar-profile:hover {
+  background: #286ab8 !important;
+  box-shadow: 0 7px 18px rgba(3, 18, 43, 0.3);
+}
+
+#sidebar .sidebar-profile-avatar {
+  background: #60a5fa !important;
+  color: #0b2856 !important;
+}
+
+#sidebar .sidebar-profile-role,
+#sidebar .sidebar-profile-chevron {
+  color: #c9ddfa !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn {
+  position: fixed !important;
+  z-index: 12001 !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 8px;
+  width: max-content;
+  min-width: 180px;
+  max-width: calc(100vw - 16px);
+  background: #ffffff !important;
+  color: #b91c1c !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn i {
+  color: #b91c1c !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover {
+  background: #ffffff !important;
+  color: #b91c1c !important;
+}
+
+#sidebar .sidebar-bottom .sidebar-logout-btn:hover i {
+  color: #b91c1c !important;
+}
+
+#faculties-section .archived-faculties-table th:nth-child(3),
+#faculties-section .archived-faculties-table td:nth-child(3),
+#students-section .archived-students-table th:nth-child(3),
+#students-section .archived-students-table td:nth-child(3) {
+  width: 30% !important;
+  text-align: center !important;
+}
+
+#faculties-section .archived-faculties-table,
+#students-section .archived-students-table {
+  table-layout: fixed !important;
+}
+
+#faculties-section .archived-faculties-table th:nth-child(1),
+#faculties-section .archived-faculties-table td:nth-child(1),
+#students-section .archived-students-table th:nth-child(1),
+#students-section .archived-students-table td:nth-child(1) {
+  width: 16% !important;
+}
+
+#faculties-section .archived-faculties-table th:nth-child(2),
+#faculties-section .archived-faculties-table td:nth-child(2),
+#students-section .archived-students-table th:nth-child(2),
+#students-section .archived-students-table td:nth-child(2) {
+  width: 28% !important;
+}
+
+#faculties-section .archived-faculties-table th:nth-child(4),
+#faculties-section .archived-faculties-table td:nth-child(4),
+#students-section .archived-students-table th:nth-child(4),
+#students-section .archived-students-table td:nth-child(4) {
+  width: 26% !important;
+  text-align: center !important;
+}
+
+#students-section .archived-student-section .archived-students-table {
+  min-width: 660px !important;
+}
+
+.archived-record-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.archived-record-actions .archived-record-action {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 4px 6px !important;
+  border: 1px solid !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+.archived-record-actions .archived-record-action span {
+  font-size: 9px !important;
+  line-height: 1 !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .restore-btn,
+#students-section .archived-students-table .archived-record-actions > .restore-btn {
+  box-sizing: border-box !important;
+  background: #fff7ed !important;
+  background-color: #fff7ed !important;
+  border: 1px solid #f97316 !important;
+  border-radius: 6px !important;
+  color: #c2410c !important;
+  overflow: visible !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .restore-btn:hover,
+#faculties-section .archived-faculties-table .archived-record-actions > .restore-btn:focus-visible,
+#students-section .archived-students-table .archived-record-actions > .restore-btn:hover,
+#students-section .archived-students-table .archived-record-actions > .restore-btn:focus-visible {
+  background: #fed7aa !important;
+  background-color: #fed7aa !important;
+  border-color: #ea580c !important;
+  color: #9a3412 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .restore-btn:active,
+#students-section .archived-students-table .archived-record-actions > .restore-btn:active {
+  background: #fdba74 !important;
+  background-color: #fdba74 !important;
+  border-color: #c2410c !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .delete-btn,
+#students-section .archived-students-table .archived-record-actions > .delete-btn {
+  box-sizing: border-box !important;
+  background: #fef2f2 !important;
+  background-color: #fef2f2 !important;
+  border: 1px solid #ef4444 !important;
+  border-radius: 6px !important;
+  color: #b91c1c !important;
+  overflow: visible !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .delete-btn:hover,
+#faculties-section .archived-faculties-table .archived-record-actions > .delete-btn:focus-visible,
+#students-section .archived-students-table .archived-record-actions > .delete-btn:hover,
+#students-section .archived-students-table .archived-record-actions > .delete-btn:focus-visible {
+  background: #fee2e2 !important;
+  background-color: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .delete-btn:active,
+#students-section .archived-students-table .archived-record-actions > .delete-btn:active {
+  background: #fecaca !important;
+  background-color: #fecaca !important;
+  border-color: #b91c1c !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.archived-record-actions .archived-record-action i {
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+#faculties-section .archived-faculties-table .archived-record-actions > .archived-record-action i,
+#students-section .archived-students-table .archived-record-actions > .archived-record-action i {
+  color: currentColor !important;
+}
+
+#addFacultyModal .modal-body,
+#addStudentModal .modal-body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scrollbar-gutter: auto !important;
+}
+
+#addFacultyModal .modal-body::-webkit-scrollbar,
+#addStudentModal .modal-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#subjectSelectionModal .modal-header {
+  align-items: center;
+  background: #ffffff !important;
+  color: #1e3a5f !important;
+  border-bottom: 1px solid #dbeafe;
+}
+
+#subjectSelectionModal .modal-header h3 {
+  color: #1e3a5f !important;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+#subjectSelectionModal .modal-header .close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #cbd5e1 !important;
+}
+
+#subjectSelectionModal .modal-header .close-btn:hover {
+  border: 0;
+  background: transparent;
+  color: #1d4ed8 !important;
+}
+
+#subjectSelectionModal .modal-body {
+  background: #ffffff;
+}
+
+#subjectSelectionModal .form-row label {
+  color: #64748b;
+  font-size: 0.68rem !important;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+#subjectSelectionModal #subject-search,
+#subjectSelectionModal .form-row select {
+  box-sizing: border-box;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px;
+  background: #f9fafb !important;
+  color: #4b5563 !important;
+  font-size: 0.78rem !important;
+  font-weight: 500;
+  box-shadow: none;
+  transform: none;
+}
+
+#subjectSelectionModal #subject-search:focus,
+#subjectSelectionModal .form-row select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  transform: none;
+}
+
+#addFacultyModal .modal-body,
+#addStudentModal .modal-body {
+  padding-left: clamp(24px, 3.5vw, 34px) !important;
+  padding-right: clamp(24px, 3.5vw, 34px) !important;
+}
+
+#addFacultyModal .subject-section-heading,
+#addStudentModal .subject-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+#addFacultyModal .subject-section-heading h4,
+#addStudentModal .subject-section-heading h4 {
+  min-width: 0;
+  margin: 0 !important;
+}
+
+#addFacultyModal #open-faculty-subject-selection,
+#addStudentModal #add-subject-btn {
+  flex: 0 0 auto;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  padding: 6px 12px !important;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  #addFacultyModal .modal-body,
+  #addStudentModal .modal-body {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  #addFacultyModal .subject-section-heading,
+  #addStudentModal .subject-section-heading {
+    gap: 8px;
+  }
+
+  #addFacultyModal #open-faculty-subject-selection,
+  #addStudentModal #add-subject-btn {
+    padding: 6px 9px !important;
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Apply a subtle dark backdrop behind admin modal dialogs. */
+.modal,
+.performance-modal,
+.period-confirmation-overlay,
+.notification-modal,
+.archive-modal-overlay,
+.alert-modal-overlay,
+.logoutform,
+#deleteSuccessModal,
+#viewStudentSubjectsModal,
+#viewFacultySubjectsModal,
+#viewClassSubjectsModal,
+#facultyReportModal,
+#academic-year-section .archived-academic-year-section:not([hidden]) {
+  background: rgba(0, 0, 0, 0.3) !important;
+  -webkit-backdrop-filter: blur(1px) !important;
+  backdrop-filter: blur(1px) !important;
 }

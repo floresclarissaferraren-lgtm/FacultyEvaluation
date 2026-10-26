@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap");
 
 :root {
   --blue-900: #1e3a8a;
@@ -21,7 +20,7 @@
   --radius-xl: 24px;
   --radius-lg: 18px;
   --box-gap: clamp(12px, 2vw, 20px);
-  --font-body: "Inter", Arial, Helvetica, sans-serif;
+  --font-body: "Poppins", Arial, Helvetica, sans-serif;
   --font-display: var(--font-body);
 }
 
@@ -33,7 +32,7 @@
 
 body {
   margin: 0;
-  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-family: "Poppins", Arial, Helvetica, sans-serif;
   background: linear-gradient(180deg, #eef6ff 0%, #f8fbff 48%, #eef4fa 100%);
   color: var(--text);
   min-height: 100vh;
@@ -99,6 +98,10 @@ h6,
   position: relative;
 }
 
+#mainPage {
+  min-height: 270px;
+}
+
 .evaluation-period-status {
   position: absolute;
   top: 20px;
@@ -111,7 +114,7 @@ h6,
   border: 1px solid transparent;
   border-radius: 999px;
   font:
-    700 12px/1 "Inter",
+    700 12px/1 "Poppins",
     sans-serif;
   white-space: nowrap;
 }
@@ -175,7 +178,6 @@ h6,
 .student-dashboard-skeleton-period,
 .student-dashboard-skeleton-copy span,
 .student-dashboard-skeleton-button,
-.student-dashboard-skeleton-image,
 .student-dashboard-skeleton-status {
   display: block;
   background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
@@ -237,14 +239,6 @@ h6,
   border-radius: 12px;
 }
 
-.student-dashboard-skeleton-image {
-  flex: 0 0 auto;
-  width: clamp(180px, 24vw, 290px);
-  height: 140px;
-  margin-left: auto;
-  border-radius: 18px;
-}
-
 .student-dashboard-skeleton-status {
   position: absolute;
   top: 18px;
@@ -270,7 +264,7 @@ h6,
   background: #ecfdf3;
   color: #15803d;
   font:
-    600 12px/1.2 "Inter",
+    600 12px/1.2 "Poppins",
     sans-serif;
 }
 
@@ -286,7 +280,7 @@ h6,
 
 .welcome-title {
   font:
-    500 12px/1 "Inter",
+    500 12px/1 "Poppins",
     sans-serif;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -295,12 +289,7 @@ h6,
 }
 
 .student-name-title {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
   font-size: clamp(22px, 2.4vw, 28px);
   font-weight: 900 !important;
   line-height: 1.2;
@@ -311,16 +300,11 @@ h6,
 
 #mainPage .student-name-title {
   position: relative;
-  top: 6px;
+  top: 10px;
 }
 
 #mainPage .welcome-header-inline .student-name-title {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
   font-size: clamp(22px, 2.4vw, 28px) !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
@@ -358,7 +342,7 @@ h6,
 
 .avatar-initials-large {
   font:
-    700 42px/1 "Inter",
+    700 42px/1 "Poppins",
     sans-serif;
   color: #fff;
   letter-spacing: 2px;
@@ -407,7 +391,7 @@ h6,
 
 .info-label {
   font:
-    500 12px/1 "Inter",
+    500 12px/1 "Poppins",
     sans-serif;
   color: #6b7280;
   text-transform: uppercase;
@@ -416,7 +400,7 @@ h6,
 
 .info-value {
   font:
-    600 16px/1.2 "Inter",
+    600 16px/1.2 "Poppins",
     sans-serif;
   color: #1e3a8a;
 }
@@ -426,7 +410,7 @@ h6,
   flex-direction: column;
   gap: 8px;
   font:
-    400 14px/1.6 "Inter",
+    400 14px/1.6 "Poppins",
     sans-serif;
   color: #6b7280;
   margin: 0;
@@ -445,7 +429,7 @@ h6,
   background: #eff6ff;
   color: #1e40af;
   font:
-    600 13px/1.5 "Inter",
+    600 13px/1.5 "Poppins",
     sans-serif;
 }
 
@@ -456,7 +440,7 @@ h6,
   background: #0b90e0;
   color: #fff;
   font:
-    600 16px/1 "Inter",
+    600 16px/1 "Poppins",
     sans-serif;
   cursor: pointer;
   display: inline-flex;
@@ -611,14 +595,14 @@ h6,
 }
 .logo-text.main-title {
   font:
-    600 16px/1.15 "Inter",
+    600 16px/1.15 "Poppins",
     sans-serif;
   color: #fff;
   letter-spacing: 0;
 }
 .logo-subtitle {
   font:
-    500 10px/1 "Inter",
+    500 10px/1 "Poppins",
     sans-serif;
   color: rgba(255, 255, 255, 0.78);
   letter-spacing: 0.8px;
@@ -666,7 +650,7 @@ h6,
   background: rgba(7, 63, 131, 0.72);
   color: #fff;
   font:
-    700 13px/1 "Inter",
+    700 13px/1 "Poppins",
     sans-serif !important;
   letter-spacing: 0.2px;
 }
@@ -732,7 +716,7 @@ h6,
 
 .dropdown-avatar-initials {
   font:
-    700 18px/1 "Inter",
+    700 18px/1 "Poppins",
     sans-serif;
   color: #fff;
   letter-spacing: 0.5px;
@@ -764,7 +748,7 @@ h6,
 
 .dropdown-user-email {
   font:
-    400 12px/1.2 "Inter",
+    400 12px/1.2 "Poppins",
     sans-serif;
   color: #64748b;
   white-space: nowrap;
@@ -779,7 +763,7 @@ h6,
   padding: 11px 16px;
   color: #475569;
   font:
-    500 14px/1.4 "Inter",
+    500 14px/1.4 "Poppins",
     sans-serif;
   transition: 0.2s ease;
   text-decoration: none;
@@ -1164,7 +1148,7 @@ h6,
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font:
-    600 0.875rem "Inter",
+    600 0.875rem "Poppins",
     sans-serif;
   color: #1e293b;
   background: #ffffff;
@@ -1308,7 +1292,7 @@ h6,
 
 .faculty-name {
   font:
-    700 16px/1.2 "Inter",
+    700 16px/1.2 "Poppins",
     sans-serif;
   color: #1e293b;
   margin: 0;
@@ -1359,7 +1343,7 @@ h6,
 
 .faculty-subjects {
   font:
-    500 13px/1.4 "Inter",
+    500 13px/1.4 "Poppins",
     sans-serif;
   color: #475569;
   margin: 0;
@@ -1385,7 +1369,7 @@ h6,
   padding: 10px 20px;
   border-radius: 10px;
   font:
-    600 13px "Inter",
+    600 13px "Poppins",
     sans-serif;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -1446,7 +1430,7 @@ h6,
   margin: 0 0 4px;
   color: #6b7280;
   font:
-    600 15px/1.4 "Inter",
+    600 15px/1.4 "Poppins",
     sans-serif;
 }
 
@@ -1454,7 +1438,7 @@ h6,
   margin: 0;
   color: #9ca3af;
   font:
-    400 13px/1.5 "Inter",
+    400 13px/1.5 "Poppins",
     sans-serif;
   max-width: 460px;
 }
@@ -1584,7 +1568,7 @@ h6,
   text-align: center;
   min-width: 250px;
   border-top: 6px solid #dc2626;
-  box-shadow: 0 12px 40px rgba(220, 38, 38, 0.15);
+  box-shadow: none;
 }
 .logout-buttons {
   display: flex;
@@ -3378,12 +3362,6 @@ body.modal-open {
     gap: clamp(16px, 3vw, 24px);
     padding: clamp(20px, 4vw, 32px) clamp(16px, 3vw, 24px);
   }
-  .student-dashboard-skeleton-image {
-    width: min(42vw, 190px);
-    height: 100px;
-    align-self: flex-end;
-    margin: 0;
-  }
   .student-dashboard-skeleton-avatar {
     flex-basis: clamp(76px, 13.5vw, 104px);
     width: clamp(76px, 13.5vw, 104px);
@@ -3694,7 +3672,7 @@ select {
 
 .performance-evaluation-title {
   font:
-    700 32px "Inter",
+    700 32px "Poppins",
     sans-serif;
   color: var(--blue-900);
   margin: 0;
@@ -3751,7 +3729,7 @@ select {
 
 .rating-legends-mini li {
   font:
-    500 11px "Inter",
+    500 11px "Poppins",
     sans-serif;
   color: #6b7280;
   display: flex;
@@ -3808,7 +3786,7 @@ select {
   color: #94a3b8;
   text-align: center;
   font:
-    600 11px/1.25 "Inter",
+    600 11px/1.25 "Poppins",
     sans-serif;
 }
 
@@ -3891,7 +3869,7 @@ select {
 
 .evaluation-navigation .pagination-info {
   font:
-    600 14px "Inter",
+    600 14px "Poppins",
     sans-serif;
   color: var(--blue-900);
   background: #fff7db;
@@ -4067,7 +4045,7 @@ select {
   .history-header h3 {
     margin: 0;
     font:
-      700 20px "Inter",
+      700 20px "Poppins",
       sans-serif;
     color: #ffffff;
     letter-spacing: 0.6px;
@@ -4107,7 +4085,7 @@ select {
   .no-history {
     text-align: center;
     font:
-      500 16px "Inter",
+      500 16px "Poppins",
       sans-serif;
     color: #6b7280;
     padding: 40px 20px;
@@ -4168,7 +4146,7 @@ select {
 
   .faculty-name {
     font:
-      700 18px "Inter",
+      700 18px "Poppins",
       sans-serif;
     color: var(--blue-900);
   }
@@ -4198,7 +4176,7 @@ select {
     padding: 6px 12px;
     border-radius: 8px;
     font:
-      600 12px "Inter",
+      600 12px "Poppins",
       sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -4206,14 +4184,14 @@ select {
 
   .rating-score {
     font:
-      700 16px "Inter",
+      700 16px "Poppins",
       sans-serif;
     color: var(--blue-900);
   }
 
   .history-date {
     font:
-      500 14px "Inter",
+      500 14px "Poppins",
       sans-serif;
     color: #6b7280;
   }
@@ -4223,7 +4201,7 @@ select {
     padding: 16px;
     border-radius: 12px;
     font:
-      400 14px "Inter",
+      400 14px "Poppins",
       sans-serif;
     color: #4b5563;
     margin-top: 8px;
@@ -4233,7 +4211,7 @@ select {
 
   .history-feedback strong {
     font:
-      600 14px "Inter",
+      600 14px "Poppins",
       sans-serif;
     color: var(--blue-900);
     display: block;
@@ -4254,7 +4232,7 @@ select {
 
   .faculty-name {
     font:
-      700 18px "Inter",
+      700 18px "Poppins",
       sans-serif;
     color: var(--blue-900);
   }
@@ -4284,7 +4262,7 @@ select {
     padding: 6px 12px;
     border-radius: 8px;
     font:
-      600 12px "Inter",
+      600 12px "Poppins",
       sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -4292,14 +4270,14 @@ select {
 
   .rating-score {
     font:
-      700 16px "Inter",
+      700 16px "Poppins",
       sans-serif;
     color: var(--blue-900);
   }
 
   .history-date {
     font:
-      500 14px "Inter",
+      500 14px "Poppins",
       sans-serif;
     color: #6b7280;
   }
@@ -4309,7 +4287,7 @@ select {
     padding: 16px;
     border-radius: 12px;
     font:
-      400 14px "Inter",
+      400 14px "Poppins",
       sans-serif;
     color: #4b5563;
     margin-top: 8px;
@@ -4319,7 +4297,7 @@ select {
 
   .history-feedback strong {
     font:
-      600 14px "Inter",
+      600 14px "Poppins",
       sans-serif;
     color: var(--blue-900);
     display: block;
@@ -5207,27 +5185,6 @@ select {
   font-size: 15px;
 }
 
-/* Main welcome illustration */
-.welcome-main-image {
-  display: block;
-  flex: 0 0 auto;
-  width: clamp(180px, 24vw, 290px);
-  max-height: 190px;
-  height: auto;
-  margin-left: auto;
-  object-fit: contain;
-  object-position: center right;
-}
-
-@media (max-width: 768px) {
-  .welcome-main-image {
-    width: min(42vw, 190px);
-    max-height: 135px;
-    align-self: flex-end;
-    margin: 4px 0 0 auto;
-  }
-}
-
 /* Compact evaluation text while preserving the existing table row sizing. */
 .performance-evaluation-title {
   font-size: 26px !important;
@@ -5495,12 +5452,6 @@ select {
     justify-content: center;
   }
 
-  .welcome-main-image {
-    width: min(42vw, 190px);
-    max-height: 135px;
-    align-self: flex-end;
-    margin: 4px 0 0 auto;
-  }
 }
 
 @media (max-width: 420px) {
@@ -5514,10 +5465,6 @@ select {
     font-size: 10px !important;
   }
 
-  .welcome-main-image {
-    width: min(44vw, 160px);
-    max-height: 115px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5526,7 +5473,6 @@ select {
   .student-dashboard-skeleton-period,
   .student-dashboard-skeleton-copy span,
   .student-dashboard-skeleton-button,
-  .student-dashboard-skeleton-image,
   .student-dashboard-skeleton-status,
   .student-navbar-skeleton-logo,
   .student-navbar-skeleton-title,
@@ -5658,6 +5604,20 @@ select {
   color: rgba(255, 255, 255, 0.78);
 }
 
+#mainPage .welcome-right {
+  gap: 2px;
+}
+
+#mainPage .welcome-message {
+  width: 100%;
+  max-width: none;
+}
+
+#mainPage .evaluate-now-btn {
+  margin-top: 14px;
+  border-radius: 8px;
+}
+
 .welcome-card .evaluate-now-btn {
   width: max-content;
   min-width: 0;
@@ -5667,7 +5627,7 @@ select {
   flex-shrink: 0;
   padding: 8px 14px;
   font:
-    600 14px/1.25 "Inter",
+    600 14px/1.25 "Poppins",
     sans-serif !important;
   white-space: nowrap;
 }
@@ -5685,4 +5645,17 @@ select {
     align-self: center;
     font-size: 14px !important;
   }
+}
+
+/* Apply a subtle dark backdrop behind student modal dialogs. */
+.logoutform,
+.profileform,
+.historyform,
+.LoginForm,
+.passwordForm,
+.final-review-overlay,
+.success-overlay {
+  background: rgba(0, 0, 0, 0.3) !important;
+  -webkit-backdrop-filter: blur(1px) !important;
+  backdrop-filter: blur(1px) !important;
 }

@@ -384,7 +384,6 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
               <span></span>
             </div>
           </div>
-          <span class="faculty-loading-illustration"></span>
         </div>
       </div>
     </div>

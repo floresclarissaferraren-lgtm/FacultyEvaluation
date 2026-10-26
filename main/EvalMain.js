@@ -289,6 +289,8 @@ if (loginForm) {
       }
     }
 
+    const startTime = Date.now();
+
     try {
       const formData = new FormData();
       formData.append("username", username);
@@ -302,7 +304,6 @@ if (loginForm) {
 
       // Add minimum display time of 3 seconds so users can see the spinner
       const minDisplayTime = 3000;
-      const startTime = Date.now();
 
       if (data.success) {
         if (data.role === "student") {

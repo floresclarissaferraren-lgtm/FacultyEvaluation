@@ -15,6 +15,10 @@ const viewFacultySubjectsModal = document.getElementById(
 );
 const managePeriodsModal = document.getElementById("managePeriodsModal");
 
+if (window.Chart) {
+  Chart.defaults.font.family = '"Poppins", sans-serif';
+}
+
 // Route any legacy duplicate-student alert through the shared admin notification UI.
 const nativeAdminAlert = window.alert.bind(window);
 window.alert = function (message) {
@@ -164,29 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   window.addEventListener("resize", positionStudentFilterOptions);
   window.addEventListener("scroll", positionStudentFilterOptions, true);
-
-  const adminOverviewTime = document.getElementById("adminOverviewTime");
-  if (adminOverviewTime) {
-    const updateAdminOverviewTime = () => {
-      const now = new Date();
-      adminOverviewTime.textContent = new Intl.DateTimeFormat("en-US", {
-        timeZone: "Asia/Manila",
-        hour: "numeric",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }).format(now);
-      adminOverviewTime.dateTime = new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Asia/Manila",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }).format(now);
-    };
-    updateAdminOverviewTime();
-    window.setInterval(updateAdminOverviewTime, 1000);
-  }
 
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
@@ -1273,6 +1254,37 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutLink?.classList.toggle("is-open", isOpen);
     logoutLink?.setAttribute("aria-hidden", String(!isOpen));
     adminProfileToggle?.setAttribute("aria-expanded", String(isOpen));
+
+    if (isOpen) {
+      window.requestAnimationFrame(positionProfileMenu);
+    }
+  }
+
+  function positionProfileMenu() {
+    if (
+      !logoutLink?.classList.contains("is-open") ||
+      !adminProfileToggle
+    ) {
+      return;
+    }
+
+    const profileRect = adminProfileToggle.getBoundingClientRect();
+    const menuWidth = Math.min(
+      Math.max(profileRect.width, 180),
+      window.innerWidth - 16,
+    );
+    const left = Math.min(
+      Math.max(profileRect.left, 8),
+      window.innerWidth - menuWidth - 8,
+    );
+    const top = Math.max(
+      8,
+      profileRect.top - logoutLink.offsetHeight - 8,
+    );
+
+    logoutLink.style.left = `${left}px`;
+    logoutLink.style.top = `${top}px`;
+    logoutLink.style.width = `${menuWidth}px`;
   }
 
   adminProfileToggle?.addEventListener("click", () => {
@@ -1286,6 +1298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") setProfileMenuOpen(false);
   });
+  window.addEventListener("resize", positionProfileMenu);
 
   function showLogoutModal(e) {
     e.preventDefault();
@@ -3516,7 +3529,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const academicTerm = semester
             ? `<strong>${semester}</strong>`
             : "<strong>Term not assigned</strong>";
-          const block = escapeHtml(c.block || "");
+          const sectionBlock = String(c.block || "").trim();
+          const sectionLetter = sectionBlock.match(/[A-Za-z]/);
+          const blockBadge = escapeHtml(
+            sectionLetter ? sectionLetter[0].toUpperCase() : sectionBlock,
+          );
           const yearLevel = escapeHtml(
             normalizeManageYearLevel(c.year_level) || c.year_level || "",
           );
@@ -3527,7 +3544,7 @@ document.addEventListener("DOMContentLoaded", () => {
           row.innerHTML = `
               <td class="class-card-section">
                 <div class="class-card-top">
-                  <span class="class-card-block">${block}</span>
+                  <span class="class-card-block">${blockBadge}</span>
                   <strong class="class-card-title">${programYearLabel}</strong>
                 </div>
               </td>
@@ -4619,7 +4636,7 @@ document.addEventListener("DOMContentLoaded", () => {
             '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
           if (archivedFacultyTbody) {
             archivedFacultyTbody.innerHTML =
-              '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
+              '<tr><td colspan="4" class="admin-empty-state">No archived faculty found</td></tr>';
           }
           updateFacultyMemberCount();
           return;
@@ -4674,10 +4691,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
             </td>
-            <td>
-              ${subjectCountLabel}
-            </td>
-            <td>${statusPillHtml(f.status)}</td>`;
+            <td>${subjectCountLabel}</td>
+            <td class="action-cell">
+              <div class="archived-record-actions">
+                <button type="button" class="archived-record-action restore-btn" title="Restore faculty" aria-label="Restore faculty">
+                  <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i><span>Restore</span>
+                </button>
+                <button type="button" class="archived-record-action delete-btn" title="Delete faculty permanently" aria-label="Delete faculty permanently">
+                  <i class="ph ph-trash" aria-hidden="true"></i><span>Delete</span>
+                </button>
+              </div>
+            </td>`;
+
+            row.querySelector(".restore-btn").addEventListener("click", async () => {
+              try {
+                const result = await updateStatus("faculty", f.id, "active");
+                if (!result.success) {
+                  showNotification(
+                    "Failed to restore faculty: " +
+                      (result.message || "Unknown error"),
+                    "#f44336",
+                  );
+                  return;
+                }
+                showNotification("Faculty restored successfully", "#4caf50");
+                refreshSectionStats();
+                loadFaculty();
+              } catch (error) {
+                console.error("Faculty restore error:", error);
+                showNotification("Error restoring faculty", "#f44336");
+              }
+            });
+            row.querySelector(".delete-btn").addEventListener("click", () => {
+              openDeleteModal("faculty", f.faculty_id, row);
+            });
 
             if (archivedFacultyTbody) archivedFacultyTbody.appendChild(row);
             return;
@@ -4805,7 +4852,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await updateStatus("faculty", f.id, newStatus);
                 if (result.success) {
                   row.dataset.status = newStatus;
-                  row.querySelector("td:nth-child(5)").innerHTML =
+                  row.querySelector("td:nth-child(4)").innerHTML =
                     statusPillHtml(newStatus);
                   (option.closest(".status-dropdown-menu") || statusMenu)
                     .querySelectorAll(".status-option")
@@ -4860,7 +4907,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (archivedFacultyTbody && archivedFacultyTbody.rows.length === 0) {
           archivedFacultyTbody.innerHTML =
-            '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
+            '<tr><td colspan="4" class="admin-empty-state">No archived faculty found</td></tr>';
         }
         filterFaculty();
       })
@@ -5794,7 +5841,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
         <div class="faculty-program-group">
           <div class="faculty-program-header">
-            <span class="faculty-program-code">${escapeHtml(group.programCode)}</span>
             <span class="faculty-program-name">${escapeHtml(group.programName)}</span>
           </div>
           <div class="faculty-subject-rows">${rows}</div>
@@ -6601,7 +6647,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Draw label
       ctx.fillStyle = "#374151";
-      ctx.font = "12px Arial";
+      ctx.font = "12px Poppins, sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(dept.name, x + barWidth / 2, canvas.height - 5);
 
@@ -7412,7 +7458,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 '<tr><td colspan="6" class="admin-empty-state">No students found</td></tr>';
               if (archivedStudentTbody) {
                 archivedStudentTbody.innerHTML =
-                  '<tr><td colspan="5" class="admin-empty-state">No archived students found</td></tr>';
+                  '<tr><td colspan="4" class="admin-empty-state">No archived students found</td></tr>';
               }
               updateStudentCountSummary();
               return;
@@ -7440,6 +7486,9 @@ document.addEventListener("DOMContentLoaded", () => {
                   : stu.program,
               );
               row.dataset.status = (stu.status || "active").toLowerCase();
+              const archivedSubjectCount = Array.isArray(stu.subjects)
+                ? stu.subjects.length
+                : 0;
 
               if (normalizeStatusValue(stu.status) === "archived") {
                 row.innerHTML = `
@@ -7447,11 +7496,40 @@ document.addEventListener("DOMContentLoaded", () => {
             <td><div class="student-name-cell"><strong>${stu.firstname || ""} ${stu.lastname || ""} ${stu.suffix || ""}</strong>
                 <small>${stu.email || ""}</small></div>
             </td>
-            <td><div class="student-program-cell"><strong>${formatStudentYearSection(stu.yearlevel, stu.section)}</strong>
-                <small>${getProgramName(stu.program)}</small></div>
-            </td>
-            <td>${statusPillHtml(stu.status)}</td>
-            <td><span class="student-type-badge ${stu.yearlevel === "irregular" ? "irregular" : "regular"}">${stu.yearlevel === "irregular" ? "Irregular" : "Regular"}</span></td>`;
+            <td>${archivedSubjectCount} ${archivedSubjectCount === 1 ? "subject" : "subjects"}</td>
+            <td class="action-cell">
+              <div class="archived-record-actions">
+                <button type="button" class="archived-record-action restore-btn" title="Restore student" aria-label="Restore student">
+                  <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i><span>Restore</span>
+                </button>
+                <button type="button" class="archived-record-action delete-btn" title="Delete student permanently" aria-label="Delete student permanently">
+                  <i class="ph ph-trash" aria-hidden="true"></i><span>Delete</span>
+                </button>
+              </div>
+            </td>`;
+
+                row.querySelector(".restore-btn").addEventListener("click", async () => {
+                  try {
+                    const result = await updateStatus("student", stu.id, "active");
+                    if (!result.success) {
+                      showNotification(
+                        "Failed to restore student: " +
+                          (result.message || "Unknown error"),
+                        "#f44336",
+                      );
+                      return;
+                    }
+                    showNotification("Student restored successfully", "#4caf50");
+                    refreshSectionStats();
+                    loadStudents();
+                  } catch (error) {
+                    console.error("Student restore error:", error);
+                    showNotification("Error restoring student", "#f44336");
+                  }
+                });
+                row.querySelector(".delete-btn").addEventListener("click", () => {
+                  openDeleteModal("student", stu.student_number, row);
+                });
                 if (archivedStudentTbody) archivedStudentTbody.appendChild(row);
                 return;
               }
@@ -8572,7 +8650,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (selectedSubjects.length === 0) {
       container.innerHTML =
-        '<p class="admin-empty-state">No subjects selected</p>';
+        '<p class="empty-subject-message">No subjects selected</p>';
       console.log("No subjects selected, showing default message");
     } else {
       console.log(`Displaying ${selectedSubjects.length} subjects`);
@@ -10767,7 +10845,7 @@ const doughnutPercentageLabels = {
     const ctx = chart.ctx;
     ctx.save();
     ctx.fillStyle = "#ffffff";
-    ctx.font = "700 10px Arial, sans-serif";
+    ctx.font = "700 10px Poppins, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.shadowColor = "rgba(15, 23, 42, .35)";

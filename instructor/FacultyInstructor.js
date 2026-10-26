@@ -467,15 +467,13 @@ function buildAssignedSubjectsHtml(subjects) {
   }
 
   const grouped = subjects.reduce((groups, subject) => {
-    const programCode = String(subject.program_code || "N/A").trim() || "N/A";
     const programName =
       String(subject.program_name || "Unassigned Program").trim() ||
       "Unassigned Program";
-    const key = `${programCode}__${programName}`;
+    const key = programName;
 
     if (!groups[key]) {
       groups[key] = {
-        programCode,
         programName,
         subjects: [],
       };
@@ -486,11 +484,7 @@ function buildAssignedSubjectsHtml(subjects) {
   }, {});
 
   return Object.values(grouped)
-    .sort(
-      (a, b) =>
-        a.programCode.localeCompare(b.programCode) ||
-        a.programName.localeCompare(b.programName),
-    )
+    .sort((a, b) => a.programName.localeCompare(b.programName))
     .map((group) => {
       const itemsHtml = group.subjects
         .sort((a, b) => {
@@ -514,7 +508,6 @@ function buildAssignedSubjectsHtml(subjects) {
       return `
         <div class="sp-program-group">
           <div class="sp-program-header">
-            <span class="sp-program-code">${escapeHtml(group.programCode)}</span>
             <span class="sp-program-name">${escapeHtml(group.programName)}</span>
           </div>
           <div class="sp-program-subjects">

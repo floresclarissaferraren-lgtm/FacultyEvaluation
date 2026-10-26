@@ -83,7 +83,7 @@ $faculty_assigned_subjects = [];
 // Show a faculty member's assignments in their profile even when evaluation is closed.
 $subjectSql = <<<'SQL'
   SELECT DISTINCT s.subject_code, s.subject_desc, s.year_level,
-    p.program_code, p.program_name
+    p.program_name
   FROM class_subjects cs
   INNER JOIN add_classes ac ON ac.id = cs.class_id
   INNER JOIN add_subjects s ON s.id = cs.subject_id
@@ -101,7 +101,6 @@ if ($subjectStmt) {
             "code" => $subject["subject_code"],
             "name" => $subject["subject_desc"],
             "year_level" => $subject["year_level"],
-            "program_code" => $subject["program_code"] ?: "N/A",
             "program_name" => $subject["program_name"] ?: "Unassigned Program",
         ];
     }
@@ -122,7 +121,7 @@ if ($subjectStmt) {
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="FacultyInstructor.css?v=<?= time() ?>&fix=<?= rand(
     1000,
     9999,
@@ -213,7 +212,6 @@ if ($subjectStmt) {
           <span></span>
         </div>
       </div>
-      <span class="instructor-dashboard-skeleton-image"></span>
     </div>
     <span id="instructor-evaluation-status" class="evaluation-period-status is-checking" role="status" aria-live="polite">
       <i class="ph ph-circle-notch" aria-hidden="true"></i>
@@ -267,7 +265,6 @@ if ($subjectStmt) {
           </button>
         </div>
       </div>
-      <img class="welcome-main-image" src="../assets/images/mainimg.png" alt="" aria-hidden="true">
     </div>
   </div>
 

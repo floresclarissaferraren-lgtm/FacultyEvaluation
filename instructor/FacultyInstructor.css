@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap");
 
 :root {
   --navy-blue: #2c3e75;
@@ -12,7 +11,7 @@
   --border: #e5e7eb;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
-  --font-body: "Inter", Arial, Helvetica, sans-serif;
+  --font-body: "Poppins", Arial, Helvetica, sans-serif;
   --font-display: var(--font-body);
 }
 
@@ -104,7 +103,7 @@ h6,
 
 .logo-text.main-title {
   font:
-    600 16px/1.15 "Inter",
+    600 16px/1.15 "Poppins",
     sans-serif;
   color: #fff;
   letter-spacing: 0;
@@ -112,7 +111,7 @@ h6,
 
 .logo-subtitle {
   font:
-    500 10px/1 "Inter",
+    500 10px/1 "Poppins",
     sans-serif;
   color: rgba(255, 255, 255, 0.78);
   letter-spacing: 0.8px;
@@ -148,7 +147,7 @@ h6,
 
 .instructor-box span {
   font:
-    500 14px/1 "Inter",
+    500 14px/1 "Poppins",
     sans-serif;
   color: #fff;
 }
@@ -163,7 +162,7 @@ h6,
   background: rgba(7, 63, 131, 0.72);
   color: #fff;
   font:
-    700 13px/1 "Inter",
+    700 13px/1 "Poppins",
     sans-serif;
   letter-spacing: 0.2px;
 }
@@ -177,7 +176,7 @@ h6,
 
 .instructor-box .instructor-account-icon {
   font:
-    700 13px/1 "Inter",
+    700 13px/1 "Poppins",
     sans-serif;
   color: #fff;
 }
@@ -232,7 +231,7 @@ h6,
 
 .dropdown-avatar-initials {
   font:
-    700 18px/1 "Inter",
+    700 18px/1 "Poppins",
     sans-serif;
   color: #fff;
   letter-spacing: 0.5px;
@@ -264,7 +263,7 @@ h6,
 
 .dropdown-user-email {
   font:
-    400 12px/1.2 "Inter",
+    400 12px/1.2 "Poppins",
     sans-serif;
   color: #64748b;
   white-space: nowrap;
@@ -279,7 +278,7 @@ h6,
   padding: 11px 16px;
   color: #475569;
   font:
-    500 14px/1.4 "Inter",
+    500 14px/1.4 "Poppins",
     sans-serif;
   transition: 0.2s ease;
   text-decoration: none;
@@ -394,7 +393,7 @@ h6,
 
 .faculty-avatar-initials {
   font:
-    700 42px/1 "Inter",
+    700 42px/1 "Poppins",
     sans-serif;
   color: #fff;
   letter-spacing: 2px;
@@ -413,7 +412,7 @@ h6,
 
 .welcome-title {
   font:
-    500 12px/1 "Inter",
+    500 12px/1 "Poppins",
     sans-serif;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -422,12 +421,7 @@ h6,
 }
 
 .student-name-title {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
   font-size: clamp(22px, 2.4vw, 28px);
   font-weight: 700 !important;
   line-height: 1.2;
@@ -438,13 +432,8 @@ h6,
 
 .welcome-card .student-name-title {
   position: relative;
-  top: -12px;
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif !important;
+  top: 0;
+  font-family: "Poppins", sans-serif !important;
   font-size: clamp(22px, 2.4vw, 28px);
   font-weight: 700 !important;
   line-height: 1.2;
@@ -454,12 +443,7 @@ h6,
 }
 
 .welcome-card .welcome-header-inline .student-name-title {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
   font-size: clamp(22px, 2.4vw, 28px) !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
@@ -490,7 +474,7 @@ h6,
 
 .info-label {
   font:
-    500 12px/1 "Inter",
+    500 12px/1 "Poppins",
     sans-serif;
   color: #6b7280;
   text-transform: uppercase;
@@ -502,14 +486,14 @@ h6,
 
 .info-value {
   font:
-    600 16px/1.2 "Inter",
+    600 16px/1.2 "Poppins",
     sans-serif;
   color: var(--dark-blue);
 }
 
 .welcome-message {
   font:
-    400 14px/1.6 "Inter",
+    400 14px/1.6 "Poppins",
     sans-serif;
   color: #6b7280;
   margin: 0;
@@ -549,7 +533,7 @@ h6,
   border: none;
   border-radius: 8px;
   font:
-    600 13px/1 "Inter",
+    600 13px/1 "Poppins",
     sans-serif;
   cursor: pointer;
   display: inline-flex;
@@ -635,7 +619,7 @@ h6,
 .stat-label {
   min-width: 0;
   font:
-    600 10px/1.35 "Inter",
+    600 10px/1.35 "Poppins",
     sans-serif;
   color: #64748b;
   text-transform: uppercase;
@@ -693,21 +677,21 @@ h6,
 
 .stat-value {
   font:
-    700 26px/1.1 "Inter",
+    700 26px/1.1 "Poppins",
     sans-serif;
   color: #1e3a8a;
 }
 
 .stat-unit {
   font:
-    500 12px/1.2 "Inter",
+    500 12px/1.2 "Poppins",
     sans-serif;
   color: #64748b;
 }
 
 .stat-extra {
   font:
-    400 11px/1.4 "Inter",
+    400 11px/1.4 "Poppins",
     sans-serif;
   color: #64748b;
   overflow-wrap: anywhere;
@@ -718,7 +702,7 @@ h6,
   padding: 4px 10px;
   border-radius: 6px;
   font:
-    600 11px/1 "Inter",
+    600 11px/1 "Poppins",
     sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -753,7 +737,7 @@ h6,
   background: transparent;
   color: #6b7280;
   font:
-    600 14px/1 "Inter",
+    600 14px/1 "Poppins",
     sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -799,7 +783,7 @@ h6,
   text-align: center;
   color: #9ca3af;
   font:
-    500 14px/1.6 "Inter",
+    500 14px/1.6 "Poppins",
     sans-serif;
 }
 
@@ -813,7 +797,7 @@ h6,
   border-spacing: 0;
   color: #0b5f9c;
   font:
-    500 14px/1.4 "Inter",
+    500 14px/1.4 "Poppins",
     sans-serif;
 }
 .subject-results-table th {
@@ -981,7 +965,7 @@ h6,
   text-align: center;
   min-width: 250px;
   border-top: 6px solid #dc2626;
-  box-shadow: 0 12px 40px rgba(220, 38, 38, 0.15);
+  box-shadow: none;
 }
 
 .logout-icon {
@@ -1595,17 +1579,6 @@ body.modal-open {
   border-bottom: 1px solid #dbeafe;
 }
 
-.sp-program-code {
-  font-size: 12px;
-  font-weight: 800;
-  color: #1d4ed8;
-  background: #ffffff;
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
 .sp-program-name {
   min-width: 0;
   font-size: 14px;
@@ -1813,7 +1786,7 @@ body {
   border: 1px solid transparent;
   border-radius: 999px;
   font:
-    700 12px/1 "Inter",
+    700 12px/1 "Poppins",
     sans-serif;
   white-space: nowrap;
 }
@@ -1841,7 +1814,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 2px;
   margin-bottom: 4px;
 }
 
@@ -1853,7 +1826,7 @@ body {
   background: #ecfdf3;
   color: #15803d;
   font:
-    600 12px/1.2 "Inter",
+    600 12px/1.2 "Poppins",
     sans-serif;
 }
 
@@ -3158,27 +3131,6 @@ body {
   font-size: 15px;
 }
 
-/* Main welcome illustration */
-.welcome-main-image {
-  display: block;
-  flex: 0 0 auto;
-  width: clamp(180px, 24vw, 290px);
-  max-height: 190px;
-  height: auto;
-  margin-left: auto;
-  object-fit: contain;
-  object-position: center right;
-}
-
-@media (max-width: 768px) {
-  .welcome-main-image {
-    width: min(42vw, 190px);
-    max-height: 135px;
-    align-self: flex-end;
-    margin: 4px 0 0 auto;
-  }
-}
-
 /* Keep the Instructor and Student welcome cards consistent on mobile. */
 @media (max-width: 768px) {
   .content-container {
@@ -3219,7 +3171,7 @@ body {
   .welcome-header-inline {
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 2px;
     margin-bottom: 4px;
     text-align: center;
   }
@@ -3260,12 +3212,6 @@ body {
     justify-content: center;
   }
 
-  .welcome-main-image {
-    width: min(42vw, 190px);
-    max-height: 135px;
-    align-self: flex-end;
-    margin: 4px 0 0 auto;
-  }
 }
 
 @media (max-width: 420px) {
@@ -3279,10 +3225,6 @@ body {
     font-size: 10px !important;
   }
 
-  .welcome-main-image {
-    width: min(44vw, 160px);
-    max-height: 115px;
-  }
 }
 
 /* Match the account password dialog to the shared login form styling. */
@@ -3437,7 +3379,6 @@ body {
 .instructor-dashboard-skeleton-line,
 .instructor-dashboard-skeleton-copy span,
 .instructor-dashboard-skeleton-actions span,
-.instructor-dashboard-skeleton-image,
 .instructor-dashboard-skeleton-status {
   display: block;
   background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
@@ -3499,13 +3440,6 @@ body {
   width: 158px;
 }
 
-.instructor-dashboard-skeleton-image {
-  flex: 0 0 clamp(180px, 24vw, 290px);
-  width: clamp(180px, 24vw, 290px);
-  height: 150px;
-  border-radius: 18px;
-}
-
 .instructor-dashboard-skeleton-status {
   position: absolute;
   top: 18px;
@@ -3521,14 +3455,6 @@ body {
     align-items: stretch;
     gap: clamp(16px, 3vw, 24px);
     padding: clamp(20px, 4vw, 32px) clamp(16px, 3vw, 24px);
-  }
-
-  .instructor-dashboard-skeleton-image {
-    width: min(42vw, 190px);
-    height: 120px;
-    flex-basis: auto;
-    align-self: flex-end;
-    margin: 0;
   }
 
   .instructor-dashboard-skeleton-content {
@@ -3573,7 +3499,6 @@ body {
   .instructor-dashboard-skeleton-line,
   .instructor-dashboard-skeleton-copy span,
   .instructor-dashboard-skeleton-actions span,
-  .instructor-dashboard-skeleton-image,
   .instructor-dashboard-skeleton-status {
     animation: none;
     background: #e5e7eb;
@@ -3737,11 +3662,6 @@ body {
   #instructorDashboard .action-buttons .action-btn i {
     font-size: clamp(13px, 3.7vw, 16px);
   }
-
-  #instructorDashboard .welcome-main-image {
-    width: min(40vw, 170px);
-    max-height: clamp(90px, 28vw, 120px);
-  }
 }
 
 @media (max-width: 360px) {
@@ -3801,4 +3721,16 @@ body {
     font-size: 8px;
     letter-spacing: 0.3px;
   }
+}
+
+/* Apply a subtle dark backdrop behind instructor modal dialogs. */
+.evaluation-history-modal,
+.logoutform,
+.LoginForm,
+.profileform,
+.evaluation-report-modal,
+.per-subject-modal {
+  background: rgba(0, 0, 0, 0.3) !important;
+  -webkit-backdrop-filter: blur(1px) !important;
+  backdrop-filter: blur(1px) !important;
 }
