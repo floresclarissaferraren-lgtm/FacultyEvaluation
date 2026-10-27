@@ -1684,6 +1684,7 @@ document.addEventListener("DOMContentLoaded", () => {
           card.dataset.color = index % 8;
           const programCode = escapeHtml(p.program_code || "PROGRAM");
           const programName = escapeHtml(p.program_name || "Unnamed program");
+          const studentCount = Number(p.enrolled_students) || 0;
           card.innerHTML = `
           <div class="program-card-header">
             <div class="program-icon">${programCode}</div>
@@ -1693,20 +1694,23 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="program-content">
               <div class="program-name">${programName}</div>
             </div>
+            <span class="program-student-count">Total Student: ${studentCount}</span>
           </div>
           <div class="program-card-actions">
-            <div class="left-buttons">
-              <button class="btn-manage" type="button">
-                <i class="ph ph-sliders" aria-hidden="true"></i> Manage program <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
-              </button>
-            </div>
-            <div class="right-buttons">
-              <button class="btn-edit" type="button" title="Edit program" aria-label="Edit program">
-                <i class="ph ph-note-pencil" aria-hidden="true"></i>
-              </button>
-              <button class="btn-delete" type="button" title="Delete program" aria-label="Delete program">
-                <i class="ph ph-trash" aria-hidden="true"></i>
-              </button>
+            <div class="program-card-action-row">
+              <div class="left-buttons">
+                <button class="btn-manage" type="button">
+                  <i class="ph ph-sliders" aria-hidden="true"></i> Manage program <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="right-buttons">
+                <button class="btn-edit" type="button" title="Edit program" aria-label="Edit program">
+                  <i class="ph ph-note-pencil" aria-hidden="true"></i>
+                </button>
+                <button class="btn-delete" type="button" title="Delete program" aria-label="Delete program">
+                  <i class="ph ph-trash" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </div>`;
 
