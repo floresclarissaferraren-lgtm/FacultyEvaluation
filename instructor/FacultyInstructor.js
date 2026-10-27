@@ -1,5 +1,6 @@
 // DROPDOWN
 let selectedFacultyReportPeriod = null;
+let selectedHistoryReportPeriod = null;
 
 function toggleDropdown() {
   const menu = document.getElementById("dropdownMenu");
@@ -225,9 +226,7 @@ function updateFacultyResultAccess(evaluationOpen) {
       btn.disabled = locked;
       btn.title = evaluationOpen
         ? "Evaluation results are available after the current evaluation process closes."
-        : !selectedFacultyReportPeriod
-          ? "No closed evaluation period results are available."
-          : "";
+        : "";
     });
 
   if (evaluationOpen || !selectedFacultyReportPeriod) {
@@ -963,7 +962,6 @@ function showEvaluationReport(periodId = null) {
     return;
   }
   if (!reportPeriodId) {
-    alert("There are no closed evaluation period results available yet.");
     return;
   }
 
@@ -1378,46 +1376,44 @@ function showEvaluationHistory(event) {
     modal.addEventListener("click", (e) => { if (e.target === modal) closeEvaluationHistory(); });
   }
   modal.innerHTML = `<section class="evaluation-history-panel" aria-labelledby="evaluationHistoryTitle">
-    <header class="evaluation-history-header"><div><h2 id="evaluationHistoryTitle">Evaluation History</h2><p>Choose a past period to view or download its reports.</p></div>
+    <header class="evaluation-history-header"><div><h2 id="evaluationHistoryTitle">Evaluation History</h2><p>Choose an academic year and semester to view its reports.</p></div>
     <button type="button" class="evaluation-history-close" aria-label="Close" onclick="closeEvaluationHistory()"><i class="ph ph-x"></i></button></header>
     <div class="evaluation-history-filters"><label>Academic year<select id="historyAcademicYear"><option value="">All academic years</option></select></label>
     <label>Semester<select id="historySemester"><option value="">All semesters</option></select></label></div>
-    <div id="evaluationHistoryList" class="evaluation-history-list" aria-live="polite"></div></section>`;
+    <div class="evaluation-history-actions history-report-actions">
+      <button type="button" id="historyEvaluationReportButton" disabled onclick="openSelectedHistoryEvaluationReport()"><i class="ph ph-chart-bar"></i><span>Evaluation Report</span></button>
+      <button type="button" id="historyPerSubjectReportButton" disabled onclick="openSelectedHistoryPerSubjectReport()"><i class="ph ph-notebook"></i><span>Per-Subject Report</span></button>
+    </div></section>`;
   modal.style.display = "flex";
   document.body.classList.add("modal-open");
-  const container = document.getElementById("evaluationHistoryList");
-  container.innerHTML = '<p class="evaluation-history-state">Loading evaluation periods...</p>';
-  Promise.all([
-    fetch("../shared/periods_api.php?action=faculty_periods", { credentials: "same-origin", cache: "no-store" }).then((r) => r.json()),
-    fetch("get_uploaded_reports.php", { credentials: "same-origin" }).then((r) => r.json()),
-  ]).then(([periodData, reportData]) => {
-    if (!periodData.success || !reportData.success) throw new Error("Unable to load evaluation history");
+  selectedHistoryReportPeriod = null;
+  fetch("../shared/periods_api.php?action=faculty_periods", {
+    credentials: "same-origin",
+    cache: "no-store",
+  }).then((r) => r.json()).then((periodData) => {
+    if (!periodData.success) throw new Error("Unable to load evaluation history");
     const periods = periodData.periods || [];
-    const reports = reportData.reports || [];
     const aySelect = document.getElementById("historyAcademicYear");
     const semesterSelect = document.getElementById("historySemester");
     [...new Set(periods.map((p) => p.academic_year))].forEach((ay) => aySelect.add(new Option(ay, ay)));
     [...new Set(periods.map((p) => p.semester))].forEach((semester) => semesterSelect.add(new Option(semester, semester)));
     const render = () => {
       const filtered = periods.filter((p) => (!aySelect.value || p.academic_year === aySelect.value) && (!semesterSelect.value || p.semester === semesterSelect.value));
-      if (!filtered.length) {
-        container.innerHTML = '<p class="evaluation-history-state">No past evaluation periods found for this filter.</p>';
-        return;
-      }
-      container.innerHTML = filtered.map((period) => {
-        const savedLinks = reports.filter((r) => r.academic_year === period.academic_year && r.semester === period.semester).map((r) => `<a class="evaluation-history-download saved-report" href="../shared/download_report.php?id=${encodeURIComponent(r.id)}"><i class="ph ph-file-pdf"></i><span>Download saved PDF</span></a>`).join("");
-        return `<article class="evaluation-history-item history-period-item"><div class="evaluation-history-file"><i class="ph ph-calendar-dots"></i></div>
-          <div class="evaluation-history-details"><strong>${escapeHtml(period.academic_year)} · ${escapeHtml(period.semester)}</strong><span>${Number(period.response_count || 0)} student responses</span>${savedLinks}</div>
-          <div class="evaluation-history-actions"><button type="button" onclick="openHistoryEvaluationReport(${Number(period.id)})"><i class="ph ph-chart-bar"></i><span>Evaluation Report</span></button>
-          <button type="button" onclick="openHistoryPerSubjectReport(${Number(period.id)})"><i class="ph ph-notebook"></i><span>Per-Subject Report</span></button></div></article>`;
-      }).join("");
+      selectedHistoryReportPeriod =
+        filtered.length === 1 ? Number(filtered[0].id) : null;
+      const buttons = document.querySelectorAll(
+        "#historyEvaluationReportButton, #historyPerSubjectReportButton",
+      );
+      buttons.forEach((button) => {
+        button.disabled = selectedHistoryReportPeriod === null;
+      });
     };
     aySelect.onchange = render;
     semesterSelect.onchange = render;
     render();
   }).catch((error) => {
     console.error("Unable to load evaluation history:", error);
-    container.innerHTML = '<p class="evaluation-history-state error">Could not load history. Please try again.</p>';
+    selectedHistoryReportPeriod = null;
   });
 }
 
@@ -1435,6 +1431,16 @@ function openHistoryEvaluationReport(periodId) {
 function openHistoryPerSubjectReport(periodId) {
   closeEvaluationHistory();
   showPerSubjectReport(periodId);
+}
+
+function openSelectedHistoryEvaluationReport() {
+  if (selectedHistoryReportPeriod === null) return;
+  openHistoryEvaluationReport(selectedHistoryReportPeriod);
+}
+
+function openSelectedHistoryPerSubjectReport() {
+  if (selectedHistoryReportPeriod === null) return;
+  openHistoryPerSubjectReport(selectedHistoryReportPeriod);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -1627,7 +1633,6 @@ function showPerSubjectReport(periodId = null) {
     return;
   }
   if (!reportPeriodId) {
-    alert("There are no closed evaluation period results available yet.");
     return;
   }
 

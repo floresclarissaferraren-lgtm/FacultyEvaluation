@@ -560,11 +560,7 @@ h6,
 }
 
 .action-btn:disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
   cursor: not-allowed;
-  box-shadow: none;
-  border: none;
 }
 
 .action-btn i {
@@ -3733,4 +3729,83 @@ body {
   background: rgba(0, 0, 0, 0.3) !important;
   -webkit-backdrop-filter: blur(1px) !important;
   backdrop-filter: blur(1px) !important;
+}
+
+#evaluationReportButton:disabled,
+#perSubjectReportButton:disabled {
+  cursor: not-allowed !important;
+}
+
+.evaluation-history-item.history-period-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 12px;
+}
+
+.history-period-item .evaluation-history-file {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.history-period-item .evaluation-history-details {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.history-period-item .evaluation-history-actions {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.history-period-item .evaluation-history-actions button {
+  min-width: 0;
+  width: 100%;
+}
+
+.evaluation-history-filters select {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 32px 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 52%,
+    calc(100% - 13px) 52%;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.evaluation-history-filters select:focus {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.15);
+}
+
+.history-report-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.history-report-actions button:disabled,
+.history-report-actions button:disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: #087dc1;
 }

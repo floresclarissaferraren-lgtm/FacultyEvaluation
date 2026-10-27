@@ -1429,7 +1429,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
                 <tr>
                   <th>Academic Year</th>
                   <th>Semester</th>
-                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="archivedAcademicYearTableBody">
@@ -1475,6 +1475,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
 <div id="report-section" class="section" style="display:none;">
   <div class="table-wrapper">
     <div class="table-header">
+      <h2 class="report-list-label">Faculty Reports</h2>
       <div class="search-filters-container">
         <div class="search-wrapper">
           <button type="button" class="search-btn" aria-label="Search reports"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></button>
@@ -1592,7 +1593,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
     <div class="modal-body">
       <div class="student-info-header">
         <div class="student-avatar">
-          <i class="ph ph-chalkboard-teacher"></i>
+          <i class="ph-fill ph-chalkboard-teacher"></i>
         </div>
         <div class="student-details">
           <h4 id="viewClassName">Class Name</h4>

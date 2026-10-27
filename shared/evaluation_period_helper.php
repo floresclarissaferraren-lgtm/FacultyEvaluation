@@ -802,7 +802,7 @@ function helperGenerateEvaluationSummaryPDF(
         $textColor = [50, 50, 50];
 
         $pdf->SetFillColor($blue[0], $blue[1], $blue[2]);
-        $pdf->Rect(10, 10, 190, 34, "F");
+        $pdf->Rect(10, 10, 190, 28, "F");
         $logoPath =
             dirname(__DIR__) .
             DIRECTORY_SEPARATOR .
@@ -812,24 +812,24 @@ function helperGenerateEvaluationSummaryPDF(
             DIRECTORY_SEPARATOR .
             "granbylogo.png";
         if (is_file($logoPath)) {
-            $pdf->Image($logoPath, 15, 15, 23);
+            $pdf->Image($logoPath, 15, 13, 19);
         }
 
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont("Arial", "B", 15);
-        $pdf->SetXY(10, 16);
+        $pdf->SetFont("Arial", "B", 13);
+        $pdf->SetXY(10, 14);
         $pdf->Cell(
             190,
-            9,
+            8,
             "Granby Colleges of Science and Technology",
             0,
             1,
             "C",
         );
-        $pdf->SetFont("Arial", "B", 11);
-        $pdf->SetX(10);
-        $pdf->Cell(190, 8, "Faculty Evaluation Report", 0, 1, "C");
-        $pdf->SetY(64);
+        $pdf->SetFont("Arial", "B", 10);
+        $pdf->SetXY(10, 23);
+        $pdf->Cell(190, 7, "Faculty Evaluation Report", 0, 1, "C");
+        $pdf->SetY(48);
 
         $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
         $detailRows = [
@@ -1139,7 +1139,7 @@ function helperGenerateReportPDF(
 
         // Header block
         $pdf->SetFillColor($BLUE[0], $BLUE[1], $BLUE[2]);
-        $pdf->Rect(10, 10, 190, 34, "F");
+        $pdf->Rect(10, 10, 190, 28, "F");
 
         $logoPath =
             dirname(__DIR__) .
@@ -1150,24 +1150,24 @@ function helperGenerateReportPDF(
             DIRECTORY_SEPARATOR .
             "granbylogo.png";
         if (is_file($logoPath)) {
-            $pdf->Image($logoPath, 15, 15, 23);
+            $pdf->Image($logoPath, 15, 13, 19);
         }
 
         $pdf->SetTextColor(255, 255, 255);
-        $pdf->SetFont("Arial", "B", 15);
-        $pdf->SetXY(10, 16);
+        $pdf->SetFont("Arial", "B", 13);
+        $pdf->SetXY(10, 14);
         $pdf->Cell(
             190,
-            9,
+            8,
             "Granby Colleges of Science and Technology",
             0,
             1,
             "C",
         );
-        $pdf->SetFont("Arial", "B", 11);
-        $pdf->SetX(10);
-        $pdf->Cell(190, 8, "Faculty Per-Subject Evaluation Report", 0, 1, "C");
-        $pdf->Ln(20);
+        $pdf->SetFont("Arial", "B", 10);
+        $pdf->SetXY(10, 23);
+        $pdf->Cell(190, 7, "Faculty Per-Subject Evaluation Report", 0, 1, "C");
+        $pdf->SetY(42);
         $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
 
         // Faculty Info Box

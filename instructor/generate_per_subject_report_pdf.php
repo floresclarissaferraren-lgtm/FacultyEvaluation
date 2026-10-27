@@ -143,18 +143,18 @@ $WHITE = [255, 255, 255];
 
 /* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
 $pdf->SetFillColor($BLUE[0], $BLUE[1], $BLUE[2]);
-$pdf->Rect(10, 10, 190, 34, "F");
+$pdf->Rect(10, 10, 190, 28, "F");
 if (file_exists(__DIR__ . "/../assets/images/granbylogo.png")) {
-    $pdf->Image(__DIR__ . "/../assets/images/granbylogo.png", 15, 15, 23);
+    $pdf->Image(__DIR__ . "/../assets/images/granbylogo.png", 15, 13, 19);
 }
 $pdf->SetTextColor(255, 255, 255);
-$pdf->SetFont("Arial", "B", 15);
-$pdf->SetXY(10, 16);
-$pdf->Cell(190, 9, ct("Granby Colleges of Science and Technology"), 0, 1, "C");
-$pdf->SetFont("Arial", "B", 11);
-$pdf->SetX(10);
-$pdf->Cell(190, 8, ct("Faculty Per-Subject Evaluation Report"), 0, 1, "C");
-$pdf->Ln(20);
+$pdf->SetFont("Arial", "B", 13);
+$pdf->SetXY(10, 14);
+$pdf->Cell(190, 8, ct("Granby Colleges of Science and Technology"), 0, 1, "C");
+$pdf->SetFont("Arial", "B", 10);
+$pdf->SetXY(10, 23);
+$pdf->Cell(190, 7, ct("Faculty Per-Subject Evaluation Report"), 0, 1, "C");
+$pdf->SetY(42);
 $pdf->SetTextColor($DARK[0], $DARK[1], $DARK[2]);
 
 /* ── FACULTY INFO BOX ──────────────────────────────────────────────────── */

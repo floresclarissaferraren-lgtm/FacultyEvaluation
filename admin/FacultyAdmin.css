@@ -15888,42 +15888,57 @@ main,
   width: 68%;
 }
 
-.admin-skeleton-ranking-card {
+.admin-section-skeleton .dashboard-row-2.admin-skeleton-grid > .admin-skeleton-ranking-group {
   display: flex;
-  min-height: 170px;
+  min-height: 250px;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 12px;
-  margin-top: 6px;
   padding: 18px;
+  border: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.admin-skeleton-ranking-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-skeleton-ranking-card {
+  display: grid;
+  flex: 1 1 0;
+  min-height: 44px;
+  grid-template-columns: 36px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #f9fafb;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .admin-skeleton-ranking-avatar {
-  display: block;
-  width: 52px;
-  height: 52px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 720px 100%;
-  animation: adminSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.admin-skeleton-ranking-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
 }
 
 .admin-skeleton-ranking-card .admin-skeleton-line.ranking-name {
-  width: 58%;
+  width: 62%;
 }
 
 .admin-skeleton-ranking-card .admin-skeleton-line.ranking-score {
-  width: 38%;
-  height: 24px;
-}
-
-.admin-skeleton-ranking-card .admin-skeleton-line.ranking-place {
-  width: 28%;
-  height: 20px;
+  width: 100%;
+  height: 14px;
 }
 
 .admin-skeleton-icon {
@@ -31304,30 +31319,6 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   background: linear-gradient(135deg, #f2f6ff 0%, #e8f0ff 100%);
 }
 
-#programs-section .program-card-header::before,
-#programs-section .program-card-header::after {
-  position: absolute;
-  content: "";
-  pointer-events: none;
-  border: 1px solid rgba(59, 130, 246, 0.12);
-  border-radius: 50%;
-}
-
-#programs-section .program-card-header::before {
-  width: 132px;
-  height: 132px;
-  top: -68px;
-  right: -28px;
-}
-
-#programs-section .program-card-header::after {
-  width: 92px;
-  height: 92px;
-  right: 36px;
-  bottom: -64px;
-  background: rgba(59, 130, 246, 0.045);
-}
-
 #programs-section .program-icon {
   z-index: 1;
   width: 68px;
@@ -31445,22 +31436,6 @@ body:has(> main > #dashboard-section:not([style*="display: none"])) > main {
   border: 0;
   border-bottom: 1px solid #e3ebf7;
   background: #1c85db;
-}
-
-#manage-section.manage-classes-view
-  #classes
-  .classes-table
-  tbody
-  td.class-card-section::after {
-  position: absolute;
-  top: -54px;
-  right: -14px;
-  width: 150px;
-  height: 150px;
-  border: 1px solid rgba(59, 130, 246, 0.12);
-  border-radius: 50%;
-  content: "";
-  pointer-events: none;
 }
 
 #manage-section.manage-classes-view .class-card-top {
@@ -32489,6 +32464,19 @@ body:has(> main > #dashboard-section[style*="display: none"]) > .navbar {
 
 body > .navbar .section-title {
   font-weight: 700 !important;
+  color: #1e3a8a !important;
+}
+
+body > .navbar .hamburger,
+body > .navbar .admin-notification-btn {
+  color: #1e3a8a !important;
+}
+
+body > .navbar .hamburger:hover,
+body > .navbar .admin-notification-btn:hover,
+body > .navbar .admin-notification-btn:focus-visible {
+  background: #dbeafe !important;
+  color: #1e3a8a !important;
 }
 
 /* Match the navbar skeleton to its real icon + title arrangement. */
@@ -32778,11 +32766,6 @@ body > .navbar .navbar-admin-avatar {
   background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 50%, #e5e7eb 100%) !important;
   background-size: 200% 100% !important;
   animation: adminDashboardSkeletonShimmer 1.4s ease-in-out infinite !important;
-}
-
-#dashboard-section.admin-section-loading > .admin-section-skeleton
-  .admin-skeleton-ranking-card {
-  background: #f9fafb !important;
 }
 
 body:has(> main > #dashboard-section.admin-section-loading) #sidebar,
@@ -34144,7 +34127,7 @@ body:has(> main > #dashboard-section.admin-section-loading)
 #report-section > .table-wrapper > .table-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   flex-wrap: nowrap;
 }
@@ -34158,6 +34141,15 @@ body:has(> main > #dashboard-section.admin-section-loading)
   width: auto;
   min-width: 0;
   flex-wrap: nowrap;
+}
+
+#report-section .report-list-label {
+  flex: 0 0 auto;
+  margin: 0 auto 0 0;
+  color: #1e3a8a;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 #report-section .search-filters-container > .search-wrapper,
@@ -35587,7 +35579,7 @@ main > .section,
   position: relative;
   top: auto;
   right: auto;
-  order: -1;
+  order: 0;
   flex: 0 0 44px;
   width: 44px;
   height: 44px;
@@ -37706,17 +37698,34 @@ main > .section,
 
 #academic-year-section .archived-academic-year-table th:nth-child(1),
 #academic-year-section .archived-academic-year-table td:nth-child(1) {
-  width: 38%;
+  width: 32%;
 }
 
 #academic-year-section .archived-academic-year-table th:nth-child(2),
 #academic-year-section .archived-academic-year-table td:nth-child(2) {
-  width: 38%;
+  width: 32%;
 }
 
 #academic-year-section .archived-academic-year-table th:nth-child(3),
 #academic-year-section .archived-academic-year-table td:nth-child(3) {
-  width: 24%;
+  width: 36%;
+}
+
+#academic-year-section .archived-academic-year-table thead th:nth-child(3) {
+  text-align: left !important;
+}
+
+#academic-year-section .archived-academic-year-table tbody td.action-cell {
+  text-align: left !important;
+}
+
+#academic-year-section .archived-academic-year-table tbody td.action-cell {
+  display: table-cell !important;
+  vertical-align: middle !important;
+}
+
+#academic-year-section .archived-academic-year-table .archived-record-actions {
+  justify-content: flex-start;
 }
 
 @media (max-width: 760px) {
@@ -38031,7 +38040,8 @@ main > .section,
 }
 
 #faculties-section .archived-faculties-table .archived-record-actions > .restore-btn,
-#students-section .archived-students-table .archived-record-actions > .restore-btn {
+#students-section .archived-students-table .archived-record-actions > .restore-btn,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .restore-btn {
   box-sizing: border-box !important;
   background: #fff7ed !important;
   background-color: #fff7ed !important;
@@ -38044,7 +38054,9 @@ main > .section,
 #faculties-section .archived-faculties-table .archived-record-actions > .restore-btn:hover,
 #faculties-section .archived-faculties-table .archived-record-actions > .restore-btn:focus-visible,
 #students-section .archived-students-table .archived-record-actions > .restore-btn:hover,
-#students-section .archived-students-table .archived-record-actions > .restore-btn:focus-visible {
+#students-section .archived-students-table .archived-record-actions > .restore-btn:focus-visible,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .restore-btn:hover,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .restore-btn:focus-visible {
   background: #fed7aa !important;
   background-color: #fed7aa !important;
   border-color: #ea580c !important;
@@ -38055,7 +38067,8 @@ main > .section,
 }
 
 #faculties-section .archived-faculties-table .archived-record-actions > .restore-btn:active,
-#students-section .archived-students-table .archived-record-actions > .restore-btn:active {
+#students-section .archived-students-table .archived-record-actions > .restore-btn:active,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .restore-btn:active {
   background: #fdba74 !important;
   background-color: #fdba74 !important;
   border-color: #c2410c !important;
@@ -38065,7 +38078,8 @@ main > .section,
 }
 
 #faculties-section .archived-faculties-table .archived-record-actions > .delete-btn,
-#students-section .archived-students-table .archived-record-actions > .delete-btn {
+#students-section .archived-students-table .archived-record-actions > .delete-btn,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .delete-btn {
   box-sizing: border-box !important;
   background: #fef2f2 !important;
   background-color: #fef2f2 !important;
@@ -38078,7 +38092,9 @@ main > .section,
 #faculties-section .archived-faculties-table .archived-record-actions > .delete-btn:hover,
 #faculties-section .archived-faculties-table .archived-record-actions > .delete-btn:focus-visible,
 #students-section .archived-students-table .archived-record-actions > .delete-btn:hover,
-#students-section .archived-students-table .archived-record-actions > .delete-btn:focus-visible {
+#students-section .archived-students-table .archived-record-actions > .delete-btn:focus-visible,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .delete-btn:hover,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .delete-btn:focus-visible {
   background: #fee2e2 !important;
   background-color: #fee2e2 !important;
   border-color: #dc2626 !important;
@@ -38089,7 +38105,8 @@ main > .section,
 }
 
 #faculties-section .archived-faculties-table .archived-record-actions > .delete-btn:active,
-#students-section .archived-students-table .archived-record-actions > .delete-btn:active {
+#students-section .archived-students-table .archived-record-actions > .delete-btn:active,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .delete-btn:active {
   background: #fecaca !important;
   background-color: #fecaca !important;
   border-color: #b91c1c !important;
@@ -38104,7 +38121,8 @@ main > .section,
 }
 
 #faculties-section .archived-faculties-table .archived-record-actions > .archived-record-action i,
-#students-section .archived-students-table .archived-record-actions > .archived-record-action i {
+#students-section .archived-students-table .archived-record-actions > .archived-record-action i,
+#academic-year-section .archived-academic-year-table .archived-record-actions > .archived-record-action i {
   color: currentColor !important;
 }
 
@@ -38120,6 +38138,19 @@ main > .section,
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+}
+
+#academic-year-section .archived-academic-year-table td.action-cell {
+  white-space: nowrap;
+}
+
+#academic-year-section .archived-academic-year-table .archived-record-actions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+#academic-year-section .archived-academic-year-table .archived-record-action {
+  flex: 0 0 auto;
 }
 
 #subjectSelectionModal .modal-header {
@@ -38257,4 +38288,538 @@ main > .section,
   background: rgba(0, 0, 0, 0.3) !important;
   -webkit-backdrop-filter: blur(1px) !important;
   backdrop-filter: blur(1px) !important;
+}
+
+#viewClassSubjectsModal #viewClassName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+#viewClassSubjectsModal #viewClassName .view-class-program,
+#viewClassSubjectsModal #viewClassName .view-class-period {
+  display: inline-flex;
+  align-items: center;
+}
+
+#viewClassSubjectsModal #viewClassName .view-class-period {
+  color: #64748b;
+  font-size: 0.82em;
+  font-weight: 500;
+}
+
+#viewClassSubjectsModal .subjects-container {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d6e7f5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+#viewClassSubjectsModal .class-subject-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e7f0f8;
+}
+
+#viewClassSubjectsModal .class-subject-row:last-child {
+  border-bottom: 0;
+}
+
+#viewClassSubjectsModal .class-subject-code {
+  flex: 0 0 46px;
+  padding: 5px 6px;
+  border: 1px solid #b9ddfa;
+  border-radius: 5px;
+  background: #eff8ff;
+  color: #0878bd;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+#viewClassSubjectsModal .class-subject-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+#viewClassSubjectsModal .class-subject-info strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#viewClassSubjectsModal .class-subject-instructor {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Refine the class cards while keeping their existing content and actions. */
+#programs-section #programsCardsContainer .program-card {
+  border-radius: 12px !important;
+}
+
+#manage-section.manage-classes-view #classes .classes-table tbody tr {
+  border-color: #d7e2f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 5px 16px rgba(30, 58, 95, 0.08) !important;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  tr:hover,
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  tr:active {
+  transform: none !important;
+  border-color: #9fc2ec !important;
+  box-shadow: 0 12px 24px rgba(30, 80, 140, 0.14) !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-section {
+  min-height: 64px !important;
+  padding: 10px 16px !important;
+  border-bottom-color: rgba(255, 255, 255, 0.24) !important;
+  background: linear-gradient(115deg, #1769ad 0%, #1c85db 68%, #3296e5 100%) !important;
+}
+
+#manage-section.manage-classes-view .class-card-top {
+  gap: 11px !important;
+}
+
+#manage-section.manage-classes-view .class-card-block {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.17) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+  font-size: 15px;
+}
+
+#manage-section.manage-classes-view .class-card-title {
+  font-size: 0.85rem !important;
+  letter-spacing: 0.035em !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-term,
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-assigned,
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-enrolled {
+  min-height: 58px !important;
+  margin-right: 18px !important;
+  margin-left: 18px !important;
+  border-bottom-color: #e8eef6 !important;
+}
+
+#manage-section.manage-classes-view .class-card-icon {
+  width: 34px !important;
+  height: 34px !important;
+  border: 1px solid #e1ebf8;
+  border-radius: 10px !important;
+  background: #f1f6fd !important;
+  color: #3470c9 !important;
+}
+
+#manage-section.manage-classes-view .class-card-info strong {
+  color: #243b5a !important;
+  font-size: 0.84rem !important;
+}
+
+#manage-section.manage-classes-view .class-card-info .class-card-info-label {
+  color: #7d8da4 !important;
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+#manage-section.manage-classes-view .class-card-info .class-card-secondary {
+  color: #71839b !important;
+  font-size: 0.7rem !important;
+  line-height: 1.25;
+}
+
+#manage-section.manage-classes-view .class-card-info small {
+  color: #7d8da4 !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .classes-table
+  tbody
+  td.class-card-actions {
+  min-height: 48px !important;
+  padding: 7px 14px !important;
+  background: #f8fafd !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .view-subjects-btn {
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  border: 1px solid #d6e6fb !important;
+  border-radius: 9px !important;
+  background: #edf5ff !important;
+  color: #2459a6 !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .view-subjects-btn:hover,
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  .view-subjects-btn:focus-visible {
+  background: #dcecff !important;
+}
+
+@media (max-width: 480px) {
+  #manage-section.manage-classes-view
+    #classes
+    .classes-table
+    tbody
+    td.class-card-section {
+    padding: 8px 12px !important;
+  }
+
+  #manage-section.manage-classes-view
+    #classes
+    .classes-table
+    tbody
+    td.class-card-term,
+  #manage-section.manage-classes-view
+    #classes
+    .classes-table
+    tbody
+    td.class-card-assigned,
+  #manage-section.manage-classes-view
+    #classes
+    .classes-table
+    tbody
+    td.class-card-enrolled {
+    margin-right: 12px !important;
+    margin-left: 12px !important;
+  }
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  > .action-buttons
+  > .edit-btn,
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  > .action-buttons
+  > .delete-btn {
+  box-sizing: border-box !important;
+  width: 22px !important;
+  min-width: 22px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  > .action-buttons
+  > .edit-btn
+  i,
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  > .action-buttons
+  > .delete-btn
+  i {
+  font-size: 1rem !important;
+}
+
+#manage-section.manage-classes-view
+  #classes
+  .class-card-actions
+  > .action-buttons {
+  gap: 0 !important;
+}
+
+/* Keep the outer list boxes consistent across admin sections. */
+#subjects-section > .subjects-page-heading-box,
+#subjects-section > .table-wrapper,
+#manage-section.manage-subjects-view #subjects,
+#manage-section.manage-classes-view #classes,
+#manage-section.manage-classes-view #classes .classes-table tbody tr,
+#faculties-section > .faculty-page-heading-box,
+#faculties-section > .faculty-list-box,
+#students-section > .student-page-heading-box,
+#students-section > .student-table-box,
+#academic-year-section > .academic-year-page-heading-box,
+#academic-year-section > .academic-year-list-box,
+#report-section > .table-wrapper {
+  border-radius: 12px !important;
+}
+
+#manage-section .manage-program-banner,
+#manage-section.manage-classes-view .manage-subjects-panel,
+#manage-section.manage-classes-view .manage-curriculum-heading {
+  border-radius: 12px !important;
+}
+
+#subjects-section > .table-wrapper .subjects-table thead,
+#subjects-section > .table-wrapper .subjects-table thead tr,
+#subjects-section > .table-wrapper .subjects-table thead th,
+#subjects-section > .table-wrapper .subjects-table thead th:first-child,
+#subjects-section > .table-wrapper .subjects-table thead th:last-child,
+#manage-section.manage-subjects-view #subjects .subjects-table thead,
+#manage-section.manage-subjects-view #subjects .subjects-table thead tr,
+#manage-section.manage-subjects-view #subjects .subjects-table thead th,
+#manage-section.manage-subjects-view #subjects .subjects-table thead th:first-child,
+#manage-section.manage-subjects-view #subjects .subjects-table thead th:last-child {
+  border-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+@media (max-width: 1180px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(36px, auto) auto auto !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-content-actions
+    > .manage-subject-control-box {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-class-semester-filter-wrapper {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #manage-section.manage-classes-view .manage-curriculum-heading {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(36px, auto) auto auto auto !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-class-semester-filter-wrapper {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+  }
+
+  #manage-section.manage-classes-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .add-manage-btn {
+    grid-column: 1 / -1 !important;
+    grid-row: 4 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .search-wrapper,
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .manage-semester-filter-wrapper {
+    grid-column: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .search-wrapper {
+    grid-row: 1 !important;
+  }
+
+  #manage-section.manage-specific-year.manage-subjects-view
+    .manage-subject-control-box
+    > .manage-semester-filter-wrapper {
+    grid-row: 2 !important;
+  }
+}
+
+#manage-section .manage-subjects-pagination .spager-btn.active,
+#manage-section .manage-subjects-pagination .spager-btn.active:hover:not([disabled]) {
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #4b5563 !important;
+  box-shadow: none !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-subject-control-box
+  > .manage-semester-filter-wrapper
+  > i {
+  display: inline-block !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-subject-control-box
+  > .manage-semester-filter-wrapper {
+  gap: 8px !important;
+}
+
+#manage-section.manage-specific-year.manage-subjects-view
+  .manage-subject-control-box
+  > .manage-semester-filter-wrapper
+  > select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding: 0 2px !important;
+  color: #1e293b !important;
+  font-size: 13px !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+#facultyReportModal .category-section .report-section-title h4,
+#facultyReportModal .category-pill-name,
+#facultyReportModal .category-pill-percent,
+#facultyReportModal .category-pill-rating {
+  font-weight: 400 !important;
+}
+
+#facultyReportModal .evaluation-details-table-wrap {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#facultyReportModal .evaluation-details-table-wrap .table-scroll {
+  max-height: 240px !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+#facultyReportModal .report-modal-body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+#facultyReportModal .report-modal-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#facultyReportModal
+  .evaluation-details-table-wrap
+  .table-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+html:has(body > main > #dashboard-section:not([style*="display: none"])) {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html:has(body > main > #dashboard-section:not([style*="display: none"]))::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }

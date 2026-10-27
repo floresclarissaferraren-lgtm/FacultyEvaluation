@@ -236,6 +236,118 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const sectionSkeletons = {
+    "dashboard-section": `
+      <div class="admin-welcome-box admin-skeleton-card admin-skeleton-welcome">
+        <div class="admin-welcome-copy">
+          <div class="admin-welcome-heading"><span class="admin-skeleton-line title"></span></div>
+          <div class="admin-skeleton-welcome-copy">
+            <span class="admin-skeleton-line meta"></span>
+            <span class="admin-skeleton-line meta short"></span>
+          </div>
+        </div>
+        <span class="admin-skeleton-welcome-image"></span>
+      </div>
+      <div class="dashboard admin-skeleton-grid">
+        ${Array.from({ length: 3 })
+          .map(
+            () => `
+          <div class="dashboard-card admin-skeleton-card">
+            <div class="dashboard-content">
+              <div class="admin-skeleton-stack">
+                <span class="admin-skeleton-line title"></span>
+                <span class="admin-skeleton-line value"></span>
+                <span class="admin-skeleton-line meta"></span>
+              </div>
+              <span class="admin-skeleton-icon"></span>
+            </div>
+          </div>
+        `,
+          )
+          .join("")}
+        <div class="admin-period-summary admin-skeleton-card admin-skeleton-overview">
+          <span class="admin-skeleton-line title"></span>
+          ${Array.from({ length: 3 })
+            .map(
+              () => `
+            <div class="admin-period-item">
+              <span class="admin-skeleton-line label"></span>
+              <span class="admin-skeleton-line meta"></span>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      </div>
+      <div class="dashboard-row-2 admin-skeleton-grid">
+        <div class="dashboard-card admin-skeleton-card">
+          <div class="dashboard-content">
+            <div class="rating-header"><span class="admin-skeleton-line title"></span></div>
+            <div class="rating-distribution-inner">
+              <span class="admin-skeleton-chart"></span>
+              <div class="admin-skeleton-list">
+                ${Array.from({ length: 5 })
+                  .map(
+                    () => '<span class="admin-skeleton-line row"></span>',
+                  )
+                  .join("")}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-card admin-skeleton-card">
+          <div class="dashboard-content">
+            <div class="rating-header"><span class="admin-skeleton-line title"></span></div>
+            <div class="admin-skeleton-list">
+              ${Array.from({ length: 3 })
+                .map(
+                  () => `
+                <div class="admin-skeleton-progress-row">
+                  <div class="admin-skeleton-progress-heading">
+                    <span class="admin-skeleton-line code"></span>
+                    <span class="admin-skeleton-line description"></span>
+                    <span class="admin-skeleton-line percent"></span>
+                  </div>
+                  <span class="admin-skeleton-progress-bar"></span>
+                </div>
+              `,
+                )
+                .join("")}
+              <div class="admin-skeleton-progress-summary">
+                ${Array.from({ length: 3 })
+                  .map(
+                    () => `
+                  <div>
+                    <span class="admin-skeleton-line value"></span>
+                    <span class="admin-skeleton-line label"></span>
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-card admin-skeleton-ranking-group">
+          <div class="rating-header"><span class="admin-skeleton-line title"></span></div>
+          <div class="admin-skeleton-ranking-list">
+            ${Array.from({ length: 4 })
+              .map(
+                () => `
+              <div class="admin-skeleton-ranking-card">
+                <span class="admin-skeleton-ranking-avatar"></span>
+                <div class="admin-skeleton-ranking-details">
+                  <span class="admin-skeleton-line ranking-name"></span>
+                  <span class="admin-skeleton-progress-bar"></span>
+                </div>
+                <span class="admin-skeleton-line ranking-score"></span>
+              </div>
+            `,
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>
+    `,
     "programs-section": `
       <div class="programs-container-box admin-skeleton-card">
         <div class="programs-header">
@@ -1020,6 +1132,7 @@ document.addEventListener("DOMContentLoaded", () => {
             loadPeriods?.();
             await loadDashboardPeriodSetting?.();
             await refreshAcademicYearTable?.();
+            await window.loadAcademicYearSection?.();
           } else {
             deleteTarget.remove();
             if (deleteType === "program") {
@@ -3526,9 +3639,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const semester = c.period_semester
             ? escapeHtml(c.period_semester)
             : "";
-          const academicTerm = semester
-            ? `<strong>${semester}</strong>`
-            : "<strong>Term not assigned</strong>";
+          const academicYearLabel = academicYear || "Not assigned";
+          const semesterLabel = semester || "Semester not assigned";
           const sectionBlock = String(c.block || "").trim();
           const sectionLetter = sectionBlock.match(/[A-Za-z]/);
           const blockBadge = escapeHtml(
@@ -3552,21 +3664,23 @@ document.addEventListener("DOMContentLoaded", () => {
               <td class="class-card-term">
                 <span class="class-card-icon"><i class="ph ph-calendar-blank" aria-hidden="true"></i></span>
                 <span class="class-card-info">
-                  ${academicTerm}
+                  <small class="class-card-info-label">Academic year</small>
+                  <strong>${academicYearLabel}</strong>
+                  <small class="class-card-secondary">${semesterLabel}</small>
                 </span>
               </td>
               <td class="class-card-assigned">
                 <span class="class-card-icon"><i class="ph ph-book-open" aria-hidden="true"></i></span>
                 <span class="class-card-info">
+                  <small class="class-card-info-label">Subjects</small>
                   <strong class="class-card-subject-count">Loading...</strong>
-                  <small class="class-card-load-state">Subjects assigned</small>
                 </span>
               </td>
               <td class="class-card-enrolled">
                 <span class="class-card-icon"><i class="ph ph-users-three" aria-hidden="true"></i></span>
                 <span class="class-card-info">
+                  <small class="class-card-info-label">Enrolled</small>
                   <strong>${enrolledStudentCount}</strong>
-                  <small>Enrolled</small>
                 </span>
               </td>
               <td class="action-cell class-card-actions">
@@ -3953,6 +4067,10 @@ document.addEventListener("DOMContentLoaded", () => {
     modalTitle.innerHTML = `Class Subjects`;
     className.textContent = `Loading...`;
     subjectsList.innerHTML = "<div class='loading'>Loading subjects...</div>";
+    modal.dataset.classId = String(classId);
+    modal.dataset.sectionName = String(sectionName || "");
+    modal.dataset.yearLevel = String(yearLevel || "");
+    modal.dataset.periodLabel = String(periodLabel || "");
     modal.style.display = "flex";
 
     // Fetch program information to get program code
@@ -3964,12 +4082,20 @@ document.addEventListener("DOMContentLoaded", () => {
           ? currentProgram.program_code
           : "PROGRAM";
         const yearDigit = yearLevel.match(/\d+/);
-        className.textContent = `${programCode}- ${yearDigit ? yearDigit[0] : ""}${sectionName}${displayPeriodLabel ? ` · ${displayPeriodLabel}` : ""}`;
+        const sectionLabel = String(sectionName || "").trim().toUpperCase();
+        className.innerHTML = `
+          <span class="view-class-program">${escapeHtml(programCode)} - ${escapeHtml(yearDigit ? yearDigit[0] : "")} ${escapeHtml(sectionLabel)}</span>
+          ${displayPeriodLabel ? `<span class="view-class-period">${escapeHtml(displayPeriodLabel)}</span>` : ""}
+        `;
       })
       .catch((err) => {
         console.error("Error fetching program:", err);
         const yearDigit = yearLevel.match(/\d+/);
-        className.textContent = `${yearDigit ? yearDigit[0] : ""}${sectionName}${displayPeriodLabel ? ` · ${displayPeriodLabel}` : ""}`;
+        const sectionLabel = String(sectionName || "").trim().toUpperCase();
+        className.innerHTML = `
+          <span class="view-class-program">${escapeHtml(yearDigit ? yearDigit[0] : "")} ${escapeHtml(sectionLabel)}</span>
+          ${displayPeriodLabel ? `<span class="view-class-period">${escapeHtml(displayPeriodLabel)}</span>` : ""}
+        `;
       });
 
     // Fetch subjects for this class
@@ -3984,22 +4110,18 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        let html = "<div class='subjects-grid'>";
+        let html = "";
         matchingSubjects.forEach((subject) => {
           html += `
-          <div class='subject-card' data-subject-id='${subject.subject_id}' data-class-id='${classId}'>
-            <div class='subject-header'>
-              <strong>${subject.subject_code}</strong>
-            </div>
-            <p class='subject-desc'>${subject.subject_desc || ""}</p>
-            <div class='class-subject-instructor'>
-              <i class='ph ph-user' aria-hidden='true'></i>
-              Instructor: ${subject.faculty_name || "Unassigned"}
+          <div class='class-subject-row' data-subject-id='${subject.subject_id}' data-class-id='${classId}'>
+            <span class='class-subject-code'>${subject.subject_code || "SUB"}</span>
+            <div class='class-subject-info'>
+              <strong>${subject.subject_desc || subject.subject_code || "Assigned Subject"}</strong>
+              <span class='class-subject-instructor'>Instructor: ${subject.faculty_name || "Unassigned"}</span>
             </div>
           </div>
         `;
         });
-        html += "</div>";
 
         subjectsList.innerHTML = html;
       })
@@ -4199,9 +4321,12 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.display = "none";
         showNotification("Faculty assignment updated successfully!", "#4caf50");
         const classModal = document.getElementById("viewClassSubjectsModal");
-        const className =
-          classModal.querySelector("#viewClassName").textContent;
-        showClassSubjectsModal(classId, className, "");
+        showClassSubjectsModal(
+          classId,
+          classModal.dataset.sectionName,
+          classModal.dataset.yearLevel,
+          classModal.dataset.periodLabel,
+        );
       } else {
         const assignMsg = (addRes.message || "").toLowerCase();
         if (assignMsg.includes("subject already exists in this section")) {
@@ -11229,9 +11354,19 @@ document.addEventListener("DOMContentLoaded", function () {
     row.innerHTML = `
       <td>${escapeAcademicHtml(period.ay)}</td>
       <td>${escapeAcademicHtml(period.semester)}</td>
-      <td><span class="status-badge ${isArchived ? "inactive" : isActive ? "active" : "inactive"}"><span class="status-dot" aria-hidden="true"></span>${isArchived ? "Archived" : isActive ? "Active" : "Inactive"}</span></td>
-      ${!isArchived ? `<td class="action-cell">
-        <div class="action-buttons">
+      ${isArchived ? "" : `<td><span class="status-badge ${isActive ? "active" : "inactive"}"><span class="status-dot" aria-hidden="true"></span>${isActive ? "Active" : "Inactive"}</span></td>`}
+      <td class="action-cell">
+        ${
+          isArchived
+            ? `<div class="archived-record-actions">
+                <button type="button" class="archived-record-action restore-btn period-archive-btn" title="Restore academic year" aria-label="Restore academic year">
+                  <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i><span>Restore</span>
+                </button>
+                <button type="button" class="archived-record-action delete-btn period-delete-btn" title="Delete academic year permanently" aria-label="Delete academic year permanently">
+                  <i class="ph ph-trash" aria-hidden="true"></i><span>Delete</span>
+                </button>
+              </div>`
+            : `<div class="action-buttons">
           <button class="manage-period-btn" title="Manage Period" aria-label="Manage Period">
             <i class="ph ph-calendar-dots"></i>
           </button>
@@ -11241,13 +11376,19 @@ document.addEventListener("DOMContentLoaded", function () {
           <button class="action-icon-btn period-archive-btn" title="Archive" aria-label="Archive Academic Year">
             <i class="ph ph-archive"></i>
           </button>
-        </div>
-      </td>` : ""}
+        </div>`
+        }
+      </td>
     `;
 
     const managePeriodBtn = row.querySelector(".manage-period-btn");
     const editBtn = row.querySelector(".edit-btn");
     const archiveBtn = row.querySelector(".period-archive-btn");
+    const deleteBtn = row.querySelector(".period-delete-btn");
+
+    deleteBtn?.addEventListener("click", () => {
+      openDeleteModal("period", `${period.ay} - ${period.semester}`, row);
+    });
 
     managePeriodBtn?.addEventListener("click", function (e) {
       e.preventDefault();
@@ -11455,7 +11596,7 @@ document.addEventListener("DOMContentLoaded", function () {
         archivedTableBody.innerHTML = "";
         if (archivedPeriods.length === 0) {
           archivedTableBody.innerHTML =
-          '<tr><td colspan="3" class="admin-empty-state">No archived academic years.</td></tr>';
+            '<tr><td colspan="3" class="admin-empty-state">No archived academic years.</td></tr>';
         } else {
           archivedPeriods.forEach((period) =>
             archivedTableBody.appendChild(renderAcademicYearRow(period)),

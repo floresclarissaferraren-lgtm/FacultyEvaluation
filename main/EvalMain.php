@@ -588,13 +588,18 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
           </div>
           <div class="skeleton-large-card skeleton-top-performance">
             <div class="skeleton-title" style="width: 160px; height: 16px;"></div>
-            <div class="skeleton-top-performance-feature">
-              <div class="skeleton-top-performance-avatar"></div>
-              <div class="skeleton-top-performance-name"></div>
-              <div class="skeleton-top-performance-score"></div>
-              <div class="skeleton-top-performance-rank"></div>
+            <div class="skeleton-top-performance-list">
+              <?php for ($rankingSkeleton = 0; $rankingSkeleton < 4; $rankingSkeleton++): ?>
+                <div class="skeleton-top-performance-feature">
+                  <div class="skeleton-top-performance-avatar"></div>
+                  <div class="skeleton-top-performance-details">
+                    <div class="skeleton-top-performance-name"></div>
+                    <div class="skeleton-top-performance-bar"></div>
+                  </div>
+                  <div class="skeleton-top-performance-score"></div>
+                </div>
+              <?php endfor; ?>
             </div>
-            <div class="skeleton-text" style="width: 80%; height: 10px; margin-top: auto; margin-bottom: 0;"></div>
           </div>
         </div>
 
