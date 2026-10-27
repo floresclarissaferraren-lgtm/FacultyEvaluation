@@ -115,7 +115,7 @@ function sendEmail(
  * Generates a visually stunning, responsive, and Gmail-compatible HTML email template.
  *
  * @param string $title Header/Subject title in the email card.
- * @param string $greeting Greeting to the user (e.g. "Hello Professor John Doe").
+ * @param string $greeting Greeting to the user (e.g. "Hello Instructor John Doe").
  * @param string $content_html The body paragraphs, instructions or message.
  * @param array|null $highlight_box Optional array with keys: 'label', 'value', 'subtext'.
  * @param array|null $cta Optional array with keys: 'label', 'url'.

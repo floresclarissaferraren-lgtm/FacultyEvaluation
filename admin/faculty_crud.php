@@ -226,7 +226,7 @@ if ($action === "add") {
 
     $title = "Welcome to Faculty Evaluation System";
     $greeting =
-        "Hello Professor " .
+        "Hello Instructor " .
         htmlspecialchars($firstname . " " . $lastname, ENT_QUOTES, "UTF-8") .
         ",";
     $content_html =

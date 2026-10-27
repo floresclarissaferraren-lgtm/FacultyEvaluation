@@ -176,11 +176,11 @@ if ($subjectStmt) {
         </div>
       </div>
       <hr class="dropdown-divider">
-      <a href="#" onclick="showPasswordForm(event)">
-        <i class="ph ph-key"></i> Change Password
-      </a>
       <a href="#" onclick="showProfile(event)">
         <i class="ph ph-user"></i> Profile
+      </a>
+      <a href="#" onclick="showPasswordForm(event)">
+        <i class="ph ph-key"></i> Change Password
       </a>
       <a href="#" onclick="showEvaluationHistory(event)">
         <i class="ph ph-clock-counter-clockwise"></i> Evaluation History

@@ -418,7 +418,7 @@ function handleExpiredPeriodClosing(
 
                 $title = "Evaluation Results Ready";
                 $greeting =
-                    "Dear Professor " .
+                    "Dear Instructor " .
                     htmlspecialchars($facultyName, ENT_QUOTES, "UTF-8") .
                     ",";
                 $content_html =
