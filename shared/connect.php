@@ -6,23 +6,36 @@ $user = getenv("FACULTY_DB_USER");
 $pass = getenv("FACULTY_DB_PASSWORD");
 $db = getenv("FACULTY_DB_NAME");
 
+$hasDatabaseConfig =
+    ($host !== false && $host !== "") ||
+    ($user !== false && $user !== "") ||
+    ($pass !== false && $pass !== "") ||
+    ($db !== false && $db !== "");
+
+if (!$hasDatabaseConfig) {
+    $host = "localhost";
+    $user = "root";
+    $pass = "";
+    $db = "faculty_evaluation_db";
+}
+
 if (
     $host === false ||
     $host === "" ||
     $user === false ||
     $user === "" ||
-    strtolower($user) === "root" ||
+    ($hasDatabaseConfig && strtolower($user) === "root") ||
     $pass === false ||
-    $pass === "" ||
+    ($hasDatabaseConfig && $pass === "") ||
     $db === false ||
     $db === ""
 ) {
     error_log(
-        "Faculty Evaluation database configuration is missing or uses a disallowed database account.",
+        "Faculty Evaluation database configuration is incomplete or uses a disallowed database account.",
     );
     http_response_code(500);
     exit(
-        "Database configuration is incomplete. Configure a dedicated application database account."
+        "Database configuration is incomplete. Configure all FACULTY_DB_* values or remove them to use local XAMPP defaults."
     );
 }
 

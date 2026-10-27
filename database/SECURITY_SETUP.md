@@ -1,21 +1,25 @@
-# Security configuration
+# Database configuration
 
-The application requires a dedicated MySQL account. Do not configure it to use
-`root` or an empty password.
+## Local XAMPP default
 
-## Current XAMPP setup
+For a basic local XAMPP setup, the app uses these defaults when none of the
+`FACULTY_DB_*` environment variables are set:
 
-The local XAMPP installation has been configured with a randomly generated
-password and the `faculty_eval_app` account. The credentials are stored outside
-the web root in
-`C:\xampp\apache\conf\extra\faculty-evaluation-env.conf`. That file is readable
-only by the Apache account, SYSTEM, and local Administrators. Apache includes
-it through `httpd-xampp.conf`.
+- Host: `localhost`
+- User: `root`
+- Password: empty
+- Database: `faculty_evaluation_db`
 
-Do not copy the generated password into this repository. If the Apache
-configuration needs to be moved or restored, create a fresh password, update
-the MySQL account and the external Apache environment file together, then
-restart Apache.
+This restores the simple local workflow: import the database into phpMyAdmin,
+then run the app. It assumes the local MySQL `root` account has no password.
+If Apache has any `FACULTY_DB_*` variables configured, the app requires all
+four values and does not use these defaults.
+
+## Recommended account for shared or production deployments
+
+Do not use the local XAMPP defaults on a server accessible to other users or
+from the internet. A `root` account with no password gives the application
+broad access to the MySQL server. Use a dedicated account instead.
 
 ## MySQL account
 
@@ -34,8 +38,8 @@ privileges. Do not grant privileges on `*.*`.
 
 ## Apache environment
 
-Set these variables in Apache configuration outside the web root (for example,
-the XAMPP Apache configuration), then restart Apache:
+Set all four variables in Apache configuration outside the web root (for
+example, the XAMPP Apache configuration), then restart Apache:
 
 ```apache
 SetEnv FACULTY_DB_HOST "localhost"
@@ -44,9 +48,9 @@ SetEnv FACULTY_DB_PASSWORD "REPLACE_WITH_THE_SAME_RANDOM_PASSWORD"
 SetEnv FACULTY_DB_NAME "faculty_evaluation_db"
 ```
 
-The app intentionally returns an error instead of falling back to MySQL root
-when the configuration is missing. Keep the password out of source control and
-out of files served by Apache.
+Keep the password out of source control and out of files served by Apache. To
+return to the local defaults, remove all four `FACULTY_DB_*` settings from the
+Apache configuration and restart Apache.
 
 Password-reset codes are stored as password hashes, expire after 10 minutes,
 and only the newest code per email remains valid. Verification is rate-limited,
