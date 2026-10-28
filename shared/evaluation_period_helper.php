@@ -571,7 +571,7 @@ function helperGetFacultyPerSubjectReportData(
         INNER JOIN add_subjects s  ON s.id  = e.subject_id
         INNER JOIN add_programs p  ON p.id  = s.program_id
         WHERE e.faculty_id = ?
-          AND e.period_id = ?
+          AND EXISTS (SELECT 1 FROM evaluation_periods ep WHERE ep.id = ? AND TRIM(ep.ay) = TRIM(e.academic_year) AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(e.semester)))
           AND e.subject_id > 0
         GROUP BY
             s.id,
@@ -641,7 +641,7 @@ function helperGetFacultyPerSubjectReportData(
         // Student comments
         $fbStmt = $conn->prepare("
             SELECT feedback FROM evaluations
-            WHERE faculty_id = ? AND subject_id = ? AND class_id = ? AND period_id = ?
+            WHERE faculty_id = ? AND subject_id = ? AND class_id = ? AND EXISTS (SELECT 1 FROM evaluation_periods ep WHERE ep.id = ? AND TRIM(ep.ay) = TRIM(academic_year) AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(semester)))
               AND feedback IS NOT NULL AND TRIM(feedback) != ''
             ORDER BY created_at DESC
         ");
@@ -685,7 +685,7 @@ function helperGetFacultyPerSubjectReportData(
     $totalStmt = $conn->prepare("
         SELECT COUNT(id) AS total, MIN(DATE(created_at)) AS date_from, MAX(DATE(created_at)) AS date_to
         FROM evaluations
-        WHERE faculty_id = ? AND period_id = ?
+        WHERE faculty_id = ? AND EXISTS (SELECT 1 FROM evaluation_periods ep WHERE ep.id = ? AND TRIM(ep.ay) = TRIM(academic_year) AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(semester)))
     ");
     $totalStmt->bind_param("ii", $faculty_id, $period_id);
     $totalStmt->execute();
@@ -719,7 +719,7 @@ function helperGetFacultyPerSubjectReportData(
 
     $allFbStmt = $conn->prepare("
         SELECT feedback FROM evaluations
-        WHERE faculty_id = ? AND period_id = ? AND feedback IS NOT NULL AND TRIM(feedback) != ''
+        WHERE faculty_id = ? AND EXISTS (SELECT 1 FROM evaluation_periods ep WHERE ep.id = ? AND TRIM(ep.ay) = TRIM(academic_year) AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(semester))) AND feedback IS NOT NULL AND TRIM(feedback) != ''
         ORDER BY created_at DESC
     ");
     $allFbStmt->bind_param("ii", $faculty_id, $period_id);

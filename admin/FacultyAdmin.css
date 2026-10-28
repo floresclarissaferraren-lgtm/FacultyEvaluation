@@ -9538,6 +9538,7 @@ div#report-section .evaluation-table .badge.na {
   box-sizing: border-box;
 }
 
+
 #subjectSelectionModal {
   z-index: 100000 !important;
 }
@@ -25675,6 +25676,18 @@ button.classes-btn:not(:disabled):hover i {
   margin-bottom: 0;
 }
 
+#addClassModal .class-semester-row {
+  grid-template-columns: minmax(0, 1fr) !important;
+  width: 100%;
+}
+
+#addClassModal .class-semester-row > div,
+#addClassModal .class-semester-row #class-semester {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: none !important;
+}
+
 #addClassModal .form-row > div {
   display: flex;
   flex-direction: column;
@@ -38411,7 +38424,7 @@ main > .section,
   min-height: 64px !important;
   padding: 10px 16px !important;
   border-bottom-color: rgba(255, 255, 255, 0.24) !important;
-  background: linear-gradient(115deg, #1769ad 0%, #1c85db 68%, #3296e5 100%) !important;
+  background: #1c85db !important;
 
 }
 
@@ -38847,4 +38860,266 @@ html:has(body > main > #dashboard-section:not([style*="display: none"]))::-webki
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+}
+
+/* Keep controls in all admin Add forms consistently less rounded. */
+[id^="add"][id$="Modal"] input:not([type="checkbox"]):not([type="radio"]),
+[id^="add"][id$="Modal"] select {
+  border-radius: 6px !important;
+}
+
+#addStudentModal #yearlevel-row input,
+#addStudentModal #yearlevel-row select,
+#addStudentModal #student-section {
+  border-radius: 6px !important;
+}
+
+#addClassModal .form-row select,
+#addClassModal .form-row input,
+#addClassModal .class-subject-search .subject-search-input,
+#addClassModal .class-subject-faculty-select {
+  border-radius: 6px !important;
+}
+
+#viewFacultySubjectsModal .faculty-profile-summary,
+#viewFacultySubjectsModal .faculty-subject-list,
+#viewFacultySubjectsModal .faculty-subjects-heading,
+#viewFacultySubjectsModal .faculty-program-header,
+#viewFacultySubjectsModal .faculty-subject-row,
+#viewFacultySubjectsModal .faculty-program-code,
+#viewFacultySubjectsModal .faculty-subject-code,
+#viewFacultySubjectsModal .faculty-profile-header .close-btn {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#viewFacultySubjectsModal .faculty-profile-summary {
+  background: #f2f8fe !important;
+}
+
+#viewFacultySubjectsModal .faculty-subject-list {
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+#viewFacultySubjectsModal .faculty-subjects-heading {
+  background: #ffffff;
+}
+
+#viewFacultySubjectsModal .faculty-program-header {
+  background: #f5faff;
+}
+
+#viewFacultySubjectsModal .faculty-subject-code,
+#viewFacultySubjectsModal .faculty-program-code {
+  background: #eff8ff;
+}
+
+#viewFacultySubjectsModal .faculty-profile-header .close-btn {
+  background: #f5f8fc;
+}
+
+#viewStudentSubjectsModal .student-profile-summary,
+#viewStudentSubjectsModal .student-subject-list,
+#viewStudentSubjectsModal .student-subjects-heading,
+#viewStudentSubjectsModal .student-subject-row,
+#viewStudentSubjectsModal .student-subject-code,
+#viewStudentSubjectsModal .student-profile-header .close-btn {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#viewStudentSubjectsModal .student-profile-summary {
+  background: #f2f8fe !important;
+}
+
+#viewStudentSubjectsModal .student-subject-list {
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+#viewStudentSubjectsModal .student-subjects-heading {
+  background: #ffffff;
+}
+
+#viewStudentSubjectsModal .student-subject-code {
+  background: #eff8ff;
+}
+
+#viewStudentSubjectsModal .student-profile-header .close-btn {
+  background: #f5f8fc;
+}
+
+#addQuestionModal .modal-content {
+  max-width: 500px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+}
+
+#addQuestionModal .addProgram-header {
+  align-items: center;
+  padding: 22px 24px !important;
+  border-bottom: 1px solid #dbeafe !important;
+  border-radius: 16px 16px 0 0 !important;
+  background: #ffffff !important;
+  color: #1e3a5f !important;
+}
+
+#addQuestionModal .addProgram-header h3 {
+  margin: 0;
+  color: #1e3a5f !important;
+  font-size: 0.9rem !important;
+  font-weight: 800;
+}
+
+#addQuestionModal .addProgram-header .close-btn {
+  width: 32px;
+  height: 32px;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  color: #cbd5e1 !important;
+  font-size: 23px;
+}
+
+#addQuestionModal .modal-body {
+  padding: var(--spacing-xl) !important;
+  background: #ffffff !important;
+}
+
+#addQuestionModal .category-label,
+#addQuestionModal .category-label .label-text,
+#addQuestionModal .modal-body > label {
+  color: #475569 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+#addQuestionModal .category-label .category-name {
+  color: #075985;
+  font-weight: 600;
+}
+
+#addQuestionModal #question-text {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #dbe3ed !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  padding: 12px 16px;
+  resize: vertical;
+}
+
+#addQuestionModal .submit-btn {
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #1877f2 !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  text-shadow: none !important;
+}
+
+/* Final overrides for the simplified Manage Periods modal. */
+#managePeriodsModal .modal-content {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16) !important;
+}
+
+#managePeriodsModal .modal-header {
+  padding: 18px 22px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+#managePeriodsModal .modal-header h3 {
+  color: #1f2937 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.02em;
+}
+
+#managePeriodsModal .modal-body,
+#managePeriodsModal .period-creation-section,
+#managePeriodsModal .periods-table-section {
+  background: #ffffff !important;
+}
+
+#managePeriodsModal .period-creation-section,
+#managePeriodsModal .periods-table-section {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+#managePeriodsModal .period-creation-section {
+  padding: 18px !important;
+}
+
+#managePeriodsModal .period-creation-section::before {
+  display: none !important;
+}
+
+#managePeriodsModal .period-section-title,
+#managePeriodsModal .periods-table-title-group span {
+  color: #1f2937 !important;
+  font-size: 0.95rem !important;
+  font-weight: 700;
+}
+
+#managePeriodsModal .period-section-subtitle {
+  color: #6b7280 !important;
+  font-size: 0.78rem !important;
+}
+
+#managePeriodsModal .period-input-group label {
+  color: #4b5563 !important;
+  font-size: 0.74rem !important;
+  font-weight: 600;
+}
+
+#managePeriodsModal .period-input-group input,
+#managePeriodsModal .period-input-group select {
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+#managePeriodsModal .period-add-btn {
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: #1877f2 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+#managePeriodsModal .periods-table-header {
+  border-bottom: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+}
+
+#managePeriodsModal .periods-table thead th {
+  background: #f9fafb !important;
+  color: #4b5563 !important;
+}
+
+#managePeriodsModal .periods-table tbody tr,
+#managePeriodsModal .periods-table tbody tr td {
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 600px) {
+  #managePeriodsModal .period-creation-section {
+    padding: 14px !important;
+  }
 }

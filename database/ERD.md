@@ -24,7 +24,6 @@ erDiagram
     ADD_CLASSES {
         int id PK
         int program_id FK
-        int period_id FK "nullable"
         varchar year_level
         varchar semester
         varchar block
@@ -114,7 +113,8 @@ erDiagram
         int faculty_id FK
         int subject_id FK
         int class_id FK
-        int period_id FK "nullable"
+        varchar academic_year
+        varchar semester
         decimal overall_rating
         text feedback
     }
@@ -207,13 +207,6 @@ erDiagram
 **Description:**
 - Each `add_programs` record can have multiple `add_classes` records.
 - The `program_id` in `add_classes` links each class to its program.
-
-### Evaluation Period ↔ Class (Schedules)
-
-**Relationship Type:** One-to-Many (1:N)  
-**Description:**
-- Each `evaluation_periods` record can be associated with multiple `add_classes` records.
-- The nullable `period_id` in `add_classes` links a class to its evaluation period when assigned.
 
 ### Category ↔ Question (Contains)
 
@@ -326,7 +319,7 @@ erDiagram
 **Relationship Type:** One-to-Many (1:N)  
 **Description:**
 - Each `evaluation_periods` record can group multiple `evaluations`.
-- The nullable `period_id` in `evaluations` links an evaluation to its period when assigned.
+- Evaluation records retain their academic year and semester as snapshot values.
 
 ### Evaluation ↔ Evaluation Answer (Has Answers)
 
@@ -388,7 +381,8 @@ erDiagram
   record, so this table is shown without a relationship.
 - `STUDENT_LOGIN.username` references `ADD_STUDENTS.student_number`, not the
   student's internal `id`.
-- `EVALUATIONS.period_id` and `ADD_CLASSES.period_id` are nullable foreign keys.
+- Evaluation records store academic year and semester snapshots. Class offerings
+  store only a semester label and are matched to the open evaluation period.
 - Cardinality is shown from the foreign-key structure; the database does not
   enforce all application-level rules such as having only one active
   evaluation period.

@@ -130,15 +130,8 @@ $periodStmt = $conn->prepare("
           SELECT 1
           FROM evaluations e
           WHERE e.faculty_id = ?
-            AND (
-                e.period_id = evaluation_periods.id
-                OR (
-                    e.period_id IS NULL
-                    AND evaluation_periods.start_date IS NOT NULL
-                    AND evaluation_periods.end_date IS NOT NULL
-                    AND DATE(e.created_at) BETWEEN evaluation_periods.start_date AND evaluation_periods.end_date
-                )
-            )
+            AND TRIM(e.academic_year) = TRIM(evaluation_periods.ay)
+            AND LOWER(TRIM(e.semester)) = LOWER(TRIM(evaluation_periods.semester))
       )
     LIMIT 1
 ");
@@ -155,10 +148,7 @@ if (!$evaluationPeriod) {
 }
 $periodStart = $evaluationPeriod["start_date"];
 $periodEnd = $evaluationPeriod["end_date"];
-$periodFilter = " AND (e.period_id = ? OR (
-    e.period_id IS NULL
-    AND DATE(e.created_at) BETWEEN ? AND ?
-))";
+$periodFilter = " AND EXISTS (SELECT 1 FROM evaluation_periods ep_filter WHERE ep_filter.id = ? AND TRIM(ep_filter.ay) = TRIM(e.academic_year) AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM(e.semester)) AND DATE(e.created_at) BETWEEN ? AND ?)";
 
 /* ── fetch every subject+class for the selected closed period ──────────── */
 /*
@@ -260,10 +250,10 @@ foreach ($subjectRows as $row) {
         WHERE faculty_id   = ?
           AND subject_id   = ?
           AND class_id     = ?
-          AND (period_id = ? OR (
-              period_id IS NULL
-              AND DATE(created_at) BETWEEN ? AND ?
-          ))
+          AND EXISTS (SELECT 1 FROM evaluation_periods ep_filter
+              WHERE ep_filter.id = ? AND TRIM(ep_filter.ay) = TRIM(academic_year)
+                AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM(semester))
+                AND DATE(created_at) BETWEEN ? AND ?)
           AND feedback IS NOT NULL
           AND TRIM(feedback) != ''
         ORDER BY created_at DESC

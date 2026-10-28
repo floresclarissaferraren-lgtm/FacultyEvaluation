@@ -48,20 +48,13 @@ function evaluationContextFilterSql(
     }
 
     if ($period_id !== null && $period_id > 0) {
-        $sql .= " AND (
-            {$alias}.period_id = ?
-            OR (
-                {$alias}.period_id IS NULL
-                AND EXISTS (
-                    SELECT 1
-                    FROM evaluation_periods ep_filter
-                    WHERE ep_filter.id = ?
-                      AND DATE({$alias}.created_at) BETWEEN ep_filter.start_date AND ep_filter.end_date
-                )
-            )
+        $sql .= " AND EXISTS (
+            SELECT 1 FROM evaluation_periods ep_filter
+            WHERE ep_filter.id = ?
+              AND TRIM(ep_filter.ay) = TRIM({$alias}.academic_year)
+              AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM({$alias}.semester))
         )";
-        $types .= "ii";
-        $params[] = $period_id;
+        $types .= "i";
         $params[] = $period_id;
     }
 

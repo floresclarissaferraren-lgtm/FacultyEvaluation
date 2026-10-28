@@ -3,6 +3,8 @@ ob_start();
 require_once __DIR__ . "/../shared/security.php";
 requireRole("faculty");
 include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/evaluation_schema.php";
+ensureEvaluationsSchema($conn);
 require_once __DIR__ . "/../shared/evaluation_period_helper.php";
 
 date_default_timezone_set("Asia/Manila");
@@ -50,15 +52,8 @@ $periodStmt = $conn->prepare("
           SELECT 1
           FROM evaluations e
           WHERE e.faculty_id = ?
-            AND (
-                e.period_id = evaluation_periods.id
-                OR (
-                    e.period_id IS NULL
-                    AND evaluation_periods.start_date IS NOT NULL
-                    AND evaluation_periods.end_date IS NOT NULL
-                    AND DATE(e.created_at) BETWEEN evaluation_periods.start_date AND evaluation_periods.end_date
-                )
-            )
+            AND TRIM(e.academic_year) = TRIM(evaluation_periods.ay)
+            AND LOWER(TRIM(e.semester)) = LOWER(TRIM(evaluation_periods.semester))
       )
     LIMIT 1
 ");

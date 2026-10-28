@@ -13,6 +13,7 @@ if ($action === "faculty_periods") {
 }
 header("Content-Type: application/json");
 include __DIR__ . "/connect.php";
+require_once __DIR__ . "/evaluation_schema.php";
 require_once __DIR__ . "/mailer.php";
 require_once __DIR__ . "/notify_evaluation_open.php";
 require_once __DIR__ . "/evaluation_period_helper.php";
@@ -199,6 +200,7 @@ function closeExpiredActivePeriod(mysqli $conn): void
 }
 
 ensurePeriodTables($conn);
+ensureEvaluationsSchema($conn);
 closeExpiredActivePeriod($conn);
 
 // Public-ish read used by other pages
@@ -310,13 +312,8 @@ if ($action === "faculty_periods") {
         INNER JOIN evaluations e
             ON e.faculty_id = ?
            AND (
-                e.period_id = p.id
-                OR (
-                    e.period_id IS NULL
-                    AND p.start_date IS NOT NULL
-                    AND p.end_date IS NOT NULL
-                    AND DATE(e.created_at) BETWEEN p.start_date AND p.end_date
-                )
+                TRIM(e.academic_year) = TRIM(p.ay)
+                AND LOWER(TRIM(e.semester)) = LOWER(TRIM(p.semester))
            )
         WHERE p.is_active = 0
         GROUP BY p.id, p.ay, p.semester, p.start_date, p.end_date
@@ -354,11 +351,8 @@ if ($action === "list") {
     $res = $conn->query(
         "SELECT id, ay, semester, start_date, end_date, is_active, is_archived,
                 (SELECT COUNT(*) FROM evaluations e
-                 WHERE e.period_id = evaluation_periods.id
-                    OR (e.period_id IS NULL
-                        AND evaluation_periods.start_date IS NOT NULL
-                        AND evaluation_periods.end_date IS NOT NULL
-                        AND DATE(e.created_at) BETWEEN evaluation_periods.start_date AND evaluation_periods.end_date)
+                 WHERE TRIM(e.academic_year) = TRIM(evaluation_periods.ay)
+                   AND LOWER(TRIM(e.semester)) = LOWER(TRIM(evaluation_periods.semester))
                 ) AS evaluation_count
          FROM evaluation_periods ORDER BY created_at DESC, id DESC",
     );
@@ -452,16 +446,11 @@ if ($action === "send_reports") {
     $evaluationCountStmt = $conn->prepare("
         SELECT COUNT(*) AS total
         FROM evaluations e
-        WHERE e.period_id = ?
-           OR (e.period_id IS NULL AND EXISTS (
-                SELECT 1 FROM evaluation_periods ep
-                WHERE ep.id = ?
-                  AND ep.start_date IS NOT NULL
-                  AND ep.end_date IS NOT NULL
-                  AND DATE(e.created_at) BETWEEN ep.start_date AND ep.end_date
-           ))
+        INNER JOIN evaluation_periods ep ON ep.id = ?
+          AND TRIM(e.academic_year) = TRIM(ep.ay)
+          AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester))
     ");
-    $evaluationCountStmt->bind_param("ii", $periodId, $periodId);
+    $evaluationCountStmt->bind_param("i", $periodId);
     $evaluationCountStmt->execute();
     $evaluationCount = intval(
         $evaluationCountStmt->get_result()->fetch_assoc()["total"] ?? 0,
@@ -838,39 +827,20 @@ if ($action === "delete") {
             exit();
         }
 
-        $classCount = 0;
-        if (tableColumnExists($conn, "add_classes", "period_id")) {
-            $classStmt = $conn->prepare(
-                "SELECT COUNT(*) AS count FROM add_classes WHERE period_id = ?",
-            );
-            $classStmt->bind_param("i", $id);
-            $classStmt->execute();
-            $classCount = intval(
-                $classStmt->get_result()->fetch_assoc()["count"] ?? 0,
-            );
-            $classStmt->close();
-        }
-
         $evaluationCount = 0;
-        if (tableColumnExists($conn, "evaluations", "period_id")) {
-            $evaluationStmt = $conn->prepare(
-                "SELECT COUNT(*) AS count FROM evaluations WHERE period_id = ?",
-            );
-            $evaluationStmt->bind_param("i", $id);
-            $evaluationStmt->execute();
-            $evaluationCount = intval(
-                $evaluationStmt->get_result()->fetch_assoc()["count"] ?? 0,
-            );
-            $evaluationStmt->close();
-        }
+        $evaluationStmt = $conn->prepare("SELECT COUNT(*) AS count FROM evaluations e INNER JOIN evaluation_periods ep ON ep.id = ? AND TRIM(e.academic_year) = TRIM(ep.ay) AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester))");
+        $evaluationStmt->bind_param("i", $id);
+        $evaluationStmt->execute();
+        $evaluationCount = intval($evaluationStmt->get_result()->fetch_assoc()["count"] ?? 0);
+        $evaluationStmt->close();
 
-        if ($classCount > 0 || $evaluationCount > 0) {
+        if ($evaluationCount > 0) {
             $conn->rollback();
             $transactionStarted = false;
             echo json_encode([
                 "success" => false,
                 "message" =>
-                    "This academic year period has linked classes or evaluation records. Archive it to preserve its history.",
+                    "This academic year period has evaluation records. Archive it to preserve its history.",
             ]);
             exit();
         }

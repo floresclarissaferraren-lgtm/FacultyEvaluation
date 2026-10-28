@@ -114,7 +114,7 @@ try {
     // Get overall rating, total responses, and period range from evaluations
     $subjectWhere =
         $subject_id > 0 ? " AND e.subject_id = ? AND e.class_id = ?" : "";
-    $periodWhere = $period_id > 0 ? " AND e.period_id = ?" : "";
+    $periodWhere = $period_id > 0 ? " AND EXISTS (SELECT 1 FROM evaluation_periods ep_filter WHERE ep_filter.id = ? AND TRIM(ep_filter.ay) = TRIM(e.academic_year) AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM(e.semester)))" : "";
     $overall_query = "SELECT 
                         COUNT(e.id) as total_evaluations,
                         COUNT(DISTINCT e.student_id) as total_respondents,
@@ -124,7 +124,7 @@ try {
                         MAX(ep.ay) AS ay,
                         MAX(ep.semester) AS semester
                     FROM evaluations e
-                    LEFT JOIN evaluation_periods ep ON ep.id = e.period_id
+                    LEFT JOIN evaluation_periods ep ON TRIM(ep.ay) = TRIM(e.academic_year) AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(e.semester))
                     WHERE e.faculty_id = ? {$subjectWhere} {$periodWhere}";
     $overall_stmt = $conn->prepare($overall_query);
     if ($subject_id > 0 && $period_id > 0) {

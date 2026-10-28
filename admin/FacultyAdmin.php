@@ -647,13 +647,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div>
-          <label for="class-academic-year">Academic Year</label>
-          <select id="class-academic-year">
-            <option value="">Academic Year</option>
-          </select>
-        </div>
+      <div class="form-row class-semester-row">
         <div>
           <label for="class-semester">Semester</label>
           <select id="class-semester" disabled>
@@ -1140,7 +1134,9 @@ include __DIR__ . "/totalstudents_dashcount.php";
           </div>
           <div>
             <label for="student-section">Section</label>
-            <input type="text" id="student-section" required>
+            <select id="student-section" required disabled>
+              <option value="">-- Select Section --</option>
+            </select>
           </div>
         </div>
       </div>

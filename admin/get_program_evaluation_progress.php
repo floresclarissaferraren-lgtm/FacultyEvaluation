@@ -25,7 +25,8 @@ try {
         $savedPeriodResult = $conn->query("
             SELECT ep.id
             FROM evaluation_periods ep
-            INNER JOIN evaluations e ON e.period_id = ep.id
+            INNER JOIN evaluations e ON TRIM(e.academic_year) = TRIM(ep.ay)
+                AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester))
             GROUP BY ep.id
             ORDER BY MAX(e.created_at) DESC, ep.id DESC
             LIMIT 1
@@ -39,7 +40,7 @@ try {
     $hasRecords = false;
     if ($progressPeriodId > 0) {
         $recordStmt = $conn->prepare(
-            "SELECT 1 FROM evaluations WHERE period_id = ? LIMIT 1",
+            "SELECT 1 FROM evaluations e INNER JOIN evaluation_periods ep ON ep.id = ? AND TRIM(e.academic_year) = TRIM(ep.ay) AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester)) LIMIT 1",
         );
         if ($recordStmt) {
             $recordStmt->bind_param("i", $progressPeriodId);
@@ -72,7 +73,7 @@ try {
                 FROM add_students st
                 INNER JOIN evaluation_periods ep ON ep.id = ?
                 INNER JOIN add_classes ac
-                    ON ac.period_id = ep.id
+                    ON LOWER(TRIM(ac.semester)) = LOWER(TRIM(ep.semester))
                    AND (
                        CAST(ac.program_id AS CHAR) = TRIM(st.program)
                        OR EXISTS (
@@ -108,7 +109,8 @@ try {
                    AND ev.faculty_id = cs.faculty_id
                    AND ev.subject_id = cs.subject_id
                    AND ev.class_id = ac.id
-                   AND ev.period_id = ep.id
+                   AND TRIM(ev.academic_year) = TRIM(ep.ay)
+                   AND LOWER(TRIM(ev.semester)) = LOWER(TRIM(ep.semester))
                 WHERE LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
                 GROUP BY ac.program_id, st.id
             ) AS student_progress

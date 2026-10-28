@@ -56,7 +56,7 @@ try {
                 FROM add_students st
                 INNER JOIN evaluation_periods ep ON ep.id = ?
                 INNER JOIN add_classes ac
-                    ON ac.period_id = ep.id
+                    ON LOWER(TRIM(ac.semester)) = LOWER(TRIM(ep.semester))
                    AND (
                        CAST(ac.program_id AS CHAR) = TRIM(st.program)
                        OR EXISTS (
@@ -92,7 +92,8 @@ try {
                    AND ev.faculty_id = cs.faculty_id
                    AND ev.subject_id = cs.subject_id
                    AND ev.class_id = ac.id
-                   AND ev.period_id = ep.id
+                   AND TRIM(ev.academic_year) = TRIM(ep.ay)
+                   AND LOWER(TRIM(ev.semester)) = LOWER(TRIM(ep.semester))
                 WHERE LOWER(TRIM(COALESCE(st.status, 'active'))) = 'active'
                 GROUP BY st.id
             ) AS student_progress
@@ -119,7 +120,7 @@ try {
         LEFT JOIN evaluations e
           ON f.id = e.faculty_id
          " .
-        ($active_period_id > 0 ? "AND e.period_id = ?" : "") .
+        ($active_period_id > 0 ? "AND EXISTS (SELECT 1 FROM evaluation_periods ep_filter WHERE ep_filter.id = ? AND TRIM(ep_filter.ay) = TRIM(e.academic_year) AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM(e.semester)))" : "") .
         "
         GROUP BY f.id, f.firstname, f.lastname, f.suffix
         HAVING response_count > 0

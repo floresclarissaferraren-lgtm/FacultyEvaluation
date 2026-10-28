@@ -47,7 +47,6 @@ CREATE TABLE `add_classes` (
   `program_id` int(11) NOT NULL,
   `year_level` varchar(20) NOT NULL,
   `semester` varchar(20) NOT NULL DEFAULT '1st Semester',
-  `period_id` int(11) DEFAULT NULL,
   `block` varchar(10) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -188,7 +187,8 @@ CREATE TABLE `evaluations` (
   `class_id` int(11) NOT NULL DEFAULT 0,
   `overall_rating` decimal(4,2) NOT NULL DEFAULT 0.00,
   `feedback` text DEFAULT NULL,
-  `period_id` int(11) DEFAULT NULL,
+  `academic_year` varchar(20) NOT NULL DEFAULT '',
+  `semester` varchar(50) NOT NULL DEFAULT '',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -402,11 +402,6 @@ ALTER TABLE `admin_login`
 
 --
 --
--- Academic-period lookup for class offerings
---
-ALTER TABLE `add_classes`
-  ADD KEY `idx_add_classes_period` (`period_id`);
-
 --
 -- Indexes for table `class_subjects`
 --
@@ -421,12 +416,11 @@ ALTER TABLE `class_subjects`
 --
 ALTER TABLE `evaluations`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_student_faculty_subject_class_period` (`student_id`,`faculty_id`,`subject_id`,`class_id`,`period_id`),
+  ADD UNIQUE KEY `uniq_student_faculty_subject_class_term` (`student_id`,`faculty_id`,`subject_id`,`class_id`,`academic_year`,`semester`),
   ADD KEY `idx_eval_faculty` (`faculty_id`),
   ADD KEY `idx_eval_student` (`student_id`),
   ADD KEY `idx_eval_subject` (`subject_id`),
-  ADD KEY `idx_eval_class` (`class_id`),
-  ADD KEY `idx_eval_period` (`period_id`);
+  ADD KEY `idx_eval_class` (`class_id`);
 
 --
 -- Indexes for table `evaluation_answers`
@@ -634,8 +628,7 @@ ALTER TABLE `student_subject_classes`
 -- Constraints for table `add_classes`
 --
 ALTER TABLE `add_classes`
-  ADD CONSTRAINT `add_classes_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `add_programs` (`id`),
-  ADD CONSTRAINT `fk_add_classes_period` FOREIGN KEY (`period_id`) REFERENCES `evaluation_periods` (`id`);
+  ADD CONSTRAINT `add_classes_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `add_programs` (`id`);
 
 --
 -- Constraints for table `add_questions`
@@ -679,7 +672,6 @@ ALTER TABLE `evaluations`
   ADD CONSTRAINT `fk_evaluations_faculty` FOREIGN KEY (`faculty_id`) REFERENCES `add_faculties` (`id`),
   ADD CONSTRAINT `fk_evaluations_subject` FOREIGN KEY (`subject_id`) REFERENCES `add_subjects` (`id`),
   ADD CONSTRAINT `fk_evaluations_class` FOREIGN KEY (`class_id`) REFERENCES `add_classes` (`id`),
-  ADD CONSTRAINT `fk_evaluations_period` FOREIGN KEY (`period_id`) REFERENCES `evaluation_periods` (`id`);
 
 ALTER TABLE `evaluation_answers`
   ADD CONSTRAINT `fk_answers_evaluation` FOREIGN KEY (`evaluation_id`) REFERENCES `evaluations` (`id`) ON DELETE CASCADE,

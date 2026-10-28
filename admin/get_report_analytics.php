@@ -34,12 +34,7 @@ try {
     }
 
     $query = "SELECT e.overall_rating, e.created_at, e.faculty_id, e.student_id,
-                     COALESCE(e.period_id,
-                         (SELECT ep2.id
-                          FROM evaluation_periods ep2
-                          WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
-                          ORDER BY ep2.id DESC
-                          LIMIT 1)) AS resolved_period_id,
+                     COALESCE(ep.id, 0) AS resolved_period_id,
                      f.firstname, f.lastname, f.suffix,
                      p.program_code, p.program_name, ep.ay AS academic_year, ep.semester
               FROM evaluations e
@@ -47,14 +42,8 @@ try {
               LEFT JOIN add_subjects s ON s.id = e.subject_id
               LEFT JOIN add_programs p ON p.id = s.program_id
               LEFT JOIN evaluation_periods ep
-                                ON ep.id = COALESCE(
-                                        e.period_id,
-                                        (SELECT ep2.id
-                                         FROM evaluation_periods ep2
-                                         WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
-                                         ORDER BY ep2.id DESC
-                                         LIMIT 1)
-                                )";
+                ON TRIM(ep.ay) = TRIM(e.academic_year)
+               AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(e.semester))";
     if ($where) {
         $query .= " WHERE " . implode(" AND ", $where);
     }

@@ -48,14 +48,8 @@ $sql = "SELECT
         FROM evaluations e
         INNER JOIN add_faculties f ON f.id = e.faculty_id
         LEFT JOIN evaluation_periods ep
-            ON ep.id = COALESCE(
-                e.period_id,
-                (SELECT ep2.id
-                 FROM evaluation_periods ep2
-                 WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
-                 ORDER BY ep2.id DESC
-                 LIMIT 1)
-            )";
+            ON TRIM(ep.ay) = TRIM(e.academic_year)
+           AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(e.semester))";
 
 $params = [];
 $types = "";

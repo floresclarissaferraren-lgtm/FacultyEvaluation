@@ -43,7 +43,6 @@ period.
 | `program_id` | `int(11)` | No | FK → `add_programs.id` | Program offering the class. |
 | `year_level` | `varchar(20)` | No | — | Year level for the class. |
 | `semester` | `varchar(20)` | No | `1st Semester` | Semester label for the class. |
-| `period_id` | `int(11)` | Yes | FK → `evaluation_periods.id` | Associated evaluation period, if assigned. |
 | `block` | `varchar(10)` | No | — | Block or section code. |
 | `created_at` | `timestamp` | No | Current timestamp | Creation time. |
 | `updated_at` | `timestamp` | No | Current timestamp, auto-update | Last update time. |
@@ -163,12 +162,13 @@ and evaluation period.
 | `class_id` | `int(11)` | No | `0`; FK → `add_classes.id` | Class offering being evaluated. |
 | `overall_rating` | `decimal(4,2)` | No | `0.00` | Calculated overall rating. |
 | `feedback` | `text` | Yes | — | Optional written feedback. |
-| `period_id` | `int(11)` | Yes | FK → `evaluation_periods.id` | Evaluation period. |
+| `academic_year` | `varchar(20)` | No | `''` | Academic year snapshot for this evaluation. |
+| `semester` | `varchar(50)` | No | `''` | Semester snapshot for this evaluation. |
 | `created_at` | `timestamp` | No | Current timestamp | Submission/creation time. |
 | `updated_at` | `timestamp` | No | Current timestamp, auto-update | Last update time. |
 
-The `(student_id, faculty_id, subject_id, class_id, period_id)` tuple is unique
-to support one evaluation per student, faculty, subject, class, and period.
+The `(student_id, faculty_id, subject_id, class_id, academic_year, semester)` tuple is unique
+to support one evaluation per student, faculty, subject, class, and semester.
 
 ### `evaluation_answers`
 

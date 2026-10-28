@@ -43,7 +43,7 @@ try {
         f.lastname,
         f.suffix,
         f.email,
-        COALESCE(e.period_id, ep.id, 0) AS resolved_period_id,
+        COALESCE(ep.id, 0) AS resolved_period_id,
         ep.ay AS academic_year,
         ep.semester,
         COUNT(DISTINCT e.student_id) as total_responses,
@@ -53,14 +53,8 @@ try {
     LEFT JOIN add_subjects s ON s.id = e.subject_id
     LEFT JOIN add_classes ac ON ac.id = e.class_id
     LEFT JOIN evaluation_periods ep
-        ON ep.id = COALESCE(
-            e.period_id,
-            (SELECT ep2.id
-             FROM evaluation_periods ep2
-             WHERE DATE(e.created_at) BETWEEN ep2.start_date AND ep2.end_date
-             ORDER BY ep2.id DESC
-             LIMIT 1)
-        )
+        ON TRIM(ep.ay) = TRIM(e.academic_year)
+       AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(e.semester))
     " .
         (!empty($where) ? " WHERE " . implode(" AND ", $where) : "") .
         "

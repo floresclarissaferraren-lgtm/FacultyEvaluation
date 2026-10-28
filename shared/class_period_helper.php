@@ -6,21 +6,63 @@ function ensureClassPeriodColumn(mysqli $conn): void
         return;
     }
 
-    $column = $conn->query("SHOW COLUMNS FROM add_classes LIKE 'period_id'");
-    if ($column && $column->num_rows === 0) {
+    $semesterColumn = $conn->query(
+        "SHOW COLUMNS FROM add_classes LIKE 'semester'",
+    );
+    if ($semesterColumn && $semesterColumn->num_rows === 0) {
         $conn->query(
-            "ALTER TABLE add_classes ADD COLUMN period_id INT(11) NULL AFTER semester",
+            "ALTER TABLE add_classes ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER year_level",
         );
     }
 
-    $index = $conn->query(
-        "SHOW INDEX FROM add_classes WHERE Key_name = 'idx_add_classes_period'",
-    );
-    if ($index && $index->num_rows === 0) {
-        $conn->query(
-            "ALTER TABLE add_classes ADD KEY idx_add_classes_period (period_id)",
-        );
+    $column = $conn->query("SHOW COLUMNS FROM add_classes LIKE 'period_id'");
+    if (!$column || $column->num_rows === 0) {
+        return;
     }
+
+    // Preserve the semester on each class before removing its academic-year link.
+    $periodTable = $conn->query("SHOW TABLES LIKE 'evaluation_periods'");
+    if ($periodTable && $periodTable->num_rows > 0) {
+        $conn->query("UPDATE add_classes ac
+            INNER JOIN evaluation_periods ep ON ep.id = ac.period_id
+            SET ac.semester = ep.semester");
+    }
+
+    $foreignKeys = $conn->query("SELECT DISTINCT CONSTRAINT_NAME
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'add_classes'
+          AND COLUMN_NAME = 'period_id'
+          AND REFERENCED_TABLE_NAME IS NOT NULL");
+    if ($foreignKeys) {
+        while ($foreignKey = $foreignKeys->fetch_assoc()) {
+            $name = str_replace(
+                '`',
+                '``',
+                (string) $foreignKey['CONSTRAINT_NAME'],
+            );
+            $conn->query("ALTER TABLE add_classes DROP FOREIGN KEY `{$name}`");
+        }
+    }
+
+    $indexes = $conn->query(
+        "SHOW INDEX FROM add_classes WHERE Column_name = 'period_id'",
+    );
+    $indexNames = [];
+    if ($indexes) {
+        while ($index = $indexes->fetch_assoc()) {
+            $name = (string) $index['Key_name'];
+            if ($name !== 'PRIMARY') {
+                $indexNames[$name] = true;
+            }
+        }
+    }
+    foreach (array_keys($indexNames) as $name) {
+        $escapedName = str_replace('`', '``', $name);
+        $conn->query("ALTER TABLE add_classes DROP INDEX `{$escapedName}`");
+    }
+
+    $conn->query("ALTER TABLE add_classes DROP COLUMN period_id");
 }
 
 function ensureStudentSubjectClassesSchema(mysqli $conn): void

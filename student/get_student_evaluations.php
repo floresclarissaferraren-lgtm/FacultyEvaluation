@@ -7,6 +7,8 @@
 require_once __DIR__ . "/../shared/security.php";
 header("Content-Type: application/json");
 include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/evaluation_schema.php";
+ensureEvaluationsSchema($conn);
 
 // Check if user is logged in and is a student
 if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "student") {
@@ -47,19 +49,17 @@ try {
             e.faculty_id,
             e.subject_id,
             e.class_id,
-            e.period_id,
             e.created_at,
             f.firstname AS faculty_firstname,
             f.lastname AS faculty_lastname,
             f.suffix AS faculty_suffix,
             s.subject_code,
             s.subject_desc,
-            ep.ay AS academic_year,
-            ep.semester
+            e.academic_year,
+            e.semester
         FROM evaluations e
         LEFT JOIN add_faculties f ON f.id = e.faculty_id
         LEFT JOIN add_subjects s ON s.id = e.subject_id
-        LEFT JOIN evaluation_periods ep ON ep.id = e.period_id
         WHERE e.student_id = ?
         ORDER BY e.created_at DESC
     ");
@@ -94,7 +94,6 @@ try {
             "subject_id" => intval($row["subject_id"]),
             "subject_label" => $subjectLabel,
             "class_id" => intval($row["class_id"]),
-            "period_id" => intval($row["period_id"]),
             "period_label" => $periodLabel,
             "created_at" => $row["created_at"],
         ];

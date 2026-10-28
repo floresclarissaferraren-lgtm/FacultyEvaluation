@@ -16,6 +16,7 @@ if (
             "get_faculty_by_subjects",
             "get_subjects_by_program_year",
             "get_subject_class_options",
+            "get_sections_by_program_year",
         ],
         true,
     )
@@ -35,25 +36,7 @@ function ensureClassSemesterColumn(mysqli $conn): void
     }
 }
 
-function getAcademicPeriod(mysqli $conn, int $period_id): ?array
-{
-    if ($period_id <= 0) {
-        return null;
-    }
-    $stmt = $conn->prepare(
-        "SELECT id, ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1",
-    );
-    if (!$stmt) {
-        return null;
-    }
-    $stmt->bind_param("i", $period_id);
-    $stmt->execute();
-    $period = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    return $period ?: null;
-}
-
-function validateSubjectsForPeriod(
+function validateSubjectsForSemester(
     mysqli $conn,
     array $subjects,
     int $program_id,
@@ -91,6 +74,26 @@ function validateSubjectsForPeriod(
 
     $stmt->close();
     return true;
+}
+
+function matchesOpenEvaluationSemester(mysqli $conn, string $semester): bool
+{
+    $stmt = $conn->prepare("SELECT ep.semester
+        FROM evaluation_settings es
+        INNER JOIN evaluation_periods ep ON ep.id = es.active_period_id
+        WHERE es.id = 1
+          AND es.evaluation_open = 1
+          AND ep.is_active = 1
+          AND ep.start_date <= CURRENT_DATE
+          AND ep.end_date >= CURRENT_DATE
+        LIMIT 1");
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return !$row || strcasecmp(trim((string) $row["semester"]), trim($semester)) === 0;
 }
 
 function ensureSubjectSemesterColumn(mysqli $conn): void
@@ -374,6 +377,51 @@ if ($action === "get_faculty_by_subjects") {
 }
 
 /* ========================= GET SUBJECTS BY PROGRAM AND YEAR ========================= */
+if ($action === "get_sections_by_program_year") {
+    $programId = intval($_GET["program_id"] ?? 0);
+    $yearLevel = trim((string) ($_GET["year_level"] ?? ""));
+    if ($programId <= 0 || $yearLevel === "") {
+        echo json_encode([]);
+        exit();
+    }
+
+    $yearVariants = [$yearLevel];
+    if (preg_match("/^([1-4])$/", $yearLevel, $match)) {
+        $number = intval($match[1]);
+        $ordinal = match ($number) {
+            1 => "1st",
+            2 => "2nd",
+            3 => "3rd",
+            default => "4th",
+        };
+        $yearVariants[] = $ordinal . " Year";
+    }
+    $yearVariants = array_values(array_unique($yearVariants));
+    $placeholders = implode(",", array_fill(0, count($yearVariants), "?"));
+    $stmt = $conn->prepare("SELECT DISTINCT UPPER(TRIM(block)) AS section
+        FROM add_classes
+        WHERE program_id = ? AND year_level IN ($placeholders)
+          AND TRIM(COALESCE(block, '')) <> ''
+        ORDER BY section ASC");
+    $types = "i" . str_repeat("s", count($yearVariants));
+    $params = [$programId, ...$yearVariants];
+    $refs = [];
+    foreach ($params as $key => $value) {
+        $refs[$key] = &$params[$key];
+    }
+    array_unshift($refs, $types);
+    call_user_func_array([$stmt, "bind_param"], $refs);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $sections = [];
+    while ($row = $result->fetch_assoc()) {
+        $sections[] = $row["section"];
+    }
+    $stmt->close();
+    echo json_encode($sections);
+    exit();
+}
+
 if ($action === "get_subjects_by_program_year") {
     $program_id = $_GET["program_id"] ?? 0;
     $year_level = $_GET["year_level"] ?? "";
@@ -442,11 +490,10 @@ if ($action === "get_subject_class_options") {
             TRIM(CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, ''))) AS instructor_name
         FROM add_classes ac
         INNER JOIN class_subjects cs ON cs.class_id = ac.id AND cs.subject_id = ?
-                INNER JOIN add_subjects s ON s.id = cs.subject_id
-                LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
+        INNER JOIN add_subjects s ON s.id = cs.subject_id
         LEFT JOIN add_faculties f ON f.id = cs.faculty_id
-                WHERE ac.program_id = ?
-                    AND LOWER(TRIM(COALESCE(ep.semester, ac.semester))) = LOWER(TRIM(s.semester))
+        WHERE ac.program_id = ?
+          AND LOWER(TRIM(ac.semester)) = LOWER(TRIM(s.semester))
         ORDER BY ac.year_level ASC, ac.block ASC
     ");
     $stmt->bind_param("ii", $subject_id, $program_id);
@@ -475,11 +522,10 @@ if ($action === "get") {
         SELECT cs.subject_id, s.subject_code, s.subject_desc, s.semester, s.year_level,
         f.id AS faculty_id, f.faculty_id AS faculty_number,
         CONCAT(f.firstname, ' ', f.lastname, ' ', COALESCE(f.suffix, '')) AS faculty_name,
-        ac.period_id, ep.ay AS academic_year
+        ac.semester
         FROM class_subjects cs
         JOIN add_subjects s ON cs.subject_id = s.id
         JOIN add_classes ac ON ac.id = cs.class_id
-        LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
         LEFT JOIN add_faculties f ON cs.faculty_id = f.id
         WHERE cs.class_id = ?
         ORDER BY s.subject_code ASC
@@ -521,8 +567,7 @@ if ($action === "get") {
     ensureClassPeriodColumn($conn);
 
     $stmt = $conn->prepare("
-        SELECT ac.id, ac.year_level, ac.block, ac.semester, ac.period_id,
-            ep.ay AS academic_year, ep.semester AS period_semester,
+        SELECT ac.id, ac.year_level, ac.block, ac.semester,
             (
                 SELECT COUNT(*)
                 FROM add_students st
@@ -538,19 +583,19 @@ if ($action === "get") {
         FROM add_classes ac
         LEFT JOIN add_programs p ON p.id = ac.program_id
         LEFT JOIN evaluation_settings es ON es.id = 1
-        LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
+        LEFT JOIN evaluation_periods ep ON ep.id = es.active_period_id
         WHERE ac.program_id = ?
             AND (
                 COALESCE(es.evaluation_open, 0) = 0
                 OR (
                     es.evaluation_open = 1
-                    AND es.active_period_id = ac.period_id
                     AND ep.is_active = 1
                     AND ep.start_date <= CURRENT_DATE
                     AND ep.end_date >= CURRENT_DATE
+                    AND LOWER(TRIM(ac.semester)) = LOWER(TRIM(ep.semester))
                 )
             )
-        ORDER BY ac.year_level ASC, ep.ay DESC, ac.semester ASC, ac.block ASC
+        ORDER BY ac.year_level ASC, ac.semester ASC, ac.block ASC
     ");
 
     if ($stmt) {
@@ -579,7 +624,7 @@ if ($action === "add") {
     $section_name = $_POST["section_name"] ?? "";
     $year_level = $_POST["year_level"] ?? "";
     $block = $_POST["block"] ?? "";
-    $period_id = intval($_POST["period_id"] ?? 0);
+    $semester = trim((string) ($_POST["semester"] ?? ""));
 
     $subjects = [];
     if (isset($_POST["subjects"])) {
@@ -610,7 +655,7 @@ if ($action === "add") {
         !$program_id ||
         !$year_level ||
         !$block ||
-        $period_id <= 0 ||
+        $semester === "" ||
         empty($subjects)
     ) {
         echo json_encode([
@@ -625,22 +670,19 @@ if ($action === "add") {
         program_id int(11) NOT NULL,
         year_level varchar(20) NOT NULL,
         semester varchar(20) NOT NULL DEFAULT '1st Semester',
-        period_id int(11) NULL,
         block varchar(10) NOT NULL
     )");
     ensureClassSemesterColumn($conn);
     ensureClassPeriodColumn($conn);
-    $period = getAcademicPeriod($conn, $period_id);
-    if (!$period) {
+    if (!matchesOpenEvaluationSemester($conn, $semester)) {
         echo json_encode([
             "status" => "error",
-            "message" => "Select a valid academic year and semester.",
+            "message" => "Classes can only be added for the semester currently open for evaluation.",
         ]);
         exit();
     }
-    $semester = (string) $period["semester"];
     if (
-        !validateSubjectsForPeriod(
+        !validateSubjectsForSemester(
             $conn,
             $subjects,
             intval($program_id),
@@ -670,14 +712,14 @@ if ($action === "add") {
 
     // Reuse an existing class for the same section; subjects are checked below.
     $check_stmt = $conn->prepare(
-        "SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ?",
+        "SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND LOWER(TRIM(semester)) = LOWER(TRIM(?))",
     );
     $check_stmt->bind_param(
-        "issi",
+        "isss",
         $program_id,
         $year_level,
         $block,
-        $period_id,
+        $semester,
     );
     $check_stmt->execute();
     $result = $check_stmt->get_result();
@@ -687,14 +729,14 @@ if ($action === "add") {
     $existingClassId = 0;
     if ($row["count"] > 0) {
         $existingStmt = $conn->prepare(
-            "SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? LIMIT 1",
+            "SELECT id FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND LOWER(TRIM(semester)) = LOWER(TRIM(?)) LIMIT 1",
         );
         $existingStmt->bind_param(
-            "issi",
+            "isss",
             $program_id,
             $year_level,
             $block,
-            $period_id,
+            $semester,
         );
         $existingStmt->execute();
         $existingRow = $existingStmt->get_result()->fetch_assoc();
@@ -743,14 +785,13 @@ if ($action === "add") {
             $subjectCheck->close();
         } else {
             $stmt = $conn->prepare(
-                "INSERT INTO add_classes (program_id, year_level, semester, period_id, block) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO add_classes (program_id, year_level, semester, block) VALUES (?, ?, ?, ?)",
             );
             $stmt->bind_param(
-                "issis",
+                "isss",
                 $program_id,
                 $year_level,
                 $semester,
-                $period_id,
                 $block,
             );
             $stmt->execute();
@@ -815,7 +856,7 @@ if ($action === "edit") {
     $section_name = $_POST["section_name"] ?? "";
     $year_level = $_POST["year_level"] ?? "";
     $block = $_POST["block"] ?? "";
-    $period_id = intval($_POST["period_id"] ?? 0);
+    $semester = trim((string) ($_POST["semester"] ?? ""));
 
     $subjects = [];
     if (isset($_POST["subjects"])) {
@@ -838,7 +879,7 @@ if ($action === "edit") {
         !$program_id ||
         !$year_level ||
         !$block ||
-        $period_id <= 0 ||
+        $semester === "" ||
         empty($subjects)
     ) {
         echo json_encode([
@@ -850,17 +891,15 @@ if ($action === "edit") {
 
     ensureClassSemesterColumn($conn);
     ensureClassPeriodColumn($conn);
-    $period = getAcademicPeriod($conn, $period_id);
-    if (!$period) {
+    if (!matchesOpenEvaluationSemester($conn, $semester)) {
         echo json_encode([
             "status" => "error",
-            "message" => "Select a valid academic year and semester.",
+            "message" => "Classes can only be updated for the semester currently open for evaluation.",
         ]);
         exit();
     }
-    $semester = (string) $period["semester"];
     if (
-        !validateSubjectsForPeriod(
+        !validateSubjectsForSemester(
             $conn,
             $subjects,
             intval($program_id),
@@ -890,14 +929,14 @@ if ($action === "edit") {
 
     // Check for duplicate class (same year level and section in same program), excluding current class
     $check_stmt = $conn->prepare(
-        "SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND period_id = ? AND id != ?",
+        "SELECT COUNT(*) as count FROM add_classes WHERE program_id = ? AND year_level = ? AND block = ? AND LOWER(TRIM(semester)) = LOWER(TRIM(?)) AND id != ?",
     );
     $check_stmt->bind_param(
-        "issii",
+        "isssi",
         $program_id,
         $year_level,
         $block,
-        $period_id,
+        $semester,
         $id,
     );
     $check_stmt->execute();
@@ -918,14 +957,13 @@ if ($action === "edit") {
     try {
         // Update class
         $stmt = $conn->prepare(
-            "UPDATE add_classes SET program_id = ?, year_level = ?, semester = ?, period_id = ?, block = ? WHERE id = ?",
+            "UPDATE add_classes SET program_id = ?, year_level = ?, semester = ?, block = ? WHERE id = ?",
         );
         $stmt->bind_param(
-            "issisi",
+            "isssi",
             $program_id,
             $year_level,
             $semester,
-            $period_id,
             $block,
             $id,
         );
@@ -987,9 +1025,8 @@ if ($action === "add_subject_to_class") {
     }
 
     ensureClassPeriodColumn($conn);
-    $periodSubjectStmt = $conn->prepare("SELECT ep.semester AS period_semester, s.semester AS subject_semester
+    $periodSubjectStmt = $conn->prepare("SELECT ac.semester AS class_semester, s.semester AS subject_semester
         FROM add_classes ac
-        INNER JOIN evaluation_periods ep ON ep.id = ac.period_id
         INNER JOIN add_subjects s ON s.id = ?
         WHERE ac.id = ? LIMIT 1");
     $periodSubjectStmt->bind_param("ii", $subject_id, $class_id);
@@ -999,14 +1036,14 @@ if ($action === "add_subject_to_class") {
     if (
         !$periodSubject ||
         strcasecmp(
-            trim($periodSubject["period_semester"]),
+            trim($periodSubject["class_semester"]),
             trim($periodSubject["subject_semester"]),
         ) !== 0
     ) {
         echo json_encode([
             "status" => "error",
             "message" =>
-                "This subject does not belong to the class academic period.",
+                "This subject does not belong to the class semester.",
         ]);
         exit();
     }

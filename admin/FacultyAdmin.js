@@ -1012,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     deleteModal.style.display = "flex";
-    deleteModal.style.zIndex = "10001";
+    deleteModal.style.zIndex = "10030";
     deleteModal.style.position = "fixed";
     console.log("Modal display set to flex");
   }
@@ -1899,7 +1899,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedClassSemester = "";
   let selectedAcademicYear = "";
   let editingPeriodId = null;
-  let classPeriods = [];
   let cachedEvaluationPeriods = [];
   let periodConfirmationResolver = null;
 
@@ -2283,89 +2282,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   window.loadDashboardPeriodSetting = loadDashboardPeriodSetting;
 
-  async function loadClassPeriodOptions(preferredPeriodId = 0) {
-    const academicYearSelect = document.getElementById("class-academic-year");
+  async function loadClassPeriodOptions(preferredSemester = "") {
     const semesterSelect = document.getElementById("class-semester");
-    if (!academicYearSelect || !semesterSelect) return null;
+    if (!semesterSelect) return "";
 
-    academicYearSelect.innerHTML =
-      '<option value="">Loading academic years...</option>';
-    semesterSelect.innerHTML = '<option value="">Semester</option>';
+    semesterSelect.innerHTML = '<option value="">Loading semesters...</option>';
     semesterSelect.disabled = true;
+    let activeSemester = "";
+    let evaluationIsOpen = false;
     try {
-      const response = await fetch("../shared/periods_api.php?action=list", {
+      const statusResponse = await fetch("../shared/periods_api.php?action=status", {
         cache: "no-store",
         credentials: "same-origin",
       });
-      const data = await response.json();
-      classPeriods =
-        data && data.success && Array.isArray(data.periods)
-          ? data.periods.filter((period) => !period.is_archived)
-          : [];
-    } catch (_) {
-      classPeriods = [];
-    }
+      const status = await statusResponse.json();
+      evaluationIsOpen = Boolean(status?.success && status.evaluation_open);
+      activeSemester = String(status?.active_semester || "").trim();
+    } catch (_) {}
 
-    academicYearSelect.innerHTML = '<option value="">Academic Year</option>';
-    const academicYears = [
-      ...new Set(
-        classPeriods.map((period) => String(period.ay || "")).filter(Boolean),
-      ),
-    ].sort((a, b) => b.localeCompare(a));
-    academicYears.forEach((academicYear) => {
+    const standardSemesters = ["1st Semester", "2nd Semester", "Summer"];
+    const availableSemesters = evaluationIsOpen && activeSemester
+      ? [activeSemester]
+      : standardSemesters;
+
+    semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+    availableSemesters.forEach((semester) => {
       const option = document.createElement("option");
-      option.value = academicYear;
-      option.textContent = academicYear;
-      academicYearSelect.appendChild(option);
-    });
-
-    const preferredPeriod = classPeriods.find(
-      (period) => Number(period.id) === Number(preferredPeriodId),
-    );
-    if (preferredPeriod) {
-      academicYearSelect.value = preferredPeriod.ay;
-      populateClassSemesterOptions(preferredPeriod.ay, preferredPeriod.id);
-    } else {
-      populateClassSemesterOptions("");
-    }
-    return preferredPeriod || null;
-  }
-
-  function populateClassSemesterOptions(academicYear, preferredPeriodId = 0) {
-    const semesterSelect = document.getElementById("class-semester");
-    if (!semesterSelect) return null;
-
-    semesterSelect.innerHTML = '<option value="">Semester</option>';
-    if (!academicYear) {
-      semesterSelect.disabled = true;
-      return null;
-    }
-
-    const periodsForYear = classPeriods.filter(
-      (period) => String(period.ay) === String(academicYear),
-    );
-    periodsForYear.forEach((period) => {
-      const option = document.createElement("option");
-      option.value = String(period.id);
-      option.textContent = period.semester;
+      option.value = semester;
+      option.textContent = semester;
       semesterSelect.appendChild(option);
     });
-    semesterSelect.disabled = periodsForYear.length === 0;
-
-    const preferredPeriod = periodsForYear.find(
-      (period) => Number(period.id) === Number(preferredPeriodId),
-    );
-    semesterSelect.value = preferredPeriod ? String(preferredPeriod.id) : "";
-    return preferredPeriod || null;
+    semesterSelect.disabled = availableSemesters.length === 0;
+    semesterSelect.value = availableSemesters.includes(preferredSemester)
+      ? preferredSemester
+      : evaluationIsOpen && availableSemesters.includes(activeSemester)
+        ? activeSemester
+        : availableSemesters.includes(selectedClassSemester)
+          ? selectedClassSemester
+          : "";
+    return semesterSelect.value;
   }
 
-  function getSelectedClassPeriod() {
-    const periodId = Number(
-      document.getElementById("class-semester")?.value || 0,
-    );
-    return (
-      classPeriods.find((period) => Number(period.id) === periodId) || null
-    );
+  function getSelectedClassSemester() {
+    return String(document.getElementById("class-semester")?.value || "").trim();
   }
 
   async function saveDashboardPeriodSetting() {
@@ -2781,7 +2740,6 @@ document.addEventListener("DOMContentLoaded", () => {
       delete addClassModal.dataset.editId;
       delete addClassModal.dataset.existingAssignments;
       delete addClassModal.dataset.existingSubjectIds;
-      document.getElementById("class-academic-year").value = "";
       document.getElementById("class-semester").value = "";
       const classYearInput = document.getElementById("class-year");
       classYearInput.value = selectedManageYear || "";
@@ -2790,7 +2748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         classSubjectSearchHtml();
       setClassSubjectMessage(
         classYearInput.value
-          ? `Select academic year and semester to load ${classYearInput.value} subjects`
+          ? `Select a semester to load ${classYearInput.value} subjects`
           : "Select a year level card before adding a class",
       );
       const facultyBox = document.getElementById("faculty-list");
@@ -2800,12 +2758,18 @@ document.addEventListener("DOMContentLoaded", () => {
           '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
       }
       await loadClassPeriodOptions();
-      if (!classPeriods.length) {
-        setClassSubjectMessage("Add an academic year and semester first");
-      } else if (classYearInput.value) {
-        setClassSubjectMessage(
-          `Select academic year and semester to load ${classYearInput.value} subjects`,
-        );
+      if (classYearInput.value) {
+        if (getSelectedClassSemester()) {
+          loadSubjectsByYear(
+            classYearInput.value,
+            null,
+            getSelectedClassSemester(),
+          );
+        } else {
+          setClassSubjectMessage(
+            `Select a semester to load ${classYearInput.value} subjects`,
+          );
+        }
       }
     }
   });
@@ -3279,26 +3243,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ========================= AUTO LOAD ON YEAR CHANGE =========================
-  document
-    .getElementById("class-academic-year")
-    ?.addEventListener("change", (event) => {
-      populateClassSemesterOptions(event.target.value);
-      document.getElementById("subject-checkbox-list").innerHTML =
-        classSubjectSearchHtml();
-      const facultyBox = document.getElementById("faculty-list");
-      if (facultyBox) {
-        facultyBox.dataset.facultyData = JSON.stringify({});
-        facultyBox.innerHTML =
-          '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
-      }
-      const year = document.getElementById("class-year").value;
-      setClassSubjectMessage(
-        event.target.value
-          ? `Select semester to load ${year || "selected year level"} subjects`
-          : "Select academic year first to load subjects",
-      );
-    });
-
   document.getElementById("class-year")?.addEventListener("change", (e) => {
     const year = e.target.value;
     const box = document.getElementById("subject-checkbox-list");
@@ -3330,16 +3274,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     console.log("Calling loadSubjectsByYear with year:", year);
-    loadSubjectsByYear(year, null, getSelectedClassPeriod()?.semester || "");
+    loadSubjectsByYear(year, null, getSelectedClassSemester());
   });
 
   document.getElementById("class-semester")?.addEventListener("change", () => {
-    const selectedPeriod = getSelectedClassPeriod();
-    if (selectedPeriod) {
-      selectedAcademicYear = selectedPeriod.ay;
-      selectedClassSemester = selectedPeriod.semester;
-      saveDashboardPeriodSetting();
-    }
+    selectedClassSemester = getSelectedClassSemester();
     const year = document.getElementById("class-year")?.value || "";
     const facultyBox = document.getElementById("faculty-list");
     if (facultyBox) {
@@ -3348,7 +3287,7 @@ document.addEventListener("DOMContentLoaded", () => {
         '<h4><i class="ph ph-user"></i> Available Faculty</h4><small>Select subjects to show available faculty and assign teachers</small>';
     }
     if (year)
-      loadSubjectsByYear(year, null, getSelectedClassPeriod()?.semester || "");
+      loadSubjectsByYear(year, null, getSelectedClassSemester());
     else
       setClassSubjectMessage("Select a year level card before adding a class");
   });
@@ -3623,27 +3562,22 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = document.createElement("tr");
           row.dataset.id = c.id;
           row.dataset.yearLevel = normalizeManageYearLevel(c.year_level);
-          row.dataset.semester = String(c.period_semester || c.semester || "")
+          row.dataset.semester = String(c.semester || "")
             .trim()
             .toLowerCase();
           row.dataset.searchKey = [
             c.section_name,
             c.block,
             c.year_level,
-            c.academic_year,
-            c.period_semester,
+            c.semester,
             currentProgramCode,
           ]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
-          const academicYear = c.academic_year
-            ? escapeHtml(c.academic_year)
+          const semester = c.semester
+            ? escapeHtml(c.semester)
             : "";
-          const semester = c.period_semester
-            ? escapeHtml(c.period_semester)
-            : "";
-          const academicYearLabel = academicYear || "Not assigned";
           const semesterLabel = semester || "Semester not assigned";
           const sectionBlock = String(c.block || "").trim();
           const sectionLetter = sectionBlock.match(/[A-Za-z]/);
@@ -3668,9 +3602,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <td class="class-card-term">
                 <span class="class-card-icon"><i class="ph ph-calendar-blank" aria-hidden="true"></i></span>
                 <span class="class-card-info">
-                  <small class="class-card-info-label">Academic year</small>
-                  <strong>${academicYearLabel}</strong>
-                  <small class="class-card-secondary">${semesterLabel}</small>
+                  <small class="class-card-info-label">Semester</small>
+                  <strong>${semesterLabel}</strong>
                 </span>
               </td>
               <td class="class-card-assigned">
@@ -3729,9 +3662,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 c.id,
                 c.block,
                 c.year_level,
-                c.academic_year && c.period_semester
-                  ? `${c.academic_year} - ${c.period_semester}`
-                  : "Term not assigned",
+                c.semester || "Semester not assigned",
               );
             });
 
@@ -3749,14 +3680,13 @@ document.addEventListener("DOMContentLoaded", () => {
             addClassModal.dataset.editId = c.id;
             addClassModal.dataset.existingAssignments = "{}";
             addClassModal.dataset.existingSubjectIds = "[]";
-            document.getElementById("class-academic-year").value = "";
             document.getElementById("class-semester").value = "";
             document.getElementById("subject-checkbox-list").innerHTML =
               classSubjectSearchHtml();
 
             document.getElementById("class-year").value = c.year_level;
             document.getElementById("class-block").value = c.block || "";
-            await loadClassPeriodOptions(c.period_id);
+            await loadClassPeriodOptions(c.semester || "");
             setClassSubjectMessage("Loading subjects...");
 
             const facultyBox = document.getElementById("faculty-list");
@@ -3803,7 +3733,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error("Error loading class edit subjects:", err);
                   });
               },
-              getSelectedClassPeriod()?.semester || "",
+              getSelectedClassSemester(),
             );
           });
 
@@ -3913,9 +3843,7 @@ document.addEventListener("DOMContentLoaded", () => {
   saveClassBtn?.addEventListener("click", () => {
     const year = document.getElementById("class-year").value.trim();
     const block = document.getElementById("class-block").value.trim();
-    const periodId = Number(
-      document.getElementById("class-semester")?.value || 0,
-    );
+    const semester = getSelectedClassSemester();
     const addClassModalEl = document.getElementById("addClassModal");
 
     if (!year || !block) {
@@ -3926,9 +3854,9 @@ document.addEventListener("DOMContentLoaded", () => {
       showGlobalNotification("Please select program first", "warning");
       return;
     }
-    if (!periodId) {
+    if (!semester) {
       showGlobalNotification(
-        "Please select an academic year, then a semester",
+        "Please select a semester",
         "warning",
       );
       return;
@@ -3982,7 +3910,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const action = isEditing ? "edit" : "add";
-    let body = `action=${action}&program_id=${currentProgramId}&period_id=${periodId}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
+    let body = `action=${action}&program_id=${currentProgramId}&semester=${encodeURIComponent(semester)}&year_level=${encodeURIComponent(year)}&block=${encodeURIComponent(block)}`;
     body += `&subjects=${encodeURIComponent(JSON.stringify(checked))}`;
     body += `&faculty_assignments=${encodeURIComponent(JSON.stringify(assignments))}`;
 
@@ -7260,6 +7188,52 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  let studentSectionLoadId = 0;
+  async function loadStudentSections(selectedSection = "") {
+    const yearSelect = document.getElementById("student-yearlevel");
+    const sectionSelect = document.getElementById("student-section");
+    if (!sectionSelect) return;
+
+    const programId = String(programSelect?.value || "").trim();
+    const yearLevel = String(yearSelect?.value || "").trim();
+    const loadId = ++studentSectionLoadId;
+    sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+    sectionSelect.disabled = true;
+    if (!programId || !yearLevel) return;
+
+    const params = new URLSearchParams({
+      action: "get_sections_by_program_year",
+      program_id: programId,
+      year_level: yearLevel,
+    });
+    try {
+      const response = await fetch(`classes_crud.php?${params.toString()}`);
+      const sections = await response.json();
+      if (loadId !== studentSectionLoadId) return;
+      sections.forEach((section) => {
+        const option = document.createElement("option");
+        option.value = section;
+        option.textContent = section;
+        sectionSelect.appendChild(option);
+      });
+      const selectedUpper = String(selectedSection || "").trim().toUpperCase();
+      if (sections.includes(selectedUpper)) {
+        sectionSelect.value = selectedUpper;
+      }
+      sectionSelect.disabled = sections.length === 0;
+      if (sections.length === 0) {
+        sectionSelect.options[0].textContent = "-- No class sections available --";
+      }
+    } catch (error) {
+      console.error("Unable to load class sections:", error);
+    }
+  }
+
+  programSelect?.addEventListener("change", () => loadStudentSections());
+  document
+    .getElementById("student-yearlevel")
+    ?.addEventListener("change", () => loadStudentSections());
+
   // Load All Subjects for Faculty Form -------------------
   function facultySubjectSearchHtml() {
     return `
@@ -7789,7 +7763,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   updateSelectedSubjectsDisplay();
 
                   // Set program value immediately after loading programs
-                  loadStudentPrograms().then(() => {
+                  loadStudentPrograms().then(async () => {
                     console.log(
                       "Programs loaded, setting program to:",
                       stu.program,
@@ -7861,6 +7835,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       });
                     });
                     programSelect.value = stu.program || "";
+                    await loadStudentSections(stu.section || "");
                     console.log("Program set to:", programSelect.value);
                   });
 
@@ -7895,6 +7870,14 @@ document.addEventListener("DOMContentLoaded", () => {
                       if (!yearlevelValue) {
                         showGlobalNotification(
                           "Please select year level for regular student",
+                          "warning",
+                        );
+                        submitBtn.disabled = false;
+                        return;
+                      }
+                      if (!document.getElementById("student-section").value) {
+                        showGlobalNotification(
+                          "Please select a section that has an added class",
                           "warning",
                         );
                         submitBtn.disabled = false;
@@ -9875,9 +9858,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
 
-          if (!n || !eMail || !fName || !lName || !p) {
+          if (
+            !n ||
+            !eMail ||
+            !fName ||
+            !lName ||
+            !p ||
+            (studentType === "regular" && !section)
+          ) {
             showGlobalNotification(
-              "Please fill all required fields",
+              studentType === "regular" && !section
+                ? "Please select a section that has an added class"
+                : "Please fill all required fields",
               "warning",
             );
             setButtonLoading(submitBtn, false);
@@ -11451,24 +11443,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      const warning = nextArchived
-        ? "Linked classes and evaluation records will remain associated with this period. Archived periods cannot be activated."
-        : "This period will become available for editing and activation again.";
-      const confirmed = await confirmPeriodAction({
-        opening: !nextArchived,
-        periodName: `${period.ay} - ${period.semester}`,
-        titleText: nextArchived
-          ? "Archive academic year?"
-          : "Restore academic year?",
-        messageText: warning,
-        confirmText: nextArchived ? "Archive Period" : "Restore Period",
-        iconClass: nextArchived ? "ph-archive-box" : "ph-arrow-counter-clockwise",
-        archiveAction: nextArchived,
-      });
-      if (!confirmed) {
-        return;
-      }
-
+      // Restoring is reversible, so perform it directly from the archived list.
+      // This avoids the period confirmation overlay intercepting the archive dialog.
       archiveBtn.disabled = true;
       try {
         const response = await fetch("../shared/periods_api.php?action=archive", {

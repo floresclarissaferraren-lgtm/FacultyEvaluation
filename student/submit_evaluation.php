@@ -54,12 +54,14 @@ $evaluationUnavailableMessage = "Evaluation is closed";
 
 if ($evaluationOpen && $activePeriodId > 0) {
     $periodStmt = $conn->prepare(
-        "SELECT start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1",
+        "SELECT ay, semester, start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1",
     );
     $periodStmt->bind_param("i", $activePeriodId);
     $periodStmt->execute();
     $period = $periodStmt->get_result()->fetch_assoc();
     $periodStmt->close();
+    $activeAcademicYear = trim((string) ($period["ay"] ?? ""));
+    $activeSemester = trim((string) ($period["semester"] ?? ""));
     if (
         $period &&
         !empty($period["start_date"]) &&
@@ -274,13 +276,13 @@ if ($class_id > 0) {
             ON ac.id = cs.class_id
            AND (ac.year_level = st.yearlevel OR ac.year_level = CONCAT(st.yearlevel, CASE st.yearlevel WHEN '1' THEN 'st Year' WHEN '2' THEN 'nd Year' WHEN '3' THEN 'rd Year' ELSE 'th Year' END))
            AND TRIM(UPPER(ac.block)) = TRIM(UPPER(st.section))
-        LEFT JOIN evaluation_periods ep ON ep.id = ac.period_id
+        LEFT JOIN evaluation_periods ep ON ep.id = ?
         LEFT JOIN add_subjects assigned_subject ON assigned_subject.id = cs.subject_id
         LEFT JOIN add_programs p ON p.id = ac.program_id
         WHERE cs.faculty_id = ?
           AND cs.subject_id = ?
           AND cs.class_id = ?
-                    AND ac.period_id = ?
+          AND LOWER(TRIM(ac.semester)) = LOWER(TRIM(ep.semester))
           AND LOWER(TRIM(assigned_subject.semester)) = LOWER(TRIM(ep.semester))
           AND (
               ssc.id IS NOT NULL
@@ -300,10 +302,10 @@ if ($class_id > 0) {
             "iiiiii",
             $student_id,
             $student_id,
+            $activePeriodId,
             $faculty_id,
             $subject_id,
             $class_id,
-            $activePeriodId,
         );
         $assignmentStmt->execute();
         $assignmentValid = (bool) $assignmentStmt->get_result()->fetch_assoc();
@@ -313,13 +315,14 @@ if ($class_id > 0) {
     $assignmentStmt = $conn->prepare("
                 SELECT cs.faculty_id
                 FROM student_subject_classes ssc
-                INNER JOIN add_classes ac ON ac.id = ssc.class_id AND ac.period_id = ?
-                INNER JOIN evaluation_periods ep ON ep.id = ac.period_id
+                INNER JOIN add_classes ac ON ac.id = ssc.class_id
+                INNER JOIN evaluation_periods ep ON ep.id = ?
                 INNER JOIN add_subjects s ON s.id = ssc.subject_id
                 INNER JOIN class_subjects cs ON cs.class_id = ac.id AND cs.subject_id = ssc.subject_id
                 WHERE ssc.student_id = ?
                     AND ssc.subject_id = ?
                     AND cs.faculty_id = ?
+                    AND LOWER(TRIM(ac.semester)) = LOWER(TRIM(ep.semester))
                     AND LOWER(TRIM(s.semester)) = LOWER(TRIM(ep.semester))
         LIMIT 1
     ");
@@ -360,22 +363,23 @@ $conn->begin_transaction();
 try {
     // Upsert one response per student/faculty/subject/class.
     $upsert = $conn->prepare("
-        INSERT INTO evaluations (student_id, faculty_id, subject_id, class_id, overall_rating, feedback, period_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO evaluations (student_id, faculty_id, subject_id, class_id, overall_rating, feedback, academic_year, semester)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE overall_rating = VALUES(overall_rating), feedback = VALUES(feedback)
     ");
     if (!$upsert) {
         throw new Exception("Unable to prepare evaluation");
     }
     $upsert->bind_param(
-        "iiiidsi",
+        "iiiidsss",
         $student_id,
         $faculty_id,
         $subject_id,
         $class_id,
         $overall,
         $feedback,
-        $activePeriodId,
+        $activeAcademicYear,
+        $activeSemester,
     );
     if (!$upsert->execute()) {
         throw new Exception("Unable to save evaluation");
@@ -383,15 +387,16 @@ try {
     $upsert->close();
 
     $evalStmt = $conn->prepare(
-        "SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? AND period_id = ? LIMIT 1",
+        "SELECT id FROM evaluations WHERE student_id = ? AND faculty_id = ? AND subject_id = ? AND class_id = ? AND academic_year = ? AND semester = ? LIMIT 1",
     );
     $evalStmt->bind_param(
-        "iiiii",
+        "iiiiss",
         $student_id,
         $faculty_id,
         $subject_id,
         $class_id,
-        $activePeriodId,
+        $activeAcademicYear,
+        $activeSemester,
     );
     $evalStmt->execute();
     $evalRes = $evalStmt->get_result();

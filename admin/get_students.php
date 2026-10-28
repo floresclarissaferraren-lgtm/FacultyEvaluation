@@ -64,7 +64,7 @@ function syncRegularStudentSubjectsByClass(mysqli $conn, array $student): void
         WHERE program_id = ?
           AND (year_level = ? OR year_level = ?)
           AND TRIM(UPPER(block)) = TRIM(UPPER(?))
-        ORDER BY period_id ASC, id ASC
+        ORDER BY semester ASC, id ASC
     ");
     if (!$classStmt) {
         return;
