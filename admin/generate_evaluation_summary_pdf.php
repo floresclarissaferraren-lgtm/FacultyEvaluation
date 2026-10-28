@@ -8,7 +8,6 @@ if (!class_exists("FPDF", false)) {
 }
 require_once __DIR__ . "/../shared/weighted_score_helper.php";
 require_once __DIR__ . "/../shared/evaluation_schema.php";
-require_once __DIR__ . "/../shared/evaluation_privacy.php";
 date_default_timezone_set("Asia/Manila");
 
 $mode = $_GET["mode"] ?? "view"; // view | download
@@ -45,7 +44,6 @@ $sql = "SELECT
             f.lastname,
             f.suffix,
             COUNT(e.id) AS total_responses,
-            COUNT(DISTINCT e.student_id) AS privacy_respondents,
             GROUP_CONCAT(DISTINCT ep.id ORDER BY ep.id) AS period_ids
         FROM evaluations e
         INNER JOIN add_faculties f ON f.id = e.faculty_id
@@ -105,9 +103,6 @@ if ($stmt) {
     $res = $stmt->get_result();
     while ($r = $res->fetch_assoc()) {
         $facultyId = intval($r["id"] ?? 0);
-        $privacySuppressed =
-            intval($r["total_responses"]) > 0 &&
-            !evaluationMeetsPrivacyThreshold(intval($r["privacy_respondents"]));
         $periodIds = array_values(
             array_filter(
                 array_map(
@@ -118,7 +113,7 @@ if ($stmt) {
             ),
         );
         $scores =
-            $facultyId > 0 && !$privacySuppressed
+            $facultyId > 0
                 ? array_map(
                     static fn($periodId) => calcWeightedScore(
                         $conn,
@@ -140,13 +135,9 @@ if ($stmt) {
             "name" => trim(
                 $r["firstname"] . " " . $r["lastname"] . " " . $r["suffix"],
             ),
-            "rating" => $privacySuppressed
-                ? "Withheld"
-                : number_format($avg, 2),
-            "responses" => $privacySuppressed
-                ? "Withheld"
-                : intval($r["total_responses"]),
-            "status" => $privacySuppressed ? "Protected" : getStatusLabel($avg),
+            "rating" => number_format($avg, 2),
+            "responses" => intval($r["total_responses"]),
+            "status" => getStatusLabel($avg),
         ];
     }
     $stmt->close();

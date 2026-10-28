@@ -84,8 +84,9 @@ $subjectContext = $subjectLabel;
 
 $isFacultyReport = ($data["reportType"] ?? "") === "faculty";
 $privacySuppressed =
-    (string) ($_SESSION["role"] ?? "") !== "faculty" &&
-    !empty($data["privacySuppressed"]);
+    (string) ($_SESSION["role"] ?? "") === "admin"
+        ? false
+        : !empty($data["privacySuppressed"]);
 
 if ((string) ($_SESSION["role"] ?? "") === "faculty") {
     if (!$isFacultyReport) {

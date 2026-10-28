@@ -154,9 +154,7 @@ try {
     // Weighted overall score (real-time)
     $totalEvaluations = intval($overall_data["total_evaluations"] ?? 0);
     $totalRespondents = intval($overall_data["total_respondents"] ?? 0);
-    $adminPrivacyPreview =
-        (string) ($_SESSION["role"] ?? "") === "admin" &&
-        (string) ($_GET["admin_privacy_preview"] ?? "") === "1";
+    $adminPrivacyPreview = (string) ($_SESSION["role"] ?? "") === "admin";
     $facultyResults = (string) ($_SESSION["role"] ?? "") === "faculty";
     $privacySuppressed =
         !$adminPrivacyPreview &&

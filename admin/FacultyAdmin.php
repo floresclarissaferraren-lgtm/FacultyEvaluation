@@ -1497,7 +1497,8 @@ include __DIR__ . "/totalstudents_dashcount.php";
       </div>
       <div class="header-actions">
         <button class="generate-report-btn" onclick="generateEvaluationReport()">
-          Generate Report
+          <i class="ph ph-file-pdf" aria-hidden="true"></i>
+          <span>Generate Report</span>
         </button>
       </div>
     </div>

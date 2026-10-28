@@ -255,11 +255,17 @@ if ($subjectStmt) {
         <?php endif; ?>
         
         <div class="action-buttons">
-          <button type="button" id="evaluationReportButton" class="action-btn primary-btn" disabled>
+          <button type="button" id="evaluationReportButton" class="action-btn primary-btn" <?php echo $evaluation_ongoing ||
+          $faculty_status !== "active"
+              ? "disabled"
+              : ""; ?>>
             <i class="ph ph-chart-bar"></i>
             Evaluation Report
           </button>
-          <button type="button" id="perSubjectReportButton" class="action-btn secondary-btn" disabled>
+          <button type="button" id="perSubjectReportButton" class="action-btn secondary-btn" <?php echo $evaluation_ongoing ||
+          $faculty_status !== "active"
+              ? "disabled"
+              : ""; ?>>
             <i class="ph ph-note"></i>
             Per-Subject Report
           </button>

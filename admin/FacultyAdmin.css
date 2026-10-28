@@ -38412,6 +38412,7 @@ main > .section,
   padding: 10px 16px !important;
   border-bottom-color: rgba(255, 255, 255, 0.24) !important;
   background: linear-gradient(115deg, #1769ad 0%, #1c85db 68%, #3296e5 100%) !important;
+
 }
 
 #manage-section.manage-classes-view .class-card-top {

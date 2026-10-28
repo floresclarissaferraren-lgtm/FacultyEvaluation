@@ -219,7 +219,7 @@ function updateFacultyResultAccess(evaluationOpen) {
   if (hidden) hidden.value = evaluationOpen ? "1" : "0";
 
   const locked =
-    isFacultyInactive() || evaluationOpen || !selectedFacultyReportPeriod;
+    isFacultyInactive() || evaluationOpen;
   document
     .querySelectorAll("#evaluationReportButton, #perSubjectReportButton")
     .forEach((btn) => {
@@ -926,7 +926,7 @@ async function loadFacultyReportPeriods() {
     if (periods.length === 0) {
       selectedFacultyReportPeriod = null;
       updateFacultyResultAccess(isEvaluationOngoing());
-      return;
+      return null;
     }
 
     const defaultId = String(data.default_period_id || periods[0].id);
@@ -940,15 +940,16 @@ async function loadFacultyReportPeriods() {
     loadFacultyStats(
       document.getElementById("programFilterSelect")?.value || "all",
     );
+    return selectedFacultyReportPeriod;
   } catch (error) {
     console.error("Failed to load faculty evaluation periods:", error);
     selectedFacultyReportPeriod = null;
     updateFacultyResultAccess(isEvaluationOngoing());
+    return null;
   }
 }
 
-function showEvaluationReport(periodId = null) {
-  const reportPeriodId = Number(periodId || selectedFacultyReportPeriod || 0);
+async function showEvaluationReport(periodId = null) {
   if (isFacultyInactive()) {
     alert(
       "Your account has been set to inactive by an admin. You cannot generate or view result until your account is active again.",
@@ -961,7 +962,14 @@ function showEvaluationReport(periodId = null) {
     );
     return;
   }
+  if (!periodId && !selectedFacultyReportPeriod) {
+    await loadFacultyReportPeriods();
+  }
+  const reportPeriodId = Number(periodId || selectedFacultyReportPeriod || 0);
   if (!reportPeriodId) {
+    alert(
+      "No closed evaluation period with report data is available yet. Please try again later or contact the administrator.",
+    );
     return;
   }
 
@@ -1508,13 +1516,13 @@ function updateInstructorAcademicPeriodDisplay(status) {
 }
 
 async function loadInstructorAcademicPeriod() {
+  const wasOngoing = isEvaluationOngoing();
   try {
     const statusRes = await fetch("../shared/periods_api.php?action=status", {
       cache: "no-store",
       credentials: "same-origin",
     });
     const status = await statusRes.json();
-    const wasOngoing = isEvaluationOngoing();
     updateInstructorAcademicPeriodDisplay(status);
     if (
       status?.success &&
@@ -1603,10 +1611,10 @@ function loadUploadedPDFs() {
 document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("evaluationReportButton")
-    ?.addEventListener("click", showEvaluationReport);
+    ?.addEventListener("click", () => showEvaluationReport());
   document
     .getElementById("perSubjectReportButton")
-    ?.addEventListener("click", showPerSubjectReport);
+    ?.addEventListener("click", () => showPerSubjectReport());
   loadFacultyReportPeriods();
   startInstructorPeriodRefresh();
 });
@@ -1618,8 +1626,7 @@ document.addEventListener("DOMContentLoaded", function () {
 /**
  * Open the per-subject evaluation report modal for the logged-in faculty.
  */
-function showPerSubjectReport(periodId = null) {
-  const reportPeriodId = Number(periodId || selectedFacultyReportPeriod || 0);
+async function showPerSubjectReport(periodId = null) {
   if (isFacultyInactive()) {
     alert(
       "Your account has been set to inactive by an admin. You cannot generate or view results until your account is active again.",
@@ -1632,7 +1639,14 @@ function showPerSubjectReport(periodId = null) {
     );
     return;
   }
+  if (!periodId && !selectedFacultyReportPeriod) {
+    await loadFacultyReportPeriods();
+  }
+  const reportPeriodId = Number(periodId || selectedFacultyReportPeriod || 0);
   if (!reportPeriodId) {
+    alert(
+      "No closed evaluation period with per-subject report data is available yet. Please try again later or contact the administrator.",
+    );
     return;
   }
 
