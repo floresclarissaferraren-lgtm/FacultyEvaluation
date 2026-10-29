@@ -4184,6 +4184,40 @@ table.evaluation-table .view-btn i {
   }
 }
 
+@media (max-width: 600px) {
+  #managePeriodsModal .period-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: 10px;
+  }
+
+  #managePeriodsModal .period-form-step {
+    grid-column: 1 / -1 !important;
+  }
+
+  #managePeriodsModal .period-input-group {
+    display: flex !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    flex: initial !important;
+    justify-self: stretch;
+  }
+
+  #managePeriodsModal .period-input-group input,
+  #managePeriodsModal .period-input-group select,
+  #managePeriodsModal .period-input-group .date-input-wrapper,
+  #managePeriodsModal .date-input-wrapper input {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  #managePeriodsModal .date-input-wrapper {
+    display: block !important;
+  }
+}
+
 #manage-section.manage-specific-year.manage-subjects-view #subjects,
 #manage-section.manage-specific-year.manage-subjects-view
   #subjects
@@ -39623,5 +39657,101 @@ html:has(body > main > #dashboard-section:not([style*="display: none"]))::-webki
   #dashboard-section .dashboard-row-2 > .dashboard-card.program-evaluation-progress {
     grid-column: 1;
     grid-row: 3;
+  }
+}
+
+@media (max-width: 600px) {
+  #managePeriodsModal .period-form-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: 6px !important;
+  }
+
+  #managePeriodsModal .period-form-step {
+    grid-column: 1 / -1 !important;
+  }
+
+  #managePeriodsModal .period-input-group {
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    justify-self: stretch !important;
+  }
+
+  #managePeriodsModal .period-input-group > input,
+  #managePeriodsModal .period-input-group > select,
+  #managePeriodsModal .period-input-group > .date-input-wrapper,
+  #managePeriodsModal .date-input-wrapper > input {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  #managePeriodsModal .date-input-wrapper {
+    display: block !important;
+    flex: initial !important;
+  }
+
+  #dashboard-section .dashboard-row-2 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  #dashboard-section .dashboard-row-2 > .dashboard-card,
+  #dashboard-section .dashboard-row-2 > .dashboard-card.top-performance,
+  #dashboard-section .dashboard-row-2 > .dashboard-card.rating-distribution,
+  #dashboard-section .dashboard-row-2 > .dashboard-card.program-evaluation-progress {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #dashboard-section .top-performance-progress-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  #dashboard-section .top-performance-progress-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 170px !important;
+    padding: 12px 8px !important;
+  }
+
+  #dashboard-section .top-performance-main,
+  #dashboard-section .top-performance-progress-meta,
+  #dashboard-section .top-performance-name {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #dashboard-section .top-performance-name {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    font-size: clamp(0.72rem, 3.2vw, 0.9rem) !important;
+  }
+
+  #dashboard-section .rating-distribution-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    width: 100% !important;
+  }
+
+  #dashboard-section .program-evaluation-progress .dashboard-content,
+  #dashboard-section .rating-distribution .dashboard-content,
+  #dashboard-section .top-performance .dashboard-content {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-right: 0 !important;
   }
 }

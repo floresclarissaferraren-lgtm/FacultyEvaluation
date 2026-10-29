@@ -3057,6 +3057,103 @@ body {
   }
 }
 
+@media (max-width: 560px) {
+  .report-header,
+  .psm-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+  }
+
+  .header-left,
+  .psm-header-left {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .college-info,
+  .psm-header-left > div {
+    min-width: 0;
+    transform: none;
+  }
+
+  .report-header-actions,
+  .psm-header-actions {
+    align-self: start;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .college-logo,
+  .psm-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .report-header-actions .download-pdf-btn,
+  .psm-header-actions .psm-download-btn {
+    min-height: 38px;
+    padding: 8px 9px;
+    font-size: 0.68rem;
+  }
+
+  .close-report-btn,
+  .psm-close-btn {
+    min-width: 38px;
+    min-height: 38px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 760px) {
+  .report-card-label,
+  .psm-card-label,
+  .psm-meta-label,
+  .category-table th {
+    font-size: clamp(0.5rem, 1.7vw, 0.62rem);
+    letter-spacing: 0.025em;
+  }
+
+  .category-table th,
+  .category-table td {
+    padding: 7px 8px;
+  }
+
+  .category-table td {
+    font-size: clamp(0.66rem, 2vw, 0.78rem);
+  }
+
+  .category-breakdown-header h3,
+  .psm-dept-name {
+    font-size: clamp(0.82rem, 2.4vw, 0.96rem);
+  }
+
+  .feedback-item,
+  .feedback-item p,
+  .psm-comment-item p {
+    font-size: clamp(0.65rem, 1.7vw, 0.82rem);
+  }
+}
+
+@media (max-width: 760px) {
+  #instructorDashboard .action-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch !important;
+    width: 100%;
+  }
+
+  #instructorDashboard .action-buttons .action-btn {
+    width: 100% !important;
+    min-width: 0;
+    padding-inline: clamp(5px, 1.6vw, 12px);
+    font-size: clamp(8px, 2vw, 13px);
+    white-space: nowrap;
+  }
+}
+
 /* Responsive ==================================================================================== */
 @media (max-width: 768px) {
   .content-container {
@@ -3814,4 +3911,49 @@ body {
   cursor: not-allowed;
   opacity: 0.55;
   background: #087dc1;
+}
+
+@media (max-width: 760px) {
+  .report-content,
+  .per-subject-modal-content,
+  .report-body,
+  .psm-body {
+    font-size: clamp(13px, 2.2vw, 14px) !important;
+  }
+
+  .college-info h2,
+  .psm-header h2 {
+    font-size: clamp(17px, 2.7vw, 18px) !important;
+  }
+
+  .report-subtitle,
+  .psm-subtitle,
+  .report-context,
+  .report-card-note,
+  .psm-card-note,
+  .category-table td,
+  .feedback-item,
+  .feedback-item p,
+  .psm-comment-item p,
+  .psm-meta-value span,
+  .psm-search-empty {
+    font-size: clamp(13px, 2.2vw, 14px) !important;
+  }
+
+  .report-card-label,
+  .psm-card-label,
+  .psm-meta-label,
+  .category-table th {
+    font-size: clamp(11px, 1.8vw, 12px) !important;
+  }
+
+  .category-breakdown-header h3,
+  .psm-comments-title {
+    font-size: clamp(15px, 2.4vw, 16px) !important;
+  }
+
+  .report-header-actions .download-pdf-btn,
+  .psm-header-actions .psm-download-btn {
+    font-size: clamp(12px, 2vw, 13px) !important;
+  }
 }
