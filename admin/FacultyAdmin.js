@@ -10639,7 +10639,39 @@ document.addEventListener("DOMContentLoaded", () => {
               4000,
             );
           } else {
-            showNotification("Evaluation opened.", "#10b981", 6000);
+            showNotification("Evaluation is Open", "#10b981", 6000);
+            if (result.notifications_queued && Number(result.period_id) > 0) {
+              fetch("../shared/periods_api.php?action=process_activation", {
+                method: "POST",
+                credentials: "same-origin",
+                keepalive: true,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: Number(result.period_id) }),
+              })
+                .then((response) => response.json())
+                .then((notifyResult) => {
+                  if (!notifyResult?.success) {
+                    showNotification(
+                      notifyResult?.message || "Gmail notices could not be sent.",
+                      "#f59e0b",
+                      8000,
+                    );
+                    return;
+                  }
+                  const failed = Number(notifyResult.notify_failed) || 0;
+                  if (failed > 0) {
+                    const details = String(notifyResult.notify_error || "").trim();
+                    showNotification(
+                      `Gmail notices: ${Number(notifyResult.notify_sent) || 0} sent, ${failed} failed${details ? `: ${details}` : "."}`,
+                      "#f59e0b",
+                      10000,
+                    );
+                  }
+                })
+                .catch((error) => {
+                  console.error("Evaluation opening notifications failed:", error);
+                });
+            }
           }
           await loadPeriods();
           await refreshPeriodCard();
@@ -10692,6 +10724,24 @@ document.addEventListener("DOMContentLoaded", () => {
               4000,
             );
           } else {
+            if (result.reports_queued && Number(result.period_id) > 0) {
+              fetch("../shared/periods_api.php?action=process_closing", {
+                method: "POST",
+                credentials: "same-origin",
+                keepalive: true,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: Number(result.period_id) }),
+              })
+                .then((response) => response.json())
+                .then((reportResult) => {
+                  if (!reportResult?.success) {
+                    console.error("Closed-period report processing failed:", reportResult);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Closed-period report processing failed:", error);
+                });
+            }
             showNotification("Evaluation period closed.", "#10b981", 6000);
           }
         } catch (error) {
@@ -11017,7 +11067,7 @@ function initRatingDistributionChart(ratingDistribution = {}) {
     {
       label: "Poor",
       value: Number(ratingDistribution.Poor) || 0,
-      color: "#ef4444",
+      color: "#dc2626",
     },
   ];
   const hasRatings = ratingData.some((item) => item.value > 0);

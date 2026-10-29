@@ -44,6 +44,16 @@ if (str_starts_with(strtoupper($username), "GC-")) {
         }
 
         if (password_verify($password, $row["password"])) {
+            if (strtolower(trim((string) ($row["status"] ?? "active"))) === "archived") {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "This student account is archived and cannot log in. Contact an administrator to restore it.",
+                ]);
+                $stmt->close();
+                $conn->close();
+                exit();
+            }
+
             $log = $conn->prepare(
                 "INSERT INTO student_login (username, password) VALUES (?, ?) ON DUPLICATE KEY UPDATE password = VALUES(password)",
             );
@@ -106,6 +116,16 @@ $result = $stmt->get_result();
 if ($result && $result->num_rows === 1) {
     $user = $result->fetch_assoc();
     if (password_verify($password, $user["faculty_password"])) {
+        if (strtolower(trim((string) ($user["status"] ?? "active"))) === "archived") {
+            echo json_encode([
+                "success" => false,
+                "message" => "This faculty account is archived and cannot log in. Contact an administrator to restore it.",
+            ]);
+            $stmt->close();
+            $conn->close();
+            exit();
+        }
+
         if ((int) $user["login_missing"] === 1) {
             $repairStmt = $conn->prepare(
                 "INSERT INTO faculty_login (faculty_id, faculty_username, faculty_password) VALUES (?, ?, ?)",

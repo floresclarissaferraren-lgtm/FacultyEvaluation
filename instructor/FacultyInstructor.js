@@ -1515,7 +1515,10 @@ function updateInstructorAcademicPeriodDisplay(status) {
   updateFacultyResultAccess(!!status?.evaluation_open);
 }
 
+let instructorPeriodRefreshInProgress = false;
 async function loadInstructorAcademicPeriod() {
+  if (instructorPeriodRefreshInProgress) return;
+  instructorPeriodRefreshInProgress = true;
   const wasOngoing = isEvaluationOngoing();
   try {
     const statusRes = await fetch("../shared/periods_api.php?action=status", {
@@ -1535,6 +1538,8 @@ async function loadInstructorAcademicPeriod() {
   } catch (err) {
     console.error("Failed to load academic period:", err);
     updateInstructorAcademicPeriodDisplay(null);
+  } finally {
+    instructorPeriodRefreshInProgress = false;
   }
 }
 
@@ -1545,7 +1550,13 @@ function startInstructorPeriodRefresh() {
     dashboard?.classList.remove("instructor-dashboard-loading");
     dashboard?.removeAttribute("aria-busy");
   });
-  setInterval(loadInstructorAcademicPeriod, 1000); // Then every 1 second
+  // Keep the displayed status current without allowing overlapping requests.
+  setInterval(() => {
+    if (!document.hidden) loadInstructorAcademicPeriod();
+  }, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) loadInstructorAcademicPeriod();
+  });
 }
 
 function loadUploadedPDFs() {
@@ -1931,7 +1942,6 @@ function buildSubjectsHtml(subjects) {
             <span class="psm-subject-code">${escapeHtml(s.subject_code || "Subject")}</span>
             <span class="psm-subject-desc">${escapeHtml(s.subject_desc || "Course evaluation")}</span>
           </div>
-          <span class="psm-period-tag"><i class="ph ph-calendar"></i> <span>${escapeHtml(s.period || "Period unavailable")}</span></span>
         </div>
 
         <div class="psm-subject-meta">

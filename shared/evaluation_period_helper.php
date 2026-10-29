@@ -248,7 +248,7 @@ function handleExpiredPeriodClosing(
                 ";
 
                 $body = getEmailHTML($title, $greeting, $content_html);
-                sendEmail($email, $name, $subject, $body);
+                sendEmail($email, $name, $subject, $body, null, null, [], true);
             }
         } else {
             error_log(
@@ -458,6 +458,7 @@ function handleExpiredPeriodClosing(
                                 "name" => $evaluationReportFileName,
                             ],
                         ],
+                        true,
                     )
                 ) {
                     $reportEmailsSent++;

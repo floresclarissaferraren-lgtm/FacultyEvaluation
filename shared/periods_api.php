@@ -11,6 +11,12 @@ if ($action === "faculty_periods") {
 } elseif ($action !== "status") {
     requireRole("admin");
 }
+if ($action === "status" && session_status() === PHP_SESSION_ACTIVE) {
+    // Status responses do not need session data after access checks. Release
+    // the session lock before database reads so this poll cannot block the
+    // same account's other dashboard requests.
+    session_write_close();
+}
 header("Content-Type: application/json");
 include __DIR__ . "/connect.php";
 require_once __DIR__ . "/evaluation_schema.php";
@@ -199,9 +205,31 @@ function closeExpiredActivePeriod(mysqli $conn): void
     closeExpiredEvaluationPeriod($conn);
 }
 
-ensurePeriodTables($conn);
-ensureEvaluationsSchema($conn);
-closeExpiredActivePeriod($conn);
+if ($action === "status") {
+    // This endpoint is polled by student and faculty dashboards. Keep its
+    // normal path read-only and avoid running schema migrations on each poll.
+    $today = todayDate();
+    $expiredStmt = $conn->prepare(
+        "SELECT 1 FROM evaluation_periods WHERE is_active = 1 AND end_date < ? LIMIT 1",
+    );
+    $expiredStmt->bind_param("s", $today);
+    $expiredStmt->execute();
+    $hasExpiredPeriod = $expiredStmt->get_result()->num_rows > 0;
+    $expiredStmt->close();
+
+    // Preserve automatic period closing, but only run the report and
+    // notification work when an active period has actually expired.
+    if ($hasExpiredPeriod) {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        closeExpiredActivePeriod($conn);
+    }
+} else {
+    ensurePeriodTables($conn);
+    ensureEvaluationsSchema($conn);
+    closeExpiredActivePeriod($conn);
+}
 
 // Public-ish read used by other pages
 if ($action === "status") {
@@ -950,40 +978,58 @@ if ($action === "set_active") {
 
         $conn->commit();
 
-        // Send email notifications to students
-        $notifySent = 0;
-        $notifyFailed = 0;
-
-        // Fetch the activated period's AY and semester for the email
-        $periodInfoStmt = $conn->prepare(
-            "SELECT ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1",
-        );
-        $periodInfoStmt->bind_param("i", $id);
-        $periodInfoStmt->execute();
-        $periodInfo = $periodInfoStmt->get_result()->fetch_assoc();
-        $periodInfoStmt->close();
-
-        if ($periodInfo) {
-            $notifyAy = $periodInfo["ay"] ?? "";
-            $notifySemester = $periodInfo["semester"] ?? "";
-            $notifyResult = sendEvaluationOpenNotifications(
-                $conn,
-                $notifyAy,
-                $notifySemester,
-            );
-            $notifySent = $notifyResult["sent"] ?? 0;
-            $notifyFailed = $notifyResult["failed"] ?? 0;
-        }
-
         echo json_encode([
             "success" => true,
             "message" => "Period activated and evaluation opened.",
-            "notify_sent" => $notifySent,
-            "notify_failed" => $notifyFailed,
+            "notifications_queued" => true,
+            "period_id" => $id,
         ]);
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(["success" => false, "message" => $e->getMessage()]);
+    }
+    exit();
+}
+
+if ($action === "process_activation") {
+    $id = intval($payload["id"] ?? 0);
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid id"]);
+        exit();
+    }
+    $stmt = $conn->prepare(
+        "SELECT ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1",
+    );
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $period = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$period) {
+        echo json_encode(["success" => false, "message" => "Evaluation period not found"]);
+        exit();
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    try {
+        $notifyResult = sendEvaluationOpenNotifications(
+            $conn,
+            (string) $period["ay"],
+            (string) $period["semester"],
+        );
+        echo json_encode([
+            "success" => true,
+            "notify_sent" => $notifyResult["sent"] ?? 0,
+            "notify_failed" => $notifyResult["failed"] ?? 0,
+            "notify_error" => $notifyResult["errors"][0] ?? "",
+        ]);
+    } catch (Throwable $error) {
+        error_log("Opening email processing failed for period $id: " . $error->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Gmail notices could not be sent.",
+        ]);
     }
     exit();
 }
@@ -1019,33 +1065,53 @@ if ($action === "deactivate") {
         );
         $conn->commit();
 
-        $closingSummary = [
-            "report_emails_sent" => 0,
-            "report_emails_failed" => 0,
-        ];
-        if ($activePeriod) {
-            try {
-                $closingSummary = handleExpiredPeriodClosing(
-                    $conn,
-                    intval($activePeriod["id"]),
-                    (string) $activePeriod["ay"],
-                    (string) $activePeriod["semester"],
-                    false,
-                );
-            } catch (Exception $e) {
-                error_log(
-                    "Evaluation period {$activePeriod["id"]} closed, but report processing failed: " .
-                        $e->getMessage(),
-                );
-                $closingSummary["report_emails_failed"] = 1;
-                $closingSummary["report_email_errors"] = [$e->getMessage()];
-            }
-        }
-
-        echo json_encode(array_merge(["success" => true], $closingSummary));
+        // Return immediately; the admin page starts report work as soon as it
+        // receives this confirmation.
+        echo json_encode([
+            "success" => true,
+            "reports_queued" => $activePeriod !== null,
+            "period_id" => intval($activePeriod["id"] ?? 0),
+        ]);
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(["success" => false, "message" => $e->getMessage()]);
+    }
+    exit();
+}
+
+if ($action === "process_closing") {
+    $id = intval($payload["id"] ?? 0);
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid id"]);
+        exit();
+    }
+    $stmt = $conn->prepare(
+        "SELECT ay, semester FROM evaluation_periods WHERE id = ? AND is_active = 0 LIMIT 1",
+    );
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $period = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$period) {
+        echo json_encode(["success" => false, "message" => "Closed period not found"]);
+        exit();
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    try {
+        $summary = handleExpiredPeriodClosing(
+            $conn,
+            $id,
+            (string) $period["ay"],
+            (string) $period["semester"],
+            false,
+        );
+        echo json_encode(array_merge(["success" => true], $summary));
+    } catch (Throwable $e) {
+        error_log("Evaluation period $id is closed, but report processing failed: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Report processing failed"]);
     }
     exit();
 }

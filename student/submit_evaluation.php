@@ -38,6 +38,17 @@ set_exception_handler(static function (Throwable $e): void {
     );
 });
 
+// The role and CSRF checks are complete. Capture the student ID and release
+// PHP's session lock before schema checks, database work, and period closing.
+$student_id = intval($_SESSION["id"] ?? 0);
+if ($student_id <= 0) {
+    submitEvaluationResponse(
+        ["success" => false, "message" => "Unauthorized"],
+        403,
+    );
+}
+session_write_close();
+
 ensureEvaluationPeriodTables($conn);
 ensureClassPeriodColumn($conn);
 closeExpiredEvaluationPeriod($conn);
@@ -89,19 +100,7 @@ if (!$evaluationOpen || $activePeriodId <= 0) {
     );
 }
 
-if (
-    !isset($_SESSION["role"]) ||
-    $_SESSION["role"] !== "student" ||
-    !isset($_SESSION["id"])
-) {
-    submitEvaluationResponse(
-        ["success" => false, "message" => "Unauthorized"],
-        403,
-    );
-}
-
 $payload = json_decode(file_get_contents("php://input"), true);
-$student_id = intval($_SESSION["id"]);
 
 $studentStatusStmt = $conn->prepare(
     "SELECT status FROM add_students WHERE id = ? LIMIT 1",
@@ -139,6 +138,29 @@ if (
     submitEvaluationResponse(
         ["success" => false, "message" => "Invalid evaluation payload"],
         422,
+    );
+}
+
+$facultyStatusStmt = $conn->prepare(
+    "SELECT status FROM add_faculties WHERE id = ? LIMIT 1",
+);
+$facultyStatusStmt->bind_param("i", $faculty_id);
+$facultyStatusStmt->execute();
+$facultyStatusRow = $facultyStatusStmt->get_result()->fetch_assoc();
+$facultyStatusStmt->close();
+
+if (
+    !$facultyStatusRow ||
+    strtolower(trim((string) ($facultyStatusRow["status"] ?? "active"))) ===
+        "archived"
+) {
+    submitEvaluationResponse(
+        [
+            "success" => false,
+            "message" =>
+                "This faculty account is archived and cannot be evaluated.",
+        ],
+        403,
     );
 }
 

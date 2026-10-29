@@ -4184,6 +4184,19 @@ table.evaluation-table .view-btn i {
   }
 }
 
+#manage-section.manage-specific-year.manage-subjects-view #subjects,
+#manage-section.manage-specific-year.manage-subjects-view
+  #subjects
+  > .manage-subject-control-box,
+#manage-section.manage-specific-year.manage-subjects-view
+  #subjects
+  .subjects-table,
+#manage-section.manage-specific-year.manage-subjects-view
+  #subjects
+  .subjects-table thead th {
+  border-radius: 0 !important;
+}
+
 @media (max-width: 640px) {
   .subject-control-box {
     grid-template-columns: 1fr;
@@ -39121,5 +39134,494 @@ html:has(body > main > #dashboard-section:not([style*="display: none"]))::-webki
 @media (max-width: 600px) {
   #managePeriodsModal .period-creation-section {
     padding: 14px !important;
+  }
+}
+
+/* Clear two-step layout for creating or editing an evaluation period. */
+#managePeriodsModal .period-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  align-items: end;
+}
+
+#managePeriodsModal .period-form-step {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#managePeriodsModal .periods-table thead th {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+#managePeriodsModal .period-form-step-number {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#managePeriodsModal .period-form-step strong,
+#managePeriodsModal .period-form-step small {
+  display: block;
+}
+
+#managePeriodsModal .period-form-step strong {
+  color: #1f2937;
+  font-size: 0.82rem;
+}
+
+#managePeriodsModal .period-form-step small {
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 600px) {
+  #managePeriodsModal .period-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #managePeriodsModal .period-form-step {
+    grid-column: 1;
+  }
+}
+
+/* Keep the entry form compact while leaving the periods list full width. */
+#managePeriodsModal .period-creation-section {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 16px;
+  padding: 14px !important;
+}
+
+#managePeriodsModal .period-section-header {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+#managePeriodsModal .period-form-grid {
+  gap: 8px 14px;
+}
+
+#managePeriodsModal .period-input-group {
+  gap: 4px;
+}
+
+#managePeriodsModal .period-input-group input,
+#managePeriodsModal .period-input-group select {
+  height: 38px !important;
+  padding-inline: 10px;
+}
+
+#managePeriodsModal .period-form-step {
+  margin-top: 2px;
+  padding-bottom: 6px;
+}
+
+#managePeriodsModal .period-form-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+#managePeriodsModal .period-section-title {
+  color: #1877f2 !important;
+}
+
+#managePeriodsModal .period-add-btn {
+  min-height: 38px;
+  padding: 8px 14px;
+}
+
+@media (max-width: 600px) {
+  #managePeriodsModal .period-creation-section {
+    max-width: none;
+    padding: 12px !important;
+  }
+}
+
+/* Keep question-row Edit/Delete controls stationary on hover and click. */
+#criteria-section .question-item .actions .edit-btn,
+#criteria-section .question-item .actions .delete-btn,
+#criteria-section .question-item .actions .edit-btn:hover,
+#criteria-section .question-item .actions .delete-btn:hover,
+#criteria-section .question-item .actions .edit-btn:focus,
+#criteria-section .question-item .actions .delete-btn:focus,
+#criteria-section .question-item .actions .edit-btn:focus-visible,
+#criteria-section .question-item .actions .delete-btn:focus-visible,
+#criteria-section .question-item .actions .edit-btn:active,
+#criteria-section .question-item .actions .delete-btn:active {
+  transform: none !important;
+  animation: none !important;
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease !important;
+}
+
+#criteria-section .question-item .actions .edit-btn i,
+#criteria-section .question-item .actions .delete-btn i,
+#criteria-section .question-item .actions .edit-btn:hover i,
+#criteria-section .question-item .actions .delete-btn:hover i,
+#criteria-section .question-item .actions .edit-btn:focus-visible i,
+#criteria-section .question-item .actions .delete-btn:focus-visible i,
+#criteria-section .question-item .actions .edit-btn:active i,
+#criteria-section .question-item .actions .delete-btn:active i {
+  transform: none !important;
+  animation: none !important;
+}
+
+#categoriesColumn .question-item .actions .edit-btn,
+#categoriesColumn .question-item .actions .delete-btn,
+#categoriesColumn .question-item .actions .edit-btn:hover,
+#categoriesColumn .question-item .actions .delete-btn:hover,
+#categoriesColumn .question-item .actions .edit-btn:focus,
+#categoriesColumn .question-item .actions .delete-btn:focus,
+#categoriesColumn .question-item .actions .edit-btn:focus-visible,
+#categoriesColumn .question-item .actions .delete-btn:focus-visible,
+#categoriesColumn .question-item .actions .edit-btn:active,
+#categoriesColumn .question-item .actions .delete-btn:active {
+  transform: none !important;
+  animation: none !important;
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease !important;
+}
+
+#categoriesColumn .question-item .actions .edit-btn i,
+#categoriesColumn .question-item .actions .delete-btn i,
+#categoriesColumn .question-item .actions .edit-btn:hover i,
+#categoriesColumn .question-item .actions .delete-btn:hover i,
+#categoriesColumn .question-item .actions .edit-btn:focus-visible i,
+#categoriesColumn .question-item .actions .delete-btn:focus-visible i,
+#categoriesColumn .question-item .actions .edit-btn:active i,
+#categoriesColumn .question-item .actions .delete-btn:active i {
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Admin dashboard blue palette. */
+#dashboard-section {
+  --rating-excellent: #2563eb;
+  --rating-very-good: #16a34a;
+  --rating-good: #eab308;
+  --rating-fair: #f97316;
+  --rating-poor: #dc2626;
+}
+
+#dashboard-section .admin-welcome-box {
+  border-color: #d7e3f4 !important;
+  border-left: 1px solid #d7e3f4 !important;
+  background: #f1f6fd !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+#dashboard-section .admin-welcome-heading h1 {
+  color: #17345f !important;
+  transform: translateY(10px);
+}
+
+#dashboard-section .admin-welcome-copy p {
+  color: #536b8c !important;
+  width: 100%;
+  max-width: none !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  #dashboard-section .admin-welcome-copy p {
+    white-space: normal;
+  }
+}
+
+#manage-section.manage-specific-year.manage-subjects-view .manage-subjects-panel,
+#manage-section.manage-specific-year.manage-subjects-view .manage-curriculum-heading,
+#manage-section.manage-specific-year.manage-subjects-view #subjects,
+#manage-section.manage-specific-year.manage-subjects-view
+  #subjects
+  > .manage-subject-control-box,
+#manage-section.manage-specific-year.manage-subjects-view
+  #subjects
+  .subjects-table thead th {
+  border-radius: 0 !important;
+}
+
+#dashboard-section .dashboard-card.faculty,
+#dashboard-section .dashboard-card.students,
+#dashboard-section .dashboard-card.evaluations,
+#dashboard-section .dashboard-card.rating-distribution,
+#dashboard-section .dashboard-card.program-evaluation-progress,
+#dashboard-section .dashboard-card.top-performance {
+  border-color: #dbe6f5 !important;
+  background: #ffffff !important;
+  color: #1e3558 !important;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content h3,
+#dashboard-section .dashboard-card.students .dashboard-content h3,
+#dashboard-section .dashboard-card.evaluations .dashboard-content h3,
+#dashboard-section .dashboard-card .rating-header h3 {
+  color: #36577f !important;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-value,
+#dashboard-section .dashboard-card.students .dashboard-value,
+#dashboard-section .dashboard-card.evaluations .dashboard-value {
+  color: #17345f !important;
+}
+
+#dashboard-section .dashboard-card.faculty .dashboard-content > div:first-child > span,
+#dashboard-section .dashboard-card.students .dashboard-content > div:first-child > span,
+#dashboard-section .dashboard-card.evaluations .dashboard-content > div:first-child > span {
+  color: #71839d !important;
+}
+
+#dashboard-section .dashboard-card.faculty .icon-box {
+  background: #eaf2fd !important;
+  color: #2563eb !important;
+}
+
+#dashboard-section .dashboard-card.faculty .icon-box i {
+  color: #2563eb !important;
+}
+
+#dashboard-section .dashboard-card.students .icon-box {
+  background: #eaf8ef !important;
+  color: #16a34a !important;
+}
+
+#dashboard-section .dashboard-card.students .icon-box i {
+  color: #16a34a !important;
+}
+
+#dashboard-section .dashboard-card.evaluations .icon-box {
+  background: #f2edff !important;
+  color: #7c3aed !important;
+}
+
+#dashboard-section .dashboard-card.evaluations .icon-box i {
+  color: #7c3aed !important;
+}
+
+#dashboard-section .admin-period-summary {
+  border-color: #d7e3f4 !important;
+  background: #f1f6fd !important;
+}
+
+#dashboard-section .admin-period-summary-title {
+  color: #1e3a68 !important;
+}
+
+#dashboard-section .admin-period-summary .admin-period-item,
+#dashboard-section .admin-period-summary .academic-year-item,
+#dashboard-section .admin-period-summary .semester-item,
+#dashboard-section .admin-period-summary .evaluation-status-item {
+  border-color: #cbdcf2 !important;
+  background: #ffffff !important;
+}
+
+#dashboard-section .admin-period-summary .admin-period-item span {
+  color: #71839d !important;
+}
+
+#dashboard-section .admin-period-summary .admin-period-item strong {
+  color: #1e3a68 !important;
+}
+
+#dashboard-section .dashboard-card.rating-distribution .rating-distribution-inner {
+  border-color: #d7e3f4 !important;
+  background: #f5f8fd !important;
+}
+
+#dashboard-section .rating-chart-center strong {
+  display: block !important;
+  color: #17345f !important;
+}
+
+#dashboard-section .rating-chart-center span {
+  margin-top: 0 !important;
+}
+
+#dashboard-section .rating-chart-center span,
+#dashboard-section .rating-legend .legend-label,
+#dashboard-section .rating-legend .legend-percent {
+  color: #657b98 !important;
+}
+
+#dashboard-section .rating-legend .legend-color.excellent {
+  background: #2563eb !important;
+}
+
+#dashboard-section .rating-legend .legend-color.very-good {
+  background: #16a34a !important;
+}
+
+#dashboard-section .rating-legend .legend-color.good {
+  background: #eab308 !important;
+}
+
+#dashboard-section .rating-legend .legend-color.fair {
+  background: #f97316 !important;
+}
+
+#dashboard-section .rating-legend .legend-color.poor {
+  background: #dc2626 !important;
+}
+
+#dashboard-section .program-progress-code {
+  background: #e5effd !important;
+  color: #36577f !important;
+}
+
+#dashboard-section .program-progress-count {
+  color: #617795 !important;
+}
+
+#dashboard-section .program-progress-percent,
+#dashboard-section .program-progress-summary-item strong {
+  color: #2563eb !important;
+}
+
+#dashboard-section .program-progress-track {
+  background: #e8eff9 !important;
+}
+
+#dashboard-section .program-progress-track > span {
+  background: linear-gradient(90deg, #2563eb, #60a5fa) !important;
+}
+
+#dashboard-section .program-progress-summary {
+  border-top-color: #e1eaf6 !important;
+}
+
+#dashboard-section .program-progress-summary-item {
+  background: #f1f6fc !important;
+}
+
+#dashboard-section .program-progress-summary-item.pending strong {
+  color: #4f6f9f !important;
+}
+
+#dashboard-section .program-progress-summary-item.overall strong {
+  color: #365f9a !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(1) {
+  background: #023e8a !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(2) {
+  background: #0077b6 !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(3) {
+  background: #0096c7 !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(4) {
+  background: #00b4d8 !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(5) {
+  background: #023e8a !important;
+}
+
+#dashboard-section .top-performance-progress-item,
+#dashboard-section .top-performance-progress-item:hover,
+#dashboard-section .top-performance-progress-item:focus-visible {
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(1):hover,
+#dashboard-section .top-performance-progress-item:nth-child(1):focus-visible {
+  background: #023e8a !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(2):hover,
+#dashboard-section .top-performance-progress-item:nth-child(2):focus-visible {
+  background: #0077b6 !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(3):hover,
+#dashboard-section .top-performance-progress-item:nth-child(3):focus-visible {
+  background: #0096c7 !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(4):hover,
+#dashboard-section .top-performance-progress-item:nth-child(4):focus-visible {
+  background: #00b4d8 !important;
+}
+
+#dashboard-section .top-performance-progress-item:nth-child(5):hover,
+#dashboard-section .top-performance-progress-item:nth-child(5):focus-visible {
+  background: #023e8a !important;
+}
+
+#dashboard-section .top-performance-progress-item .top-performance-rank {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+#dashboard-section
+  .top-performance-progress-item:nth-child(4)
+  :is(.top-performance-name, .top-performance-percent, .top-performance-rank) {
+  color: #023e8a !important;
+  -webkit-text-fill-color: #023e8a !important;
+}
+
+#dashboard-section .top-performance-rank,
+#dashboard-section .top-performance-avatar {
+  color: #315a96 !important;
+}
+
+#dashboard-section .top-performance-avatar {
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  background: #f1f6fd !important;
+}
+
+/* Dashboard panel order: rankings, ratings, then evaluation progress. */
+#dashboard-section .dashboard-row-2 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#dashboard-section .dashboard-row-2 > .dashboard-card.top-performance {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#dashboard-section .dashboard-row-2 > .dashboard-card.rating-distribution {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#dashboard-section .dashboard-row-2 > .dashboard-card.program-evaluation-progress {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+@media (max-width: 1100px) {
+  #dashboard-section .dashboard-row-2 > .dashboard-card.top-performance {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #dashboard-section .dashboard-row-2 > .dashboard-card.rating-distribution {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #dashboard-section .dashboard-row-2 > .dashboard-card.program-evaluation-progress {
+    grid-column: 1;
+    grid-row: 3;
   }
 }

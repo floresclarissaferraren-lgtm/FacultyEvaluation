@@ -217,7 +217,6 @@ include __DIR__ . "/totalstudents_dashcount.php";
       </div>
       <p>Here's an overview of your Faculty Evaluation System. Track faculty performance, monitor evaluation progress, and manage reports and system activities all in one place.</p>
     </div>
-    <img class="admin-welcome-image" src="../assets/images/imagesbg.png" alt="" aria-hidden="true">
   </div>
 
   <div class="dashboard">
@@ -1623,6 +1622,14 @@ include __DIR__ . "/totalstudents_dashcount.php";
         </div>
 
         <div class="period-form-grid">
+          <div class="period-form-step">
+            <span class="period-form-step-number">1</span>
+            <div>
+              <strong>Academic period</strong>
+              <small>Confirm the academic year and semester.</small>
+            </div>
+          </div>
+
           <div class="period-input-group">
             <label for="period-ay">Academic Year</label>
             <input type="text" id="period-ay" placeholder="YYYY-YYYY" readonly>
@@ -1636,6 +1643,14 @@ include __DIR__ . "/totalstudents_dashcount.php";
               <option value="2nd Semester">2nd Semester</option>
               <option value="Summer">Summer</option>
             </select>
+          </div>
+
+          <div class="period-form-step">
+            <span class="period-form-step-number">2</span>
+            <div>
+              <strong>Evaluation dates</strong>
+              <small>Choose when the evaluation starts and ends.</small>
+            </div>
           </div>
 
           <div class="period-input-group">

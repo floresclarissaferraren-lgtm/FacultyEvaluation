@@ -732,13 +732,18 @@ function goBackToMain() {
   }
 }
 
+let studentPeriodRefreshInProgress = false;
 async function refreshStudentPeriodAccess() {
+  if (studentPeriodRefreshInProgress) return;
+  studentPeriodRefreshInProgress = true;
   try {
     const statusRes = await fetch("../shared/periods_api.php?action=status", {
       cache: "no-store",
       credentials: "same-origin",
     });
+    if (!statusRes.ok) return;
     const status = await statusRes.json();
+    if (!status?.success) return;
     updateStudentAcademicPeriodDisplay(status);
 
     const evaluateSection = document.getElementById("evaluateSection");
@@ -754,17 +759,20 @@ async function refreshStudentPeriodAccess() {
       }
     }
   } catch (_) {
-    const evaluateSection = document.getElementById("evaluateSection");
-    const isEvaluating =
-      evaluateSection && evaluateSection.style.display !== "none";
-    if (isEvaluating) {
-      goBackToMain();
-      showGlobalNotification("Evaluation is closed", "warning");
-    }
+    // A temporary network/server error must not discard the student's
+    // in-progress evaluation. Submission is validated by the server.
+  } finally {
+    studentPeriodRefreshInProgress = false;
   }
 }
 
-setInterval(refreshStudentPeriodAccess, 1000);
+// Keep status current while preventing overlapping requests.
+setInterval(() => {
+  if (!document.hidden) refreshStudentPeriodAccess();
+}, 1000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshStudentPeriodAccess();
+});
 // ================= LOAD CATEGORIES + QUESTIONS =================
 let currentCriteria = 0;
 let criteriaTables = [];
@@ -1646,8 +1654,6 @@ document.addEventListener("DOMContentLoaded", function () {
       navbar?.removeAttribute("aria-busy");
     },
   );
-  setInterval(loadStudentAcademicPeriod, 15000);
-
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {
     backBtn.addEventListener("click", function (e) {

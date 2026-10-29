@@ -23,6 +23,7 @@ function sendEvaluationOpenNotifications(
 
     $sent = 0;
     $failed = 0;
+    $firstError = "";
 
     if ($res) {
         while ($row = $res->fetch_assoc()) {
@@ -57,14 +58,27 @@ function sendEvaluationOpenNotifications(
 
             $body = getEmailHTML($title, $greeting, $content_html, null, $cta);
 
-            if (sendEmail($email, $name, $subject, $body)) {
+            // Use the same Gmail SMTP connection mode as the working close
+            // report sender so opening notices follow the proven mail path.
+            if (sendEmail($email, $name, $subject, $body, null, null, [], true)) {
                 $sent++;
             } else {
                 $failed++;
+                if ($firstError === "") {
+                    $firstError = getLastEmailError();
+                }
+                error_log(
+                    "Evaluation opening email failed for {$email}: " .
+                        getLastEmailError(),
+                );
             }
         }
     }
 
-    return ["sent" => $sent, "failed" => $failed];
+    return [
+        "sent" => $sent,
+        "failed" => $failed,
+        "errors" => $firstError === "" ? [] : [$firstError],
+    ];
 }
 ?>

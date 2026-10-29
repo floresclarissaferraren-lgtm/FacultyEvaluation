@@ -32,8 +32,10 @@ function sendEmail(
     $attachmentPath = null,
     $attachmentName = null,
     array $additionalAttachments = [],
+    bool $reuseSmtpConnection = false,
 ) {
     global $lastEmailError;
+    static $persistentMailer = null;
     $lastEmailError = "";
 
     if (!extension_loaded("openssl")) {
@@ -43,7 +45,20 @@ function sendEmail(
         return false;
     }
 
-    $mail = new PHPMailer(true);
+    // Closing a period can send the same message to many recipients. Reusing
+    // the SMTP connection avoids a TLS/authentication handshake for each one.
+    if ($reuseSmtpConnection && $persistentMailer instanceof PHPMailer) {
+        $mail = $persistentMailer;
+        $mail->clearAllRecipients();
+        $mail->clearAttachments();
+        $mail->clearReplyTos();
+        $mail->clearCustomHeaders();
+    } else {
+        $mail = new PHPMailer(true);
+        if ($reuseSmtpConnection) {
+            $persistentMailer = $mail;
+        }
+    }
 
     try {
         $mail->isSMTP();
@@ -57,6 +72,7 @@ function sendEmail(
         $mail->Port = 587;
 
         $mail->SMTPAutoTLS = true;
+        $mail->SMTPKeepAlive = $reuseSmtpConnection;
 
         $mail->SMTPOptions = [
             "ssl" => [

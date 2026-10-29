@@ -5670,3 +5670,26 @@ select {
   width: 0 !important;
   height: 0 !important;
 }
+
+/* Keep the success-form OK button stationary on hover and press. */
+.success-overlay .su-ok-btn,
+.success-overlay .su-ok-btn:hover,
+.success-overlay .su-ok-btn:focus,
+.success-overlay .su-ok-btn:focus-visible,
+.success-overlay .su-ok-btn:active {
+  transform: none !important;
+}
+
+.success-overlay .su-ok-btn {
+  transition: background 0.22s ease, box-shadow 0.22s ease;
+}
+
+.historyform .rating-label {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.historyform .history-rating {
+  position: relative;
+  top: -4px;
+}

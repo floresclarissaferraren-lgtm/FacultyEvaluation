@@ -18,7 +18,6 @@ function getActiveEvaluationPeriodId(mysqli $conn): int
 }
 
 try {
-    ensureEvaluationsSchema($conn);
     $active_period_id = getActiveEvaluationPeriodId($conn);
     // Get total faculty count
     $faculty_query = "SELECT COUNT(*) as total FROM add_faculties";
@@ -29,8 +28,6 @@ try {
     $student_query = "SELECT COUNT(*) as total FROM add_students";
     $student_result = $conn->query($student_query);
     $total_students = $student_result->fetch_assoc()["total"];
-
-    error_log("Dashboard stats - Total students: " . $total_students);
 
     // Get total active students.
     $active_students_query =
