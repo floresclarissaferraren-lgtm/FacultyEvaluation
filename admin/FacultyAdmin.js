@@ -9651,8 +9651,105 @@ document.addEventListener("DOMContentLoaded", () => {
   // ========================= Forms Close ==========================================================================================
   // Removed global close button handler to prevent closing all modals
 
+  function initBulkStudentImport() {
+    const importButton = document.querySelector(".bulk-import-student-btn");
+    const fileInput = document.getElementById("student-bulk-import-file");
+    const summary = document.getElementById("student-import-summary");
+    if (!importButton || !fileInput || !summary) return;
+
+    importButton.onclick = () => fileInput.click();
+    fileInput.onchange = async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("action", "bulk_import");
+      formData.append("student_csv", file);
+      importButton.disabled = true;
+      importButton.innerHTML =
+        '<i class="ph ph-spinner-gap" aria-hidden="true"></i> Importing...';
+      summary.hidden = false;
+      summary.textContent = "Importing student accounts...";
+
+      try {
+        const response = await fetch("student_crud.php", {
+          method: "POST",
+          body: formData,
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Unable to import this CSV file.");
+        }
+
+        summary.replaceChildren();
+        const heading = document.createElement("h3");
+        heading.textContent = "Import results";
+        const totals = document.createElement("div");
+        totals.className = "student-import-summary-counts";
+        [
+          ["Imported", result.imported],
+          ["Duplicates skipped", result.skipped],
+          ["Failed", result.failed],
+        ].forEach(([label, count]) => {
+          const item = document.createElement("div");
+          item.className = "student-import-summary-count";
+          const value = document.createElement("strong");
+          value.textContent = String(count);
+          const caption = document.createElement("span");
+          caption.textContent = label;
+          item.append(value, caption);
+          totals.appendChild(item);
+        });
+        summary.append(heading, totals);
+
+        const appendRecords = (title, records) => {
+          if (!Array.isArray(records) || records.length === 0) return;
+          const sectionHeading = document.createElement("h4");
+          sectionHeading.textContent = title;
+          const list = document.createElement("ul");
+          records.forEach((record) => {
+            const item = document.createElement("li");
+            const identifier = record.student_number || "No student ID";
+            item.textContent = `CSV row ${record.row} (${identifier}): ${record.reason}`;
+            list.appendChild(item);
+          });
+          summary.append(sectionHeading, list);
+        };
+
+        appendRecords("Skipped duplicates", result.skipped_records);
+        appendRecords("Failed records", result.failed_records);
+        appendRecords("Email warnings", result.email_warnings);
+
+        if (result.imported > 0) {
+          loadStudents();
+          loadDashboardStats();
+        }
+        showNotification(
+          `Import complete: ${result.imported} imported, ${result.skipped} skipped, ${result.failed} failed.`,
+          result.failed > 0 ? "#d97706" : "#4caf50",
+          6000,
+        );
+      } catch (error) {
+        summary.replaceChildren();
+        const heading = document.createElement("h3");
+        heading.textContent = "Import failed";
+        const message = document.createElement("p");
+        message.textContent =
+          error.message || "Unable to import this CSV file.";
+        summary.append(heading, message);
+        showNotification(message.textContent, "#f44336", 6000);
+      } finally {
+        importButton.disabled = false;
+        importButton.innerHTML =
+          '<i class="ph ph-upload-simple" aria-hidden="true"></i> Bulk Import Accounts';
+        fileInput.value = "";
+      }
+    };
+  }
+
   // ------------------- Add Student -------------------
   function initAddStudentButton() {
+    initBulkStudentImport();
     console.log("Initializing add student button...");
     const addStudentBtn = document.querySelector(".add-student-btn");
     console.log("Add student button found:", addStudentBtn);

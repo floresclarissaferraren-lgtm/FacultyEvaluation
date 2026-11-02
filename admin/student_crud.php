@@ -10,6 +10,7 @@ require_once __DIR__ . "/../shared/class_period_helper.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data["action"] ?? "";
+$action = $action !== "" ? $action : ($_POST["action"] ?? "");
 
 ensureColumnExists(
     $conn,
@@ -209,7 +210,456 @@ function assignStudentSubjects(
 /* =========================
    ADD NEW STUDENT
 ========================= */
-if ($action === "add") {
+if ($action === "bulk_import") {
+    $file = $_FILES["student_csv"] ?? null;
+    if (!$file || !isset($file["error"]) || $file["error"] !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Select a CSV file to import.",
+        ]);
+        exit();
+    }
+
+    if (
+        strtolower(pathinfo($file["name"] ?? "", PATHINFO_EXTENSION)) !==
+        "csv"
+    ) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Only CSV files are supported.",
+        ]);
+        exit();
+    }
+
+    if (($file["size"] ?? 0) > 5 * 1024 * 1024) {
+        http_response_code(413);
+        echo json_encode([
+            "success" => false,
+            "message" => "The CSV file must be 5 MB or smaller.",
+        ]);
+        exit();
+    }
+
+    $handle = fopen($file["tmp_name"], "r");
+    if (!$handle) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to read the uploaded CSV file.",
+        ]);
+        exit();
+    }
+
+    $headers = fgetcsv($handle, 0, ",", '"', "\\");
+    if (!is_array($headers) || empty($headers)) {
+        fclose($handle);
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "The CSV file must include a header row.",
+        ]);
+        exit();
+    }
+
+    $headerAliases = [
+        "student_id" => "student_number",
+        "first_name" => "firstname",
+        "last_name" => "lastname",
+        "year_level" => "yearlevel",
+        "program_id" => "program",
+    ];
+    $headerIndexes = [];
+    foreach ($headers as $index => $header) {
+        $normalizedHeader = strtolower(trim((string) $header));
+        if ($index === 0) {
+            $normalizedHeader = preg_replace(
+                '/^\xEF\xBB\xBF/',
+                "",
+                $normalizedHeader,
+            );
+        }
+        $normalizedHeader = preg_replace(
+            '/[\s-]+/',
+            "_",
+            $normalizedHeader,
+        );
+        $normalizedHeader =
+            $headerAliases[$normalizedHeader] ?? $normalizedHeader;
+        if (isset($headerIndexes[$normalizedHeader])) {
+            fclose($handle);
+            http_response_code(400);
+            echo json_encode([
+                "success" => false,
+                "message" => "The CSV file contains duplicate column headers.",
+            ]);
+            exit();
+        }
+        $headerIndexes[$normalizedHeader] = $index;
+    }
+
+    $requiredHeaders = [
+        "student_number",
+        "email",
+        "firstname",
+        "lastname",
+        "program",
+    ];
+    $missingHeaders = array_values(
+        array_diff($requiredHeaders, array_keys($headerIndexes)),
+    );
+    if (!empty($missingHeaders)) {
+        fclose($handle);
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                "Missing required CSV columns: " .
+                implode(", ", $missingHeaders) .
+                ".",
+        ]);
+        exit();
+    }
+
+    $insert = $conn->prepare("
+        INSERT INTO add_students
+        (student_number,email,firstname,lastname,suffix,yearlevel,program,section,student_type,status,password)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+    ");
+    $duplicateCheck = $conn->prepare("
+        SELECT student_number, email
+        FROM add_students
+        WHERE student_number = ? OR email = ?
+        LIMIT 1
+    ");
+    if (!$insert || !$duplicateCheck) {
+        fclose($handle);
+        http_response_code(500);
+        error_log("Bulk student import: unable to prepare database statements.");
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to prepare the student import.",
+        ]);
+        exit();
+    }
+
+    $summary = [
+        "success" => true,
+        "imported" => 0,
+        "skipped" => 0,
+        "failed" => 0,
+        "skipped_records" => [],
+        "failed_records" => [],
+        "email_warnings" => [],
+    ];
+    $rowNumber = 1;
+    $defaultStatus = "active";
+
+    while (($row = fgetcsv($handle, 0, ",", '"', "\\")) !== false) {
+        $rowNumber++;
+        if (count($row) === 1 && trim((string) $row[0]) === "") {
+            continue;
+        }
+
+        $record = [];
+        foreach (
+            [
+                "student_number",
+                "email",
+                "firstname",
+                "lastname",
+                "suffix",
+                "program",
+                "student_type",
+                "yearlevel",
+                "section",
+            ]
+            as $field
+        ) {
+            $record[$field] = isset($headerIndexes[$field])
+                ? trim((string) ($row[$headerIndexes[$field]] ?? ""))
+                : "";
+        }
+
+        $studentNumber = strtoupper($record["student_number"]);
+        $email = $record["email"];
+        $firstName = $record["firstname"];
+        $lastName = $record["lastname"];
+        $suffix = $record["suffix"];
+        $studentType = strtolower($record["student_type"] ?: "regular");
+        $yearLevel = $record["yearlevel"];
+        $section = $record["section"];
+        try {
+            $programId = resolveProgramId($conn, $record["program"]);
+        } catch (Throwable $e) {
+            $programId = 0;
+            error_log(
+                "Bulk student import program lookup failed on CSV row " .
+                    $rowNumber .
+                    ": " .
+                    $e->getMessage(),
+            );
+        }
+
+        $reason = "";
+        if (count($row) !== count($headers)) {
+            $reason = "The number of values does not match the CSV columns.";
+        } elseif (
+            $studentNumber === "" ||
+            $email === "" ||
+            $firstName === "" ||
+            $lastName === "" ||
+            $record["program"] === ""
+        ) {
+            $reason =
+                "Student ID, email, first name, last name, and program are required.";
+        } elseif (!preg_match('/^GC-[0-9]{6}$/', $studentNumber)) {
+            $reason =
+                "Student ID must be GC- followed by exactly 6 digits.";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $reason = "Email address is invalid.";
+        } elseif (!in_array($studentType, ["regular", "irregular"], true)) {
+            $reason = "Student type must be regular or irregular.";
+        } elseif ($programId <= 0) {
+            $reason = "Program does not match an existing program.";
+        } else {
+            $programCheck = $conn->prepare(
+                "SELECT id FROM add_programs WHERE id = ? LIMIT 1",
+            );
+            if (!$programCheck) {
+                $reason = "Unable to validate the selected program.";
+            } else {
+                $programCheck->bind_param("i", $programId);
+                try {
+                    $programCheck->execute();
+                    $programCheck->store_result();
+                    if ($programCheck->num_rows === 0) {
+                        $reason =
+                            "Program does not match an existing program.";
+                    }
+                } catch (Throwable $e) {
+                    $reason = "Unable to validate the selected program.";
+                    error_log(
+                        "Bulk student import program validation failed on CSV row " .
+                            $rowNumber .
+                            ": " .
+                            $e->getMessage(),
+                    );
+                }
+                $programCheck->close();
+            }
+        }
+
+        if ($reason === "" && $studentType === "regular") {
+            if (!in_array($yearLevel, ["1", "2", "3", "4"], true)) {
+                $reason =
+                    "Regular students must have a year level from 1 to 4.";
+            } elseif ($section === "") {
+                $reason = "Regular students must have a section.";
+            }
+        }
+
+        if ($reason !== "") {
+            $summary["failed"]++;
+            $summary["failed_records"][] = [
+                "row" => $rowNumber,
+                "student_number" => $studentNumber,
+                "reason" => $reason,
+            ];
+            continue;
+        }
+
+        $duplicateCheck->bind_param("ss", $studentNumber, $email);
+        try {
+            $duplicateChecked = $duplicateCheck->execute();
+        } catch (Throwable $e) {
+            $duplicateChecked = false;
+            error_log(
+                "Bulk student import duplicate check failed on CSV row " .
+                    $rowNumber .
+                    ": " .
+                    $e->getMessage(),
+            );
+        }
+        if (!$duplicateChecked) {
+            $summary["failed"]++;
+            $summary["failed_records"][] = [
+                "row" => $rowNumber,
+                "student_number" => $studentNumber,
+                "reason" => "Unable to check for existing accounts.",
+            ];
+            error_log(
+                "Bulk student import: duplicate check failed on CSV row " .
+                    $rowNumber .
+                    ": " .
+                    $duplicateCheck->error,
+            );
+            continue;
+        }
+        $duplicateResult = $duplicateCheck->get_result();
+        $existing = $duplicateResult
+            ? $duplicateResult->fetch_assoc()
+            : null;
+        if ($duplicateResult) {
+            $duplicateResult->free();
+        }
+        if ($existing) {
+            $matchesStudentNumber =
+                strcasecmp(
+                    (string) $existing["student_number"],
+                    $studentNumber,
+                ) === 0;
+            $matchesEmail =
+                strcasecmp((string) $existing["email"], $email) === 0;
+            $duplicateReason =
+                $matchesStudentNumber && $matchesEmail
+                    ? "Student ID and email already exist."
+                    : ($matchesStudentNumber
+                        ? "Student ID already exists."
+                        : "Email address already exists.");
+            $summary["skipped"]++;
+            $summary["skipped_records"][] = [
+                "row" => $rowNumber,
+                "student_number" => $studentNumber,
+                "reason" => $duplicateReason,
+            ];
+            continue;
+        }
+
+        $yearLevelValue = $studentType === "irregular" ? "irregular" : $yearLevel;
+        $program = (string) $programId;
+        $sectionValue = $studentType === "irregular" ? "" : $section;
+        $password = generateTemporaryPassword();
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        try {
+            $conn->begin_transaction();
+            $insert->bind_param(
+                "sssssssssss",
+                $studentNumber,
+                $email,
+                $firstName,
+                $lastName,
+                $suffix,
+                $yearLevelValue,
+                $program,
+                $sectionValue,
+                $studentType,
+                $defaultStatus,
+                $hashedPassword,
+            );
+            if (!$insert->execute()) {
+                throw new RuntimeException($insert->error);
+            }
+
+            assignStudentSubjects(
+                $conn,
+                (int) $insert->insert_id,
+                $program,
+                $yearLevelValue,
+                $sectionValue,
+                [],
+                $studentType === "regular",
+            );
+            $conn->commit();
+            $summary["imported"]++;
+
+            try {
+                $protocol =
+                    !empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off"
+                        ? "https"
+                        : "http";
+                $host = $_SERVER["HTTP_HOST"] ?? "localhost";
+                $baseUrl = $protocol . "://" . $host . "/FacultyEvaluation";
+                $safeName = htmlspecialchars(
+                    $firstName . " " . $lastName,
+                    ENT_QUOTES,
+                    "UTF-8",
+                );
+                $safeStudentNumber = htmlspecialchars(
+                    $studentNumber,
+                    ENT_QUOTES,
+                    "UTF-8",
+                );
+                $emailBody = getEmailHTML(
+                    "Welcome to Faculty Evaluation System",
+                    "Hello " . $safeName . ",",
+                    "<p>Your student account has been successfully created.</p><p><strong>Student Number:</strong> " .
+                        $safeStudentNumber .
+                        "</p>",
+                    [
+                        "label" => "Temporary Password",
+                        "value" => $password,
+                        "subtext" => "Keep this password secure",
+                    ],
+                    [
+                        "label" => "Log In to System",
+                        "url" => $baseUrl . "/EvalMain.php",
+                    ],
+                );
+                $emailSent = sendEmail(
+                    $email,
+                    $firstName . " " . $lastName,
+                    "Welcome to Faculty Evaluation System",
+                    $emailBody,
+                );
+            } catch (Throwable $mailError) {
+                $emailSent = false;
+                error_log(
+                    "Bulk student import email failed on CSV row " .
+                        $rowNumber .
+                        ": " .
+                        $mailError->getMessage(),
+                );
+            }
+            if (!$emailSent) {
+                $summary["email_warnings"][] = [
+                    "row" => $rowNumber,
+                    "student_number" => $studentNumber,
+                    "reason" =>
+                        "Account imported, but the password email could not be sent.",
+                ];
+            }
+        } catch (Throwable $e) {
+            $insertError = (int) $insert->errno;
+            $conn->rollback();
+            $isDuplicate =
+                $insertError === 1062 ||
+                ($e instanceof mysqli_sql_exception &&
+                    (int) $e->getCode() === 1062);
+            if ($isDuplicate) {
+                $summary["skipped"]++;
+                $summary["skipped_records"][] = [
+                    "row" => $rowNumber,
+                    "student_number" => $studentNumber,
+                    "reason" =>
+                        "Student ID or email already exists.",
+                ];
+                continue;
+            }
+
+            $summary["failed"]++;
+            $summary["failed_records"][] = [
+                "row" => $rowNumber,
+                "student_number" => $studentNumber,
+                "reason" => "Unable to save this student account.",
+            ];
+            error_log(
+                "Bulk student import failed on CSV row " .
+                    $rowNumber .
+                    ": " .
+                    $e->getMessage(),
+            );
+        }
+    }
+
+    fclose($handle);
+    $insert->close();
+    $duplicateCheck->close();
+    echo json_encode($summary);
+    exit();
+} elseif ($action === "add") {
     $student_number = trim($data["student_number"] ?? "");
     $email = trim($data["email"] ?? "");
     $firstname = trim($data["firstname"] ?? "");
