@@ -7,6 +7,7 @@ header("Pragma: no-cache");
 include __DIR__ . "/../shared/connect.php";
 require_once __DIR__ . "/../shared/weighted_score_helper.php";
 require_once __DIR__ . "/../shared/evaluation_schema.php";
+require_once __DIR__ . "/../shared/dashboard_period_helper.php";
 
 function getActiveEvaluationPeriodId(mysqli $conn): int
 {
@@ -19,6 +20,7 @@ function getActiveEvaluationPeriodId(mysqli $conn): int
 
 try {
     $active_period_id = getActiveEvaluationPeriodId($conn);
+    $dashboard_period_id = getDashboardEvaluationPeriodId($conn);
     // Get total faculty count
     $faculty_query = "SELECT COUNT(*) as total FROM add_faculties";
     $faculty_result = $conn->query($faculty_query);
@@ -39,7 +41,7 @@ try {
     $total_evaluations_submitted = 0;
 
     // A student is complete only after submitting every assigned evaluation.
-    if ($active_period_id > 0) {
+    if ($dashboard_period_id > 0) {
         $evaluation_stmt = $conn->prepare("
             SELECT
                 COUNT(*) AS expected_students,
@@ -98,7 +100,7 @@ try {
         if (!$evaluation_stmt) {
             throw new Exception("Unable to prepare evaluation progress query.");
         }
-        $evaluation_stmt->bind_param("i", $active_period_id);
+        $evaluation_stmt->bind_param("i", $dashboard_period_id);
         $evaluation_stmt->execute();
         $evaluation_result = $evaluation_stmt->get_result();
         $progress = $evaluation_result->fetch_assoc() ?: [];
@@ -110,27 +112,24 @@ try {
     }
 
     // Get faculty ratings using weighted scores (real-time)
-    $faculty_list_query =
-        "
+    $faculty_list_query = "
         SELECT f.id, f.firstname, f.lastname, f.suffix, COUNT(e.id) as response_count
         FROM add_faculties f
         LEFT JOIN evaluations e
           ON f.id = e.faculty_id
-         " .
-        ($active_period_id > 0 ? "AND EXISTS (SELECT 1 FROM evaluation_periods ep_filter WHERE ep_filter.id = ? AND TRIM(ep_filter.ay) = TRIM(e.academic_year) AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM(e.semester)))" : "") .
-        "
+         AND EXISTS (
+             SELECT 1 FROM evaluation_periods ep_filter
+             WHERE ep_filter.id = ?
+               AND TRIM(ep_filter.ay) = TRIM(e.academic_year)
+               AND LOWER(TRIM(ep_filter.semester)) = LOWER(TRIM(e.semester))
+         )
         GROUP BY f.id, f.firstname, f.lastname, f.suffix
         HAVING response_count > 0
     ";
-    if ($active_period_id > 0) {
-        $faculty_list_stmt = $conn->prepare($faculty_list_query);
-        $faculty_list_stmt->bind_param("i", $active_period_id);
-        $faculty_list_stmt->execute();
-        $faculty_list_result = $faculty_list_stmt->get_result();
-    } else {
-        $faculty_list_result = $conn->query($faculty_list_query);
-        $faculty_list_stmt = null;
-    }
+    $faculty_list_stmt = $conn->prepare($faculty_list_query);
+    $faculty_list_stmt->bind_param("i", $dashboard_period_id);
+    $faculty_list_stmt->execute();
+    $faculty_list_result = $faculty_list_stmt->get_result();
 
     $ratings = [];
     $weighted_sum = 0.0;
@@ -143,7 +142,7 @@ try {
             $fid,
             null,
             null,
-            $active_period_id ?: null,
+            $dashboard_period_id ?: null,
         );
         if ($weighted_avg <= 0) {
             continue;
@@ -163,9 +162,7 @@ try {
             "responses" => intval($frow["response_count"]),
         ];
     }
-    if ($faculty_list_stmt) {
-        $faculty_list_stmt->close();
-    }
+    $faculty_list_stmt->close();
 
     // Sort by weighted rating descending
     usort($ratings, fn($a, $b) => $b["rating"] <=> $a["rating"]);
@@ -226,6 +223,7 @@ try {
             "totalStudents" => $total_students,
             "activeStudents" => $total_active_students,
             "activePeriodId" => $active_period_id,
+            "dashboardPeriodId" => $dashboard_period_id,
             "expectedEvaluations" => $expected_evaluations,
             "expectedStudents" => $expected_evaluations,
             "completedStudents" => $total_evaluations_submitted,

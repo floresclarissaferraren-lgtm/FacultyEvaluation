@@ -35,6 +35,7 @@ function ensurePeriodTables(mysqli $conn): void
             start_date DATE NULL,
             end_date DATE NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 0,
+            is_completed TINYINT(1) NOT NULL DEFAULT 0,
             is_archived TINYINT(1) NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -45,6 +46,11 @@ function ensurePeriodTables(mysqli $conn): void
     // Modify existing columns to allow NULL
     $conn->query("ALTER TABLE evaluation_periods MODIFY start_date DATE NULL");
     $conn->query("ALTER TABLE evaluation_periods MODIFY end_date DATE NULL");
+    if (!tableColumnExists($conn, "evaluation_periods", "is_completed")) {
+        $conn->query(
+            "ALTER TABLE evaluation_periods ADD COLUMN is_completed TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active",
+        );
+    }
     if (!tableColumnExists($conn, "evaluation_periods", "is_archived")) {
         $conn->query(
             "ALTER TABLE evaluation_periods ADD COLUMN is_archived TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active",
@@ -299,6 +305,45 @@ if ($action === "status") {
                 $activePeriodStatus = "scheduled";
             } else {
                 $activePeriodStatus = $evaluationOpen ? "open" : "ready";
+            }
+        }
+    }
+    if ($activePeriodId <= 0 && $currentAcademicYear !== "" && $currentSemester !== "") {
+        $currentPeriod = null;
+        try {
+            $currentPeriodStmt = $conn->prepare(
+                "SELECT start_date, end_date, is_completed
+                 FROM evaluation_periods
+                 WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)
+                 ORDER BY id DESC LIMIT 1",
+            );
+        } catch (Throwable $error) {
+            $currentPeriodStmt = null;
+        }
+        if (!$currentPeriodStmt) {
+            $currentPeriodStmt = $conn->prepare(
+                "SELECT start_date, end_date
+                 FROM evaluation_periods
+                 WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)
+                 ORDER BY id DESC LIMIT 1",
+            );
+        }
+        if ($currentPeriodStmt) {
+            $currentPeriodStmt->bind_param(
+                "ss",
+                $currentAcademicYear,
+                $currentSemester,
+            );
+            $currentPeriodStmt->execute();
+            $currentPeriod = $currentPeriodStmt->get_result()->fetch_assoc();
+            $currentPeriodStmt->close();
+            if ($currentPeriod) {
+                $isPastEndDate =
+                    !empty($currentPeriod["end_date"]) &&
+                    $currentPeriod["end_date"] < todayDate();
+                if (intval($currentPeriod["is_completed"] ?? 0) === 1 || $isPastEndDate) {
+                    $activePeriodStatus = "done";
+                }
             }
         }
     }
@@ -920,7 +965,7 @@ if ($action === "set_active") {
     }
 
     $periodStmt = $conn->prepare(
-        "SELECT start_date, end_date, is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
+        "SELECT ay, semester, start_date, end_date, is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
     );
     $periodStmt->bind_param("i", $id);
     $periodStmt->execute();
@@ -960,9 +1005,22 @@ if ($action === "set_active") {
 
     $conn->begin_transaction();
     try {
-        $conn->query("UPDATE evaluation_periods SET is_active = 0");
+        $previousActiveStmt = $conn->prepare(
+            "UPDATE evaluation_periods
+             SET is_completed = 1
+             WHERE is_active = 1 AND id <> ?",
+        );
+        $previousActiveStmt->bind_param("i", $id);
+        $previousActiveStmt->execute();
+        $previousActiveStmt->close();
+        $deactivatePeriodsStmt = $conn->prepare(
+            "UPDATE evaluation_periods SET is_active = 0 WHERE id <> ?",
+        );
+        $deactivatePeriodsStmt->bind_param("i", $id);
+        $deactivatePeriodsStmt->execute();
+        $deactivatePeriodsStmt->close();
         $stmt = $conn->prepare(
-            "UPDATE evaluation_periods SET is_active = 1 WHERE id = ?",
+            "UPDATE evaluation_periods SET is_active = 1, is_completed = 0 WHERE id = ?",
         );
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -970,9 +1028,22 @@ if ($action === "set_active") {
 
         // Activating a period also opens the evaluation for students in that period.
         $stmt2 = $conn->prepare(
-            "UPDATE evaluation_settings SET evaluation_open = 1, active_period_id = ? WHERE id = 1",
+            "UPDATE evaluation_settings
+             SET evaluation_open = 1, active_period_id = ?,
+                 selected_ay = ?, selected_semester = ?,
+                 display_ay = ?, display_semester = ?
+             WHERE id = 1",
         );
-        $stmt2->bind_param("i", $id);
+        $periodAy = (string) $period["ay"];
+        $periodSemester = (string) $period["semester"];
+        $stmt2->bind_param(
+            "issss",
+            $id,
+            $periodAy,
+            $periodSemester,
+            $periodAy,
+            $periodSemester,
+        );
         $stmt2->execute();
         $stmt2->close();
 
@@ -1059,7 +1130,9 @@ if ($action === "deactivate") {
             $periodStmt->close();
         }
 
-        $conn->query("UPDATE evaluation_periods SET is_active = 0");
+        $conn->query(
+            "UPDATE evaluation_periods SET is_active = 0, is_completed = 1 WHERE is_active = 1",
+        );
         $conn->query(
             "UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1",
         );

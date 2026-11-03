@@ -535,6 +535,7 @@ function updateStudentAcademicPeriodDisplay(status) {
       "is-checking",
       "is-open",
       "is-closed",
+      "is-done",
       "is-unavailable",
     );
     if (!status || !status.success) {
@@ -545,6 +546,10 @@ function updateStudentAcademicPeriodDisplay(status) {
       evaluationStatusEl.classList.add("is-open");
       evaluationStatusEl.innerHTML =
         '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation is open';
+    } else if (status.active_period_status === "done" || status.active_period_status === "expired") {
+      evaluationStatusEl.classList.add("is-done");
+      evaluationStatusEl.innerHTML =
+        '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation is done';
     } else {
       evaluationStatusEl.classList.add("is-closed");
       evaluationStatusEl.innerHTML =
@@ -690,7 +695,9 @@ async function showEvaluateSection() {
       const message =
         status?.active_period_status === "scheduled" && status.active_start_date
           ? `Evaluation starts on ${status.active_start_date}.`
-          : "Evaluation is closed";
+          : status?.active_period_status === "done" || status?.active_period_status === "expired"
+            ? "Evaluation is done"
+            : "Evaluation is closed";
       showGlobalNotification(message, "warning");
       return;
     }

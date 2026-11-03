@@ -1806,6 +1806,12 @@ body {
   color: #b91c1c;
 }
 
+.evaluation-period-status.is-done {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
 .welcome-header-inline {
   display: flex;
   flex-direction: column;

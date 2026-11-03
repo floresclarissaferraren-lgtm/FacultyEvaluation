@@ -277,20 +277,6 @@ if (loginForm) {
 
     const fullscreenSpinner = document.getElementById("fullscreen-spinner");
 
-    const isStudentLogin = username.toUpperCase().startsWith("GC-");
-    if (!isStudentLogin) {
-      fullscreenSpinner.classList.remove("hidden");
-      if (username.toUpperCase().startsWith("FC-")) {
-        fullscreenSpinner.classList.add("loading-faculty");
-        fullscreenSpinner.classList.remove("loading-admin");
-      } else {
-        fullscreenSpinner.classList.add("loading-admin");
-        fullscreenSpinner.classList.remove("loading-faculty");
-      }
-    }
-
-    const startTime = Date.now();
-
     try {
       const formData = new FormData();
       formData.append("username", username);
@@ -309,48 +295,29 @@ if (loginForm) {
         if (data.role === "student") {
           window.location.href = "../student/FacultyUser.php";
         } else if (data.role === "faculty") {
+          fullscreenSpinner.classList.remove("hidden", "loading-admin");
           fullscreenSpinner.classList.add("loading-faculty");
-          fullscreenSpinner.classList.remove("loading-admin");
-          const elapsedTime = Date.now() - startTime;
-          if (elapsedTime < minDisplayTime) {
-            setTimeout(() => {
-              window.location.href = "../instructor/FacultyInstructor.php";
-            }, minDisplayTime - elapsedTime);
-          } else {
+          setTimeout(() => {
             window.location.href = "../instructor/FacultyInstructor.php";
-          }
+          }, minDisplayTime);
         } else if (data.role === "admin") {
+          fullscreenSpinner.classList.remove("hidden", "loading-faculty");
           fullscreenSpinner.classList.add("loading-admin");
-          fullscreenSpinner.classList.remove("loading-faculty");
-          const elapsedTime = Date.now() - startTime;
-          if (elapsedTime < minDisplayTime) {
-            setTimeout(() => {
-              window.location.href = "../admin/FacultyAdmin.php";
-            }, minDisplayTime - elapsedTime);
-          } else {
+          setTimeout(() => {
             window.location.href = "../admin/FacultyAdmin.php";
-          }
+          }, minDisplayTime);
         } else {
           document.getElementById("passwordError").textContent =
             "Login successful, but role is unknown.";
-          fullscreenSpinner.classList.add("hidden");
-          fullscreenSpinner.classList.remove(
-            "loading-admin",
-            "loading-faculty",
-          );
         }
       } else {
         document.getElementById("passwordError").textContent =
           data.message || "Login failed";
-        fullscreenSpinner.classList.add("hidden");
-        fullscreenSpinner.classList.remove("loading-admin", "loading-faculty");
       }
     } catch (err) {
       console.error("Login error:", err);
       document.getElementById("passwordError").textContent =
         "An error occurred. Please try again.";
-      fullscreenSpinner.classList.add("hidden");
-      fullscreenSpinner.classList.remove("loading-admin", "loading-faculty");
     }
   });
 }

@@ -457,7 +457,6 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
               <div class="skeleton-text" style="width: 58%; height: 12px;"></div>
             </div>
           </div>
-          <div class="skeleton-admin-welcome-image"></div>
         </div>
 
         <div class="skeleton-cards-grid">

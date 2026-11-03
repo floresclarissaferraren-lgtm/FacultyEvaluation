@@ -138,6 +138,12 @@ h6,
   color: #b91c1c;
 }
 
+.evaluation-period-status.is-done {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
 .student-dashboard-skeleton {
   position: absolute;
   inset: 0;

@@ -1020,20 +1020,11 @@ include __DIR__ . "/totalstudents_dashcount.php";
             </details>
           </div>
         </div>
-        <button type="button" class="bulk-import-student-btn" aria-label="Bulk Import Accounts" title="Import student accounts from a CSV file">
-          <i class="ph ph-upload-simple" aria-hidden="true"></i> Bulk Import Accounts
-        </button>
-        <input type="file" id="student-bulk-import-file" accept=".csv,text/csv" hidden>
         <button class="add-student-btn button-gradient"><i class="ph ph-plus"></i> Add New Student</button>
+        <input type="file" id="student-bulk-import-file" accept=".csv,text/csv" hidden>
         <button class="show-archived-student-btn"><i class="ph ph-archive" aria-hidden="true"></i> View Archived</button>
       </div>
     </div>
-
-    <details class="student-import-help">
-      <summary><i class="ph ph-info" aria-hidden="true"></i><span>CSV format and requirements</span><i class="ph ph-caret-down student-import-help-caret" aria-hidden="true"></i></summary>
-      <p>Columns: student_number, email, firstname, lastname, program, student_type, yearlevel, section, suffix. Program may be its ID, name, or code. Regular students require yearlevel and section; student_type defaults to regular.</p>
-    </details>
-    <div id="student-import-summary" class="student-import-summary" aria-live="polite" hidden></div>
 
     <div class="table-wrapper">
     <div class="table-scroll-container">
@@ -1076,6 +1067,9 @@ include __DIR__ . "/totalstudents_dashcount.php";
   <div class="modal-content">
     <div class="modal-header">
       <h3>ADD NEW STUDENT</h3>
+      <button type="button" class="bulk-import-student-btn" aria-label="Bulk Import Accounts" title="Import student accounts from a CSV file">
+        <i class="ph ph-upload-simple" aria-hidden="true"></i> Bulk Import Accounts
+      </button>
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">

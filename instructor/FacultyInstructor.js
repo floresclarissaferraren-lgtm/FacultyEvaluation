@@ -1471,6 +1471,7 @@ function renderInstructorEvaluationStatus(status) {
     "is-checking",
     "is-open",
     "is-closed",
+    "is-done",
     "is-unavailable",
   );
   if (!status || !status.success) {
@@ -1481,6 +1482,10 @@ function renderInstructorEvaluationStatus(status) {
     statusEl.classList.add("is-open");
     statusEl.innerHTML =
       '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation is open';
+  } else if (status.active_period_status === "done" || status.active_period_status === "expired") {
+    statusEl.classList.add("is-done");
+    statusEl.innerHTML =
+      '<i class="ph ph-check-circle" aria-hidden="true"></i> Evaluation is done';
   } else {
     statusEl.classList.add("is-closed");
     statusEl.innerHTML =

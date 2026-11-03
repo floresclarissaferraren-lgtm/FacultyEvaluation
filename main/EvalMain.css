@@ -1984,13 +1984,6 @@ body.modal-open {
   gap: 7px;
 }
 
-.skeleton-admin-welcome-image {
-  width: 150px;
-  height: 60px;
-  flex: 0 0 150px;
-  border-radius: 12px;
-}
-
 .skeleton-toolbar {
   display: flex;
   justify-content: flex-end;
@@ -2334,7 +2327,6 @@ body.modal-open {
 .skeleton-caret,
 .skeleton-toolbar-label,
 .skeleton-dropdown,
-.skeleton-admin-welcome-image,
 .skeleton-card-icon-box,
 .skeleton-value,
 .skeleton-circle-chart,
@@ -2403,9 +2395,6 @@ body.modal-open {
   .skeleton-welcome-copy {
     margin-left: 0;
   }
-  .skeleton-admin-welcome-image {
-    display: none;
-  }
   .skeleton-academic-items {
     grid-template-columns: 1fr;
   }
@@ -2426,7 +2415,6 @@ body.modal-open {
   #fullscreen-spinner .admin-skeleton .skeleton-value,
   #fullscreen-spinner .admin-skeleton .skeleton-circle-chart,
   #fullscreen-spinner .admin-skeleton .skeleton-legend-item,
-  #fullscreen-spinner .admin-skeleton .skeleton-admin-welcome-image,
   #fullscreen-spinner .admin-skeleton .skeleton-program-progress-code,
   #fullscreen-spinner .admin-skeleton .skeleton-program-progress-name,
   #fullscreen-spinner .admin-skeleton .skeleton-program-progress-percent,
@@ -2479,6 +2467,14 @@ body.modal-open {
 }
 
 #fullscreen-spinner.loading-faculty .admin-skeleton {
+  display: none;
+}
+
+#fullscreen-spinner.loading-admin .admin-skeleton {
+  display: flex;
+}
+
+#fullscreen-spinner.loading-admin .faculty-skeleton {
   display: none;
 }
 

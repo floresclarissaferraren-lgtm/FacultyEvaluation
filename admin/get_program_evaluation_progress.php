@@ -6,6 +6,7 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 include __DIR__ . "/../shared/connect.php";
 require_once __DIR__ . "/../shared/evaluation_schema.php";
+require_once __DIR__ . "/../shared/dashboard_period_helper.php";
 
 try {
     ensureEvaluationsSchema($conn);
@@ -18,24 +19,7 @@ try {
     }
     $periodRow = $periodResult->fetch_assoc() ?: [];
     $activePeriodId = intval($periodRow["active_period_id"] ?? 0);
-    $progressPeriodId = $activePeriodId;
-
-    // When evaluations are closed, keep showing the latest period with saved submissions.
-    if ($progressPeriodId <= 0) {
-        $savedPeriodResult = $conn->query("
-            SELECT ep.id
-            FROM evaluation_periods ep
-            INNER JOIN evaluations e ON TRIM(e.academic_year) = TRIM(ep.ay)
-                AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester))
-            GROUP BY ep.id
-            ORDER BY MAX(e.created_at) DESC, ep.id DESC
-            LIMIT 1
-        ");
-        if ($savedPeriodResult) {
-            $savedPeriodRow = $savedPeriodResult->fetch_assoc() ?: [];
-            $progressPeriodId = intval($savedPeriodRow["id"] ?? 0);
-        }
-    }
+    $progressPeriodId = getDashboardEvaluationPeriodId($conn);
 
     $hasRecords = false;
     if ($progressPeriodId > 0) {

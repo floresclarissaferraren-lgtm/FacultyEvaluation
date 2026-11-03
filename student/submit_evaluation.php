@@ -63,6 +63,43 @@ $activePeriodId = $settings ? intval($settings["active_period_id"] ?? 0) : 0;
 $today = date("Y-m-d");
 $evaluationUnavailableMessage = "Evaluation is closed";
 
+if ($activePeriodId <= 0) {
+    $displayPeriodResult = $conn->query(
+        "SELECT display_ay, display_semester, selected_ay, selected_semester
+         FROM evaluation_settings WHERE id = 1 LIMIT 1",
+    );
+    $displayPeriod = $displayPeriodResult
+        ? $displayPeriodResult->fetch_assoc()
+        : null;
+    $displayYear = trim(
+        (string) (($displayPeriod["display_ay"] ?? "") ?: ($displayPeriod["selected_ay"] ?? "")),
+    );
+    $displaySemester = trim(
+        (string) (($displayPeriod["display_semester"] ?? "") ?: ($displayPeriod["selected_semester"] ?? "")),
+    );
+    if ($displayYear !== "" && $displaySemester !== "") {
+        $doneStmt = $conn->prepare(
+            "SELECT is_completed, end_date FROM evaluation_periods
+             WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)
+             ORDER BY id DESC LIMIT 1",
+        );
+        if ($doneStmt) {
+            $doneStmt->bind_param("ss", $displayYear, $displaySemester);
+            $doneStmt->execute();
+            $displayedPeriod = $doneStmt->get_result()->fetch_assoc();
+            $doneStmt->close();
+            if (
+                $displayedPeriod &&
+                (intval($displayedPeriod["is_completed"] ?? 0) === 1 ||
+                    (!empty($displayedPeriod["end_date"]) &&
+                        $displayedPeriod["end_date"] < $today))
+            ) {
+                $evaluationUnavailableMessage = "Evaluation is done";
+            }
+        }
+    }
+}
+
 if ($evaluationOpen && $activePeriodId > 0) {
     $periodStmt = $conn->prepare(
         "SELECT ay, semester, start_date, end_date FROM evaluation_periods WHERE id = ? LIMIT 1",

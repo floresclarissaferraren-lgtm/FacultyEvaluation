@@ -40,11 +40,21 @@ function ensureEvaluationPeriodTables(mysqli $conn): void
             start_date DATE NULL,
             end_date DATE NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 0,
+            is_completed TINYINT(1) NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             KEY idx_active (is_active)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+
+    $completedColumn = $conn->query(
+        "SHOW COLUMNS FROM evaluation_periods LIKE 'is_completed'",
+    );
+    if ($completedColumn && $completedColumn->num_rows === 0) {
+        $conn->query(
+            "ALTER TABLE evaluation_periods ADD COLUMN is_completed TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active",
+        );
+    }
 
     $conn->query("
         CREATE TABLE IF NOT EXISTS evaluation_settings (
@@ -161,7 +171,7 @@ function closeExpiredEvaluationPeriod(mysqli $conn): void
         try {
             // Deactivate period
             $conn->query(
-                "UPDATE evaluation_periods SET is_active = 0 WHERE id = $periodId",
+                "UPDATE evaluation_periods SET is_active = 0, is_completed = 1 WHERE id = $periodId",
             );
             // Set settings to closed
             $conn->query(

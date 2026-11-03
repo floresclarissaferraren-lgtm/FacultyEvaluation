@@ -899,12 +899,18 @@ document.addEventListener("DOMContentLoaded", () => {
       loadFaculty?.();
     }
     if (id === "criteria-section") loadCategories?.();
-    if (id === "academic-year-section") window.loadAcademicYearSection?.();
+    if (id === "academic-year-section") {
+      closeArchivedAcademicYearView?.();
+      window.loadAcademicYearSection?.();
+    }
     if (id === "report-section") {
       loadReportPeriodFilters?.();
       loadEvaluations?.();
     }
-    if (id === "students-section") loadStudents?.();
+    if (id === "students-section") {
+      showStudentListView?.();
+      loadStudents?.();
+    }
     if (id === "subjects-section") loadSubjectsMainTable?.();
 
     // =========================
@@ -997,7 +1003,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("deleteMessage").innerText =
-      `Do you want to delete ${type}? \n${name}`;
+      `Are you sure you want to delete this ${type}?`;
     document.getElementById("deleteWarning").innerText =
       type === "period"
         ? "Academic periods with linked classes or evaluation records cannot be deleted. Archive the period to preserve its history."
@@ -2329,7 +2335,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function saveDashboardPeriodSetting() {
     try {
-      await fetch("../shared/periods_api.php?action=set_dashboard_period", {
+      const response = await fetch("../shared/periods_api.php?action=set_dashboard_period", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
@@ -2338,9 +2344,13 @@ document.addEventListener("DOMContentLoaded", () => {
           semester: selectedClassSemester || "",
         }),
       });
+      const result = await response.json();
+      if (!result?.success) return;
       if (typeof window.refreshAdminPeriodCard === "function") {
         await window.refreshAdminPeriodCard();
       }
+      loadDashboardStats(true);
+      await resetReportPeriodToCurrent();
     } catch (_) {}
   }
 
@@ -4298,6 +4308,17 @@ document.addEventListener("DOMContentLoaded", () => {
       sid.disabled = sem.disabled = h.includes("EDIT STUDENT");
     }
   };
+  const resetModalScrollPosition = (modal) => {
+    const resetScroll = () => {
+      modal.scrollTop = 0;
+      const content = modal.querySelector(".modal-content");
+      const body = modal.querySelector(".modal-body");
+      if (content) content.scrollTop = 0;
+      if (body) body.scrollTop = 0;
+    };
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+  };
   const closeModal = (m) => {
     m.style.display = "none";
     if (m.id === "addFacultyModal")
@@ -5014,6 +5035,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("faculty-photo-preview").hidden = true;
     delete addFacultyModal.dataset.editRow;
     openModal(addFacultyModal, "ADD NEW FACULTY", "SAVE FACULTY");
+    resetModalScrollPosition(addFacultyModal);
 
     setTimeout(() => {
       const emailInput = document.getElementById("faculty-email");
@@ -5345,6 +5367,19 @@ document.addEventListener("DOMContentLoaded", () => {
     })();
 
     return reportPeriodFiltersPromise;
+  }
+
+  function resetReportPeriodToCurrent() {
+    reportPeriodFiltersLoaded = false;
+    reportPeriodFiltersPromise = null;
+    const aySelect = document.getElementById("report-ay-filter");
+    aySelect
+      ?.querySelectorAll("option:not(:first-child)")
+      .forEach((option) => option.remove());
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) searchInput.value = "";
+
+    return loadReportPeriodFilters().then(() => loadEvaluations());
   }
 
   function applyReportSearchFilter() {
@@ -6571,7 +6606,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (pendingCountEl)
               pendingCountEl.textContent = pendingEvaluations.toLocaleString();
 
-            if (!Number(data.data.activePeriodId)) {
+            if (
+              !Number(
+                data.data.dashboardPeriodId ?? data.data.activePeriodId,
+              )
+            ) {
               progressFillEl.style.width = "0%";
               progressTextEl.textContent = "No active evaluation period";
             } else if (expectedEvaluations <= 0) {
@@ -9654,8 +9693,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function initBulkStudentImport() {
     const importButton = document.querySelector(".bulk-import-student-btn");
     const fileInput = document.getElementById("student-bulk-import-file");
-    const summary = document.getElementById("student-import-summary");
-    if (!importButton || !fileInput || !summary) return;
+    if (!importButton || !fileInput) return;
 
     importButton.onclick = () => fileInput.click();
     fileInput.onchange = async () => {
@@ -9668,8 +9706,6 @@ document.addEventListener("DOMContentLoaded", () => {
       importButton.disabled = true;
       importButton.innerHTML =
         '<i class="ph ph-spinner-gap" aria-hidden="true"></i> Importing...';
-      summary.hidden = false;
-      summary.textContent = "Importing student accounts...";
 
       try {
         const response = await fetch("student_crud.php", {
@@ -9681,63 +9717,35 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.message || "Unable to import this CSV file.");
         }
 
-        summary.replaceChildren();
-        const heading = document.createElement("h3");
-        heading.textContent = "Import results";
-        const totals = document.createElement("div");
-        totals.className = "student-import-summary-counts";
-        [
-          ["Imported", result.imported],
-          ["Duplicates skipped", result.skipped],
-          ["Failed", result.failed],
-        ].forEach(([label, count]) => {
-          const item = document.createElement("div");
-          item.className = "student-import-summary-count";
-          const value = document.createElement("strong");
-          value.textContent = String(count);
-          const caption = document.createElement("span");
-          caption.textContent = label;
-          item.append(value, caption);
-          totals.appendChild(item);
-        });
-        summary.append(heading, totals);
-
-        const appendRecords = (title, records) => {
-          if (!Array.isArray(records) || records.length === 0) return;
-          const sectionHeading = document.createElement("h4");
-          sectionHeading.textContent = title;
-          const list = document.createElement("ul");
-          records.forEach((record) => {
-            const item = document.createElement("li");
-            const identifier = record.student_number || "No student ID";
-            item.textContent = `CSV row ${record.row} (${identifier}): ${record.reason}`;
-            list.appendChild(item);
-          });
-          summary.append(sectionHeading, list);
-        };
-
-        appendRecords("Skipped duplicates", result.skipped_records);
-        appendRecords("Failed records", result.failed_records);
-        appendRecords("Email warnings", result.email_warnings);
-
-        if (result.imported > 0) {
+        const updated = Number(result.updated || 0);
+        if (result.imported > 0 || updated > 0) {
           loadStudents();
           loadDashboardStats();
         }
+        closeModal(addStudentModal);
+        const importedLabel = result.imported === 1 ? "student" : "students";
+        const emailFailed = Number(result.email_failed || 0);
+        const updatedLabel = updated === 1 ? "student record" : "student records";
+        const successfulSummary = [
+          result.imported > 0 ? `${result.imported} ${importedLabel} imported` : "",
+          updated > 0 ? `${updated} existing ${updatedLabel} updated` : "",
+        ].filter(Boolean).join(", ");
+        const notificationMessage = result.failed > 0
+          ? `Import finished: ${result.imported} ${importedLabel} imported${updated > 0 ? `, ${updated} existing ${updatedLabel} updated` : ""}, ${result.failed} failed.`
+          : emailFailed > 0
+            ? `Students imported, but the temporary password email failed for ${emailFailed} student${emailFailed === 1 ? "" : "s"}.`
+            : `Student import successful: ${successfulSummary || `0 ${importedLabel} imported`}.${result.skipped > 0 ? ` ${result.skipped} duplicate${result.skipped === 1 ? "" : "s"}.` : ""}`;
         showNotification(
-          `Import complete: ${result.imported} imported, ${result.skipped} skipped, ${result.failed} failed.`,
-          result.failed > 0 ? "#d97706" : "#4caf50",
+          notificationMessage,
+          result.failed > 0 || emailFailed > 0 ? "#d97706" : "#4caf50",
           6000,
         );
       } catch (error) {
-        summary.replaceChildren();
-        const heading = document.createElement("h3");
-        heading.textContent = "Import failed";
-        const message = document.createElement("p");
-        message.textContent =
-          error.message || "Unable to import this CSV file.";
-        summary.append(heading, message);
-        showNotification(message.textContent, "#f44336", 6000);
+        showNotification(
+          error.message || "Unable to import this CSV file.",
+          "#f44336",
+          6000,
+        );
       } finally {
         importButton.disabled = false;
         importButton.innerHTML =
@@ -9774,6 +9782,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addStudentModal.style.backgroundColor = "rgba(0,0,0,0.5)";
         addStudentModal.style.alignItems = "center";
         addStudentModal.style.justifyContent = "center";
+        resetModalScrollPosition(addStudentModal);
 
         // Add close button event listener directly for Add Students modal
         setTimeout(() => {
@@ -10179,11 +10188,19 @@ document.addEventListener("DOMContentLoaded", () => {
           scheduled: "Scheduled",
           ready: "Ready to open",
           setup: "Dates needed",
-          expired: "Expired",
+          expired: "Done",
           closed: "Closed",
+          done: "Done",
         };
         statusText.textContent =
           statusLabels[data.active_period_status] || "Closed";
+        statusText
+          .closest(".evaluation-status-item")
+          ?.classList.toggle(
+            "is-done",
+            String(data.active_period_status || "").toLowerCase() === "done" ||
+              String(data.active_period_status || "").toLowerCase() === "expired",
+          );
         statusText
           .closest(".evaluation-status-item")
           ?.classList.toggle(
@@ -10773,6 +10790,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await loadPeriods();
           await refreshPeriodCard();
           await syncDashboardPeriodSetting();
+          if (result?.success) {
+            loadDashboardStats(true);
+            await resetReportPeriodToCurrent();
+          }
           await refreshAcademicYearTable();
         } catch (error) {
           console.error("Failed to activate evaluation period:", error);
@@ -11310,6 +11331,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (archivedAcademicYearSection) {
       archivedAcademicYearSection.hidden = true;
       archivedAcademicYearSection.style.display = "none";
+    }
+    if (archivedAcademicYearSearch) {
+      archivedAcademicYearSearch.value = "";
+      filterArchivedAcademicYears();
     }
   }
 
