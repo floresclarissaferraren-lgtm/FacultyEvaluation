@@ -10265,7 +10265,31 @@ document.addEventListener("DOMContentLoaded", () => {
               result?.message || "Unable to close the evaluation period.",
             );
           }
-          showNotification("Evaluation period closed.", "#10b981", 7000);
+          let closeMessage = "Evaluation period closed.";
+          let closeColor = "#10b981";
+          if (result.reports_queued && Number(result.period_id) > 0) {
+            const noticeResponse = await fetch(
+              "../shared/periods_api.php?action=process_closing",
+              {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: Number(result.period_id) }),
+              },
+            );
+            const noticeResult = await noticeResponse.json().catch(() => null);
+            const sent = Number(noticeResult?.notifications_sent) || 0;
+            const failed = Number(noticeResult?.notifications_failed) || 0;
+            const details = String(noticeResult?.notification_error || "").trim();
+            closeMessage =
+              !noticeResponse.ok || !noticeResult?.success || failed > 0 || sent === 0
+                ? `Period closed. Gmail notices: ${sent} sent, ${failed} failed${details ? `: ${details}` : sent === 0 && failed === 0 ? ". No active students with email were found." : "."}`
+                : `Period closed. Gmail notice sent to ${sent} active students.`;
+            if (!noticeResponse.ok || !noticeResult?.success || failed > 0 || sent === 0) {
+              closeColor = "#f59e0b";
+            }
+          }
+          showNotification(closeMessage, closeColor, 9000);
         } catch (error) {
           console.error("Failed to close evaluation period:", error);
           showNotification(
@@ -10755,36 +10779,29 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
             showNotification("Evaluation is Open", "#10b981", 6000);
             if (result.notifications_queued && Number(result.period_id) > 0) {
-              fetch("../shared/periods_api.php?action=process_activation", {
-                method: "POST",
-                credentials: "same-origin",
-                keepalive: true,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: Number(result.period_id) }),
-              })
-                .then((response) => response.json())
-                .then((notifyResult) => {
-                  if (!notifyResult?.success) {
-                    showNotification(
-                      notifyResult?.message || "Gmail notices could not be sent.",
-                      "#f59e0b",
-                      8000,
-                    );
-                    return;
-                  }
-                  const failed = Number(notifyResult.notify_failed) || 0;
-                  if (failed > 0) {
-                    const details = String(notifyResult.notify_error || "").trim();
-                    showNotification(
-                      `Gmail notices: ${Number(notifyResult.notify_sent) || 0} sent, ${failed} failed${details ? `: ${details}` : "."}`,
-                      "#f59e0b",
-                      10000,
-                    );
-                  }
-                })
-                .catch((error) => {
-                  console.error("Evaluation opening notifications failed:", error);
-                });
+              const notifyResponse = await fetch(
+                "../shared/periods_api.php?action=process_activation",
+                {
+                  method: "POST",
+                  credentials: "same-origin",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ id: Number(result.period_id) }),
+                },
+              );
+              const notifyResult = await notifyResponse.json().catch(() => null);
+              const sent = Number(notifyResult?.notify_sent) || 0;
+              const failed = Number(notifyResult?.notify_failed) || 0;
+              const details = String(notifyResult?.notify_error || "").trim();
+              if (!notifyResponse.ok || !notifyResult?.success || failed > 0 || sent === 0) {
+                showNotification(
+                  notifyResult?.message ||
+                    `Gmail notices: ${sent} sent, ${failed} failed${details ? `: ${details}` : sent === 0 && failed === 0 ? ". No active students with email were found." : "."}`,
+                  "#f59e0b",
+                  10000,
+                );
+              } else {
+                showNotification(`Gmail notices sent to ${sent} active students.`, "#10b981", 7000);
+              }
             }
           }
           await loadPeriods();
@@ -10842,25 +10859,32 @@ document.addEventListener("DOMContentLoaded", () => {
               4000,
             );
           } else {
+            let closeMessage = "Evaluation period closed.";
+            let closeColor = "#10b981";
             if (result.reports_queued && Number(result.period_id) > 0) {
-              fetch("../shared/periods_api.php?action=process_closing", {
-                method: "POST",
-                credentials: "same-origin",
-                keepalive: true,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: Number(result.period_id) }),
-              })
-                .then((response) => response.json())
-                .then((reportResult) => {
-                  if (!reportResult?.success) {
-                    console.error("Closed-period report processing failed:", reportResult);
-                  }
-                })
-                .catch((error) => {
-                  console.error("Closed-period report processing failed:", error);
-                });
+              const noticeResponse = await fetch(
+                "../shared/periods_api.php?action=process_closing",
+                {
+                  method: "POST",
+                  credentials: "same-origin",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ id: Number(result.period_id) }),
+                },
+              );
+              const noticeResult = await noticeResponse.json().catch(() => null);
+              const sent = Number(noticeResult?.notifications_sent) || 0;
+              const failed = Number(noticeResult?.notifications_failed) || 0;
+              const details = String(noticeResult?.notification_error || "").trim();
+              if (!noticeResponse.ok || !noticeResult?.success || failed > 0 || sent === 0) {
+                closeMessage =
+                  noticeResult?.message ||
+                  `Period closed. Gmail notices: ${sent} sent, ${failed} failed${details ? `: ${details}` : sent === 0 && failed === 0 ? ". No active students with email were found." : "."}`;
+                closeColor = "#f59e0b";
+              } else {
+                closeMessage = `Period closed. Gmail notice sent to ${sent} active students.`;
+              }
             }
-            showNotification("Evaluation period closed.", "#10b981", 6000);
+            showNotification(closeMessage, closeColor, 9000);
           }
         } catch (error) {
           console.error("Failed to close evaluation period:", error);

@@ -234,7 +234,12 @@ if ($action === "status") {
 } else {
     ensurePeriodTables($conn);
     ensureEvaluationsSchema($conn);
-    closeExpiredActivePeriod($conn);
+    // The status poll owns automatic expiry handling. Running it before an
+    // admin's manual close could classify that close as automatic and email
+    // faculty PDFs before the admin uses the envelope action.
+    if (!in_array($action, ["deactivate", "process_closing", "send_reports"], true)) {
+        closeExpiredActivePeriod($conn);
+    }
 }
 
 // Public-ish read used by other pages
@@ -708,7 +713,7 @@ if ($action === "update") {
     }
 
     $archivedStmt = $conn->prepare(
-        "SELECT is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
+        "SELECT is_archived, ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1",
     );
     $archivedStmt->bind_param("i", $id);
     $archivedStmt->execute();
@@ -751,7 +756,7 @@ if ($action === "update") {
     // If dates are omitted, use the saved range for the conflict check.
     if ($startDate === "" || $endDate === "") {
         $existingStmt = $conn->prepare(
-            "SELECT start_date, end_date, is_archived FROM evaluation_periods WHERE id = ? LIMIT 1",
+            "SELECT start_date, end_date, is_archived, ay, semester FROM evaluation_periods WHERE id = ? LIMIT 1",
         );
         $existingStmt->bind_param("i", $id);
         $existingStmt->execute();
@@ -763,12 +768,37 @@ if ($action === "update") {
             empty($existingPeriod["start_date"]) ||
             empty($existingPeriod["end_date"])
         ) {
-            $stmt = $conn->prepare(
-                "UPDATE evaluation_periods SET ay = ?, semester = ? WHERE id = ?",
-            );
-            $stmt->bind_param("ssi", $ay, $semester, $id);
-            $ok = $stmt->execute();
-            $stmt->close();
+            $conn->begin_transaction();
+            try {
+                if (
+                    trim((string) $existingPeriod["ay"]) !== $ay ||
+                    strcasecmp(trim((string) $existingPeriod["semester"]), $semester) !== 0
+                ) {
+                    $evaluationStmt = $conn->prepare(
+                        "UPDATE evaluations SET academic_year = ?, semester = ? WHERE TRIM(academic_year) = TRIM(?) AND LOWER(TRIM(semester)) = LOWER(TRIM(?))",
+                    );
+                    $oldAy = (string) $existingPeriod["ay"];
+                    $oldSemester = (string) $existingPeriod["semester"];
+                    $evaluationStmt->bind_param("ssss", $ay, $semester, $oldAy, $oldSemester);
+                    if (!$evaluationStmt->execute()) {
+                        throw new RuntimeException("Unable to update evaluations for this period.");
+                    }
+                    $evaluationStmt->close();
+                }
+                $stmt = $conn->prepare(
+                    "UPDATE evaluation_periods SET ay = ?, semester = ? WHERE id = ?",
+                );
+                $stmt->bind_param("ssi", $ay, $semester, $id);
+                $ok = $stmt->execute();
+                $stmt->close();
+                if (!$ok) {
+                    throw new RuntimeException("Unable to update evaluation period.");
+                }
+                $conn->commit();
+            } catch (Throwable $e) {
+                $conn->rollback();
+                $ok = false;
+            }
 
             echo json_encode(["success" => $ok]);
             exit();
@@ -808,12 +838,52 @@ if ($action === "update") {
         exit();
     }
 
-    $stmt = $conn->prepare(
-        "UPDATE evaluation_periods SET ay = ?, semester = ?, start_date = ?, end_date = ? WHERE id = ?",
-    );
-    $stmt->bind_param("ssssi", $ay, $semester, $start, $end, $id);
-    $ok = $stmt->execute();
-    $stmt->close();
+    // Keep saved evaluations attached to the edited period's new label so
+    // reports continue to find them after an academic year or semester change.
+    $conn->begin_transaction();
+    try {
+        if (
+            trim((string) $existingPeriod["ay"]) !== $ay ||
+            strcasecmp(trim((string) $existingPeriod["semester"]), $semester) !== 0
+        ) {
+            $evaluationStmt = $conn->prepare(
+                "UPDATE evaluations SET academic_year = ?, semester = ? WHERE TRIM(academic_year) = TRIM(?) AND LOWER(TRIM(semester)) = LOWER(TRIM(?))",
+            );
+            if (!$evaluationStmt) {
+                throw new RuntimeException("Unable to prepare evaluation period update.");
+            }
+            $oldAy = (string) $existingPeriod["ay"];
+            $oldSemester = (string) $existingPeriod["semester"];
+            $evaluationStmt->bind_param("ssss", $ay, $semester, $oldAy, $oldSemester);
+            if (!$evaluationStmt->execute()) {
+                $evaluationStmt->close();
+                throw new RuntimeException("Unable to update evaluations for this period.");
+            }
+            $evaluationStmt->close();
+        }
+
+        $stmt = $conn->prepare(
+            "UPDATE evaluation_periods SET ay = ?, semester = ?, start_date = ?, end_date = ? WHERE id = ?",
+        );
+        if (!$stmt) {
+            throw new RuntimeException("Unable to prepare period update.");
+        }
+        $stmt->bind_param("ssssi", $ay, $semester, $start, $end, $id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            throw new RuntimeException("Unable to update evaluation period.");
+        }
+        $stmt->close();
+        $conn->commit();
+        $ok = true;
+    } catch (Throwable $e) {
+        $conn->rollback();
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to update this period and its report records. The saved period and evaluations were left unchanged.",
+        ]);
+        exit();
+    }
 
     echo json_encode(["success" => $ok]);
     exit();
@@ -1178,6 +1248,7 @@ if ($action === "process_closing") {
             $id,
             (string) $period["ay"],
             (string) $period["semester"],
+            true,
             false,
         );
         echo json_encode(array_merge(["success" => true], $summary));

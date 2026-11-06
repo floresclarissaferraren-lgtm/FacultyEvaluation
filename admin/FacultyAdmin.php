@@ -229,7 +229,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <div>
           <h3>Total Faculty</h3>
           <p id="totalFaculty" class="dashboard-value"><?php echo $totalFacultyCount; ?></p>
-          <span>Registered Users</span>
+          <span>Active Users</span>
         </div>
         <div class="icon-box"><i class="ph-fill ph-chalkboard-teacher"></i></div>
       </div>
@@ -243,7 +243,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <div>
           <h3>Total Students</h3>
           <p id="totalStudents" class="dashboard-value"><?php echo $totalStudentsCount; ?></p>
-          <span>Registered Users</span>
+          <span>Active Users</span>
         </div>
         <div class="icon-box"><i class="ph-fill ph-graduation-cap"></i></div>
       </div>

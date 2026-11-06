@@ -16,8 +16,14 @@ ensureColumnExists(
     'VARCHAR(20) NOT NULL DEFAULT "active"',
 );
 
-$totalFacultyCount = getTotalCount($conn, "add_faculties");
-$totalStudentsCount = getTotalCount($conn, "add_students");
+$totalFacultyCount = scalarCount(
+    $conn,
+    "SELECT COUNT(*) AS total FROM add_faculties WHERE LOWER(TRIM(COALESCE(status, 'active'))) = 'active'",
+);
+$totalStudentsCount = scalarCount(
+    $conn,
+    "SELECT COUNT(*) AS total FROM add_students WHERE LOWER(TRIM(COALESCE(status, 'active'))) = 'active'",
+);
 $totalEvaluationsCount = 0;
 $totalProgramsCount = getTotalCount($conn, "add_programs");
 

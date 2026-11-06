@@ -21,13 +21,13 @@ function getActiveEvaluationPeriodId(mysqli $conn): int
 try {
     $active_period_id = getActiveEvaluationPeriodId($conn);
     $dashboard_period_id = getDashboardEvaluationPeriodId($conn);
-    // Get total faculty count
-    $faculty_query = "SELECT COUNT(*) as total FROM add_faculties";
+    // Dashboard cards count active users only.
+    $faculty_query = "SELECT COUNT(*) as total FROM add_faculties WHERE LOWER(TRIM(COALESCE(status, 'active'))) = 'active'";
     $faculty_result = $conn->query($faculty_query);
     $total_faculty = $faculty_result->fetch_assoc()["total"];
 
     // Get total students count
-    $student_query = "SELECT COUNT(*) as total FROM add_students";
+    $student_query = "SELECT COUNT(*) as total FROM add_students WHERE LOWER(TRIM(COALESCE(status, 'active'))) = 'active'";
     $student_result = $conn->query($student_query);
     $total_students = $student_result->fetch_assoc()["total"];
 

@@ -224,10 +224,14 @@ function handleExpiredPeriodClosing(
     string $ay,
     string $semester,
     bool $notifyStudents = true,
+    bool $generateFacultyReports = true,
 ): array {
     $reportEmailsSent = 0;
     $reportEmailsFailed = 0;
     $reportEmailErrors = [];
+    $studentNoticesSent = 0;
+    $studentNoticesFailed = 0;
+    $studentNoticeError = "";
 
     // 1. Notify Students
     if ($notifyStudents) {
@@ -258,13 +262,37 @@ function handleExpiredPeriodClosing(
                 ";
 
                 $body = getEmailHTML($title, $greeting, $content_html);
-                sendEmail($email, $name, $subject, $body, null, null, [], true);
+                if (sendEmail($email, $name, $subject, $body, null, null, [], true)) {
+                    $studentNoticesSent++;
+                } else {
+                    $studentNoticesFailed++;
+                    if ($studentNoticeError === "") {
+                        $studentNoticeError = getLastEmailError();
+                    }
+                }
             }
         } else {
+            $studentNoticesFailed++;
+            if ($studentNoticeError === "") {
+                $studentNoticeError = "Unable to load active student email addresses.";
+            }
             error_log(
                 "Unable to load students for closing notifications for period $periodId.",
             );
         }
+    }
+
+    // Manual closes only send the student notice. Faculty PDFs are handled
+    // separately by the admin's envelope action.
+    if (!$generateFacultyReports) {
+        return [
+            "notifications_sent" => $studentNoticesSent,
+            "notifications_failed" => $studentNoticesFailed,
+            "notification_error" => $studentNoticeError,
+            "report_emails_sent" => 0,
+            "report_emails_failed" => 0,
+            "report_email_errors" => [],
+        ];
     }
 
     // 2. Process Faculty Members: Generate & Upload PDF, Send Email
@@ -499,6 +527,9 @@ function handleExpiredPeriodClosing(
     }
 
     return [
+        "notifications_sent" => $studentNoticesSent,
+        "notifications_failed" => $studentNoticesFailed,
+        "notification_error" => $studentNoticeError,
         "report_emails_sent" => $reportEmailsSent,
         "report_emails_failed" => $reportEmailsFailed,
         "report_email_errors" => $reportEmailErrors,

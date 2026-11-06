@@ -73,6 +73,10 @@ function sendEvaluationOpenNotifications(
                 );
             }
         }
+    } else {
+        $failed++;
+        $firstError = "Unable to load active student email addresses.";
+        error_log("Evaluation opening notices could not load active students.");
     }
 
     return [
