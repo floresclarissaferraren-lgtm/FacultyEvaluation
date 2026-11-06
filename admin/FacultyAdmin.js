@@ -10206,9 +10206,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (statusText) {
         const statusLabels = {
           open: "Open",
-          scheduled: "Scheduled",
-          ready: "Ready to open",
-          setup: "Dates needed",
+          scheduled: "Closed",
+          ready: "Closed",
+          setup: "Closed",
           expired: "Done",
           closed: "Closed",
           done: "Done",
