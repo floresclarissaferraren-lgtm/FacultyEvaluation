@@ -1162,6 +1162,10 @@ if ($action === "process_activation") {
             "success" => true,
             "notify_sent" => $notifyResult["sent"] ?? 0,
             "notify_failed" => $notifyResult["failed"] ?? 0,
+            "students_sent" => $notifyResult["students_sent"] ?? 0,
+            "students_failed" => $notifyResult["students_failed"] ?? 0,
+            "faculty_sent" => $notifyResult["faculty_sent"] ?? 0,
+            "faculty_failed" => $notifyResult["faculty_failed"] ?? 0,
             "notify_error" => $notifyResult["errors"][0] ?? "",
         ]);
     } catch (Throwable $error) {
@@ -1300,6 +1304,7 @@ if ($action === "set_open") {
 
     $notifySent = 0;
     $notifyFailed = 0;
+    $notifyResult = [];
     if ($ok && $open === 1) {
         // Fetch the active period's AY and semester for the email
         $settingsRow = $conn
@@ -1327,6 +1332,10 @@ if ($action === "set_open") {
         "success" => $ok,
         "notify_sent" => $notifySent,
         "notify_failed" => $notifyFailed,
+        "students_sent" => $notifyResult["students_sent"] ?? 0,
+        "students_failed" => $notifyResult["students_failed"] ?? 0,
+        "faculty_sent" => $notifyResult["faculty_sent"] ?? 0,
+        "faculty_failed" => $notifyResult["faculty_failed"] ?? 0,
     ]);
     exit();
 }

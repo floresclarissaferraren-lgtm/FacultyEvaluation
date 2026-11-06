@@ -236,39 +236,67 @@ function handleExpiredPeriodClosing(
     // 1. Notify Students
     if ($notifyStudents) {
         $studentRes = $conn->query("
-            SELECT email, firstname, lastname
+            SELECT DISTINCT email
             FROM add_students
-            WHERE LOWER(status) = 'active' AND email IS NOT NULL AND email != ''
+            WHERE LOWER(TRIM(status)) = 'active'
+              AND email IS NOT NULL
+              AND email != ''
         ");
         if ($studentRes) {
+            $studentRecipients = [];
             while ($row = $studentRes->fetch_assoc()) {
-                $email = trim($row["email"]);
-                $name = trim($row["firstname"] . " " . $row["lastname"]);
-                $subject = "Faculty Evaluation Concluded - A.Y. $ay, $semester";
-                $title = "Faculty Evaluation Period Concluded";
-                $greeting =
-                    "Dear " .
-                    htmlspecialchars($name, ENT_QUOTES, "UTF-8") .
-                    ",";
-                $content_html =
-                    "
-                    <p style='margin: 0 0 16px 0;'>This is to inform you that the faculty evaluation period for <strong>Academic Year " .
-                    htmlspecialchars($ay, ENT_QUOTES, "UTF-8") .
-                    ", " .
-                    htmlspecialchars($semester, ENT_QUOTES, "UTF-8") .
-                    "</strong> has closed.</p>
-                    <p style='margin: 0 0 16px 0; font-size: 15px; font-weight: bold; color: #dc2626;'>The evaluation process is now complete.</p>
-                    <p style='margin: 0 0 16px 0;'>We thank you very much for participating and sharing your valuable feedback, which is key to improving our instruction and college standards.</p>
-                ";
-
-                $body = getEmailHTML($title, $greeting, $content_html);
-                if (sendEmail($email, $name, $subject, $body, null, null, [], true)) {
-                    $studentNoticesSent++;
+                $email = trim((string) ($row["email"] ?? ""));
+                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $studentRecipients[] = $email;
                 } else {
                     $studentNoticesFailed++;
                     if ($studentNoticeError === "") {
+                        $studentNoticeError =
+                            "One or more active student email addresses are invalid.";
+                    }
+                }
+            }
+
+            $subject = "Faculty Evaluation Period concluded - A.Y. $ay, $semester";
+            $content_html =
+                "
+                <p style='margin: 0 0 16px 0;'>This is to inform you that the faculty evaluation period for <strong>Academic Year " .
+                htmlspecialchars($ay, ENT_QUOTES, "UTF-8") .
+                ", " .
+                htmlspecialchars($semester, ENT_QUOTES, "UTF-8") .
+                "</strong> has closed.</p>
+                <p style='margin: 0 0 16px 0; font-size: 15px; font-weight: bold; color: #dc2626;'>The evaluation process is now closed.</p>
+                <p style='margin: 0 0 16px 0;'>We thank you very much for participating and sharing your valuable feedback, which is key to improving our instruction and college standards.</p>
+            ";
+            $body = getEmailHTML(
+                "Faculty Evaluation Period concluded",
+                "Dear Student,",
+                $content_html,
+            );
+            foreach (array_chunk($studentRecipients, 50) as $batch) {
+                if (
+                    sendEmail(
+                        MAIL_USER,
+                        MAIL_NAME,
+                        $subject,
+                        $body,
+                        null,
+                        null,
+                        [],
+                        true,
+                        $batch,
+                    )
+                ) {
+                    $studentNoticesSent += count($batch);
+                } else {
+                    $studentNoticesFailed += count($batch);
+                    if ($studentNoticeError === "") {
                         $studentNoticeError = getLastEmailError();
                     }
+                    error_log(
+                        "Evaluation closing email batch failed for period $periodId: " .
+                            getLastEmailError(),
+                    );
                 }
             }
         } else {

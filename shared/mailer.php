@@ -33,6 +33,7 @@ function sendEmail(
     $attachmentName = null,
     array $additionalAttachments = [],
     bool $reuseSmtpConnection = false,
+    array $bccRecipients = [],
 ) {
     global $lastEmailError;
     static $persistentMailer = null;
@@ -84,6 +85,9 @@ function sendEmail(
 
         $mail->setFrom(MAIL_USER, MAIL_NAME);
         $mail->addAddress($toEmail, $toName);
+        foreach ($bccRecipients as $bccEmail) {
+            $mail->addBCC($bccEmail);
+        }
         $attachments = $additionalAttachments;
         if ($attachmentPath !== null) {
             array_unshift($attachments, [

@@ -188,14 +188,14 @@ $facultyStatusStmt->close();
 
 if (
     !$facultyStatusRow ||
-    strtolower(trim((string) ($facultyStatusRow["status"] ?? "active"))) ===
-        "archived"
+    strtolower(trim((string) ($facultyStatusRow["status"] ?? "active"))) !==
+        "active"
 ) {
     submitEvaluationResponse(
         [
             "success" => false,
             "message" =>
-                "This faculty account is archived and cannot be evaluated.",
+                "This faculty account is not active and cannot be evaluated.",
         ],
         403,
     );

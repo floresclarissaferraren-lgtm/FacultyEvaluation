@@ -128,7 +128,7 @@ try {
                AND LOWER(TRIM(ev.semester)) = LOWER(TRIM(ep.semester))
                 WHERE st.id = ?
                   AND cs.faculty_id > 0
-                  AND LOWER(TRIM(COALESCE(f.status, 'active'))) <> 'archived'
+                  AND LOWER(TRIM(COALESCE(f.status, 'active'))) = 'active'
             ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
         ";
 
@@ -228,7 +228,7 @@ try {
                                          WHERE ss.student_id = ?
                                              AND LOWER(TRIM(ac.semester)) = LOWER(TRIM(ep.semester))
                                              AND LOWER(TRIM(s.semester)) = LOWER(TRIM(ep.semester))
-                                             AND LOWER(TRIM(COALESCE(f.status, 'active'))) <> 'archived'
+                                             AND LOWER(TRIM(COALESCE(f.status, 'active'))) = 'active'
                 ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
             ";
 
