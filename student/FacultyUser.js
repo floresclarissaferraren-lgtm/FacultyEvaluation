@@ -1740,85 +1740,6 @@ async function showEvaluationHistory(event) {
   }
 }
 
-function displayEvaluationHistory(history) {
-  let historyModal = document.getElementById("historyModal");
-  if (!historyModal) {
-    historyModal = document.createElement("div");
-    historyModal.id = "historyModal";
-    historyModal.className = "historyform";
-    document.body.appendChild(historyModal);
-  }
-
-  let historyContent = "";
-
-  if (history.length === 0) {
-    historyContent = `
-      <div class="history-content">
-        <div class="history-header">
-          <h3>Evaluation History</h3>
-          <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
-        </div>
-        <div class="history-body">
-          <p class="no-history">No evaluations submitted yet.</p>
-        </div>
-      </div>
-    `;
-  } else {
-    const historyItems = history
-      .map(
-        (item) => `
-      <div class="history-item">
-        <div class="history-faculty">
-          <i class="ph ph-user-circle"></i>
-          <span class="faculty-name">${item.faculty_name}</span>
-        </div>
-        <div class="history-details">
-          <div class="history-rating">
-            <span class="rating-label">${item.rating_label}</span>
-            <span class="rating-score">${item.overall_rating}/5.00</span>
-          </div>
-          <div class="history-date">${item.date_evaluated}</div>
-        </div>
-        ${item.feedback ? `<div class="history-feedback"><strong>Feedback:</strong> ${item.feedback}</div>` : ""}
-      </div>
-    `,
-      )
-      .join("");
-
-    historyContent = `
-      <div class="history-content">
-        <div class="history-header">
-          <h3>Evaluation History</h3>
-          <button class="close-history-btn" onclick="closeHistoryModal()">×</button>
-        </div>
-        <div class="history-body">
-          <div class="history-list">
-            ${historyItems}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  historyModal.innerHTML = `
-    <div class="logout-content">
-      ${historyContent}
-    </div>
-  `;
-
-  historyModal.style.display = "flex";
-
-  // Attach click-outside listener only once
-  if (!historyModal._clickListenerAttached) {
-    historyModal.addEventListener("click", function (event) {
-      if (event.target === historyModal) {
-        closeHistoryModal();
-      }
-    });
-    historyModal._clickListenerAttached = true;
-  }
-}
-
 function closeHistoryModal() {
   const historyModal = document.getElementById("historyModal");
   if (historyModal) {
@@ -1863,7 +1784,12 @@ function displayEvaluationHistory(history) {
             );
             const ratingClass = label.toLowerCase().replace(/\s+/g, "-");
             const rating = Number(item.overall_rating || 0).toFixed(2);
-            const date = escapeHistoryHtml(item.date_evaluated);
+            const academicYear = escapeHistoryHtml(item.academic_year);
+            const semester = escapeHistoryHtml(item.semester);
+            const academicPeriod =
+              academicYear || semester
+                ? `${academicYear ? `AY ${academicYear}` : ""}${academicYear && semester ? " · " : ""}${semester}`
+                : "Academic period unavailable";
             const feedback = escapeHistoryHtml(item.feedback || "");
 
             return `
@@ -1874,7 +1800,7 @@ function displayEvaluationHistory(history) {
               <div class="history-faculty-info">
                 <div class="faculty-name">${facultyName}</div>
                 ${subjectName ? `<div class="history-date">${subjectName}</div>` : ""}
-                <div class="history-date">${date}</div>
+                <div class="history-period">${academicPeriod}</div>
               </div>
             </div>
             <div class="history-rating">

@@ -83,8 +83,6 @@ if (strtolower((string) ($status_row["status"] ?? "active")) !== "active") {
     exit();
 }
 
-blockFacultyResultsWhileEvaluationOngoing($conn);
-
 // --- Total responses & date range ---
 ensureEvaluationsSchema($conn);
 $periodStmt = $conn->prepare("

@@ -119,8 +119,6 @@ if (strtolower((string) ($sRow["status"] ?? "active")) !== "active") {
     exit();
 }
 
-blockFacultyResultsWhileEvaluationOngoing($conn);
-
 ensureEvaluationsSchema($conn);
 $periodStmt = $conn->prepare("
     SELECT id, ay, semester, start_date, end_date

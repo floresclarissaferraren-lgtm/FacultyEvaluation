@@ -24,6 +24,8 @@ try {
         e.overall_rating,
         e.feedback,
         e.created_at,
+        e.academic_year,
+        e.semester,
         f.id as faculty_id,
         f.faculty_id,
         f.firstname,
@@ -64,10 +66,8 @@ try {
             "overall_rating" => $row["overall_rating"],
             "rating_label" => $rating_label,
             "feedback" => $row["feedback"],
-            "date_evaluated" => date(
-                "F j, Y g:i A",
-                strtotime($row["created_at"]),
-            ),
+            "academic_year" => $row["academic_year"],
+            "semester" => $row["semester"],
         ];
     }
 
