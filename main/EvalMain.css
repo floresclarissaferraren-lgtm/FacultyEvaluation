@@ -2361,10 +2361,19 @@ body.modal-open {
     grid-template-columns: repeat(2, 1fr);
   }
   .skeleton-row-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
-  .skeleton-top-performance {
-    grid-column: 1 / -1;
+  #fullscreen-spinner .skeleton-row-2 > .skeleton-top-performance {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  #fullscreen-spinner .skeleton-row-2 > .skeleton-rating-distribution {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  #fullscreen-spinner .skeleton-row-2 > .skeleton-evaluation-progress {
+    grid-column: 1;
+    grid-row: 3;
   }
 }
 
@@ -3177,10 +3186,30 @@ body.modal-open {
   gap: 12px;
 }
 
+#fullscreen-spinner .skeleton-row-2 > .skeleton-top-performance {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#fullscreen-spinner .skeleton-row-2 > .skeleton-rating-distribution {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#fullscreen-spinner .skeleton-row-2 > .skeleton-evaluation-progress {
+  grid-column: 3;
+  grid-row: 1;
+}
+
 #fullscreen-spinner .skeleton-large-card {
   min-height: 320px;
   padding: 16px;
   border-radius: 12px;
+}
+
+#fullscreen-spinner .skeleton-large-card.skeleton-panel {
+  padding: 0;
+  background: #ffffff;
 }
 
 #fullscreen-spinner .skeleton-doughnut-container {
@@ -3276,6 +3305,21 @@ body.modal-open {
 
   #fullscreen-spinner .skeleton-large-card {
     min-height: 260px;
+  }
+
+  #fullscreen-spinner .skeleton-row-2 > .skeleton-top-performance {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #fullscreen-spinner .skeleton-row-2 > .skeleton-rating-distribution {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #fullscreen-spinner .skeleton-row-2 > .skeleton-evaluation-progress {
+    grid-column: 1;
+    grid-row: 3;
   }
 }
 

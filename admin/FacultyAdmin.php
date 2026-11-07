@@ -1327,12 +1327,6 @@ include __DIR__ . "/totalstudents_dashcount.php";
       <span class="close-btn">&times;</span>
     </div>
     <div class="modal-body">
-      <!-- Error message container -->
-      <div id="questionErrorMsg" class="question-error-msg" style="display:none;">
-        <i class="ph ph-warning-circle"></i>
-        <span class="error-text"></span>
-      </div>
-      
       <p class="category-label">
         <span class="label-text">Category:</span>
         <span class="category-name" id="questionCategoryName"></span>

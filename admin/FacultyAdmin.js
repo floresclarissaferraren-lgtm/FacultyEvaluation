@@ -191,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeAdminSection = "dashboard-section";
   let adminRealtimeTimer = null;
   let dashboardStatsLoading = false;
-  let initialDashboardSkeletonPending = true;
   let reportEvaluationsLoading = false;
 
   function getSectionScrollableElements(section) {
@@ -236,118 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const sectionSkeletons = {
-    "dashboard-section": `
-      <div class="admin-welcome-box admin-skeleton-card admin-skeleton-welcome">
-        <div class="admin-welcome-copy">
-          <div class="admin-welcome-heading"><span class="admin-skeleton-line title"></span></div>
-          <div class="admin-skeleton-welcome-copy">
-            <span class="admin-skeleton-line meta"></span>
-            <span class="admin-skeleton-line meta short"></span>
-          </div>
-        </div>
-        <span class="admin-skeleton-welcome-image"></span>
-      </div>
-      <div class="dashboard admin-skeleton-grid">
-        ${Array.from({ length: 3 })
-          .map(
-            () => `
-          <div class="dashboard-card admin-skeleton-card">
-            <div class="dashboard-content">
-              <div class="admin-skeleton-stack">
-                <span class="admin-skeleton-line title"></span>
-                <span class="admin-skeleton-line value"></span>
-                <span class="admin-skeleton-line meta"></span>
-              </div>
-              <span class="admin-skeleton-icon"></span>
-            </div>
-          </div>
-        `,
-          )
-          .join("")}
-        <div class="admin-period-summary admin-skeleton-card admin-skeleton-overview">
-          <span class="admin-skeleton-line title"></span>
-          ${Array.from({ length: 3 })
-            .map(
-              () => `
-            <div class="admin-period-item">
-              <span class="admin-skeleton-line label"></span>
-              <span class="admin-skeleton-line meta"></span>
-            </div>
-          `,
-            )
-            .join("")}
-        </div>
-      </div>
-      <div class="dashboard-row-2 admin-skeleton-grid">
-        <div class="dashboard-card admin-skeleton-card">
-          <div class="dashboard-content">
-            <div class="rating-header"><span class="admin-skeleton-line title"></span></div>
-            <div class="rating-distribution-inner">
-              <span class="admin-skeleton-chart"></span>
-              <div class="admin-skeleton-list">
-                ${Array.from({ length: 5 })
-                  .map(
-                    () => '<span class="admin-skeleton-line row"></span>',
-                  )
-                  .join("")}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dashboard-card admin-skeleton-card">
-          <div class="dashboard-content">
-            <div class="rating-header"><span class="admin-skeleton-line title"></span></div>
-            <div class="admin-skeleton-list">
-              ${Array.from({ length: 3 })
-                .map(
-                  () => `
-                <div class="admin-skeleton-progress-row">
-                  <div class="admin-skeleton-progress-heading">
-                    <span class="admin-skeleton-line code"></span>
-                    <span class="admin-skeleton-line description"></span>
-                    <span class="admin-skeleton-line percent"></span>
-                  </div>
-                  <span class="admin-skeleton-progress-bar"></span>
-                </div>
-              `,
-                )
-                .join("")}
-              <div class="admin-skeleton-progress-summary">
-                ${Array.from({ length: 3 })
-                  .map(
-                    () => `
-                  <div>
-                    <span class="admin-skeleton-line value"></span>
-                    <span class="admin-skeleton-line label"></span>
-                  </div>
-                `,
-                  )
-                  .join("")}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dashboard-card admin-skeleton-ranking-group">
-          <div class="rating-header"><span class="admin-skeleton-line title"></span></div>
-          <div class="admin-skeleton-ranking-list">
-            ${Array.from({ length: 4 })
-              .map(
-                () => `
-              <div class="admin-skeleton-ranking-card">
-                <span class="admin-skeleton-ranking-avatar"></span>
-                <div class="admin-skeleton-ranking-details">
-                  <span class="admin-skeleton-line ranking-name"></span>
-                  <span class="admin-skeleton-progress-bar"></span>
-                </div>
-                <span class="admin-skeleton-line ranking-score"></span>
-              </div>
-            `,
-              )
-              .join("")}
-          </div>
-        </div>
-      </div>
-    `,
     "programs-section": `
       <div class="programs-container-box admin-skeleton-card">
         <div class="programs-header">
@@ -1541,10 +1428,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const code = programCodeInput.value.trim(),
       name = programNameInput.value.trim();
     if (!code || !name) {
-      showGlobalNotification(
-        "Please fill in both Program Code and Program Name",
-        "warning",
-      );
+      showGlobalNotification("Please fill all fields", "warning");
       return;
     }
 
@@ -3091,19 +2975,8 @@ document.addEventListener("DOMContentLoaded", () => {
       isEditingSubject,
     });
 
-    if (!code || !desc || !semester) {
+    if (!code || !desc || !semester || !year || !currentProgramId) {
       showGlobalNotification("Please fill all fields", "warning");
-      return;
-    }
-    if (!year) {
-      showGlobalNotification(
-        "Select a year level before adding a subject",
-        "warning",
-      );
-      return;
-    }
-    if (!currentProgramId) {
-      showGlobalNotification("Please select program first", "warning");
       return;
     }
 
@@ -3856,19 +3729,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const semester = getSelectedClassSemester();
     const addClassModalEl = document.getElementById("addClassModal");
 
-    if (!year || !block) {
+    if (!year || !block || !currentProgramId || !semester) {
       showGlobalNotification("Please fill all fields", "warning");
-      return;
-    }
-    if (!currentProgramId) {
-      showGlobalNotification("Please select program first", "warning");
-      return;
-    }
-    if (!semester) {
-      showGlobalNotification(
-        "Please select a semester",
-        "warning",
-      );
       return;
     }
 
@@ -3889,7 +3751,7 @@ document.addEventListener("DOMContentLoaded", () => {
       checked.push(...existingSubjectIds);
     }
     if (checked.length === 0) {
-      showGlobalNotification("Please select at least one subject", "warning");
+      showGlobalNotification("Please fill all fields", "warning");
       return;
     }
 
@@ -3912,10 +3774,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (missingFacultySubjects.length > 0) {
-      showGlobalNotification(
-        "You must complete all required selections before adding a class subject.",
-        "warning",
-      );
+      showGlobalNotification("Please fill all fields", "warning");
       return;
     }
 
@@ -3962,7 +3821,13 @@ document.addEventListener("DOMContentLoaded", () => {
           saveClassBtn.textContent = "SAVE CLASS";
         } else {
           const msg = (res.message || "").toLowerCase();
-          if (msg.includes("subject already exists in this section")) {
+          if (
+            msg.includes("please select at least one subject") ||
+            msg.includes("complete all required selections") ||
+            msg.includes("missing required fields")
+          ) {
+            showGlobalNotification("Please fill all fields", "warning");
+          } else if (msg.includes("subject already exists in this section")) {
             showNotification(
               "The subject already exists in this section",
               "#f44336",
@@ -4221,11 +4086,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const facultyId = document.getElementById("editFacultySelect").value;
 
     if (!classId || !subjectId || !facultyId || facultyId === "0") {
-      showNotification(
-        "You must complete all required selections before adding a class subject.",
-        "#f59e0b",
-        3500,
-      );
+      showGlobalNotification("Please fill all fields", "warning");
       return;
     }
 
@@ -4271,7 +4132,13 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       } else {
         const assignMsg = (addRes.message || "").toLowerCase();
-        if (assignMsg.includes("subject already exists in this section")) {
+        if (
+          assignMsg.includes("complete all required selections") ||
+          assignMsg.includes("missing class id") ||
+          assignMsg.includes("missing subject id")
+        ) {
+          showGlobalNotification("Please fill all fields", "warning");
+        } else if (assignMsg.includes("subject already exists in this section")) {
           showNotification(
             "The subject already exists in this section",
             "#f44336",
@@ -5084,6 +4951,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ? ""
         : document.getElementById("faculty-photo-preview").src;
 
+    if (!n || !e || !f || !l) {
+      facultySaveInProgress = false;
+      setButtonLoading(submitButton, false);
+      return showGlobalNotification("Please fill all fields", "warning");
+    }
+
     if (!/^FC-[0-9]{6}$/.test(n)) {
       document
         .getElementById("faculty-number")
@@ -5096,12 +4969,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
     document.getElementById("faculty-number").removeAttribute("aria-invalid");
-
-    if (!n || !e || !f || !l) {
-      facultySaveInProgress = false;
-      setButtonLoading(submitButton, false);
-      return showNotification("Required fields missing!", "#f44336");
-    }
 
     const action = addFacultyModal.dataset.editRow ? "edit" : "add";
     const facultyData = {
@@ -6518,10 +6385,6 @@ document.addEventListener("DOMContentLoaded", () => {
     dashboardStatsLoading = true;
     loadProgramEvaluationProgress();
     console.log("Loading dashboard stats...");
-    if (!silent && initialDashboardSkeletonPending) {
-      showSectionSkeleton("dashboard-section");
-      initialDashboardSkeletonPending = false;
-    }
     return fetch("get_dashboard_stats.php?cb=" + Date.now(), {
       cache: "no-store",
     })
@@ -6711,7 +6574,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((err) => console.error("Network error:", err))
       .finally(() => {
         dashboardStatsLoading = false;
-        if (!silent) hideSectionSkeleton("dashboard-section");
       });
   }
 
@@ -8585,17 +8447,6 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     }
 
-    // Clear error message when user starts typing in question textarea
-    const questionTextarea = document.getElementById("question-text");
-    if (questionTextarea) {
-      questionTextarea.addEventListener("input", () => {
-        const errorMsg = document.getElementById("questionErrorMsg");
-        if (errorMsg && errorMsg.style.display !== "none") {
-          errorMsg.style.display = "none";
-        }
-      });
-    }
-
     // Add Subject modal close button
     const subjectCloseBtn = document.querySelector(
       "#addSubjectModal .close-btn",
@@ -8738,10 +8589,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           if (!classId || !selectedClass) {
-            showGlobalNotification(
-              `Please select year level and section for subject ${subject.subject_code}`,
-              "warning",
-            );
+            showGlobalNotification("Please fill all fields", "warning");
             hasMissingClass = true;
             return;
           }
@@ -9088,26 +8936,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.hasActivePeriod) return;
 
     const q = document.getElementById("question-text").value.trim();
-    const errorMsg = document.getElementById("questionErrorMsg");
-    const errorText = errorMsg?.querySelector(".error-text");
 
     if (!q) {
-      // Show error message inside the modal
-      if (errorMsg && errorText) {
-        errorText.textContent = "Please enter a question";
-        errorMsg.style.display = "flex";
-
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-          errorMsg.style.display = "none";
-        }, 3000);
-      }
+      showGlobalNotification("Please fill all fields", "warning");
       return;
-    }
-
-    // Hide error message if shown
-    if (errorMsg) {
-      errorMsg.style.display = "none";
     }
 
     const catId = addQuestionModal.dataset.targetId.replace("cat-", "");
@@ -9208,9 +9040,7 @@ document.addEventListener("DOMContentLoaded", () => {
       questionCategoryName.innerText =
         cat.querySelector(".category-name").innerText;
 
-      // Clear error message and input field when opening modal
-      const errorMsg = document.getElementById("questionErrorMsg");
-      if (errorMsg) errorMsg.style.display = "none";
+      // Clear the input field when opening the modal.
       document.getElementById("question-text").value = "";
 
       addQuestionModal.style.display = "flex";
@@ -9258,10 +9088,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     item.querySelector(".edit-btn").onclick = () => {
       if (window.hasActivePeriod) return;
-
-      // Clear error message when opening edit modal
-      const errorMsg = document.getElementById("questionErrorMsg");
-      if (errorMsg) errorMsg.style.display = "none";
 
       document.getElementById("question-text").value =
         item.querySelector(".question-text").innerText;
@@ -9948,18 +9774,6 @@ document.addEventListener("DOMContentLoaded", () => {
           setButtonLoading(submitBtn, true, "Saving Student...");
 
           const numberVal = val("number").trim();
-          if (!/^GC-[0-9]{6}$/.test(numberVal)) {
-            studentNumberInput.setAttribute("aria-invalid", "true");
-            showGlobalNotification(
-              "Student ID must be GC- followed by exactly 6 digits (example: GC-123456).",
-              "warning",
-            );
-            setButtonLoading(submitBtn, false);
-            return;
-          } else {
-            studentNumberInput.removeAttribute("aria-invalid");
-          }
-
           const n = val("number"),
             eMail = val("email"),
             fName = val("firstname"),
@@ -9970,20 +9784,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const studentType = document.querySelector(
             'input[name="student-type"]:checked',
           ).value;
-          let y;
-          if (studentType === "irregular") {
-            y = "irregular";
-          } else {
-            y = val("yearlevel");
-            if (!y) {
-              showGlobalNotification(
-                "Please select year level for regular student",
-                "warning",
-              );
-              setButtonLoading(submitBtn, false);
-              return;
-            }
-          }
+          const y = studentType === "irregular" ? "irregular" : val("yearlevel");
 
           if (
             !n ||
@@ -9991,16 +9792,24 @@ document.addEventListener("DOMContentLoaded", () => {
             !fName ||
             !lName ||
             !p ||
+            !y ||
             (studentType === "regular" && !section)
           ) {
+            showGlobalNotification("Please fill all fields", "warning");
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+
+          if (!/^GC-[0-9]{6}$/.test(numberVal)) {
+            studentNumberInput.setAttribute("aria-invalid", "true");
             showGlobalNotification(
-              studentType === "regular" && !section
-                ? "Please select a section that has an added class"
-                : "Please fill all required fields",
+              "Student ID must be GC- followed by exactly 6 digits (example: GC-123456).",
               "warning",
             );
             setButtonLoading(submitBtn, false);
             return;
+          } else {
+            studentNumberInput.removeAttribute("aria-invalid");
           }
 
           // Clear subjects for regular students, keep only for irregular
@@ -11526,13 +11335,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const academicYear = academicYearInput.value.trim();
     const semester = semesterSelect.value;
 
-    if (!academicYear) {
-      alert("Please enter an academic year");
-      return;
-    }
-
-    if (!semester) {
-      alert("Please select a semester");
+    if (!academicYear || !semester) {
+      showGlobalNotification("Please fill all fields", "warning");
       return;
     }
 
