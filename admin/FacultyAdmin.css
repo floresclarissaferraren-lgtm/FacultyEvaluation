@@ -4853,73 +4853,6 @@ table.evaluation-table .view-btn:hover {
   margin-top: var(--spacing-xs);
 }
 
-#deleteSuccessModal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  backdrop-filter: blur(4px);
-}
-
-#deleteSuccessModal .success-modal-card {
-  width: 17.5rem;
-  max-width: 80%;
-  padding: var(--spacing-xl) var(--spacing-lg);
-  background: #fff;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: var(--shadow-xl);
-  border-top: 6px solid var(--success);
-  animation: scaleIn 0.25s ease-out;
-  backdrop-filter: blur(10px);
-}
-
-#deleteSuccessModal .success-icon-circle {
-  width: 3.75rem;
-  height: 3.75rem;
-  margin: 0 auto var(--spacing-md);
-  background: rgba(34, 197, 94, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--success);
-  font-size: 2rem;
-  box-shadow: var(--shadow-sm);
-}
-
-#deleteSuccessModal .success-main-text {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--neutral-900);
-  margin-bottom: var(--spacing-lg);
-}
-
-#deleteSuccessModal .ok-btn {
-  background: var(--success);
-  color: #fff;
-  border: none;
-  padding: var(--spacing-sm) var(--spacing-xl);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-md);
-}
-
-#deleteSuccessModal .ok-btn:hover {
-  background: #059669;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-}
-
 /* ====================================================================================================================================
    Faculty & Student Forms
    ==================================================================================================================================== */
@@ -24506,80 +24439,7 @@ button.classes-btn:not(:disabled):hover i {
   transform: none !important;
 }
 
-#deleteSuccessModal .success-modal-card {
-  width: 18rem !important;
-  max-width: 90% !important;
-  min-height: 0 !important;
-  padding: 20px 20px 18px !important;
-  border: 1px solid var(--border-color) !important;
-  border-top: 1px solid var(--border-color) !important;
-  border-radius: 16px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 12px !important;
-  animation: none !important;
-}
 
-#deleteSuccessModal .success-icon-circle {
-  width: 52px !important;
-  height: 52px !important;
-  margin: 0 auto 2px !important;
-  font-size: 22px !important;
-  box-shadow: none !important;
-}
-
-#deleteSuccessModal .success-icon-solid {
-  display: block;
-  width: 30px;
-  height: 30px;
-  color: var(--success);
-}
-
-#deleteSuccessModal .success-main-text {
-  margin: 0 !important;
-  font-size: 15px !important;
-  line-height: 1.3 !important;
-}
-
-#deleteSuccessModal .success-buttons {
-  margin-top: 2px !important;
-}
-
-#deleteSuccessModal .ok-btn,
-#deleteSuccessModal .ok-btn:focus {
-  background: #10b981 !important;
-  background-image: none !important;
-  border-color: #10b981 !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-#deleteSuccessModal .ok-btn:hover,
-#deleteSuccessModal .ok-btn:focus-visible {
-  background: #059669 !important;
-  background-image: none !important;
-  border-color: #059669 !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-#deleteSuccessModal .ok-btn:active {
-  background: #047857 !important;
-  background-image: none !important;
-  border-color: #047857 !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-#deleteSuccessModal .ok-btn {
-  min-height: 38px !important;
-  padding: 8px 28px !important;
-  font-size: 13px !important;
-}
 
 #logoutModal .logout-btn {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
@@ -38542,7 +38402,6 @@ main > .section,
 .archive-modal-overlay,
 .alert-modal-overlay,
 .logoutform,
-#deleteSuccessModal,
 #viewStudentSubjectsModal,
 #viewFacultySubjectsModal,
 #viewClassSubjectsModal,

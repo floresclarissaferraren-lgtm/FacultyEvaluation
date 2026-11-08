@@ -478,22 +478,6 @@ include __DIR__ . "/totalstudents_dashcount.php";
   </div>
 </div>
 
-<div id="deleteSuccessModal" class="modal" style="display:none;">
-  <div class="modal-content success-modal-card">
-    <div class="success-icon-circle">
-      <svg class="success-icon-solid" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <circle cx="12" cy="12" r="10" fill="currentColor" />
-        <path d="m7.5 12.2 3 3 6-6.4" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" />
-      </svg>
-    </div>
-    <p class="success-main-text">Deleted successfully!</p>
-    <div class="success-buttons">
-      <button id="success-ok-btn" class="ok-btn">OK</button>
-    </div>
-  </div>
-</div>
-
-
 <!-- Manage Section ==============================================================================================================================-->
 <div id="manage-section" class="section" style="display:none;">
   <div class="manage-program-banner">

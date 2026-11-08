@@ -317,20 +317,32 @@ if ($action === "status") {
         $currentPeriod = null;
         try {
             $currentPeriodStmt = $conn->prepare(
-                "SELECT start_date, end_date, is_completed
-                 FROM evaluation_periods
-                 WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)
-                 ORDER BY id DESC LIMIT 1",
+                "SELECT ep.start_date, ep.end_date, ep.is_completed,
+                        EXISTS (
+                            SELECT 1
+                            FROM evaluations e
+                            WHERE TRIM(e.academic_year) = TRIM(ep.ay)
+                              AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester))
+                        ) AS has_evaluations
+                 FROM evaluation_periods ep
+                 WHERE TRIM(ep.ay) = ? AND LOWER(TRIM(ep.semester)) = LOWER(?)
+                 ORDER BY ep.id DESC LIMIT 1",
             );
         } catch (Throwable $error) {
             $currentPeriodStmt = null;
         }
         if (!$currentPeriodStmt) {
             $currentPeriodStmt = $conn->prepare(
-                "SELECT start_date, end_date
-                 FROM evaluation_periods
-                 WHERE TRIM(ay) = ? AND LOWER(TRIM(semester)) = LOWER(?)
-                 ORDER BY id DESC LIMIT 1",
+                "SELECT ep.start_date, ep.end_date,
+                        EXISTS (
+                            SELECT 1
+                            FROM evaluations e
+                            WHERE TRIM(e.academic_year) = TRIM(ep.ay)
+                              AND LOWER(TRIM(e.semester)) = LOWER(TRIM(ep.semester))
+                        ) AS has_evaluations
+                 FROM evaluation_periods ep
+                 WHERE TRIM(ep.ay) = ? AND LOWER(TRIM(ep.semester)) = LOWER(?)
+                 ORDER BY ep.id DESC LIMIT 1",
             );
         }
         if ($currentPeriodStmt) {
@@ -347,7 +359,10 @@ if ($action === "status") {
                     !empty($currentPeriod["end_date"]) &&
                     $currentPeriod["end_date"] < todayDate();
                 if (intval($currentPeriod["is_completed"] ?? 0) === 1 || $isPastEndDate) {
-                    $activePeriodStatus = "done";
+                    $activePeriodStatus =
+                        intval($currentPeriod["has_evaluations"] ?? 0) > 0
+                            ? "done"
+                            : "closed";
                 }
             }
         }
@@ -954,7 +969,7 @@ if ($action === "delete") {
         $conn->begin_transaction();
         $transactionStarted = true;
         $periodStmt = $conn->prepare(
-            "SELECT id FROM evaluation_periods WHERE id = ? FOR UPDATE",
+            "SELECT id, ay, semester FROM evaluation_periods WHERE id = ? FOR UPDATE",
         );
         $periodStmt->bind_param("i", $id);
         $periodStmt->execute();
@@ -987,6 +1002,30 @@ if ($action === "delete") {
             ]);
             exit();
         }
+
+        $periodAy = (string) $period["ay"];
+        $periodSemester = (string) $period["semester"];
+        $clearSelectedPeriodStmt = $conn->prepare(
+            "UPDATE evaluation_settings
+             SET selected_ay = NULL, selected_semester = NULL
+             WHERE id = 1
+               AND TRIM(selected_ay) = TRIM(?)
+               AND LOWER(TRIM(selected_semester)) = LOWER(TRIM(?))",
+        );
+        $clearSelectedPeriodStmt->bind_param("ss", $periodAy, $periodSemester);
+        $clearSelectedPeriodStmt->execute();
+        $clearSelectedPeriodStmt->close();
+
+        $clearDisplayedPeriodStmt = $conn->prepare(
+            "UPDATE evaluation_settings
+             SET display_ay = NULL, display_semester = NULL
+             WHERE id = 1
+               AND TRIM(display_ay) = TRIM(?)
+               AND LOWER(TRIM(display_semester)) = LOWER(TRIM(?))",
+        );
+        $clearDisplayedPeriodStmt->bind_param("ss", $periodAy, $periodSemester);
+        $clearDisplayedPeriodStmt->execute();
+        $clearDisplayedPeriodStmt->close();
 
         $settingsStmt = $conn->prepare(
             "UPDATE evaluation_settings
@@ -1207,9 +1246,35 @@ if ($action === "deactivate") {
         $conn->query(
             "UPDATE evaluation_periods SET is_active = 0, is_completed = 1 WHERE is_active = 1",
         );
-        $conn->query(
-            "UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1",
-        );
+        if ($activePeriod !== null) {
+            $periodAy = (string) $activePeriod["ay"];
+            $periodSemester = (string) $activePeriod["semester"];
+            $settingsStmt = $conn->prepare(
+                "UPDATE evaluation_settings
+                 SET evaluation_open = 0, active_period_id = NULL,
+                     selected_ay = ?, selected_semester = ?,
+                     display_ay = ?, display_semester = ?
+                 WHERE id = 1",
+            );
+            if (!$settingsStmt) {
+                throw new Exception(
+                    "Unable to preserve the closed evaluation period.",
+                );
+            }
+            $settingsStmt->bind_param(
+                "ssss",
+                $periodAy,
+                $periodSemester,
+                $periodAy,
+                $periodSemester,
+            );
+            $settingsStmt->execute();
+            $settingsStmt->close();
+        } else {
+            $conn->query(
+                "UPDATE evaluation_settings SET evaluation_open = 0, active_period_id = NULL WHERE id = 1",
+            );
+        }
         $conn->commit();
 
         // Return immediately; the admin page starts report work as soon as it

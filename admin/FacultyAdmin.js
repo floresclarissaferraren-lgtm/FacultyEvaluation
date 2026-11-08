@@ -890,10 +890,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("deleteMessage").innerText =
-      `Are you sure you want to delete this ${type}?`;
+      type === "period"
+        ? `Are you sure you want to permanently delete ${name}?`
+        : `Are you sure you want to delete this ${type}?`;
     document.getElementById("deleteWarning").innerText =
       type === "period"
-        ? "Academic periods with linked classes or evaluation records cannot be deleted. Archive the period to preserve its history."
+        ? "Periods with evaluation records cannot be deleted. Archive this period to preserve its history."
         : `Warning: All details about this ${type} will be deleted.`;
 
     // Add wider class for subjects delete modal
@@ -1050,7 +1052,7 @@ document.addEventListener("DOMContentLoaded", () => {
             loadPrograms();
           }
           closeDeleteModal();
-          openDeleteSuccess();
+          showNotification("Deleted successfully!", "#10b981", 4000);
 
           // Refresh subjects list after successful deletion
           if (deleteType === "subject") {
@@ -1107,47 +1109,6 @@ document.addEventListener("DOMContentLoaded", () => {
         closeDeleteModal();
       });
   };
-
-  function openDeleteSuccess() {
-    const modal = document.getElementById("deleteSuccessModal");
-    modal.style.display = "flex";
-    modal.style.zIndex = "10002";
-    modal.style.position = "fixed";
-    // Also update dashboard when success modal is shown (for immediate feedback)
-    if (deleteType === "student") {
-      setTimeout(() => {
-        loadDashboardStats();
-        console.log("Dashboard stats updated on delete success modal");
-      }, 100);
-    }
-
-    if (deleteType === "program") {
-      loadPrograms();
-      loadDashboardStats();
-      console.log(
-        "Program list and dashboard stats updated on delete success modal",
-      );
-    }
-  }
-  function closeDeleteSuccess() {
-    document.getElementById("deleteSuccessModal").style.display = "none";
-    // Update dashboard when success modal is closed
-    if (deleteType === "student") {
-      loadDashboardStats();
-      console.log("Dashboard stats updated on delete success modal close");
-    }
-
-    if (deleteType === "program") {
-      loadPrograms();
-      loadDashboardStats();
-      console.log(
-        "Program list and dashboard stats updated on delete success modal close",
-      );
-    }
-    // Reset delete type
-    deleteType = "";
-  }
-  document.getElementById("success-ok-btn").onclick = closeDeleteSuccess;
 
   const modal = document.getElementById("deleteModal");
   modal.querySelector(".cancel-btn").onclick = closeDeleteModal;
@@ -1757,7 +1718,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "addSubjectMainModal",
       "managePeriodsModal",
       "deleteModal",
-      "deleteSuccessModal",
       "facultyReportModal",
     ];
 
@@ -2167,7 +2127,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else localStorage.removeItem("selectedClassSemester");
       } catch (err) {}
 
-      syncDashboardPeriodSetting();
+      await syncDashboardPeriodSetting();
     } catch (err) {}
   }
   window.loadDashboardPeriodSetting = loadDashboardPeriodSetting;
@@ -10096,6 +10056,7 @@ document.addEventListener("DOMContentLoaded", () => {
             );
           }
           showNotification("Evaluation is closed.", "#10b981", 6000);
+          await refreshPeriodCard();
           if (result.reports_queued && Number(result.period_id) > 0) {
             void fetch("../shared/periods_api.php?action=process_closing", {
               method: "POST",
