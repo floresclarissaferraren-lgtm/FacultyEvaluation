@@ -141,6 +141,18 @@ function closeModal(modal) {
   }
 }
 
+const expiredRole = new URLSearchParams(window.location.search).get("expired");
+if (["admin", "faculty", "student"].includes(expiredRole)) {
+  const loginDescription = document.querySelector(
+    "#loginModal .login-description",
+  );
+  if (loginDescription) {
+    loginDescription.textContent = `Your ${expiredRole} session expired. Please log in again.`;
+  }
+  openModal(modals.login);
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 function clearLoginFormFields() {
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");

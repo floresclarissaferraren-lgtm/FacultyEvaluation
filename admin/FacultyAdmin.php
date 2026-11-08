@@ -32,7 +32,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
     });
   </script>
 </head>
-<body>
+<body data-dashboard-role="admin">
 
 <!-- ===================== NAVBAR ===================== -->
 <div class="navbar">

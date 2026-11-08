@@ -44,7 +44,13 @@
           console.log("Session kept alive:", data.timestamp);
         } else {
           if (data.status === "expired") {
-            window.location.href = "../EvalMain.php?expired=1";
+            const dashboardRole = document.body.dataset.dashboardRole;
+            const expiredQuery = ["admin", "faculty", "student"].includes(
+              dashboardRole,
+            )
+              ? dashboardRole
+              : "1";
+            window.location.href = `../EvalMain.php?expired=${expiredQuery}`;
             return;
           }
           consecutiveFailures++;

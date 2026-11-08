@@ -133,7 +133,7 @@ if ($subjectStmt) {
 
 </head>
 
-<body>
+<body data-dashboard-role="faculty">
 
 <div class="navbar">
   <div class="brand">
