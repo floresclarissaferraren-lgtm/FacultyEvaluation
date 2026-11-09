@@ -390,7 +390,7 @@ if ($action === "bulk_import") {
         "updated" => 0,
         "skipped" => 0,
         "failed" => 0,
-        "email_sent" => 0,
+        "email_queued" => 0,
         "email_failed" => 0,
         "evaluation_open" => $evaluationOpen,
         "skipped_records" => [],
@@ -400,6 +400,7 @@ if ($action === "bulk_import") {
     $rowNumber = 1;
     $defaultStatus = "active";
     $seenStudentNumbers = [];
+    $pendingWelcomeEmails = [];
 
     while (($row = fgetcsv($handle, 0, ",", '"', "\\")) !== false) {
         $rowNumber++;
@@ -840,35 +841,28 @@ if ($action === "bulk_import") {
                         "url" => $baseUrl . "/EvalMain.php",
                     ],
                 );
-                $emailSent = sendEmail(
-                    $email,
-                    $firstName . " " . $lastName,
-                    "Welcome to Faculty Evaluation System",
-                    $emailBody,
-                    null,
-                    null,
-                    [],
-                    true,
-                );
+                $pendingWelcomeEmails[] = [
+                    "to_email" => $email,
+                    "to_name" => $firstName . " " . $lastName,
+                    "subject" => "Welcome to Faculty Evaluation System",
+                    "body" => $emailBody,
+                    "row" => $rowNumber,
+                    "student_number" => $studentNumber,
+                ];
             } catch (Throwable $mailError) {
-                $emailSent = false;
-                error_log(
-                    "Bulk student import email failed on CSV row " .
-                        $rowNumber .
-                        ": " .
-                        $mailError->getMessage(),
-                );
-            }
-            if ($emailSent) {
-                $summary["email_sent"]++;
-            } else {
                 $summary["email_failed"]++;
                 $summary["email_warnings"][] = [
                     "row" => $rowNumber,
                     "student_number" => $studentNumber,
                     "reason" =>
-                        "Account imported, but the password email could not be sent.",
+                        "Account imported, but the password email could not be prepared.",
                 ];
+                error_log(
+                    "Bulk student import email preparation failed on CSV row " .
+                        $rowNumber .
+                        ": " .
+                        $mailError->getMessage(),
+                );
             }
         } catch (Throwable $e) {
             $insertError = (int) $insert->errno;
@@ -882,8 +876,7 @@ if ($action === "bulk_import") {
                 $summary["skipped_records"][] = [
                     "row" => $rowNumber,
                     "student_number" => $studentNumber,
-                    "reason" =>
-                        "Student ID or email already exists.",
+                    "reason" => "Student ID or email already exists.",
                 ];
                 continue;
             }
@@ -899,6 +892,29 @@ if ($action === "bulk_import") {
                     $rowNumber .
                     ": " .
                     $e->getMessage(),
+            );
+        }
+    }
+
+    if ($pendingWelcomeEmails) {
+        try {
+            $summary["email_token"] = queueSessionEmailBatch(
+                $pendingWelcomeEmails,
+            );
+            $summary["email_queued"] = count($pendingWelcomeEmails);
+        } catch (Throwable $queueError) {
+            $summary["email_failed"] += count($pendingWelcomeEmails);
+            foreach ($pendingWelcomeEmails as $pendingEmail) {
+                $summary["email_warnings"][] = [
+                    "row" => $pendingEmail["row"],
+                    "student_number" => $pendingEmail["student_number"],
+                    "reason" =>
+                        "Account imported, but the password email could not be queued.",
+                ];
+            }
+            error_log(
+                "Bulk student import: unable to queue welcome emails: " .
+                    $queueError->getMessage(),
             );
         }
     }
@@ -1045,18 +1061,25 @@ if ($action === "bulk_import") {
                 $cta,
             );
 
-            $sent = sendEmail(
-                $email,
-                "$firstname $lastname",
-                "Welcome to Faculty Evaluation System",
-                $body,
-            );
+            $emailToken = "";
+            try {
+                $emailToken = queueSessionEmail(
+                    $email,
+                    "$firstname $lastname",
+                    "Welcome to Faculty Evaluation System",
+                    $body,
+                );
+            } catch (Throwable $mailQueueError) {
+                error_log(
+                    "Student welcome email could not be queued: " .
+                        $mailQueueError->getMessage(),
+                );
+            }
 
             echo json_encode([
                 "success" => true,
-                "message" => $sent
-                    ? "Student added and temporary password sent by email."
-                    : "Student added, but the password email could not be sent. Ask the student to use Forgot Password.",
+                "message" => "Student added successfully. Welcome email is being sent.",
+                "email_token" => $emailToken,
                 "subject_inserted" => $assignResult["inserted"] ?? 0,
                 "subject_message" => $assignResult["message"] ?? "",
             ]);

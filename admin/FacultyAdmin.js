@@ -1143,6 +1143,8 @@ document.addEventListener("DOMContentLoaded", () => {
       message.textContent =
         type === "academicYear"
           ? `Archive academic year ${record.ay} - ${record.semester}?`
+          : type === "faculty" || type === "student"
+            ? `Archive this ${label.toLowerCase()} account? It will move to the archived list and appear as inactive when filtered.`
           : `Archive this ${label.toLowerCase()} account?`;
     if (confirmBtn) confirmBtn.textContent = `Yes, Archive`;
     overlay.classList.add("show");
@@ -1172,12 +1174,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       try {
-        const result = await updateStatus(type, record.id, "archived");
+        const archivedStatus = "archived";
+        const result = await updateStatus(type, record.id, archivedStatus);
         if (result.success) {
-          row.dataset.status = "archived";
-          const statusCellIndex = type === "student" ? 4 : 5;
+          row.dataset.status = archivedStatus;
+          const statusCellIndex = type === "student" ? 5 : 4;
           row.querySelector(`td:nth-child(${statusCellIndex})`).innerHTML =
-            statusPillHtml("archived");
+            statusPillHtml("inactive");
           if (statusMenu)
             statusMenu
               .querySelectorAll(".status-option")
@@ -4221,15 +4224,17 @@ document.addEventListener("DOMContentLoaded", () => {
     element.classList.toggle("is-archived", normalized === "archived");
   }
 
-  function statusMenuHtml(type, currentStatus) {
-    const options =
-      type === "faculty"
-        ? ["active", "inactive", "on leave"]
-        : ["active", "inactive"];
+  function statusMenuHtml(type, currentStatus, triggerHtml = null) {
     const current = normalizeStatusValue(currentStatus);
+    const options = type === "faculty" ? ["active", "on leave"] : ["active"];
+    const triggerLabel = type === "student" ? "Status" : "Setting";
     return `
     <div class="status-action-menu">
-      <button type="button" class="action-icon-btn settings-btn" title="Setting" aria-label="Setting"><i class="ph ph-gear-six"></i><span>Setting</span></button>
+      ${
+        triggerHtml
+          ? `<button type="button" class="faculty-status-trigger" aria-label="Change faculty status. Current status: ${statusLabel(current)}">${triggerHtml}</button>`
+          : `<button type="button" class="action-icon-btn settings-btn" title="${triggerLabel}" aria-label="${triggerLabel}"><i class="ph ph-gear-six"></i><span>${triggerLabel}</span></button>`
+      }
       <div class="status-dropdown-menu">
         ${options
           .map(
@@ -4362,7 +4367,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function positionStatusMenu(statusMenu) {
     const dropdown = statusMenu.querySelector(".status-dropdown-menu");
-    const trigger = statusMenu.querySelector(".settings-btn");
+    const trigger = statusMenu.querySelector(
+      ".settings-btn, .faculty-status-trigger",
+    );
     if (!dropdown || !trigger) return;
 
     if (!statusMenu.dataset.statusMenuId) {
@@ -4517,6 +4524,78 @@ document.addEventListener("DOMContentLoaded", () => {
     return response.json();
   }
 
+  async function sendQueuedWelcomeEmail(
+    token,
+    accountType,
+    showEmailNotification = true,
+  ) {
+    if (!token) {
+      console.error(`${accountType} welcome email token was not returned.`);
+      if (showEmailNotification) {
+        showNotification(
+          `${accountType} was saved, but the welcome email could not be started.`,
+          "#f59e0b",
+        );
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch("send_queued_account_email.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        keepalive: true,
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Email delivery failed.");
+      }
+      if (showEmailNotification) {
+        showNotification(`${accountType} welcome email sent.`, "#10b981");
+      }
+    } catch (error) {
+      console.error(`${accountType} welcome email error:`, error);
+      if (showEmailNotification) {
+        showNotification(
+          `${accountType} was saved, but the welcome email could not be sent. Use Forgot Password if credentials were not received.`,
+          "#f59e0b",
+        );
+      }
+    }
+  }
+
+  async function sendQueuedBulkWelcomeEmails(token) {
+    try {
+      const response = await fetch("send_queued_account_emails.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        keepalive: true,
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Bulk email delivery failed.");
+      }
+
+      const emailFailed = Number(result.email_failed || 0);
+      if (emailFailed > 0) {
+        showNotification(
+          `Student accounts were imported, but welcome emails failed for ${emailFailed} student${emailFailed === 1 ? "" : "s"}.`,
+          "#d97706",
+          6000,
+        );
+      }
+    } catch (error) {
+      console.error("Bulk student welcome email error:", error);
+      showNotification(
+        "Student accounts were imported, but welcome emails could not be sent.",
+        "#d97706",
+        6000,
+      );
+    }
+  }
+
   // ------------------- Load Faculty -------------------
   function loadFaculty() {
     console.log("Loading faculty data...");
@@ -4551,7 +4630,7 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("Processing faculty:", f);
           console.log("Photo data:", f.photo);
           console.log("Subjects data:", f.subjects);
-          const row = document.createElement("tr");
+          let row = document.createElement("tr");
           row.id = "faculty-" + f.faculty_id;
           Object.assign(row.dataset, f);
           row.dataset.faculty_id = f.faculty_id;
@@ -4583,6 +4662,9 @@ document.addEventListener("DOMContentLoaded", () => {
             ? f.subjects.length
             : 0;
           const subjectCountLabel = `${subjectCount} ${subjectCount === 1 ? "subject" : "subjects"}`;
+          const facultyStatus = normalizeStatusValue(f.status);
+          const facultyIsInactive =
+            facultyStatus === "inactive" || facultyStatus === "archived";
 
           if (normalizeStatusValue(f.status) === "archived") {
             row.innerHTML = `
@@ -4608,6 +4690,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </td>`;
 
+            const archivedRow = row;
             row.querySelector(".restore-btn").addEventListener("click", async () => {
               try {
                 const result = await updateStatus("faculty", f.id, "active");
@@ -4628,11 +4711,17 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             });
             row.querySelector(".delete-btn").addEventListener("click", () => {
-              openDeleteModal("faculty", f.faculty_id, row);
+              openDeleteModal("faculty", f.faculty_id, archivedRow);
             });
 
+            row.id = "archived-faculty-" + f.faculty_id;
             if (archivedFacultyTbody) archivedFacultyTbody.appendChild(row);
-            return;
+            row = document.createElement("tr");
+            row.id = "faculty-" + f.faculty_id;
+            Object.assign(row.dataset, f);
+            row.dataset.faculty_id = f.faculty_id;
+            row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()}`;
+            row.dataset.status = "archived";
           }
 
           row.innerHTML = `
@@ -4641,20 +4730,12 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>
             ${subjectCountLabel}
           </td>
-          <td>${statusPillHtml(f.status)}</td>
+          <td>${facultyIsInactive ? statusPillHtml("inactive") : statusMenuHtml("faculty", facultyStatus, statusPillHtml(facultyStatus))}</td>
           <td class="action-cell">
-            <div class="table-row-actions">
-              <button type="button" class="table-row-actions-trigger" aria-label="More faculty actions" aria-haspopup="true" aria-expanded="false" title="More actions">
-                <span class="table-action-dots" aria-hidden="true">•••</span>
-              </button>
-              <div class="table-row-actions-menu" role="group" aria-label="Faculty actions">
-                <div class="action-buttons">
-                  <button type="button" class="action-icon-btn view-btn" title="View" aria-label="View"><i class="ph ph-eye"></i><span>View</span></button>
-                  <button type="button" class="action-icon-btn edit-btn" title="Edit" aria-label="Edit"><i class="ph ph-note-pencil"></i><span>Edit</span></button>
-                  ${statusMenuHtml("faculty", f.status)}
-                  <button type="button" class="action-icon-btn archive-btn" title="Archived" aria-label="Archived"><i class="ph ph-archive"></i><span>Archived</span></button>
-                </div>
-              </div>
+            <div class="action-buttons" role="group" aria-label="Faculty actions">
+              <button type="button" class="action-icon-btn view-btn" title="View" aria-label="View"><i class="ph ph-eye" aria-hidden="true"></i></button>
+              <button type="button" class="action-icon-btn edit-btn" title="Edit" aria-label="Edit"><i class="ph ph-note-pencil" aria-hidden="true"></i></button>
+              <button type="button" class="action-icon-btn archive-btn" title="Archive" aria-label="Archive"><i class="ph ph-archive" aria-hidden="true"></i></button>
             </div>
           </td>`;
 
@@ -4681,7 +4762,24 @@ document.addEventListener("DOMContentLoaded", () => {
               f.firstname || "";
             document.getElementById("faculty-lastname").value =
               f.lastname || "";
-            document.getElementById("faculty-suffix").value = f.suffix || "";
+            const facultySuffixSelect =
+              document.getElementById("faculty-suffix");
+            const facultySuffixValue = String(f.suffix || "").trim();
+            if (
+              facultySuffixValue &&
+              ![...facultySuffixSelect.options].some(
+                (option) => option.value === facultySuffixValue,
+              )
+            ) {
+              const legacySuffixOption = new Option(
+                facultySuffixValue,
+                facultySuffixValue,
+              );
+              legacySuffixOption.dataset.legacySuffix = "true";
+              facultySuffixSelect.add(legacySuffixOption);
+            }
+            facultySuffixSelect.value = facultySuffixValue;
+            updateFacultySubjectButton();
 
             const preview = document.getElementById("faculty-photo-preview");
             preview.src = f.photo || "";
@@ -4739,57 +4837,65 @@ document.addEventListener("DOMContentLoaded", () => {
           };
 
           const statusMenu = row.querySelector(".status-action-menu");
-          statusMenu
-            .querySelector(".settings-btn")
-            .addEventListener("click", (e) => {
-              e.stopPropagation();
-              const willOpen = !statusMenu.classList.contains("open");
-              closeStatusMenus(statusMenu);
-              statusMenu.classList.toggle("open", willOpen);
-              if (willOpen) positionStatusMenu(statusMenu);
-              else restoreStatusDropdown(statusMenu);
-            });
-          statusMenu.querySelectorAll(".status-option").forEach((option) => {
-            option.addEventListener("click", async (e) => {
-              e.stopPropagation();
-              const newStatus = option.dataset.status;
-              try {
-                const result = await updateStatus("faculty", f.id, newStatus);
-                if (result.success) {
-                  row.dataset.status = newStatus;
-                  row.querySelector("td:nth-child(4)").innerHTML =
-                    statusPillHtml(newStatus);
-                  (option.closest(".status-dropdown-menu") || statusMenu)
-                    .querySelectorAll(".status-option")
-                    .forEach((btn) => {
-                      btn.classList.toggle(
-                        "selected",
-                        btn.dataset.status === newStatus,
-                      );
-                    });
-                  restoreStatusDropdown(statusMenu);
-                  statusMenu.classList.remove("open");
-                  closeStatusMenus();
-                  closeRowActionMenus();
-                  showNotification(
-                    `Faculty status updated to ${statusLabel(newStatus)}`,
-                    "#4caf50",
-                  );
-                  refreshSectionStats();
-                  filterFaculty();
-                } else {
-                  showNotification(
-                    "Failed to update status: " +
-                      (result.message || "Unknown error"),
-                    "#f44336",
-                  );
+          if (statusMenu) {
+            statusMenu
+              .querySelector(".faculty-status-trigger")
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                const willOpen = !statusMenu.classList.contains("open");
+                closeStatusMenus(statusMenu);
+                statusMenu.classList.toggle("open", willOpen);
+                if (willOpen) positionStatusMenu(statusMenu);
+                else restoreStatusDropdown(statusMenu);
+              });
+            statusMenu.querySelectorAll(".status-option").forEach((option) => {
+              option.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const newStatus = option.dataset.status;
+                try {
+                  const result = await updateStatus("faculty", f.id, newStatus);
+                  if (result.success) {
+                    row.dataset.status = newStatus;
+                    const statusTrigger = statusMenu.querySelector(
+                      ".faculty-status-trigger",
+                    );
+                    statusTrigger.innerHTML = statusPillHtml(newStatus);
+                    statusTrigger.setAttribute(
+                      "aria-label",
+                      `Change faculty status. Current status: ${statusLabel(newStatus)}`,
+                    );
+                    (option.closest(".status-dropdown-menu") || statusMenu)
+                      .querySelectorAll(".status-option")
+                      .forEach((btn) => {
+                        btn.classList.toggle(
+                          "selected",
+                          btn.dataset.status === newStatus,
+                        );
+                      });
+                    restoreStatusDropdown(statusMenu);
+                    statusMenu.classList.remove("open");
+                    closeStatusMenus();
+                    closeRowActionMenus();
+                    showNotification(
+                      `Faculty status updated to ${statusLabel(newStatus)}`,
+                      "#4caf50",
+                    );
+                    refreshSectionStats();
+                    filterFaculty();
+                  } else {
+                    showNotification(
+                      "Failed to update status: " +
+                        (result.message || "Unknown error"),
+                      "#f44336",
+                    );
+                  }
+                } catch (error) {
+                  console.error("Status update error:", error);
+                  showNotification("Error updating status", "#f44336");
                 }
-              } catch (error) {
-                console.error("Status update error:", error);
-                showNotification("Error updating status", "#f44336");
-              }
+              });
             });
-          });
+          }
 
           row
             .querySelector(".archive-btn")
@@ -4800,7 +4906,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
               }
 
-              openArchiveModal(row, f, statusMenu);
+              openArchiveModal(row, f, statusMenu, "faculty");
             });
         });
         applyManageSearchFilter();
@@ -4854,6 +4960,12 @@ document.addEventListener("DOMContentLoaded", () => {
     addFacultyModal.querySelectorAll("input").forEach((i) => {
       if (i.id !== "faculty-number") i.value = "";
     });
+    const facultySuffixSelect = document.getElementById("faculty-suffix");
+    facultySuffixSelect.value = "";
+    facultySuffixSelect
+      .querySelectorAll("option[data-legacy-suffix]")
+      .forEach((option) => option.remove());
+    updateFacultySubjectButton();
 
     selectedFacultySubjects = [];
     renderSelectedFacultySubjects();
@@ -4965,12 +5077,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (result.success) {
         console.log("Faculty saved successfully, reloading faculty list...");
-        await loadFaculty();
         closeModal(addFacultyModal);
-        showNotification(
-          action === "add" ? "Faculty added succesfully" : result.message,
-          "#10b981",
-        );
+        if (action === "add") {
+          showNotification("Faculty added successfully.", "#10b981");
+          void sendQueuedWelcomeEmail(result.email_token, "Faculty", false);
+        } else {
+          showNotification(result.message, "#10b981");
+        }
+        loadFaculty();
       } else {
         showNotification(result.message, "#f44336");
       }
@@ -5022,9 +5136,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const statusText = normalizeStatusValue(r.dataset.status);
 
-      // Check status filter against the row status value. Archived faculty stay out of the normal list.
       if (statusFilter && statusFilter !== "") {
-        matchesStatus = statusText === statusFilter.toLowerCase();
+        const selectedStatus = statusFilter.toLowerCase();
+        matchesStatus =
+          statusText === selectedStatus ||
+          (selectedStatus === "inactive" && statusText === "archived");
       } else {
         matchesStatus = statusText !== "archived";
       }
@@ -7049,6 +7165,47 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  const studentMainInfoInputs = [
+    document.getElementById("student-number"),
+    document.getElementById("student-email"),
+    document.getElementById("student-firstname"),
+    document.getElementById("student-lastname"),
+  ];
+
+  function hasStudentMainInfo() {
+    return studentMainInfoInputs.every((input) => input?.value.trim());
+  }
+
+  function updateStudentAcademicControls() {
+    const mainInfoComplete = hasStudentMainInfo();
+    const program = document.getElementById("student-program");
+    const yearLevel = document.getElementById("student-yearlevel");
+    const section = document.getElementById("student-section");
+    const addSubjectButton = document.getElementById("add-subject-btn");
+
+    document
+      .querySelectorAll('input[name="student-type"]')
+      .forEach((input) => {
+        input.disabled = !mainInfoComplete;
+      });
+    if (program) program.disabled = !mainInfoComplete;
+    if (yearLevel) yearLevel.disabled = !mainInfoComplete;
+    if (section) {
+      section.disabled =
+        !mainInfoComplete ||
+        !program?.value ||
+        !yearLevel?.value ||
+        section.options.length <= 1;
+    }
+    if (addSubjectButton) addSubjectButton.disabled = !mainInfoComplete;
+  }
+
+  studentMainInfoInputs.forEach((input) => {
+    input?.addEventListener("input", updateStudentAcademicControls);
+    input?.addEventListener("change", updateStudentAcademicControls);
+  });
+  updateStudentAcademicControls();
+
   let studentSectionLoadId = 0;
   async function loadStudentSections(selectedSection = "") {
     const yearSelect = document.getElementById("student-yearlevel");
@@ -7081,7 +7238,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (sections.includes(selectedUpper)) {
         sectionSelect.value = selectedUpper;
       }
-      sectionSelect.disabled = sections.length === 0;
+      updateStudentAcademicControls();
       if (sections.length === 0) {
         sectionSelect.options[0].textContent = "-- No class sections available --";
       }
@@ -7090,10 +7247,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  programSelect?.addEventListener("change", () => loadStudentSections());
+  programSelect?.addEventListener("change", () => {
+    updateStudentAcademicControls();
+    loadStudentSections();
+  });
   document
     .getElementById("student-yearlevel")
-    ?.addEventListener("change", () => loadStudentSections());
+    ?.addEventListener("change", () => {
+      updateStudentAcademicControls();
+      loadStudentSections();
+    });
 
   // Load All Subjects for Faculty Form -------------------
   function facultySubjectSearchHtml() {
@@ -7302,6 +7465,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openFacultySubjectSelection() {
     if (!facultySubjectSelectionModal) return;
+    if (document.getElementById("open-faculty-subject-selection")?.disabled)
+      return;
     const searchInput = document.getElementById(
       "faculty-subject-selection-search",
     );
@@ -7321,6 +7486,28 @@ document.addEventListener("DOMContentLoaded", () => {
     facultySubjectSelectionModal.style.display = "flex";
     facultySubjectSelectionModal.style.zIndex = "100001";
   }
+
+  const facultyMainInfoInputs = [
+    document.getElementById("faculty-number"),
+    document.getElementById("faculty-email"),
+    document.getElementById("faculty-firstname"),
+    document.getElementById("faculty-lastname"),
+  ];
+  const facultySubjectButton = document.getElementById(
+    "open-faculty-subject-selection",
+  );
+  function updateFacultySubjectButton() {
+    if (!facultySubjectButton) return;
+    facultySubjectButton.disabled = facultyMainInfoInputs.some(
+      (input) => !input?.value.trim(),
+    );
+  }
+
+  facultyMainInfoInputs.forEach((input) => {
+    input?.addEventListener("input", updateFacultySubjectButton);
+    input?.addEventListener("change", updateFacultySubjectButton);
+  });
+  updateFacultySubjectButton();
 
   document
     .getElementById("open-faculty-subject-selection")
@@ -7431,7 +7618,7 @@ document.addEventListener("DOMContentLoaded", () => {
             data.forEach((stu) => {
               console.log("Processing student:", stu);
               console.log("Student subjects:", stu.subjects);
-              const row = document.createElement("tr");
+              let row = document.createElement("tr");
               row.dataset.id = stu.id;
               row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
               row.dataset.studentType =
@@ -7449,7 +7636,11 @@ document.addEventListener("DOMContentLoaded", () => {
                   ? studentProgram.name || studentProgram.program_name
                   : stu.program,
               );
-              row.dataset.status = (stu.status || "active").toLowerCase();
+              const studentStatus =
+                normalizeStatusValue(stu.status) === "archived"
+                  ? "archived"
+                  : "active";
+              row.dataset.status = studentStatus;
               const archivedSubjectCount = Array.isArray(stu.subjects)
                 ? stu.subjects.length
                 : 0;
@@ -7472,6 +7663,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </td>`;
 
+                const archivedRow = row;
                 row.querySelector(".restore-btn").addEventListener("click", async () => {
                   try {
                     const result = await updateStatus("student", stu.id, "active");
@@ -7492,10 +7684,27 @@ document.addEventListener("DOMContentLoaded", () => {
                   }
                 });
                 row.querySelector(".delete-btn").addEventListener("click", () => {
-                  openDeleteModal("student", stu.student_number, row);
+                  openDeleteModal("student", stu.student_number, archivedRow);
                 });
                 if (archivedStudentTbody) archivedStudentTbody.appendChild(row);
-                return;
+                row = document.createElement("tr");
+                row.dataset.id = stu.id;
+                row.dataset.yearlevel = normalizeStudentYearlevel(stu.yearlevel);
+                row.dataset.studentType =
+                  String(stu.student_type || stu.yearlevel || "")
+                    .trim()
+                    .toLowerCase() === "irregular"
+                    ? "irregular"
+                    : "regular";
+                row.dataset.programId = studentProgram
+                  ? String(studentProgram.id)
+                  : String(stu.program || "");
+                row.dataset.programName = normalizeFilterText(
+                  studentProgram
+                    ? studentProgram.name || studentProgram.program_name
+                    : stu.program,
+                );
+                row.dataset.status = "archived";
               }
 
               row.innerHTML = `
@@ -7506,21 +7715,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <td><div class="student-program-cell"><strong>${formatStudentYearSection(stu.yearlevel, stu.section)}</strong>
               <small>${getProgramName(stu.program)}</small></div>
           </td>
-          <td>${statusPillHtml(stu.status)}</td>
           <td><span class="student-type-badge ${stu.yearlevel === "irregular" ? "irregular" : "regular"}">${stu.yearlevel === "irregular" ? "Irregular" : "Regular"}</span></td>
+          <td>${statusPillHtml(studentStatus === "archived" ? "inactive" : "active")}</td>
           <td class="action-cell">
-            <div class="table-row-actions">
-              <button type="button" class="table-row-actions-trigger" aria-label="More student actions" aria-haspopup="true" aria-expanded="false" title="More actions">
-                <span class="table-action-dots" aria-hidden="true">•••</span>
-              </button>
-              <div class="table-row-actions-menu" role="group" aria-label="Student actions">
-                <div class="action-buttons">
-                  <button type="button" class="action-icon-btn view-subjects-btn" title="View" aria-label="View"><i class="ph ph-eye"></i><span>View</span></button>
-                  <button type="button" class="action-icon-btn edit-btn" title="Edit" aria-label="Edit"><i class="ph ph-note-pencil"></i><span>Edit</span></button>
-                  ${statusMenuHtml("student", stu.status)}
-                  <button type="button" class="action-icon-btn archive-btn" title="Archived" aria-label="Archived"><i class="ph ph-archive"></i><span>Archived</span></button>
-                </div>
-              </div>
+            <div class="action-buttons" role="group" aria-label="Student actions">
+              <button type="button" class="action-icon-btn view-subjects-btn" title="View" aria-label="View"><i class="ph ph-eye" aria-hidden="true"></i></button>
+              <button type="button" class="action-icon-btn edit-btn" title="Edit" aria-label="Edit"><i class="ph ph-note-pencil" aria-hidden="true"></i></button>
+              <button type="button" class="action-icon-btn archive-btn" title="Archive" aria-label="Archive"><i class="ph ph-archive" aria-hidden="true"></i></button>
             </div>
           </td>`;
 
@@ -7549,10 +7750,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     stu.firstname || "";
                   document.getElementById("student-lastname").value =
                     stu.lastname || "";
-                  document.getElementById("student-suffix").value =
-                    stu.suffix || "";
+                  const suffixSelect =
+                    document.getElementById("student-suffix");
+                  const suffixValue = String(stu.suffix || "").trim();
+                  if (
+                    suffixValue &&
+                    ![...suffixSelect.options].some(
+                      (option) => option.value === suffixValue,
+                    )
+                  ) {
+                    const legacySuffixOption = new Option(
+                      suffixValue,
+                      suffixValue,
+                    );
+                    legacySuffixOption.dataset.legacySuffix = "true";
+                    suffixSelect.add(legacySuffixOption);
+                  }
+                  suffixSelect.value = suffixValue;
                   document.getElementById("student-section").value =
                     stu.section || "";
+                  updateStudentAcademicControls();
 
                   // Handle student type and year level
                   const studentTypeRadios = document.querySelectorAll(
@@ -7696,6 +7913,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       });
                     });
                     programSelect.value = stu.program || "";
+                    updateStudentAcademicControls();
                     await loadStudentSections(stu.section || "");
                     console.log("Program set to:", programSelect.value);
                   });
@@ -7803,67 +8021,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("Edit button not found for student row:", stu);
               }
 
-              const statusMenu = row.querySelector(".status-action-menu");
-              statusMenu
-                .querySelector(".settings-btn")
-                .addEventListener("click", (e) => {
-                  e.stopPropagation();
-                  const willOpen = !statusMenu.classList.contains("open");
-                  closeStatusMenus(statusMenu);
-                  statusMenu.classList.toggle("open", willOpen);
-                  if (willOpen) positionStatusMenu(statusMenu);
-                  else restoreStatusDropdown(statusMenu);
-                });
-              statusMenu
-                .querySelectorAll(".status-option")
-                .forEach((option) => {
-                  option.addEventListener("click", async (e) => {
-                    e.stopPropagation();
-                    const newStatus = option.dataset.status;
-                    try {
-                      const result = await updateStatus(
-                        "student",
-                        stu.id,
-                        newStatus,
-                      );
-                      if (result.success) {
-                        row.dataset.status = newStatus;
-                        row.querySelector("td:nth-child(4)").innerHTML =
-                          statusPillHtml(newStatus);
-                        (option.closest(".status-dropdown-menu") || statusMenu)
-                          .querySelectorAll(".status-option")
-                          .forEach((btn) => {
-                            btn.classList.toggle(
-                              "selected",
-                              btn.dataset.status === newStatus,
-                            );
-                          });
-                        restoreStatusDropdown(statusMenu);
-                        statusMenu.classList.remove("open");
-                        closeStatusMenus();
-                        closeRowActionMenus();
-                        showNotification(
-                          `Student status updated to ${statusLabel(newStatus)}`,
-                          "#4caf50",
-                        );
-                        refreshSectionStats();
-                      } else {
-                        showNotification(
-                          "Failed to update status: " +
-                            (result.message || "Unknown error"),
-                          "#f44336",
-                        );
-                      }
-                    } catch (error) {
-                      console.error("Student status update error:", error);
-                      showNotification(
-                        "Error updating student status",
-                        "#f44336",
-                      );
-                    }
-                  });
-                });
-
               row
                 .querySelector(".archive-btn")
                 .addEventListener("click", async () => {
@@ -7875,7 +8032,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                   }
 
-                  openArchiveModal(row, stu, statusMenu, "student");
+                  openArchiveModal(row, stu, null, "student");
                 });
 
               // View Subjects
@@ -7909,6 +8066,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const programFilter = document.getElementById(
               "student-program-filter",
             );
+            const statusFilter = document.getElementById(
+              "student-status-filter",
+            );
             const yearlevelFilter = document.getElementById(
               "student-yearlevel-filter",
             );
@@ -7926,6 +8086,13 @@ document.addEventListener("DOMContentLoaded", () => {
               };
             }
 
+            if (statusFilter) {
+              statusFilter.onchange = () => {
+                setStudentFilterActiveStates();
+                filterStudents();
+              };
+            }
+
             if (yearlevelFilter) {
               yearlevelFilter.onchange = (e) => {
                 setStudentFilterActiveStates();
@@ -7937,7 +8104,7 @@ document.addEventListener("DOMContentLoaded", () => {
             filterStudents();
 
             function setStudentFilterActiveStates() {
-              [programFilter, yearlevelFilter].forEach((filter) => {
+              [programFilter, statusFilter, yearlevelFilter].forEach((filter) => {
                 if (!filter) return;
 
                 const wrapper = filter.closest(".program-filter-wrapper");
@@ -7953,6 +8120,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? searchInput.value.toLowerCase()
                 : "";
               const selectedProgram = programFilter ? programFilter.value : "";
+              const selectedStatus = statusFilter
+                ? statusFilter.value.toLowerCase()
+                : "";
               const selectedYearlevel = yearlevelFilter
                 ? yearlevelFilter.value.toLowerCase()
                 : "";
@@ -7965,6 +8135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 let matchesSearch = true;
                 let matchesProgram = true;
+                let matchesStatus = true;
                 let matchesYearlevel = true;
 
                 // Check search term against ID and name only
@@ -7990,6 +8161,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     programText === normalizeFilterText(selectedProgram);
                 }
 
+                if (selectedStatus) {
+                  const rowStatus = normalizeStatusValue(row.dataset.status);
+                  matchesStatus =
+                    rowStatus === selectedStatus ||
+                    (selectedStatus === "inactive" && rowStatus === "archived");
+                }
+
                 if (selectedYearlevel && selectedYearlevel !== "") {
                   matchesYearlevel =
                     (row.dataset.yearlevel || "") === selectedYearlevel;
@@ -7997,7 +8175,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Show row only if all conditions are met
                 row.style.display =
-                  matchesSearch && matchesProgram && matchesYearlevel
+                  matchesSearch &&
+                  matchesProgram &&
+                  matchesStatus &&
+                  matchesYearlevel &&
+                  (selectedStatus === "inactive" ||
+                    normalizeStatusValue(row.dataset.status) !== "archived")
                     ? ""
                     : "none";
               });
@@ -8211,6 +8394,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add Subject button - opens popup modal
   document.getElementById("add-subject-btn")?.addEventListener("click", () => {
+    if (!hasStudentMainInfo()) return;
+
     const program = document.getElementById("student-program").value;
 
     if (!program) {
@@ -9502,6 +9687,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!response.ok || !result.success) {
           throw new Error(result.message || "Unable to import this CSV file.");
         }
+        if (result.email_token) {
+          void sendQueuedBulkWelcomeEmails(result.email_token);
+        }
 
         const updated = Number(result.updated || 0);
         if (result.imported > 0 || updated > 0) {
@@ -9637,6 +9825,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
         });
+        document
+          .querySelectorAll("#student-suffix option[data-legacy-suffix]")
+          .forEach((option) => option.remove());
+        updateStudentAcademicControls();
         const studentNumberInput = document.getElementById("student-number");
         if (
           studentNumberInput &&
@@ -9714,6 +9906,7 @@ document.addEventListener("DOMContentLoaded", () => {
               yearlevelSelect.required = true;
               sectionSelect.required = true;
               if (subjectsSection) subjectsSection.style.display = "none";
+              updateStudentAcademicControls();
             }
           });
         });
@@ -9803,14 +9996,15 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             const d = await res.json();
             if (d.success) {
+              closeModal(addStudentModal);
+              showNotification("Student added successfully.", "#10b981");
+              void sendQueuedWelcomeEmail(d.email_token, "Student", false);
               loadStudents();
               loadPrograms();
               setTimeout(() => {
                 loadDashboardStats();
                 console.log("Dashboard stats updated after student add");
               }, 500);
-              closeModal(addStudentModal);
-              showNotification("Student added sucessfully", "#4caf50");
               addProgramToDropdown(p);
             } else if ((d.message || "").startsWith("Student ID must be GC-")) {
               showGlobalNotification(d.message, "warning");

@@ -139,7 +139,7 @@ if ($conn->connect_error) {
 
 ensureStudentSubjectClassesSchema($conn);
 
-$result = $conn->query("SELECT * FROM add_students ORDER BY id ASC");
+$result = $conn->query("SELECT * FROM add_students ORDER BY id DESC");
 if (!$result) {
     echo json_encode(["error" => "Query failed: " . $conn->error]);
     exit();

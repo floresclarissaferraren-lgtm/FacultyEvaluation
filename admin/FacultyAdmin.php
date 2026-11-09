@@ -865,9 +865,19 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <label>Email <input type="email" id="faculty-email" placeholder="eg. faculty@email.com"></label>
       </div>
       <div class="form-row">
-        <label>First <input id="faculty-firstname" placeholder="eg. Juan"></label>
-        <label>Last <input id="faculty-lastname" placeholder="eg. Dela Cruz"></label>
-        <label>Suffix <input id="faculty-suffix" placeholder="Jr., III"></label>
+        <label>First Name <input id="faculty-firstname" placeholder="eg. Juan"></label>
+        <label>Last Name <input id="faculty-lastname" placeholder="eg. Dela Cruz"></label>
+        <label for="faculty-suffix">Suffix (Optional)
+          <select id="faculty-suffix">
+            <option value="">-- Select Suffix --</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+          </select>
+        </label>
       </div>
       
             
@@ -875,7 +885,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <div id="faculty-subjects-list" class="subjects-list">
           <div class="subject-section-heading">
             <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
-            <button type="button" id="open-faculty-subject-selection" class="button-gradient">
+            <button type="button" id="open-faculty-subject-selection" class="button-gradient" disabled>
               <i class="ph ph-plus"></i> Add Subjects
             </button>
           </div>
@@ -992,12 +1002,21 @@ include __DIR__ . "/totalstudents_dashcount.php";
                 <div class="program-filter-wrapper">
                   <i class="ph ph-graduation-cap" aria-hidden="true"></i>
                   <select id="student-yearlevel-filter" class="program-dropdown">
-                    <option value="">-- All Year Levels --</option>
+                    <option value="">All Years</option>
                     <option value="1">1st Year</option>
                     <option value="2">2nd Year</option>
                     <option value="3">3rd Year</option>
                     <option value="4">4th Year</option>
                     <option value="irregular">Irregular</option>
+                  </select>
+                </div>
+                <label for="student-status-filter">Status</label>
+                <div class="program-filter-wrapper">
+                  <i class="ph ph-check-circle" aria-hidden="true"></i>
+                  <select id="student-status-filter" class="program-dropdown">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>
@@ -1014,7 +1033,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
     <div class="table-scroll-container">
       <table class="students-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Year-Section</th><th>Status</th><th>Type</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Year-Section</th><th>Type</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1079,8 +1098,16 @@ include __DIR__ . "/totalstudents_dashcount.php";
           <input type="text" id="student-lastname" placeholder="eg. Dela Cruz">
         </div>
         <div class="suffix-field">
-          <label for="student-suffix">Suffix</label>
-          <input type="text" id="student-suffix" placeholder="Jr., III">
+          <label for="student-suffix">Suffix (Optional)</label>
+          <select id="student-suffix">
+            <option value="">-- Select Suffix --</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+          </select>
         </div>
       </div>
 
@@ -1091,10 +1118,10 @@ include __DIR__ . "/totalstudents_dashcount.php";
             <label>Student Type</label>
             <div style="display: flex; gap: 20px; margin-top: 5px; justify-content: center;">
               <label style="display: flex; align-items: center; gap: 5px;">
-                <input type="radio" name="student-type" value="regular" checked> Regular 
+                <input type="radio" name="student-type" value="regular" checked disabled> Regular
               </label>
               <label style="display: flex; align-items: center; gap: 5px;">
-                <input type="radio" name="student-type" value="irregular"> Irregular 
+                <input type="radio" name="student-type" value="irregular" disabled> Irregular
               </label>
             </div>
           </div>
@@ -1102,7 +1129,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <div class="form-row">
           <div>
             <label for="student-program">Program</label>
-            <select id="student-program" required>
+            <select id="student-program" required disabled>
               <option value="" disabled selected>-- Select Program --</option>
             </select>
           </div>
@@ -1111,7 +1138,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <div class="form-row" id="yearlevel-row">
           <div>
             <label for="student-yearlevel">Year Level</label>
-            <select id="student-yearlevel" required>
+            <select id="student-yearlevel" required disabled>
               <option value="" disabled selected>-- Select Year Level --</option>
               <option>1</option>
               <option>2</option>
@@ -1131,7 +1158,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
       <div class="section-box">
         <div class="subject-section-heading">
           <h4><i class="ph ph-book"></i> Assigned Subjects</h4>
-          <button type="button" id="add-subject-btn" class="button-gradient">
+          <button type="button" id="add-subject-btn" class="button-gradient" disabled>
             <i class="ph ph-plus"></i> Add Subject
           </button>
         </div>

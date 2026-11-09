@@ -1025,11 +1025,11 @@ async function loadFacultyCategories() {
       ${selectedSubjectText ? `<p class="performance-evaluation-subtitle">${selectedSubjectText}</p>` : ""}
       <div class="rating-legends-mini">
         <ul>
-          <li><span class="dot dot5"></span>5 - Outstanding</li>
-          <li><span class="dot dot4"></span>4 - Very Good</li>
-          <li><span class="dot dot3"></span>3 - Good</li>
-          <li><span class="dot dot2"></span>2 - Fair</li>
-          <li><span class="dot dot1"></span>1 - Poor</li>
+          <li>5 - Outstanding</li>
+          <li>4 - Very Good</li>
+          <li>3 - Good</li>
+          <li>2 - Fair</li>
+          <li>1 - Poor</li>
         </ul>
       </div>
     `;

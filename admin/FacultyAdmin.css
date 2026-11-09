@@ -4050,6 +4050,22 @@ table.evaluation-table .view-btn i {
   overflow: visible;
 }
 
+#faculties-section .faculty-status-trigger {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+#faculties-section .faculty-status-trigger:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
 .faculties-table td:last-child,
 .students-table td:last-child,
 .action-cell {
@@ -5008,6 +5024,22 @@ table.evaluation-table .view-btn:hover {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#addStudentModal #student-program:disabled,
+#addStudentModal #student-yearlevel:disabled,
+#addStudentModal #student-section:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+#addStudentModal #add-subject-btn:disabled {
+  background: #9ca3af !important;
+  border-color: #9ca3af !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* ====================================================================================================================================
@@ -11006,6 +11038,14 @@ body:has(> main > #dashboard-section[style*="display: none"])
   width: 100%;
   justify-content: center;
   margin-bottom: 12px;
+}
+
+#addFacultyModal #open-faculty-subject-selection:disabled {
+  background: #9ca3af !important;
+  border-color: #9ca3af !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 #addFacultyModal .empty-subject-message {
@@ -38819,6 +38859,20 @@ main > .section,
   }
 }
 
+@media (max-width: 768px) {
+  #manage-section.manage-classes-view
+    .manage-curriculum-heading
+    > .manage-content-actions
+    > .manage-class-semester-filter-wrapper {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
 @media (max-width: 520px) {
   #manage-section.manage-specific-year.manage-subjects-view
     .manage-subject-control-box {
@@ -39845,7 +39899,7 @@ html:has(body > main > #dashboard-section:not([style*="display: none"]))::-webki
   }
 
   #students-section > .student-table-box > .student-page-heading > .student-heading-actions > .show-archived-student-btn {
-    grid-column: 2 !important;
+    grid-column: 1 / -1 !important;
     grid-row: 3 !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -39903,5 +39957,319 @@ html:has(body > main > #dashboard-section:not([style*="display: none"]))::-webki
     min-height: 32px;
     padding: 0 7px;
     font-size: 10px;
+  }
+}
+
+#faculties-section .faculties-table .action-buttons {
+  gap: 2px !important;
+}
+
+#faculties-section .faculties-table .action-buttons .action-icon-btn,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:hover,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:focus,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:focus-visible,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:active {
+  margin: 0 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#faculties-section .faculties-table .action-buttons .action-icon-btn i,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:hover i,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:focus i,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:focus-visible i,
+#faculties-section .faculties-table .action-buttons .action-icon-btn:active i {
+  color: #1e293b !important;
+}
+
+#faculties-section .faculties-table .action-cell button,
+#faculties-section .faculties-table .action-cell button:hover,
+#faculties-section .faculties-table .action-cell button:focus,
+#faculties-section .faculties-table .action-cell button:focus-visible,
+#faculties-section .faculties-table .action-cell button:active,
+#faculties-section .faculties-table .action-cell button i,
+#faculties-section .faculties-table .action-cell button:hover i,
+#faculties-section .faculties-table .action-cell button:focus i,
+#faculties-section .faculties-table .action-cell button:focus-visible i,
+#faculties-section .faculties-table .action-cell button:active i {
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+#faculties-section .faculties-table .action-cell .view-btn:hover,
+#faculties-section .faculties-table .action-cell .edit-btn:hover {
+  color: #1d4ed8 !important;
+}
+
+#faculties-section .faculties-table .action-cell .view-btn:hover i,
+#faculties-section .faculties-table .action-cell .edit-btn:hover i {
+  color: #1d4ed8 !important;
+}
+
+#faculties-section .faculties-table .action-cell .archive-btn:hover,
+#faculties-section .faculties-table .action-cell .archive-btn:hover i {
+  color: #ea580c !important;
+}
+
+#addStudentModal #student-suffix:has(option:checked[value=""]) {
+  color: #757575 !important;
+}
+
+#addStudentModal #student-suffix option {
+  color: #1e293b;
+}
+
+#addFacultyModal #faculty-suffix:has(option:checked[value=""]) {
+  color: #757575 !important;
+}
+
+#addFacultyModal #faculty-suffix option {
+  color: #1e293b;
+}
+
+#addFacultyModal #faculty-suffix,
+#addFacultyModal #faculty-suffix:hover,
+#addFacultyModal #faculty-suffix:focus,
+#addFacultyModal #faculty-suffix:active {
+  transform: none !important;
+  transition: none !important;
+}
+
+@media (max-width: 640px) {
+  #faculties-section .faculty-list-box .table-wrapper,
+  #faculties-section .faculty-list-box .table-scroll-container {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #faculties-section .faculty-list-box .table-scroll-container {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table {
+    width: 660px;
+    min-width: 660px;
+    table-layout: fixed;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table th:nth-child(1),
+  #faculties-section .faculty-list-box .faculties-table td:nth-child(1) {
+    width: 100px;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table th:nth-child(2),
+  #faculties-section .faculty-list-box .faculties-table td:nth-child(2) {
+    width: 230px;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table th:nth-child(3),
+  #faculties-section .faculty-list-box .faculties-table td:nth-child(3) {
+    width: 100px;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table th:nth-child(4),
+  #faculties-section .faculty-list-box .faculties-table td:nth-child(4) {
+    width: 115px;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table th:nth-child(5),
+  #faculties-section .faculty-list-box .faculties-table td:nth-child(5) {
+    box-sizing: border-box;
+    width: 115px;
+    min-width: 115px;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table th,
+  #faculties-section .faculty-list-box .faculties-table td {
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .faculty-name-cell {
+    min-width: 0;
+    gap: 7px;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .faculty-name-cell > div:last-child {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .faculty-name-cell .table-avatar {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .faculty-name-text,
+  #faculties-section .faculty-list-box .faculties-table .faculty-name-cell small {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .action-cell {
+    min-width: 115px;
+    padding: 4px !important;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .action-buttons {
+    gap: 2px !important;
+  }
+
+  #faculties-section .faculty-list-box .faculties-table .action-buttons .action-icon-btn {
+    box-sizing: border-box;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+  }
+}
+
+#students-section .student-table-box .students-table .action-buttons {
+  gap: 2px !important;
+}
+
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:hover,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:focus,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:focus-visible,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:active {
+  margin: 0 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn i,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:hover i,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:focus i,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:focus-visible i,
+#students-section .student-table-box .students-table .action-buttons .action-icon-btn:active i {
+  color: #1e293b !important;
+}
+
+#students-section .student-table-box .students-table .action-cell button,
+#students-section .student-table-box .students-table .action-cell button:hover,
+#students-section .student-table-box .students-table .action-cell button:focus,
+#students-section .student-table-box .students-table .action-cell button:focus-visible,
+#students-section .student-table-box .students-table .action-cell button:active,
+#students-section .student-table-box .students-table .action-cell button i,
+#students-section .student-table-box .students-table .action-cell button:hover i,
+#students-section .student-table-box .students-table .action-cell button:focus i,
+#students-section .student-table-box .students-table .action-cell button:focus-visible i,
+#students-section .student-table-box .students-table .action-cell button:active i {
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+#students-section .student-table-box .students-table .action-cell .view-subjects-btn:hover,
+#students-section .student-table-box .students-table .action-cell .edit-btn:hover,
+#students-section .student-table-box .students-table .action-cell .view-subjects-btn:hover i,
+#students-section .student-table-box .students-table .action-cell .edit-btn:hover i {
+  color: #1d4ed8 !important;
+}
+
+#students-section .student-table-box .students-table .action-cell .archive-btn:hover,
+#students-section .student-table-box .students-table .action-cell .archive-btn:hover i {
+  color: #ea580c !important;
+}
+
+@media (max-width: 640px) {
+  #students-section .student-table-box,
+  #students-section .student-table-box .table-scroll-container {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #students-section .student-table-box .table-scroll-container {
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+  }
+
+  #students-section .student-table-box .students-table {
+    width: 800px;
+    min-width: 800px;
+    margin: 0;
+    table-layout: fixed;
+  }
+
+  #students-section .student-table-box .students-table th:nth-child(1),
+  #students-section .student-table-box .students-table td:nth-child(1) {
+    width: 110px;
+  }
+
+  #students-section .student-table-box .students-table th:nth-child(2),
+  #students-section .student-table-box .students-table td:nth-child(2) {
+    width: 215px;
+  }
+
+  #students-section .student-table-box .students-table th:nth-child(3),
+  #students-section .student-table-box .students-table td:nth-child(3) {
+    width: 165px;
+  }
+
+  #students-section .student-table-box .students-table th:nth-child(4),
+  #students-section .student-table-box .students-table td:nth-child(4) {
+    width: 95px;
+  }
+
+  #students-section .student-table-box .students-table th:nth-child(5),
+  #students-section .student-table-box .students-table td:nth-child(5) {
+    width: 105px;
+  }
+
+  #students-section .student-table-box .students-table th:nth-child(6),
+  #students-section .student-table-box .students-table td:nth-child(6) {
+    box-sizing: border-box;
+    width: 110px;
+    min-width: 110px;
+    padding-right: 4px !important;
+    padding-left: 4px !important;
+  }
+
+  #students-section .student-table-box .students-table th,
+  #students-section .student-table-box .students-table td {
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+
+  #students-section .student-table-box .student-name-cell,
+  #students-section .student-table-box .student-program-cell {
+    min-width: 0;
+  }
+
+  #students-section .student-table-box .student-name-cell strong,
+  #students-section .student-table-box .student-name-cell small,
+  #students-section .student-table-box .student-program-cell strong,
+  #students-section .student-table-box .student-program-cell small {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  #students-section .student-table-box .students-table .action-cell {
+    min-width: 110px;
+    padding: 4px !important;
+  }
+
+  #students-section .student-table-box .students-table .action-buttons {
+    gap: 2px !important;
+  }
+
+  #students-section .student-table-box .students-table .action-buttons .action-icon-btn {
+    box-sizing: border-box;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
   }
 }

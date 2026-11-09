@@ -21,6 +21,58 @@ function getLastEmailError()
     return $lastEmailError;
 }
 
+function queueSessionEmail(
+    string $toEmail,
+    string $toName,
+    string $subject,
+    string $body,
+): string {
+    return storeSessionEmailRequest([
+        "to_email" => $toEmail,
+        "to_name" => $toName,
+        "subject" => $subject,
+        "body" => $body,
+    ]);
+}
+
+function queueSessionEmailBatch(array $emails): string
+{
+    if (empty($emails)) {
+        throw new InvalidArgumentException("At least one email is required.");
+    }
+
+    return storeSessionEmailRequest(["emails" => array_values($emails)]);
+}
+
+function storeSessionEmailRequest(array $payload): string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        throw new RuntimeException("An active session is required to queue email.");
+    }
+
+    $pendingEmails = $_SESSION["pending_account_emails"] ?? [];
+    if (!is_array($pendingEmails)) {
+        $pendingEmails = [];
+    }
+
+    $expirationTime = time() - 600;
+    foreach ($pendingEmails as $token => $email) {
+        if (
+            !is_array($email) ||
+            intval($email["created_at"] ?? 0) < $expirationTime
+        ) {
+            unset($pendingEmails[$token]);
+        }
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $payload["created_at"] = time();
+    $pendingEmails[$token] = $payload;
+    $_SESSION["pending_account_emails"] = $pendingEmails;
+
+    return $token;
+}
+
 /* =========================
    SEND EMAIL FUNCTION
 ========================= */
@@ -69,8 +121,9 @@ function sendEmail(
         $mail->Username = MAIL_USER;
         $mail->Password = preg_replace("/\s+/", "", MAIL_PASS);
 
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port = 465;
+        $mail->Timeout = 10;
 
         $mail->SMTPAutoTLS = true;
         $mail->SMTPKeepAlive = $reuseSmtpConnection;

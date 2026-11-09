@@ -292,7 +292,7 @@ try {
             LEFT JOIN faculty_subjects fs ON f.id = fs.faculty_id
             LEFT JOIN add_subjects s ON fs.subject_id = s.id
             LEFT JOIN add_programs p ON s.program_id = p.id
-            ORDER BY f.lastname, f.firstname, p.program_code, s.year_level, s.subject_code
+            ORDER BY f.id DESC, p.program_code, s.year_level, s.subject_code
         ";
 
         $result = $conn->query($query);

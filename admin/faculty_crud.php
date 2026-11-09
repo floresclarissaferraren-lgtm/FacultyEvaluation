@@ -257,23 +257,25 @@ if ($action === "add") {
         $cta,
     );
 
-    // Send email asynchronously to avoid blocking
-    $sent = sendEmail(
-        $email,
-        "$firstname $lastname",
-        "Welcome to Faculty Evaluation System",
-        $body,
-    );
-
-    if (!$sent) {
-        error_log("Failed to send email to faculty: $email");
+    $emailToken = "";
+    try {
+        $emailToken = queueSessionEmail(
+            $email,
+            "$firstname $lastname",
+            "Welcome to Faculty Evaluation System",
+            $body,
+        );
+    } catch (Throwable $mailQueueError) {
+        error_log(
+            "Faculty welcome email could not be queued: " .
+                $mailQueueError->getMessage(),
+        );
     }
 
     echo json_encode([
         "success" => true,
-        "message" => $sent
-            ? "Faculty added and temporary password sent by email."
-            : "Faculty added, but the password email could not be sent. Ask the faculty member to use Forgot Password.",
+        "message" => "Faculty added successfully. Welcome email is being sent.",
+        "email_token" => $emailToken,
     ]);
 } /* =========================
    EDIT FACULTY
