@@ -29403,6 +29403,10 @@ body :not([class*="ph-"]):not([class*="fa-"]):not(.material-icons):not(svg) {
   color: #2563eb;
   background: #ffffff;
 }
+#viewStudentSubjectsModal .student-profile-details h3 {
+  padding: 0;
+  background: transparent;
+}
 #viewStudentSubjectsModal .student-profile-details p,
 #viewFacultySubjectsModal .faculty-profile-details p {
   font-size: 0.8rem;
