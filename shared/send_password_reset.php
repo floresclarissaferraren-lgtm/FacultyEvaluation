@@ -4,6 +4,7 @@ require_once __DIR__ . "/rate_limit.php";
 requireMethod("POST");
 enforceRateLimit("password_reset_request_ip", 30, 3600);
 $email = trim($_POST["email"] ?? "");
+$accountType = strtolower(trim((string) ($_POST["account_type"] ?? "")));
 enforceRateLimit(
     "password_reset_request_email_" . hash("sha256", strtolower($email)),
     3,
@@ -21,30 +22,35 @@ if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
-// Look up the user — students and faculty only (admin has no email column)
 $found = false;
 $recipientName = "";
 
-// Check add_students
-$stmt = $conn->prepare(
-    "SELECT id, firstname, lastname FROM add_students WHERE email = ? LIMIT 1",
-);
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$res = $stmt->get_result();
-if ($res && $res->num_rows > 0) {
-    $row = $res->fetch_assoc();
-    $recipientName = trim(
-        ($row["firstname"] ?? "") . " " . ($row["lastname"] ?? ""),
-    );
-    $found = true;
-}
-$stmt->close();
-
-// Check add_faculties
-if (!$found) {
+if ($accountType === "admin") {
     $stmt = $conn->prepare(
-        "SELECT id, firstname, lastname FROM add_faculties WHERE email = ? LIMIT 1",
+        "SELECT admin_id, admin_username, admin_email FROM admin_login WHERE admin_email = ? LIMIT 1",
+    );
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res && $res->num_rows > 0) {
+        $row = $res->fetch_assoc();
+        $recipientName = trim((string) ($row["admin_username"] ?? "Admin"));
+        $found = true;
+    }
+    $stmt->close();
+
+    if (!$found) {
+        echo json_encode([
+            "success" => false,
+            "message" => "This email address is not registered as the administrator's email. Please enter the registered admin Gmail address.",
+        ]);
+        $conn->close();
+        exit();
+    }
+} else {
+    // Look up the user — students and faculty only
+    $stmt = $conn->prepare(
+        "SELECT id, firstname, lastname FROM add_students WHERE email = ? LIMIT 1",
     );
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -57,16 +63,33 @@ if (!$found) {
         $found = true;
     }
     $stmt->close();
-}
 
-if (!$found) {
-    echo json_encode([
-        "success" => true,
-        "message" =>
-            "If the email is registered, a reset code will be sent shortly.",
-    ]);
-    $conn->close();
-    exit();
+    if (!$found) {
+        $stmt = $conn->prepare(
+            "SELECT id, firstname, lastname FROM add_faculties WHERE email = ? LIMIT 1",
+        );
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($res && $res->num_rows > 0) {
+            $row = $res->fetch_assoc();
+            $recipientName = trim(
+                ($row["firstname"] ?? "") . " " . ($row["lastname"] ?? ""),
+            );
+            $found = true;
+        }
+        $stmt->close();
+    }
+
+    if (!$found) {
+        echo json_encode([
+            "success" => true,
+            "message" =>
+                "If the email is registered, a reset code will be sent shortly.",
+        ]);
+        $conn->close();
+        exit();
+    }
 }
 
 // Generate 6-digit code

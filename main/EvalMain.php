@@ -264,6 +264,7 @@ if (isset($_GET["logout"]) && $_GET["logout"] === "true") {
       <h2 class="login-title">Forgot Password</h2>
       <p class="login-description">Enter your registered email and we'll send you a 6-digit reset code.</p>
       <form id="forgotForm" class="modern-login-form">
+        <input type="hidden" id="forgotAccountType" name="account_type" value="">
         <div class="modern-input-group has-icon">
           <input type="email" id="resetEmail" placeholder="Email address" required autocomplete="email">
           <div class="input-icon"><i class="ph ph-envelope"></i></div>

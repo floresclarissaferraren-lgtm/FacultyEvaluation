@@ -47,14 +47,12 @@ function ensureEvaluationsSchema(mysqli $conn): void
                 $conn->query("ALTER TABLE evaluations DROP FOREIGN KEY `{$name}`");
             }
         }
+        dropEvaluationIndexIfExists($conn, "uniq_student_faculty_subject_class_period");
+        dropEvaluationIndexIfExists($conn, "idx_eval_period");
         $conn->query("ALTER TABLE evaluations DROP COLUMN period_id");
     }
     dropEvaluationIndexIfExists($conn, "uniq_student_faculty");
     dropEvaluationIndexIfExists($conn, "uniq_student_faculty_subject_class");
-    if ($hasPeriod) {
-        dropEvaluationIndexIfExists($conn, "uniq_student_faculty_subject_class_period");
-        dropEvaluationIndexIfExists($conn, "idx_eval_period");
-    }
     addEvaluationIndexIfMissing($conn, "idx_eval_faculty", "ALTER TABLE evaluations ADD KEY idx_eval_faculty (faculty_id)");
     addEvaluationIndexIfMissing($conn, "idx_eval_student", "ALTER TABLE evaluations ADD KEY idx_eval_student (student_id)");
     addEvaluationIndexIfMissing($conn, "idx_eval_subject", "ALTER TABLE evaluations ADD KEY idx_eval_subject (subject_id)");

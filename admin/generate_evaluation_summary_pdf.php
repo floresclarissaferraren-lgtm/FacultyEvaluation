@@ -92,6 +92,24 @@ if ($stmt && !empty($params)) {
 }
 
 $rows = [];
+$subjectCountStmt = $conn->prepare("
+    SELECT COUNT(DISTINCT CASE WHEN e.subject_id > 0 THEN e.subject_id END) AS subject_count
+    FROM evaluations e
+    WHERE e.faculty_id = ?
+      AND EXISTS (
+          SELECT 1
+          FROM evaluation_periods ep
+          WHERE ep.id = ?
+            AND TRIM(ep.ay) = TRIM(e.academic_year)
+            AND LOWER(TRIM(ep.semester)) = LOWER(TRIM(e.semester))
+            AND ep.end_date IS NOT NULL
+            AND (ep.end_date < CURDATE() OR ep.is_active = 0)
+      )
+");
+if (!$subjectCountStmt) {
+    http_response_code(500);
+    exit("Unable to generate report: subject count query preparation failed.");
+}
 if ($stmt) {
     $stmt->execute();
     $res = $stmt->get_result();
@@ -106,35 +124,45 @@ if ($stmt) {
                 static fn($periodId) => $periodId > 0,
             ),
         );
-        $scores =
-            $facultyId > 0
-                ? array_map(
-                    static fn($periodId) => calcWeightedScore(
-                        $conn,
-                        $facultyId,
-                        null,
-                        null,
-                        $periodId,
-                    ),
-                    $periodIds,
-                )
-                : [];
-        $scores = array_values(
-            array_filter($scores, static fn($score) => $score > 0),
-        );
-        $avg = empty($scores)
-            ? 0
-            : round(array_sum($scores) / count($scores), 2);
+        $weightedSum = 0.0;
+        $subjectCount = 0;
+        foreach ($periodIds as $periodId) {
+            $periodScore = calcWeightedScore(
+                $conn,
+                $facultyId,
+                null,
+                null,
+                $periodId,
+            );
+            $subjectCountStmt->bind_param("ii", $facultyId, $periodId);
+            $subjectCountStmt->execute();
+            $subjectCountResult = $subjectCountStmt->get_result();
+            $subjectCountRow = $subjectCountResult->fetch_assoc();
+            $subjectCountResult->free();
+            $periodSubjectCount = intval(
+                $subjectCountRow["subject_count"] ?? 0,
+            );
+            if ($periodScore <= 0 || $periodSubjectCount <= 0) {
+                continue;
+            }
+            $weightedSum += $periodScore * $periodSubjectCount;
+            $subjectCount += $periodSubjectCount;
+        }
+        $avg = $subjectCount > 0
+            ? round($weightedSum / $subjectCount, 2)
+            : 0.0;
         $rows[] = [
             "name" => trim(
                 $r["firstname"] . " " . $r["lastname"] . " " . $r["suffix"],
             ),
             "rating" => number_format($avg, 2),
+            "percentage" => number_format(($avg / 5) * 100, 1),
             "responses" => intval($r["total_responses"]),
             "status" => getStatusLabel($avg),
         ];
     }
     $stmt->close();
+    $subjectCountStmt->close();
 } else {
     http_response_code(500);
     exit("Unable to generate report: query preparation failed.");
@@ -172,10 +200,11 @@ $pdf->Ln(2);
 $pdf->SetFillColor($headerColor[0], $headerColor[1], $headerColor[2]);
 $pdf->SetTextColor(255, 255, 255);
 $pdf->SetFont("Arial", "B", 10);
-$pdf->Cell(70, 9, "Faculty Name", 1, 0, "C", true);
+$pdf->Cell(60, 9, "Faculty Name", 1, 0, "C", true);
 $pdf->Cell(35, 9, "Overall Rating", 1, 0, "C", true);
-$pdf->Cell(35, 9, "Responses", 1, 0, "C", true);
-$pdf->Cell(50, 9, "Status", 1, 1, "C", true);
+$pdf->Cell(25, 9, "Percent", 1, 0, "C", true);
+$pdf->Cell(30, 9, "Responses", 1, 0, "C", true);
+$pdf->Cell(40, 9, "Status", 1, 1, "C", true);
 
 $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
 $pdf->SetFont("Arial", "", 10);
@@ -187,10 +216,11 @@ if (count($rows) === 0) {
         $pdf->SetFillColor(
             ...$index % 2 === 0 ? [255, 255, 255] : [247, 250, 255],
         );
-        $pdf->Cell(70, 8, substr($row["name"], 0, 35), 1, 0, "L", true);
+        $pdf->Cell(60, 8, substr($row["name"], 0, 30), 1, 0, "L", true);
         $pdf->Cell(35, 8, $row["rating"], 1, 0, "C", true);
-        $pdf->Cell(35, 8, $row["responses"], 1, 0, "C", true);
-        $pdf->Cell(50, 8, $row["status"], 1, 1, "C", true);
+        $pdf->Cell(25, 8, $row["percentage"] . "%", 1, 0, "C", true);
+        $pdf->Cell(30, 8, $row["responses"], 1, 0, "C", true);
+        $pdf->Cell(40, 8, $row["status"], 1, 1, "C", true);
     }
 }
 

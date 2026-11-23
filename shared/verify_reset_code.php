@@ -9,9 +9,11 @@ $data = is_array($data) ? $data : [];
 $emailValue = $data["email"] ?? "";
 $codeValue = $data["code"] ?? "";
 $passwordValue = $data["password"] ?? "";
+$accountTypeValue = $data["account_type"] ?? "";
 $email = is_string($emailValue) ? trim($emailValue) : "";
 $code = is_string($codeValue) ? trim($codeValue) : "";
 $password = is_string($passwordValue) ? $passwordValue : "";
+$accountType = strtolower(trim((string) $accountTypeValue));
 $check_only = !empty($data["check_only"]); // step 2: just validate, don't consume
 enforceRateLimit("password_reset_verify_ip", 60, 900);
 enforceRateLimit(
@@ -79,6 +81,25 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         "message" => "Invalid or expired code. Please request a new one.",
     ]);
     exit();
+}
+
+if ($accountType === "admin") {
+    $stmt = $conn->prepare(
+        "SELECT admin_id FROM admin_login WHERE admin_email = ? LIMIT 1",
+    );
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $adminCheck = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$adminCheck) {
+        echo json_encode([
+            "success" => false,
+            "code_valid" => false,
+            "message" => "This email address is not registered as the administrator's email. Please enter the registered admin Gmail address.",
+        ]);
+        exit();
+    }
 }
 
 $conn->begin_transaction();

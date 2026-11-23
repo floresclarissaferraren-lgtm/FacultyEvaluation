@@ -25,14 +25,11 @@ $strength_errors = [];
 if (strlen($new_password) < 8) {
     $strength_errors[] = "at least 8 characters";
 }
+if (!preg_match("/[0-9]/", $new_password)) {
+    $strength_errors[] = "at least 1 number";
+}
 if (!preg_match("/[A-Z]/", $new_password)) {
-    $strength_errors[] = "at least one uppercase letter";
-}
-if (!preg_match("/[a-z]/", $new_password)) {
-    $strength_errors[] = "at least one lowercase letter";
-}
-if (!preg_match("/[^A-Za-z0-9]/", $new_password)) {
-    $strength_errors[] = "at least one special character";
+    $strength_errors[] = "at least 1 uppercase letter";
 }
 if (!empty($strength_errors)) {
     echo json_encode([

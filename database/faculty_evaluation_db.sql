@@ -85,6 +85,8 @@ CREATE TABLE `add_faculties` (
   `firstname` varchar(100) DEFAULT NULL,
   `lastname` varchar(100) DEFAULT NULL,
   `suffix` varchar(20) DEFAULT NULL,
+  `department` varchar(120) DEFAULT NULL,
+  `is_department_head` tinyint(1) NOT NULL DEFAULT 0,
   `photo` longtext DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `status` varchar(100) DEFAULT NULL,
@@ -96,11 +98,23 @@ CREATE TABLE `add_faculties` (
 -- Dumping data for table `add_faculties`
 --
 
-INSERT INTO `add_faculties` (`id`, `faculty_id`, `email`, `firstname`, `lastname`, `suffix`, `photo`, `password`, `status`, `created_at`, `updated_at`) VALUES
-(88, 'FC-000001', 'clarusbright08@gmail.com', 'Juan', 'Bacislao', '', '', '$2y$10$By0fydOxDS0F2qO.xHutQ.2pGlkmhOjc5geoW1Oo0YhUXn/GSY.WW', NULL, '2026-10-27 15:03:50', '2026-10-27 15:03:50'),
-(89, 'FC-000002', 'cherryannlique1@gmail.com', 'Daniel', 'Dela Cruz', '', '', '$2y$10$HcePiRjtyu3BkV5.REhWve5tdXc7ro90qgbFnVIb.kUKgna1gj5EW', 'archived', '2026-10-27 15:05:40', '2026-10-28 15:18:57');
+INSERT INTO `add_faculties` (`id`, `faculty_id`, `email`, `firstname`, `lastname`, `suffix`, `department`, `is_department_head`, `photo`, `password`, `status`, `created_at`, `updated_at`) VALUES
+(88, 'FC-000001', 'clarusbright08@gmail.com', 'Juan', 'Bacislao', '', NULL, 0, '', '$2y$10$By0fydOxDS0F2qO.xHutQ.2pGlkmhOjc5geoW1Oo0YhUXn/GSY.WW', NULL, '2026-10-27 15:03:50', '2026-10-27 15:03:50'),
+(89, 'FC-000002', 'cherryannlique1@gmail.com', 'Daniel', 'Dela Cruz', '', NULL, 0, '', '$2y$10$HcePiRjtyu3BkV5.REhWve5tdXc7ro90qgbFnVIb.kUKgna1gj5EW', 'archived', '2026-10-27 15:05:40', '2026-10-28 15:18:57');
 
 -- --------------------------------------------------------
+
+--
+-- Table structure for table `add_departments`
+--
+
+CREATE TABLE `add_departments` (
+  `id` int(11) NOT NULL,
+  `department_code` varchar(20) NOT NULL,
+  `department_name` varchar(120) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Table structure for table `add_programs`
@@ -108,6 +122,7 @@ INSERT INTO `add_faculties` (`id`, `faculty_id`, `email`, `firstname`, `lastname
 
 CREATE TABLE `add_programs` (
   `id` int(11) NOT NULL,
+  `department_id` int(11) DEFAULT NULL,
   `program_code` varchar(20) NOT NULL,
   `program_name` varchar(100) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -214,7 +229,7 @@ CREATE TABLE `add_subjects` (
   `subject_code` varchar(20) NOT NULL,
   `subject_desc` varchar(150) NOT NULL,
   `year_level` varchar(10) NOT NULL,
-  `semester` enum('1st Semester','2nd Semester') DEFAULT '2nd Semester',
+  `semester` enum('1st Semester','2nd Semester','Summer') NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -248,6 +263,7 @@ INSERT INTO `add_subjects` (`id`, `program_id`, `subject_code`, `subject_desc`, 
 CREATE TABLE `admin_login` (
   `admin_id` int(11) NOT NULL,
   `admin_username` varchar(50) NOT NULL,
+  `admin_email` varchar(255) DEFAULT NULL,
   `admin_password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -255,8 +271,8 @@ CREATE TABLE `admin_login` (
 -- Dumping data for table `admin_login`
 --
 
-INSERT INTO `admin_login` (`admin_id`, `admin_username`, `admin_password`) VALUES
-(1, 'ADM-0001', '$2y$10$o1tFhqdY6p9Z0rw/Px4Hk.6MCuZ7p025FwzHuiqatzmS0Zxc4FfQa');
+INSERT INTO `admin_login` (`admin_id`, `admin_username`, `admin_email`, `admin_password`) VALUES
+(1, 'ADM-0001', 'bacislaoclaudine4@gmail.com', '$2y$10$rgc88aH1U7830gGRD/TcSedaE.NZJqc4Xp024jUqx5wz12dSQLw.u');
 
 -- --------------------------------------------------------
 
@@ -618,8 +634,16 @@ ALTER TABLE `add_faculties`
 --
 ALTER TABLE `add_programs`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_add_programs_department_id` (`department_id`),
   ADD UNIQUE KEY `program_code` (`program_code`),
   ADD UNIQUE KEY `program_code_2` (`program_code`);
+
+--
+-- Indexes for table `add_departments`
+--
+ALTER TABLE `add_departments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `department_code` (`department_code`);
 
 --
 -- Indexes for table `add_questions`
@@ -648,7 +672,8 @@ ALTER TABLE `add_subjects`
 --
 ALTER TABLE `admin_login`
   ADD PRIMARY KEY (`admin_id`),
-  ADD UNIQUE KEY `admin_username` (`admin_username`);
+  ADD UNIQUE KEY `admin_username` (`admin_username`),
+  ADD UNIQUE KEY `admin_email` (`admin_email`);
 
 --
 -- Indexes for table `class_subjects`
@@ -776,6 +801,12 @@ ALTER TABLE `add_programs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
 
 --
+-- AUTO_INCREMENT for table `add_departments`
+--
+ALTER TABLE `add_departments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `add_questions`
 --
 ALTER TABLE `add_questions`
@@ -874,6 +905,12 @@ ALTER TABLE `student_subject_classes`
 --
 ALTER TABLE `add_classes`
   ADD CONSTRAINT `add_classes_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `add_programs` (`id`);
+
+--
+-- Constraints for table `add_programs`
+--
+ALTER TABLE `add_programs`
+  ADD CONSTRAINT `add_programs_ibfk_department` FOREIGN KEY (`department_id`) REFERENCES `add_departments` (`id`) ON DELETE RESTRICT;
 
 --
 -- Constraints for table `add_questions`

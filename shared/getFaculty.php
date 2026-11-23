@@ -13,6 +13,20 @@ try {
         "status",
         'VARCHAR(20) NOT NULL DEFAULT "active"',
     );
+    ensureColumnExists(
+        $conn,
+        "add_faculties",
+        "department",
+        "VARCHAR(120) DEFAULT NULL",
+        "suffix",
+    );
+    ensureColumnExists(
+        $conn,
+        "add_faculties",
+        "is_department_head",
+        "TINYINT(1) NOT NULL DEFAULT 0",
+        "department",
+    );
 
     ensureEvaluationsSchema($conn);
     ensureClassPeriodColumn($conn);
@@ -96,6 +110,8 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
+                f.department,
+                f.is_department_head,
                 ev.id AS evaluation_id,
                 cs.subject_id,
                 ac.id AS class_id,
@@ -193,6 +209,8 @@ try {
                     f.suffix,
                     f.photo,
                     f.status,
+                    f.department,
+                    f.is_department_head,
                     ev.id AS evaluation_id,
                     ss.subject_id,
                     COALESCE(ssc.class_id, 0) AS class_id,
@@ -248,6 +266,8 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
+                f.department,
+                f.is_department_head,
                 fs.subject_id,
                 0 AS class_id,
                 NULL AS class_year_level,
@@ -279,6 +299,8 @@ try {
                 f.suffix,
                 f.photo,
                 f.status,
+                f.department,
+                f.is_department_head,
                 fs.subject_id,
                 0 AS class_id,
                 NULL AS class_year_level,
@@ -334,6 +356,8 @@ try {
                 "suffix" => $row["suffix"] ?? "",
                 "photo" => $row["photo"] ?? "",
                 "status" => $row["status"] ?? "active",
+                "department" => $row["department"] ?? "",
+                "is_department_head" => (int) ($row["is_department_head"] ?? 0),
                 "evaluation_id" => intval($row["evaluation_id"] ?? 0),
                 // subjects array keeps the same shape the JS already reads
                 "subjects" => [$subject],
@@ -378,6 +402,8 @@ try {
                     "suffix" => $row["suffix"] ?? "",
                     "photo" => $row["photo"] ?? "",
                     "status" => $row["status"] ?? "active",
+                    "department" => $row["department"] ?? "",
+                    "is_department_head" => (int) ($row["is_department_head"] ?? 0),
                     "subjects" => [],
                     "subject_codes" => [],
                 ];

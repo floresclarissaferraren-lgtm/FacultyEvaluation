@@ -342,10 +342,24 @@ if ($subjectStmt) {
         <div class="modern-input-group has-toggle">
           <label class="password-field-label" for="newPass">New Password</label>
           <div class="input-wrap">
-            <input type="password" id="newPass" required>
+            <input type="password" id="newPass" required aria-describedby="passwordStrength newPassError">
             <div class="password-toggle" onclick="togglePassword('newPass', this)">
               <i class="ph ph-eye-slash"></i>
             </div>
+          </div>
+          <div class="password-strength is-empty" id="passwordStrength">
+            <div class="password-strength-meter" aria-hidden="true">
+              <span class="password-strength-segment"></span>
+              <span class="password-strength-segment"></span>
+              <span class="password-strength-segment"></span>
+            </div>
+            <p class="password-strength-status" id="passwordStrengthStatus" aria-live="polite">Password strength</p>
+            <p class="password-strength-heading">Password must have:</p>
+            <ul class="password-strength-rules">
+              <li data-password-rule="length"><i class="ph ph-x-circle" aria-hidden="true"></i>At least 8 characters</li>
+              <li data-password-rule="number"><i class="ph ph-x-circle" aria-hidden="true"></i>At least 1 number</li>
+              <li data-password-rule="uppercase"><i class="ph ph-x-circle" aria-hidden="true"></i>At least 1 uppercase</li>
+            </ul>
           </div>
           <small id="newPassError" class="error-message"></small>
         </div>

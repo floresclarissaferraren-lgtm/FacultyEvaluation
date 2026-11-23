@@ -16,16 +16,231 @@ ensureColumnExists(
     "status",
     'VARCHAR(20) NOT NULL DEFAULT "active"',
 );
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "department",
+    "VARCHAR(120) DEFAULT NULL",
+    "suffix",
+);
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "is_department_head",
+    "TINYINT(1) NOT NULL DEFAULT 0",
+    "department",
+);
 
 /* =========================
+   ASSIGN EXISTING FACULTY AS DEPARTMENT HEAD
+========================= */
+if (
+    $action === "assign_department_head" ||
+    $action === "update_department_head"
+) {
+    $isUpdate = $action === "update_department_head";
+    $facultyRecordId = intval($data["faculty_record_id"] ?? 0);
+    $departmentId = intval($data["department_id"] ?? 0);
+
+    if ($facultyRecordId < 1 || $departmentId < 1) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Select a valid faculty member and department.",
+        ]);
+        exit();
+    }
+
+    require_once __DIR__ . "/../shared/department_schema.php";
+    ensureDepartmentSchema($conn);
+
+    $departmentStmt = $conn->prepare(
+        "SELECT department_name FROM add_departments WHERE id = ? LIMIT 1",
+    );
+    if (!$departmentStmt) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to validate the selected department.",
+        ]);
+        exit();
+    }
+    $departmentStmt->bind_param("i", $departmentId);
+    if (!$departmentStmt->execute()) {
+        $departmentStmt->close();
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to validate the selected department.",
+        ]);
+        exit();
+    }
+    $departmentResult = $departmentStmt->get_result();
+    if (!$departmentResult) {
+        $departmentStmt->close();
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to validate the selected department.",
+        ]);
+        exit();
+    }
+    $department = $departmentResult->fetch_assoc();
+    $departmentStmt->close();
+
+    if (!$department) {
+        http_response_code(404);
+        echo json_encode([
+            "success" => false,
+            "message" => "The selected department was not found.",
+        ]);
+        exit();
+    }
+
+    $assignStmt = $conn->prepare("
+        UPDATE add_faculties
+        SET department = ?, is_department_head = 1
+        WHERE id = ?
+          AND COALESCE(is_department_head, 0) = ?
+          AND LOWER(TRIM(COALESCE(status, 'active'))) <> 'archived'
+    ");
+    if (!$assignStmt) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to assign the selected faculty member.",
+        ]);
+        exit();
+    }
+    $departmentName = (string) $department["department_name"];
+    $expectedHeadStatus = $isUpdate ? 1 : 0;
+    $assignStmt->bind_param(
+        "sii",
+        $departmentName,
+        $facultyRecordId,
+        $expectedHeadStatus,
+    );
+    if (!$assignStmt->execute()) {
+        $assignStmt->close();
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to assign the selected faculty member.",
+        ]);
+        exit();
+    }
+    $assigned = $assignStmt->affected_rows === 1;
+    $assignStmt->close();
+
+    if (!$assigned && $isUpdate) {
+        $verifyStmt = $conn->prepare("
+            SELECT id FROM add_faculties
+            WHERE id = ?
+              AND COALESCE(is_department_head, 0) = 1
+              AND LOWER(TRIM(COALESCE(status, 'active'))) <> 'archived'
+            LIMIT 1
+        ");
+        if (!$verifyStmt) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Unable to verify the department head record.",
+            ]);
+            exit();
+        }
+        $verifyStmt->bind_param("i", $facultyRecordId);
+        if (!$verifyStmt->execute()) {
+            $verifyStmt->close();
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Unable to verify the department head record.",
+            ]);
+            exit();
+        }
+        $verifyResult = $verifyStmt->get_result();
+        $assigned = $verifyResult && $verifyResult->num_rows === 1;
+        $verifyStmt->close();
+    }
+
+    if (!$assigned) {
+        http_response_code(409);
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                $isUpdate
+                    ? "The department head is archived or no longer available."
+                    : "The faculty member is already a department head, archived, or no longer available.",
+        ]);
+        exit();
+    }
+
+    echo json_encode([
+        "success" => true,
+        "message" => $isUpdate
+            ? "Department head updated successfully."
+            : "Department head assigned successfully.",
+    ]);
+} elseif ($action === "remove_department_head") {
+    $facultyRecordId = intval($data["id"] ?? 0);
+    if ($facultyRecordId < 1) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Select a valid department head.",
+        ]);
+        exit();
+    }
+
+    $removeStmt = $conn->prepare("
+        UPDATE add_faculties
+        SET is_department_head = 0
+        WHERE id = ? AND COALESCE(is_department_head, 0) = 1
+    ");
+    if (!$removeStmt) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to remove the department head assignment.",
+        ]);
+        exit();
+    }
+    $removeStmt->bind_param("i", $facultyRecordId);
+    if (!$removeStmt->execute()) {
+        $removeStmt->close();
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Unable to remove the department head assignment.",
+        ]);
+        exit();
+    }
+    $removed = $removeStmt->affected_rows === 1;
+    $removeStmt->close();
+
+    if (!$removed) {
+        http_response_code(409);
+        echo json_encode([
+            "success" => false,
+            "message" => "The department head is no longer available.",
+        ]);
+        exit();
+    }
+    echo json_encode([
+        "success" => true,
+        "message" => "Department head assignment removed successfully.",
+    ]);
+} /* =========================
    ADD NEW FACULTY
 ========================= */
-if ($action === "add") {
+elseif ($action === "add") {
     $faculty_id = trim($data["faculty_id"] ?? "");
     $email = trim($data["email"] ?? "");
     $firstname = trim($data["firstname"] ?? "");
     $lastname = trim($data["lastname"] ?? "");
     $suffix = trim($data["suffix"] ?? "");
+    $department = trim($data["department"] ?? "");
+    $is_department_head = !empty($data["is_department_head"]) ? 1 : 0;
     $photo = $data["photo"] ?? "";
     $subjects = $data["subjects"] ?? [];
 
@@ -42,7 +257,7 @@ if ($action === "add") {
         $photo = "";
     }
 
-    if (!$faculty_id || !$email || !$firstname || !$lastname) {
+    if (!$faculty_id || !$email || !$firstname || !$lastname || !$department) {
         echo json_encode([
             "success" => false,
             "message" => "Missing required fields",
@@ -94,16 +309,18 @@ if ($action === "add") {
             // Insert with password
             $stmt = $conn->prepare("
                 INSERT INTO add_faculties
-                (faculty_id,email,firstname,lastname,suffix,photo,password)
-                VALUES (?,?,?,?,?,?,?)
+                (faculty_id,email,firstname,lastname,suffix,department,is_department_head,photo,password)
+                VALUES (?,?,?,?,?,?,?,?,?)
             ");
             $stmt->bind_param(
-                "sssssss",
+                "ssssssiss",
                 $faculty_id,
                 $email,
                 $firstname,
                 $lastname,
                 $suffix,
+                $department,
+                $is_department_head,
                 $photo,
                 $hashed_password,
             );
@@ -111,16 +328,18 @@ if ($action === "add") {
             // Insert without password (fallback)
             $stmt = $conn->prepare("
                 INSERT INTO add_faculties
-                (faculty_id,email,firstname,lastname,suffix,photo)
-                VALUES (?,?,?,?,?,?)
+                (faculty_id,email,firstname,lastname,suffix,department,is_department_head,photo)
+                VALUES (?,?,?,?,?,?,?,?)
             ");
             $stmt->bind_param(
-                "ssssss",
+                "ssssssis",
                 $faculty_id,
                 $email,
                 $firstname,
                 $lastname,
                 $suffix,
+                $department,
+                $is_department_head,
                 $photo,
             );
         }
@@ -226,12 +445,15 @@ if ($action === "add") {
 
     $title = "Welcome to Faculty Evaluation System";
     $greeting =
-        "Hello Instructor " .
+        "Hello " .
+        ($is_department_head ? "Department Head " : "Instructor ") .
         htmlspecialchars($firstname . " " . $lastname, ENT_QUOTES, "UTF-8") .
         ",";
     $content_html =
         "
-        <p style='margin: 0 0 16px 0;'>Your faculty instructor account has been successfully created. You can now access the Faculty Evaluation System using your credentials below.</p>
+        <p style='margin: 0 0 16px 0;'>Your " .
+        ($is_department_head ? "department head" : "faculty instructor") .
+        " account has been successfully created. You can now access the Faculty Evaluation System using your credentials below.</p>
         <p style='margin: 0 0 16px 0;'><strong>Faculty Number / Username:</strong> " .
         htmlspecialchars($faculty_id, ENT_QUOTES, "UTF-8") .
         "</p>
@@ -294,6 +516,7 @@ if ($action === "add") {
     $firstname = $data["firstname"];
     $lastname = $data["lastname"];
     $suffix = $data["suffix"];
+    $department = trim((string) ($data["department"] ?? ""));
     $photo = $data["photo"];
     $subjects = $data["subjects"] ?? [];
 
@@ -310,17 +533,18 @@ if ($action === "add") {
     try {
         $stmt = $conn->prepare("
         UPDATE add_faculties
-        SET faculty_id=?, email=?, firstname=?, lastname=?, suffix=?, photo=?
+        SET faculty_id=?, email=?, firstname=?, lastname=?, suffix=?, department=?, photo=?
         WHERE id=?
     ");
 
         $stmt->bind_param(
-            "ssssssi",
+            "sssssssi",
             $faculty_id,
             $email,
             $firstname,
             $lastname,
             $suffix,
+            $department,
             $photo,
             $id,
         );

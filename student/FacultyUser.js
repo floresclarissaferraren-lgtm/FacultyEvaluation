@@ -113,6 +113,8 @@ function showPasswordForm(e) {
   document.getElementById("newPass").value = "";
   document.getElementById("confirmPass").value = "";
   if (typeof clearPassMsgs === "function") clearPassMsgs();
+  updatePasswordStrengthIndicator();
+  updateConfirmPasswordMatch();
 }
 
 function closePasswordForm() {
@@ -338,14 +340,83 @@ function clearPassMsgs() {
 }
 
 function validatePasswordStrength(password) {
+  const rules = getPasswordStrengthRules(password);
   const errors = [];
-  if (password.length < 8) errors.push("at least 8 characters");
-  if (!/[A-Z]/.test(password)) errors.push("at least one uppercase letter");
-  if (!/[a-z]/.test(password)) errors.push("at least one lowercase letter");
-  if (!/[^A-Za-z0-9]/.test(password))
-    errors.push("at least one special character");
+  if (!rules.length) errors.push("at least 8 characters");
+  if (!rules.number) errors.push("at least 1 number");
+  if (!rules.uppercase) errors.push("at least 1 uppercase letter");
   return errors;
 }
+
+function getPasswordStrengthRules(password) {
+  return {
+    length: password.length >= 8,
+    number: /\d/.test(password),
+    uppercase: /[A-Z]/.test(password),
+  };
+}
+
+function updatePasswordStrengthIndicator() {
+  const input = document.getElementById("newPass");
+  const indicator = document.getElementById("passwordStrength");
+  if (!input || !indicator) return;
+
+  const password = input.value.trim();
+  const rules = getPasswordStrengthRules(password);
+  const passedRules = Object.values(rules).filter(Boolean).length;
+  const isStrong = passedRules === Object.keys(rules).length;
+
+  indicator.classList.toggle("is-empty", !password);
+  indicator.classList.toggle("is-weak", Boolean(password) && !isStrong);
+  indicator.classList.toggle("is-strong", isStrong);
+  indicator.classList.toggle("show-rules", Boolean(password) && !isStrong);
+  indicator.querySelectorAll(".password-strength-segment").forEach((segment, index) => {
+    segment.classList.toggle("is-filled", index < passedRules);
+  });
+  indicator.querySelectorAll("[data-password-rule]").forEach((rule) => {
+    const isMet = Boolean(rules[rule.dataset.passwordRule]);
+    rule.classList.toggle("is-met", isMet);
+    const icon = rule.querySelector("i");
+    if (icon) {
+      icon.classList.toggle("ph-check-circle", isMet);
+      icon.classList.toggle("ph-x-circle", !isMet);
+    }
+  });
+
+  const status = document.getElementById("passwordStrengthStatus");
+  if (status) {
+    status.textContent = !password
+      ? "Password strength"
+      : isStrong
+        ? "Strong Password"
+        : "Weak Password";
+  }
+}
+
+function updateConfirmPasswordMatch() {
+  const newPassword = document.getElementById("newPass")?.value.trim() || "";
+  const confirmPassword =
+    document.getElementById("confirmPass")?.value.trim() || "";
+  if (!confirmPassword) {
+    showPassMsg("confirmPassError", "");
+    return;
+  }
+  showPassMsg(
+    "confirmPassError",
+    newPassword === confirmPassword ? "" : "Passwords do not match.",
+  );
+}
+
+document.getElementById("newPass")?.addEventListener("input", () => {
+  updatePasswordStrengthIndicator();
+  showPassMsg("newPassError", "");
+  updateConfirmPasswordMatch();
+});
+document
+  .getElementById("confirmPass")
+  ?.addEventListener("input", updateConfirmPasswordMatch);
+updatePasswordStrengthIndicator();
+updateConfirmPasswordMatch();
 
 function showPasswordMessageBox(message, type) {
   let box = document.getElementById("passGlobalMsg");
@@ -1103,6 +1174,12 @@ async function loadFacultyCategories() {
       criteriaTables.push(table);
     }
 
+    formContentArea.addEventListener("change", (event) => {
+      if (event.target?.matches?.('input[type="radio"]')) {
+        updatePaginationButtons();
+      }
+    });
+
     // Add feedback container (hidden initially)
     const feedbackSubmitContainer = document.createElement("div");
     feedbackSubmitContainer.id = "feedbackSubmitContainer";
@@ -1219,8 +1296,27 @@ function previousCriteria() {
   }
 }
 
+function getFirstUnansweredQuestionRow(criteriaIndex) {
+  const table = criteriaTables[criteriaIndex];
+  return Array.from(table?.querySelectorAll("tbody tr") || []).find(
+    (row) =>
+      row.querySelector(".question-list") &&
+      !row.querySelector('input[type="radio"]:checked'),
+  );
+}
+
 function nextCriteria() {
   if (currentCriteria < criteriaTables.length - 1) {
+    const unansweredRow = getFirstUnansweredQuestionRow(currentCriteria);
+    if (unansweredRow) {
+      showGlobalNotification(
+        "Please answer all questions in this section before continuing.",
+        "warning",
+      );
+      unansweredRow.querySelector('input[type="radio"]')?.focus();
+      return;
+    }
+
     criteriaTables[currentCriteria].classList.remove("active");
     currentCriteria++;
     criteriaTables[currentCriteria].classList.add("active");
@@ -1252,7 +1348,10 @@ function updatePaginationButtons() {
 
   if (nextBtn) {
     const isLastPage = currentCriteria === criteriaTables.length - 1;
-    nextBtn.disabled = evaluationSubmitting;
+    nextBtn.disabled =
+      evaluationSubmitting ||
+      !criteriaTables[currentCriteria] ||
+      Boolean(getFirstUnansweredQuestionRow(currentCriteria));
     nextBtn.textContent = isLastPage ? "Submit" : "Next";
     if (evaluationSubmitting) nextBtn.textContent = "Submitting...";
     nextBtn.onclick = isLastPage ? submitEvaluation : nextCriteria;

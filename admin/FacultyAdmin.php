@@ -155,21 +155,35 @@ include __DIR__ . "/totalstudents_dashcount.php";
         <span>Management</span>
       </div>
       <div class="menu-items">
-        <a href="#" data-section="programs-section" data-tooltip="Program" aria-label="Program"
+        <a href="#" data-section="programs-section" data-tooltip="Department" aria-label="Department"
            onclick="showSection('programs-section', event)">
-          <i class="ph ph-stack"></i>
-          <span>Program</span>
+          <i class="ph ph-buildings"></i>
+          <span>Department</span>
         </a>
-        <a href="#" data-section="faculties-section" data-tooltip="Faculty" aria-label="Faculty"
-           onclick="showSection('faculties-section', event)">
-          <i class="ph ph-users-three"></i>
-          <span>Faculty</span>
-        </a>
-        <a href="#" data-section="students-section" data-tooltip="Student" aria-label="Student"
-           onclick="showSection('students-section', event)">
-          <i class="ph ph-student"></i>
-          <span>Student</span>
-        </a>
+        <div class="management-people-menu">
+          <button type="button" class="management-people-toggle" aria-expanded="false" aria-controls="management-people-links">
+            <i class="ph ph-users-three" aria-hidden="true"></i>
+            <span>Users</span>
+            <i class="ph ph-caret-down management-people-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="management-people-links" id="management-people-links" hidden>
+            <a href="#" data-section="faculties-section" data-tooltip="Faculty" aria-label="Faculty"
+               onclick="showSection('faculties-section', event)">
+              <i class="ph ph-users-three"></i>
+              <span>Faculty</span>
+            </a>
+            <a href="#" data-section="students-section" data-tooltip="Student" aria-label="Student"
+               onclick="showSection('students-section', event)">
+              <i class="ph ph-student"></i>
+              <span>Student</span>
+            </a>
+            <a href="#" data-section="head-departments-section" data-tooltip="Head Department" aria-label="Head Department"
+               onclick="showSection('head-departments-section', event)">
+              <i class="ph ph-buildings"></i>
+              <span>Head Department</span>
+            </a>
+          </div>
+        </div>
         <a href="#" data-section="criteria-section" data-tooltip="Evaluation Criteria" aria-label="Evaluation Criteria"
            onclick="showSection('criteria-section', event)">
           <i class="ph ph-clipboard-text"></i>
@@ -425,40 +439,62 @@ include __DIR__ . "/totalstudents_dashcount.php";
     <!-- Programs Header -->
     <div class="programs-header">
       <div class="programs-stats">
-        <div class="stats-icon" aria-hidden="true">
-          <i class="ph-fill ph-graduation-cap"></i>
+        <button type="button" class="department-programs-back" aria-label="Back to departments" title="Back to departments" hidden>
+          <i class="ph ph-arrow-left" aria-hidden="true"></i>
+        </button>
+        <div class="stats-icon" id="departmentHeaderIcon" aria-hidden="true">
+          <i class="ph-fill ph-buildings"></i>
         </div>
         <div class="stats-info">
-          <p class="stats-number" id="totalPrograms">0 Program Record</p>
-          <p class="stats-subtitle">Active programs in your institution</p>
+          <p class="stats-number" id="totalPrograms">0 Department Record</p>
         </div>
       </div>
       <div class="programs-actions">
-        <div class="search-wrapper">
-          <button class="search-btn"><i class="ph ph-magnifying-glass"></i></button>
-          <input type="text" id="program-search" placeholder="Search program..."/>
+        <div class="search-wrapper" id="departmentSearchContainer">
+          <button type="button" class="search-btn" aria-label="Search departments">
+            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          </button>
+          <input type="search" id="department-search" placeholder="Search department..." aria-label="Search departments">
         </div>
-        <button class="add-program-btn button-gradient"><i class="ph ph-plus"></i> Add New Program</button>
+        <button class="add-department-btn button-gradient"><i class="ph ph-plus"></i> Add Department</button>
+        <button type="button" class="add-program-btn button-gradient" hidden><i class="ph ph-plus"></i> Add Program</button>
       </div>
     </div>
 
-    <!-- Programs Cards Container -->
-    <div class="programs-cards-container" id="programsCardsContainer">
-      <!-- Program cards will be dynamically added here -->
+    <div class="departments-cards-container" id="departmentsCardsContainer">
+      <div class="admin-empty-state">Loading departments...</div>
+    </div>
+    <div id="departmentProgramsView" class="department-programs-view" hidden>
+      <div class="programs-cards-container" id="programsCardsContainer"></div>
     </div>
   </div>
 </div>
 <!-- Add Program Modal -->
 <div id="addProgramModal" class="modal" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header"><h3>ADD NEW PROGRAM</h3><span class="close-btn">&times;</span></div>
+    <div class="modal-header"><h3>ADD NEW PROGRAM</h3><button type="button" class="close-btn" aria-label="Close">&times;</button></div>
     <div class="modal-body">
+      <label for="program-department-display">Department</label>
+      <input type="text" id="program-department-display" readonly>
+      <input type="hidden" id="program-department">
       <label for="program-code">Program Code</label>
       <input type="text" id="program-code" placeholder="eg. BSIT">
       <small id="program-code-message" class="program-validation-message" style="display:none;"></small>
       <label for="program-name">Program Name</label>
       <input type="text" id="program-name" placeholder="eg. Bachelor of Information Technology">
       <button id="save-program-btn" class="submit-btn">SAVE PROGRAM</button>
+    </div>
+  </div>
+</div>
+<div id="departmentModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header"><h3 id="departmentModalTitle">ADD DEPARTMENT</h3><button type="button" class="close-btn" aria-label="Close">&times;</button></div>
+    <div class="modal-body">
+      <label for="department-code">Department Code</label>
+      <input type="text" id="department-code" maxlength="20" placeholder="eg. CCS" required>
+      <label for="department-name">Department Name</label>
+      <input type="text" id="department-name" maxlength="120" placeholder="eg. College of Computer Studies" required>
+      <button type="button" id="save-department-btn" class="submit-btn">SAVE DEPARTMENT</button>
     </div>
   </div>
 </div>
@@ -805,7 +841,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
       <div class="table-scroll-container">
         <table class="faculties-table">
           <thead>
-            <tr><th>ID</th><th>Name</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
+            <tr><th>ID</th><th>Name</th><th>Department</th><th>Subjects</th><th>Status</th><th>Action</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -829,7 +865,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
     <div class="table-scroll-container">
       <table class="faculties-table archived-faculties-table">
         <thead>
-          <tr><th>ID</th><th>Name</th><th>Subject</th><th>Action</th></tr>
+          <tr><th>ID</th><th>Name</th><th>Department</th><th>Subject</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -879,6 +915,13 @@ include __DIR__ . "/totalstudents_dashcount.php";
           </select>
         </label>
       </div>
+      <div class="form-row">
+        <label for="faculty-department">Department
+          <select id="faculty-department" required>
+            <option value="">Select department</option>
+          </select>
+        </label>
+      </div>
       
             
       <div class="section-box">
@@ -895,6 +938,50 @@ include __DIR__ . "/totalstudents_dashcount.php";
         </div>
       </div>
       <button class="submit-btn">SAVE FACULTY</button>
+    </div>
+  </div>
+</div>
+
+<!-- Head Department Management -->
+<div id="head-departments-section" class="section" style="display:none;">
+  <div class="head-department-list-box">
+    <div class="head-department-list-header">
+      <div>
+        <h1>Head Department</h1>
+      </div>
+      <button type="button" id="add-head-department-btn" class="button-gradient add-head-department-btn">
+        <i class="ph ph-plus" aria-hidden="true"></i> Add Head Department
+      </button>
+    </div>
+    <div id="head-department-cards" class="head-department-cards">
+      <div class="admin-empty-state">Loading department heads...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Existing Faculty as Head Department -->
+<div id="addHeadDepartmentModal" class="modal" hidden>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>ADD HEAD DEPARTMENT</h3>
+      <span class="close-btn">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="head-department-search-field">
+          <label for="head-department-faculty-search">Search faculty by name or ID</label>
+          <input id="head-department-faculty-search" type="search" placeholder="Search name or faculty ID" autocomplete="off">
+          <div id="head-department-faculty-results" class="head-department-search-results" hidden></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="head-department-name">Department
+          <select id="head-department-name" required>
+            <option value="">Select department</option>
+          </select>
+        </label>
+      </div>
+      <button type="button" class="submit-btn">SAVE HEAD DEPARTMENT</button>
     </div>
   </div>
 </div>

@@ -1,5 +1,6 @@
 const addSubjectModal = document.getElementById("addSubjectModal");
 const addFacultyModal = document.getElementById("addFacultyModal");
+const addHeadDepartmentModal = document.getElementById("addHeadDepartmentModal");
 const addStudentModal = document.getElementById("addStudentModal");
 const addCategoryModal = document.getElementById("addCategoryModal");
 const addQuestionModal = document.getElementById("addQuestionModal");
@@ -242,11 +243,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="programs-actions"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control short"></span></div>
         </div>
         <div class="programs-cards-container">${Array.from({ length: 6 })
-          .map(
-            () =>
-              `<div class="program-card admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line meta"></span><div class="program-card-actions"><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span></div></div>`,
-          )
-          .join("")}</div>
+        .map(
+          () =>
+            `<div class="program-card admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line value"></span><span class="admin-skeleton-line meta"></span><div class="program-card-actions"><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span><span class="admin-skeleton-line button"></span></div></div>`,
+        )
+        .join("")}</div>
       </div>
     `,
     "faculties-section": buildPeopleSkeleton(
@@ -268,16 +269,16 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="section-header admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line control short"></span></div>
       <div class="criteria-layout">
         <div class="categories-column">${Array.from({ length: 4 })
-          .map(
-            () =>
-              `<div class="admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line row"></span><span class="admin-skeleton-line row short"></span></div>`,
-          )
-          .join("")}</div>
+        .map(
+          () =>
+            `<div class="admin-skeleton-card"><span class="admin-skeleton-line title"></span><span class="admin-skeleton-line meta"></span><span class="admin-skeleton-line row"></span><span class="admin-skeleton-line row short"></span></div>`,
+        )
+        .join("")}</div>
         <div class="summary-panel admin-skeleton-card"><span class="admin-skeleton-line title"></span>${Array.from(
           { length: 7 },
         )
-          .map(() => `<span class="admin-skeleton-line row"></span>`)
-          .join("")}</div>
+        .map(() => `<span class="admin-skeleton-line row"></span>`)
+        .join("")}</div>
       </div>
     `,
     "report-section": buildTableSkeleton("table-wrapper", 6, 6),
@@ -345,20 +346,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return `
       <div class="${wrapperClass} admin-skeleton-table-card">
         ${countSummary}
-        ${
-          countSummaryType
-            ? ""
-            : `<div class="table-header admin-skeleton-toolbar">
+        ${countSummaryType
+        ? ""
+        : `<div class="table-header admin-skeleton-toolbar">
           <div class="search-filters-container"><span class="admin-skeleton-line control"></span><span class="admin-skeleton-line control"></span></div>
           <div class="header-actions"><span class="admin-skeleton-line control short"></span></div>
         </div>`
-        }
+      }
         <div class="table-scroll-container">
           <div class="admin-skeleton-table" style="--skeleton-columns:${columnCount};">
             <div class="admin-skeleton-table-row head">${cells}</div>
             ${Array.from({ length: rowCount })
-              .map(() => `<div class="admin-skeleton-table-row">${cells}</div>`)
-              .join("")}
+        .map(() => `<div class="admin-skeleton-table-row">${cells}</div>`)
+        .join("")}
           </div>
         </div>
       </div>
@@ -732,15 +732,26 @@ document.addEventListener("DOMContentLoaded", () => {
       link.classList.add("active");
       currentActiveLink = link;
     }
+    if (
+      ["faculties-section", "students-section", "head-departments-section"].includes(id)
+    ) {
+      const peopleToggle = document.querySelector(".management-people-toggle");
+      const peopleLinks = document.getElementById("management-people-links");
+      if (peopleToggle && peopleLinks) {
+        peopleToggle.setAttribute("aria-expanded", "true");
+        peopleLinks.hidden = false;
+      }
+    }
 
     // Update navbar section title
     const navbarTitle = document.getElementById("navbarSectionTitle");
     const navbarSubtitle = document.querySelector(".section-subtitle");
     const sectionTitles = {
       "dashboard-section": "Dashboard",
-      "programs-section": "Program Management",
+      "programs-section": "Department Management",
       "faculties-section": "Faculty Management",
       "students-section": "Student Management",
+      "head-departments-section": "Head Department Management",
       "criteria-section": "Criteria Management",
       "academic-year-section": "Academic Year Management",
       "report-section": "Evaluation Report",
@@ -752,11 +763,12 @@ document.addEventListener("DOMContentLoaded", () => {
       "dashboard-section":
         "Real-time Overview of Faculty Performance and Evaluation Status",
       "programs-section":
-        "Manage and update academic programs offered by the institution",
+        "Manage departments and their academic programs",
       "faculties-section":
         "This section contains all faculty members with their profiles and teaching assignments",
       "students-section":
         "This section shows all students with their basic details and records for easy management",
+      "head-departments-section": "",
       "criteria-section":
         "Manage the standards used to evaluate faculty performance.",
       "academic-year-section":
@@ -772,22 +784,34 @@ document.addEventListener("DOMContentLoaded", () => {
       navbarTitle.textContent = sectionTitles[id];
     }
 
-    if (navbarSubtitle && sectionSubtitles[id]) {
-      navbarSubtitle.textContent = sectionSubtitles[id];
+    if (navbarSubtitle && sectionTitles[id]) {
+      navbarSubtitle.textContent = sectionSubtitles[id] || "";
     }
 
     // =========================
     // AUTO LOAD SECTIONS (DATA ONLY)
     // =========================
     if (id === "dashboard-section") loadDashboardStats?.();
-    if (id === "programs-section") loadPrograms?.();
+    if (id === "programs-section") {
+      isDepartmentProgramView = false;
+      currentDepartmentSelection = null;
+      document.getElementById("departmentProgramsView").hidden = true;
+      document.getElementById("departmentsCardsContainer").hidden = false;
+      document.querySelector(".add-department-btn").hidden = false;
+      document.querySelector(".add-program-btn").hidden = true;
+      document.querySelector(".department-programs-back").hidden = true;
+      document.getElementById("departmentHeaderIcon").hidden = false;
+      document.getElementById("departmentSearchContainer").hidden = false;
+      loadPrograms?.();
+    }
     if (id === "faculties-section") {
       showFacultyListView?.();
       loadFaculty?.();
     }
+    if (id === "head-departments-section") loadDepartmentHeads?.();
     if (id === "criteria-section") loadCategories?.();
     if (id === "academic-year-section") {
-      closeArchivedAcademicYearView?.();
+      window.closeArchivedAcademicYearView?.();
       window.loadAcademicYearSection?.();
     }
     if (id === "report-section") {
@@ -822,6 +846,17 @@ document.addEventListener("DOMContentLoaded", () => {
     startAdminRealtimeRefresh();
   };
 
+  document
+    .querySelector(".management-people-toggle")
+    ?.addEventListener("click", () => {
+      const toggle = document.querySelector(".management-people-toggle");
+      const links = document.getElementById("management-people-links");
+      if (!toggle || !links) return;
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", String(!expanded));
+      links.hidden = expanded;
+    });
+
   function clearControlValue(control) {
     if (!control) return;
     control.value = "";
@@ -831,7 +866,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function clearSearchControls(targetIds = null) {
     const ids = targetIds || [
-      "program-search",
+      "department-search",
       "manage-search",
       "manage-subjects-search",
       "manage-subjects-semester-filter",
@@ -892,11 +927,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("deleteMessage").innerText =
       type === "period"
         ? `Are you sure you want to permanently delete ${name}?`
-        : `Are you sure you want to delete this ${type}?`;
+        : type === "department"
+          ? `Are you sure you want to delete department ${name}?`
+          : type === "department_head"
+            ? `Remove ${name} as department head?`
+            : `Are you sure you want to delete this ${type}?`;
     document.getElementById("deleteWarning").innerText =
       type === "period"
         ? "Periods with evaluation records cannot be deleted. Archive this period to preserve its history."
-        : `Warning: All details about this ${type} will be deleted.`;
+        : type === "department"
+          ? "Departments with programs cannot be deleted. Move or delete those programs first."
+          : type === "department_head"
+            ? "This removes the department head assignment. The faculty account will remain."
+            : `Warning: All details about this ${type} will be deleted.`;
 
     // Add wider class for subjects delete modal
     const deleteModalCard = document.querySelector(".delete-modal-card");
@@ -926,6 +969,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cfg = {
       faculty: { url: "deleteFaculty.php", key: "faculty_id", type: "form" },
       program: { url: "deleteProgram.php", key: "program_code", type: "form" },
+      department: { url: "department_crud.php", key: "id", type: "form" },
       category: {
         url: "delete_category.php",
         key: "category_id",
@@ -944,6 +988,11 @@ document.addEventListener("DOMContentLoaded", () => {
         url: "../shared/periods_api.php?action=delete",
         key: "id",
         type: "json_period",
+      },
+      department_head: {
+        url: "faculty_crud.php",
+        key: "id",
+        type: "json_department_head",
       },
     }[deleteType];
 
@@ -982,6 +1031,15 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id: val }),
       };
+    } else if (cfg.type === "json_department_head") {
+      fetchOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "remove_department_head",
+          id: deleteTarget.dataset[cfg.key],
+        }),
+      };
     } else {
       // For other entities, send form-encoded
       const val =
@@ -991,6 +1049,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Add action parameter for subjects and classes
       if (deleteType === "subject" || deleteType === "class") {
+        body += `&action=delete`;
+      }
+      if (deleteType === "department") {
         body += `&action=delete`;
       }
 
@@ -1033,6 +1094,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (deleteType === "program") {
               updateProgramCount();
             }
+            if (deleteType === "department") {
+              loadPrograms();
+            }
+            if (deleteType === "department_head") {
+              loadDepartmentHeads();
+              loadFaculty();
+            }
             if (deleteType === "category") {
               updateCriteriaCounts();
               updateWeightDistribution();
@@ -1051,14 +1119,13 @@ document.addEventListener("DOMContentLoaded", () => {
           if (deleteType === "student") {
             loadPrograms();
           }
-          closeDeleteModal();
-          showNotification("Deleted successfully!", "#10b981", 4000);
-
-          // Refresh subjects list after successful deletion
-          if (deleteType === "subject") {
+          const deletedSubject = deleteType === "subject";
+          if (deletedSubject) {
             loadSubjectsMainTable?.();
             loadSubjects?.();
           }
+          closeDeleteModal();
+          showNotification("Deleted successfully!", "#10b981", 4000);
 
           if (deleteType === "faculty" || deleteType === "student") {
             refreshSectionStats();
@@ -1145,7 +1212,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `Archive academic year ${record.ay} - ${record.semester}?`
           : type === "faculty" || type === "student"
             ? `Archive this ${label.toLowerCase()} account? It will move to the archived list and appear as inactive when filtered.`
-          : `Archive this ${label.toLowerCase()} account?`;
+            : `Archive this ${label.toLowerCase()} account?`;
     if (confirmBtn) confirmBtn.textContent = `Yes, Archive`;
     overlay.classList.add("show");
   }
@@ -1308,8 +1375,20 @@ document.addEventListener("DOMContentLoaded", () => {
     programHeader = addProgramModal.querySelector("h3"),
     programCodeInput = document.getElementById("program-code"),
     programNameInput = document.getElementById("program-name"),
-    programCodeMessage = document.getElementById("program-code-message");
+    programCodeMessage = document.getElementById("program-code-message"),
+    programDepartmentInput = document.getElementById("program-department"),
+    programDepartmentDisplay = document.getElementById("program-department-display"),
+    departmentSearchInput = document.getElementById("department-search"),
+    departmentModal = document.getElementById("departmentModal"),
+    departmentCodeInput = document.getElementById("department-code"),
+    departmentNameInput = document.getElementById("department-name"),
+    departmentSubmitBtn = document.getElementById("save-department-btn");
   let editRowProgram = null;
+  let editDepartmentId = null;
+  let departmentRecords = [];
+  let programRecords = [];
+  let isDepartmentProgramView = false;
+  let currentDepartmentSelection = null;
 
   function normalizeProgramCode(code) {
     return String(code || "")
@@ -1326,12 +1405,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getExistingProgramCodes() {
-    return Array.from(document.querySelectorAll(".program-card"))
+    return programRecords
       .filter(
-        (card) =>
-          !editRowProgram || card.dataset.id !== editRowProgram.dataset.id,
+        (program) =>
+          !editRowProgram || String(program.id) !== String(editRowProgram.dataset.id),
       )
-      .map((card) => normalizeProgramCode(card.dataset.programCode))
+      .map((program) => normalizeProgramCode(program.program_code))
       .filter(Boolean);
   }
 
@@ -1339,20 +1418,121 @@ document.addEventListener("DOMContentLoaded", () => {
     return getExistingProgramCodes().includes(normalizeProgramCode(code));
   }
 
-  // OPEN ADD MODAL
-  document.querySelector(".add-program-btn")?.addEventListener("click", () => {
-    programHeader.innerText = "ADD NEW PROGRAM";
-    programSubmitBtn.innerText = "SAVE PROGRAM";
-    programCodeInput.value = "";
-    programNameInput.value = "";
-    editRowProgram = null;
-    // Clear validation states
+  function openProgramModal(program = null) {
+    const isEditing = Boolean(program);
+    programHeader.innerText = isEditing ? "EDIT PROGRAM" : "ADD NEW PROGRAM";
+    programSubmitBtn.innerText = isEditing ? "UPDATE PROGRAM" : "SAVE PROGRAM";
+    programCodeInput.value = program?.program_code || "";
+    programNameInput.value = program?.program_name || "";
+    editRowProgram = program ? { dataset: { id: String(program.id) } } : null;
+    const departmentId = program
+      ? (program.department_id ?? "")
+      : (currentDepartmentSelection ?? "");
+    const department = departmentRecords.find(
+      (item) => String(item.id) === String(departmentId),
+    );
+    programDepartmentInput.value = String(departmentId);
+    programDepartmentDisplay.value = department
+      ? `${department.department_code} - ${department.department_name}`
+      : program?.department_id == null
+        ? "Unassigned Programs"
+        : "Department unavailable";
     programCodeInput.style.borderColor = "";
     programCodeInput.title = "";
     setProgramCodeMessage("");
     addProgramModal.style.display = "flex";
     addProgramModal.style.zIndex = "10001";
     addProgramModal.style.position = "fixed";
+  }
+
+  document.querySelector(".add-program-btn")?.addEventListener("click", () => {
+    if (departmentRecords.length === 0) {
+      showNotification("Add a department before adding programs.", "#f44336");
+      return;
+    }
+    openProgramModal();
+  });
+
+  document.querySelector(".add-department-btn")?.addEventListener("click", () => {
+    openDepartmentModal();
+  });
+
+  document.querySelector("#addProgramModal .close-btn")?.addEventListener("click", closeProgramModal);
+  document.querySelector("#departmentModal .close-btn")?.addEventListener("click", closeDepartmentModal);
+  document.querySelector(".department-programs-back")?.addEventListener("click", () => {
+    isDepartmentProgramView = false;
+    currentDepartmentSelection = null;
+    document.getElementById("departmentProgramsView").hidden = true;
+    document.getElementById("departmentsCardsContainer").hidden = false;
+    document.querySelector(".add-department-btn").hidden = false;
+    document.querySelector(".add-program-btn").hidden = true;
+    document.querySelector(".department-programs-back").hidden = true;
+    document.getElementById("departmentHeaderIcon").hidden = false;
+    document.getElementById("departmentSearchContainer").hidden = false;
+    updateProgramCount();
+  });
+
+  function openDepartmentModal(department = null) {
+    editDepartmentId = department ? String(department.id) : null;
+    document.getElementById("departmentModalTitle").textContent = department
+      ? "EDIT DEPARTMENT"
+      : "ADD DEPARTMENT";
+    departmentSubmitBtn.textContent = department
+      ? "UPDATE DEPARTMENT"
+      : "SAVE DEPARTMENT";
+    departmentCodeInput.value = department?.department_code || "";
+    departmentNameInput.value = department?.department_name || "";
+    departmentModal.style.display = "flex";
+    departmentModal.style.zIndex = "10001";
+    departmentModal.style.position = "fixed";
+  }
+
+  function closeDepartmentModal() {
+    departmentModal.style.display = "none";
+    departmentCodeInput.value = "";
+    departmentNameInput.value = "";
+    editDepartmentId = null;
+  }
+
+  departmentSubmitBtn?.addEventListener("click", async () => {
+    const departmentCode = departmentCodeInput.value.trim().replace(/\s+/g, "").toUpperCase();
+    const departmentName = departmentNameInput.value.trim();
+    if (!departmentCode || !departmentName) {
+      showNotification("Department code and name are required.", "#f44336");
+      return;
+    }
+
+    const isEditing = Boolean(editDepartmentId);
+    const params = new URLSearchParams({
+      action: isEditing ? "update" : "create",
+      department_code: departmentCode,
+      department_name: departmentName,
+    });
+    if (editDepartmentId) params.set("id", editDepartmentId);
+
+    setButtonLoading(departmentSubmitBtn, true, "Saving Department...");
+    try {
+      const response = await fetch("department_crud.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString(),
+      });
+      const result = await response.json();
+      if (!response.ok || result.status !== "success") {
+        throw new Error(result.message || "Unable to save department.");
+      }
+      closeDepartmentModal();
+      if (!isEditing) departmentSearchInput.value = "";
+      await loadPrograms();
+      showNotification(
+        isEditing ? "Department updated successfully." : "Department added successfully.",
+        "#4caf50",
+      );
+    } catch (error) {
+      showNotification(error.message || "Unable to save department.", "#f44336");
+    } finally {
+      setButtonLoading(departmentSubmitBtn, false);
+    }
   });
 
   // REAL-TIME VALIDATION FOR PROGRAM CODE (using existing table data)
@@ -1390,9 +1570,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // SAVE / UPDATE
   programSubmitBtn.addEventListener("click", () => {
     const code = programCodeInput.value.trim(),
-      name = programNameInput.value.trim();
-    if (!code || !name) {
-      showGlobalNotification("Please fill all fields", "warning");
+      name = programNameInput.value.trim(),
+      departmentId = programDepartmentInput.value;
+    if (!code || !name || (!departmentId && !editRowProgram)) {
+      showGlobalNotification("Program code and name are required.", "warning");
       return;
     }
 
@@ -1408,8 +1589,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const url = editRowProgram ? "edit_program.php" : "add_program.php";
     const params = new URLSearchParams();
     if (editRowProgram) params.set("id", editRowProgram.dataset.id);
+    params.set("department_id", departmentId);
     params.set("program_code", normalizeProgramCode(code));
     params.set("program_name", name);
+    const isEditing = Boolean(editRowProgram);
 
     setButtonLoading(programSubmitBtn, true, "Saving Program...");
     const minimumLoadingTime = new Promise((resolve) =>
@@ -1434,13 +1617,12 @@ document.addEventListener("DOMContentLoaded", () => {
           (typeof res === "object" && res.status === "success") ||
           (typeof res === "string" && res.toLowerCase().includes("success"));
         if (ok) {
-          loadPrograms();
           closeProgramModal();
-          if (editRowProgram) {
-            showNotification("Program edited successfully!", "#4caf50");
-          } else {
-            showNotification("Program added successfully!", "#4caf50");
-          }
+          loadPrograms();
+          showNotification(
+            isEditing ? "Program edited successfully!" : "Program added successfully!",
+            "#4caf50",
+          );
         } else {
           // Show simple notification for duplicate program errors
           if (
@@ -1498,116 +1680,232 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateProgramCount() {
     const totalProgramsElement = document.getElementById("totalPrograms");
-    if (!totalProgramsElement) return;
+    if (!totalProgramsElement || isDepartmentProgramView) return;
 
-    const count = document.querySelectorAll(".program-card").length;
-    const label = count === 1 ? "Program Record" : "Program Records";
+    const count = departmentRecords.length;
+    const label = count === 1 ? "Department Record" : "Department Records";
     totalProgramsElement.textContent = `${count} ${label}`;
   }
 
-  // LOAD PROGRAMS
-  function loadPrograms() {
-    fetch("getProgram.php")
-      .then((r) => r.json())
-      .then((data) => {
-        const container = document.getElementById("programsCardsContainer");
-        container.innerHTML = "";
+  function renderDepartmentCards(unassignedProgramCount) {
+    const container = document.getElementById("departmentsCardsContainer");
+    container.replaceChildren();
 
-        // Update program count
-        const totalProgramsElement = document.getElementById("totalPrograms");
-        const count = data ? data.length : 0;
-        const label = count === 1 ? "Program Record" : "Program Records";
-        totalProgramsElement.textContent = `${count} ${label}`;
+    if (departmentRecords.length === 0) {
+      container.classList.add("is-empty");
+      container.innerHTML =
+        '<div class="admin-empty-state">No departments available</div>';
+      return;
+    }
+    container.classList.remove("is-empty");
 
-        // Check if no data or empty array
-        if (!data || data.length === 0) {
-          container.innerHTML =
-            '<div class="admin-empty-state">No programs found</div>';
-          return;
-        }
-
-        // Sort data alphabetically by program_code
-        data.sort((a, b) => a.program_code.localeCompare(b.program_code));
-
-        data.forEach((p, index) => {
-          const card = document.createElement("div");
-          card.className = "program-card";
-          card.dataset.id = p.id;
-          card.dataset.programCode = p.program_code;
-          card.dataset.programName = p.program_name;
-          card.dataset.color = index % 8;
-          const programCode = escapeHtml(p.program_code || "PROGRAM");
-          const programName = escapeHtml(p.program_name || "Unnamed program");
-          const studentCount = Number(p.enrolled_students) || 0;
-          card.innerHTML = `
-          <div class="program-card-header">
-            <div class="program-icon">${programCode}</div>
+    departmentRecords.forEach((department) => {
+      const card = document.createElement("article");
+      card.className = "department-card";
+      card.dataset.search =
+        `${department.department_code} ${department.department_name}`.toLowerCase();
+      card.innerHTML = `
+        <div class="department-card-content">
+          <span class="department-card-code">${escapeHtml(department.department_code)}</span>
+          <h3>${escapeHtml(department.department_name)}</h3>
+          <span class="program-student-count">${Number(department.program_count) || 0} programs</span>
+        </div>
+        <div class="program-card-actions">
+          <div class="left-buttons">
+            <button type="button" class="btn-manage">
+              <i class="ph ph-sliders" aria-hidden="true"></i> Manage department
+              <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
+            </button>
           </div>
-          <div class="program-card-body">
-            <span class="program-card-category">Academic Program</span>
-            <div class="program-content">
-              <div class="program-name">${programName}</div>
-            </div>
-            <span class="program-student-count">Total Student: ${studentCount}</span>
+          <div class="right-buttons">
+            <button type="button" class="btn-edit" title="Edit department" aria-label="Edit department">
+              <i class="ph ph-note-pencil" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn-delete" title="Delete department" aria-label="Delete department">
+              <i class="ph ph-trash" aria-hidden="true"></i>
+            </button>
           </div>
-          <div class="program-card-actions">
-            <div class="program-card-action-row">
-              <div class="left-buttons">
-                <button class="btn-manage" type="button">
-                  <i class="ph ph-sliders" aria-hidden="true"></i> Manage program <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
-                </button>
-              </div>
-              <div class="right-buttons">
-                <button class="btn-edit" type="button" title="Edit program" aria-label="Edit program">
-                  <i class="ph ph-note-pencil" aria-hidden="true"></i>
-                </button>
-                <button class="btn-delete" type="button" title="Delete program" aria-label="Delete program">
-                  <i class="ph ph-trash" aria-hidden="true"></i>
-                </button>
-              </div>
-            </div>
-          </div>`;
+        </div>`;
+      card.querySelector(".btn-manage").addEventListener("click", () => {
+        openDepartmentPrograms(department.id, department.department_code, department.department_name);
+      });
+      card.querySelector(".btn-edit").addEventListener("click", () => {
+        openDepartmentModal(department);
+      });
+      card.querySelector(".btn-delete").addEventListener("click", () => {
+        card.dataset.id = String(department.id);
+        openDeleteModal("department", department.department_name, card);
+      });
+      container.appendChild(card);
+    });
 
-          // Add event listeners
-          const manageBtn = card.querySelector(".btn-manage");
-          const editBtn = card.querySelector(".btn-edit");
-          const deleteBtn = card.querySelector(".btn-delete");
+    if (unassignedProgramCount > 0) {
+      const card = document.createElement("article");
+      card.className = "department-card unassigned-department-card";
+      card.dataset.search = "legacy unassigned programs";
+      card.innerHTML = `
+        <div class="department-card-content">
+          <span class="department-card-code">LEGACY</span>
+          <h3>Unassigned Programs</h3>
+          <span class="program-student-count">${unassignedProgramCount} programs need a department assignment</span>
+        </div>
+        <div class="program-card-actions">
+          <div class="left-buttons">
+            <button type="button" class="btn-manage">
+              <i class="ph ph-sliders" aria-hidden="true"></i> Manage department
+              <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>`;
+      card.querySelector(".btn-manage").addEventListener("click", () => {
+        openDepartmentPrograms("", "LEGACY", "Unassigned Programs");
+      });
+      container.appendChild(card);
+    }
 
-          manageBtn.addEventListener("click", () =>
-            manageProgram(p.id, p.program_code, p.program_name),
-          );
-          editBtn.addEventListener("click", () =>
-            editProgram(p.id, p.program_code, p.program_name),
-          );
-          deleteBtn.addEventListener("click", () =>
-            deleteProgram(p.id, p.program_code),
-          );
+    filterDepartmentCards();
+  }
 
-          container.appendChild(card);
-        });
+  function filterDepartmentCards() {
+    const container = document.getElementById("departmentsCardsContainer");
+    const term = departmentSearchInput.value.trim().toLowerCase();
+    const cards = Array.from(container.querySelectorAll(".department-card"));
+    let visibleCount = 0;
+
+    container.querySelector(".department-search-empty")?.remove();
+    cards.forEach((card) => {
+      const matches = !term || card.dataset.search.includes(term);
+      card.hidden = !matches;
+      if (matches) visibleCount++;
+    });
+
+    if (term && cards.length > 0 && visibleCount === 0) {
+      const emptyState = document.createElement("div");
+      emptyState.className = "admin-empty-state department-search-empty";
+      emptyState.textContent = "No departments found";
+      container.appendChild(emptyState);
+    }
+  }
+
+  departmentSearchInput?.addEventListener("input", filterDepartmentCards);
+
+  function renderDepartmentPrograms() {
+    const container = document.getElementById("programsCardsContainer");
+    container.replaceChildren();
+    const programs = programRecords
+      .filter((program) => {
+        const programDepartmentId = program.department_id == null
+          ? ""
+          : String(program.department_id);
+        return programDepartmentId === String(currentDepartmentSelection ?? "");
       })
-      .catch((err) => console.error("FETCH ERROR:", err))
-      .finally(() => hideSectionSkeleton("programs-section"));
+      .sort((a, b) => a.program_code.localeCompare(b.program_code));
+
+    if (programs.length === 0) {
+      container.innerHTML =
+        '<div class="admin-empty-state">No programs in this department yet. Use Add Program to create one.</div>';
+      return;
+    }
+
+    programs.forEach((program, index) => {
+      const card = document.createElement("div");
+      card.className = "program-card";
+      card.dataset.id = program.id;
+      card.dataset.programCode = program.program_code;
+      card.dataset.programName = program.program_name;
+      card.dataset.color = index % 8;
+      const programCode = escapeHtml(program.program_code || "PROGRAM");
+      const programName = escapeHtml(program.program_name || "Unnamed program");
+      const studentCount = Number(program.enrolled_students) || 0;
+      card.innerHTML = `
+        <div class="program-card-header"><div class="program-icon">${programCode}</div></div>
+        <div class="program-card-body">
+          <span class="program-card-category">Academic Program</span>
+          <div class="program-content"><div class="program-name">${programName}</div></div>
+          <span class="program-student-count">Total Student: ${studentCount}</span>
+        </div>
+        <div class="program-card-actions">
+          <div class="program-card-action-row">
+            <div class="left-buttons">
+              <button class="btn-manage" type="button">
+                <i class="ph ph-sliders" aria-hidden="true"></i> Manage program <i class="ph ph-caret-right program-manage-arrow" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="right-buttons">
+              <button class="btn-edit" type="button" title="Edit program" aria-label="Edit program"><i class="ph ph-note-pencil" aria-hidden="true"></i></button>
+              <button class="btn-delete" type="button" title="Delete program" aria-label="Delete program"><i class="ph ph-trash" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </div>`;
+
+      card.querySelector(".btn-manage").addEventListener("click", () =>
+        manageProgram(program.id, program.program_code, program.program_name),
+      );
+      card.querySelector(".btn-edit").addEventListener("click", () => editProgram(program));
+      card.querySelector(".btn-delete").addEventListener("click", () =>
+        deleteProgram(program.id, program.program_code),
+      );
+      container.appendChild(card);
+    });
+  }
+
+  function openDepartmentPrograms(id, code, name) {
+    currentDepartmentSelection = id == null ? "" : String(id);
+    isDepartmentProgramView = true;
+    document.getElementById("totalPrograms").textContent = `${code} - ${name}`;
+    document.getElementById("departmentsCardsContainer").hidden = true;
+    document.getElementById("departmentProgramsView").hidden = false;
+    document.getElementById("departmentSearchContainer").hidden = true;
+    document.getElementById("departmentHeaderIcon").hidden = true;
+    document.querySelector(".add-department-btn").hidden = true;
+    document.querySelector(".add-program-btn").hidden = !currentDepartmentSelection;
+    document.querySelector(".department-programs-back").hidden = false;
+    renderDepartmentPrograms();
+  }
+
+  async function loadPrograms() {
+    try {
+      const departmentResponse = await fetch("getDepartment.php");
+      if (!departmentResponse.ok) {
+        throw new Error("Unable to load departments.");
+      }
+      const departmentData = await departmentResponse.json();
+      const programResponse = await fetch("getProgram.php");
+      if (!programResponse.ok) {
+        throw new Error("Unable to load programs.");
+      }
+      const programs = await programResponse.json();
+      if (!Array.isArray(departmentData.departments) || !Array.isArray(programs)) {
+        throw new Error("The server returned invalid department or program data.");
+      }
+
+      departmentRecords = departmentData.departments;
+      programRecords = programs;
+      updateProgramCount();
+      renderDepartmentCards(Number(departmentData.unassigned_program_count) || 0);
+      if (isDepartmentProgramView) renderDepartmentPrograms();
+    } catch (error) {
+      console.error("Unable to load departments and programs:", error);
+      const container = document.getElementById("departmentsCardsContainer");
+      container.innerHTML =
+        '<div class="admin-empty-state">Unable to load departments. Refresh and try again.</div>';
+      showNotification(error.message || "Unable to load departments.", "#f44336");
+    } finally {
+      hideSectionSkeleton("programs-section");
+    }
   }
   // CLOSE MODAL
   function closeProgramModal() {
     programCodeInput.value = "";
     programNameInput.value = "";
+    programDepartmentInput.value = "";
+    programDepartmentDisplay.value = "";
     programCodeInput.style.borderColor = "";
     programCodeInput.title = "";
     setProgramCodeMessage("");
     editRowProgram = null;
     addProgramModal.style.display = "none";
   }
-
-  document.getElementById("program-search")?.addEventListener("input", (e) => {
-    const term = e.target.value.toLowerCase();
-    const cards = document.querySelectorAll(".program-card");
-    cards.forEach((card) => {
-      const text = card.textContent.toLowerCase();
-      card.style.display = text.includes(term) ? "" : "none";
-    });
-  });
 
   // Program Card Action Functions
   function manageProgram(id, code, name = "") {
@@ -1652,19 +1950,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loadClasses();
   }
 
-  function editProgram(id, code, name) {
-    // Open edit modal with program data
-    programHeader.innerText = "EDIT PROGRAM";
-    programSubmitBtn.innerText = "UPDATE PROGRAM";
-    programCodeInput.value = code;
-    programNameInput.value = name;
-    programCodeInput.style.borderColor = "";
-    programCodeInput.title = "";
-    setProgramCodeMessage("");
-    editRowProgram = { dataset: { id: id } };
-    addProgramModal.style.display = "flex";
-    addProgramModal.style.zIndex = "10001";
-    addProgramModal.style.position = "fixed";
+  function editProgram(program) {
+    openProgramModal(program);
   }
 
   function deleteProgram(id, code) {
@@ -1713,6 +2000,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "addProgramModal",
       "addSubjectModal",
       "addFacultyModal",
+      "addHeadDepartmentModal",
       "addStudentModal",
       "addCategoryModal",
       "addQuestionModal",
@@ -1942,7 +2230,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // LOAD ALL SUBJECTS
   function loadSubjectsMainTable() {
-    fetch("subject_crud.php?action=get_all")
+    fetch("subject_crud.php?action=get_all", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         subjectsMainData = Array.isArray(data) ? data : [];
@@ -2128,10 +2416,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (selectedClassSemester)
           localStorage.setItem("selectedClassSemester", selectedClassSemester);
         else localStorage.removeItem("selectedClassSemester");
-      } catch (err) {}
+      } catch (err) { }
 
       await syncDashboardPeriodSetting();
-    } catch (err) {}
+    } catch (err) { }
   }
   window.loadDashboardPeriodSetting = loadDashboardPeriodSetting;
 
@@ -2151,7 +2439,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const status = await statusResponse.json();
       evaluationIsOpen = Boolean(status?.success && status.evaluation_open);
       activeSemester = String(status?.active_semester || "").trim();
-    } catch (_) {}
+    } catch (_) { }
 
     const standardSemesters = ["1st Semester", "2nd Semester", "Summer"];
     const availableSemesters = evaluationIsOpen && activeSemester
@@ -2198,7 +2486,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       loadDashboardStats(true);
       await resetReportPeriodToCurrent();
-    } catch (_) {}
+    } catch (_) { }
   }
 
   function syncPeriodFormDefaults() {
@@ -2215,7 +2503,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedClassSemester = semester;
     try {
       localStorage.setItem("selectedClassSemester", semester);
-    } catch (err) {}
+    } catch (err) { }
     syncDashboardPeriodSetting();
     updateDashboardPeriodBox();
     saveDashboardPeriodSetting();
@@ -2551,6 +2839,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("manageDetailBack")?.addEventListener("click", () => {
     if (manageSearchInput) manageSearchInput.value = "";
     showManageYearLevels();
+    loadSubjects(false);
   });
 
   // ========================= TAB BUTTONS =========================
@@ -2685,7 +2974,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (semesterFilter) semesterFilter.value = "";
     }
 
-    fetch(`subject_crud.php?action=get&program_id=${requestedProgramId}`)
+    fetch(`subject_crud.php?action=get&program_id=${requestedProgramId}`, {
+      cache: "no-store",
+    })
       .then((r) => r.json())
       .then((data) => {
         if (
@@ -2723,7 +3014,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (!semester || s.semester === semester) &&
         (!selectedManageYear ||
           normalizeManageYearLevel(s.year_level) ===
-            normalizeManageYearLevel(selectedManageYear))
+          normalizeManageYearLevel(selectedManageYear))
       );
     });
 
@@ -2771,9 +3062,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const usePagination = total > SUBJECTS_ROWS_PER_PAGE;
     const pageData = usePagination
       ? subjectsFilteredData.slice(
-          (subjectsCurrentPage - 1) * SUBJECTS_ROWS_PER_PAGE,
-          subjectsCurrentPage * SUBJECTS_ROWS_PER_PAGE,
-        )
+        (subjectsCurrentPage - 1) * SUBJECTS_ROWS_PER_PAGE,
+        subjectsCurrentPage * SUBJECTS_ROWS_PER_PAGE,
+      )
       : subjectsFilteredData;
 
     subjectsTableBody.innerHTML = "";
@@ -2824,7 +3115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const semesterSelect = document.getElementById("subject-semester");
         for (let i = 0; i < semesterSelect.options.length; i++) {
           if (
-            semesterSelect.options[i].value === (s.semester || "1st Semester")
+            semesterSelect.options[i].value === (s.semester || "")
           ) {
             semesterSelect.selectedIndex = i;
             break;
@@ -3073,7 +3364,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 subjectCheckbox.disabled = false;
               }
             })
-            .catch(() => {});
+            .catch(() => { });
         });
 
         if (typeof callback === "function") callback(data);
@@ -3304,7 +3595,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!periodStatus?.success) {
           throw new Error(
             periodStatus?.message ||
-              "Unable to determine the current evaluation period.",
+            "Unable to determine the current evaluation period.",
           );
         }
         return fetch(
@@ -3374,9 +3665,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const matchingClasses = requestedYear
           ? classesAllData.filter(
-              (item) =>
-                normalizeManageYearLevel(item.year_level) === requestedYear,
-            )
+            (item) =>
+              normalizeManageYearLevel(item.year_level) === requestedYear,
+          )
           : classesAllData;
 
         const classCountBadge = document.getElementById(
@@ -3799,9 +4090,9 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
             showNotification(
               "Error " +
-                (isEditing ? "updating" : "adding") +
-                " class: " +
-                (res.message || "Unknown error"),
+              (isEditing ? "updating" : "adding") +
+              " class: " +
+              (res.message || "Unknown error"),
               "#f44336",
               5000,
             );
@@ -3812,8 +4103,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Error saving class:", err);
         alert(
           "Something went wrong while " +
-            (isEditing ? "updating" : "adding") +
-            " class.",
+          (isEditing ? "updating" : "adding") +
+          " class.",
         );
       })
       .finally(() => setButtonLoading(saveClassBtn, false));
@@ -4068,7 +4359,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (deleteRes.status !== "success") {
         showNotification(
           "Error updating assignment: " +
-            (deleteRes.message || "Unknown error"),
+          (deleteRes.message || "Unknown error"),
           "#f44336",
         );
         return;
@@ -4178,6 +4469,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ================= Faculty ==========================================================================================
   const facultyTbody = document.querySelector("#faculties-section tbody");
+  const headDepartmentCards = document.getElementById("head-department-cards");
   const archivedFacultyTbody = document.querySelector(
     ".archived-faculties-table tbody",
   );
@@ -4216,6 +4508,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return `<span class="inline-status ${cssStatus}"><span class="status-dot"></span><span>${statusLabel(normalized)}</span></span>`;
   }
 
+  function escapeFacultyMarkup(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function setProfileStatusBadge(element, status) {
     const normalized = normalizeStatusValue(status);
     element.textContent = statusLabel(normalized);
@@ -4230,21 +4531,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const triggerLabel = type === "student" ? "Status" : "Setting";
     return `
     <div class="status-action-menu">
-      ${
-        triggerHtml
-          ? `<button type="button" class="faculty-status-trigger" aria-label="Change faculty status. Current status: ${statusLabel(current)}">${triggerHtml}</button>`
-          : `<button type="button" class="action-icon-btn settings-btn" title="${triggerLabel}" aria-label="${triggerLabel}"><i class="ph ph-gear-six"></i><span>${triggerLabel}</span></button>`
+      ${triggerHtml
+        ? `<button type="button" class="faculty-status-trigger" aria-label="Change faculty status. Current status: ${statusLabel(current)}">${triggerHtml}</button>`
+        : `<button type="button" class="action-icon-btn settings-btn" title="${triggerLabel}" aria-label="${triggerLabel}"><i class="ph ph-gear-six"></i><span>${triggerLabel}</span></button>`
       }
       <div class="status-dropdown-menu">
         ${options
-          .map(
-            (status) => `
+        .map(
+          (status) => `
           <button type="button" class="status-option ${current === status ? "selected" : ""}" data-status="${status}">
             ${statusLabel(status)}
           </button>
         `,
-          )
-          .join("")}
+        )
+        .join("")}
       </div>
     </div>
   `;
@@ -4596,6 +4896,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function loadFacultyDepartmentOptions(selectedDepartment = "") {
+    const departmentSelect = document.getElementById("faculty-department");
+    const response = await fetch("getDepartment.php", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Unable to load departments for the faculty form.");
+    }
+
+    const data = await response.json();
+    if (!Array.isArray(data.departments)) {
+      throw new Error("The server returned invalid department data.");
+    }
+
+    const selectedName = String(selectedDepartment || "").trim();
+    const options = [new Option("Select department", "")];
+    const departmentNames = new Set();
+    data.departments.forEach((department) => {
+      const name = String(department.department_name || "").trim();
+      const code = String(department.department_code || "").trim();
+      if (!name || !code) {
+        throw new Error("The server returned an invalid department record.");
+      }
+      options.push(new Option(`${code} - ${name}`, name));
+      departmentNames.add(name);
+    });
+
+    if (selectedName && !departmentNames.has(selectedName)) {
+      options.push(new Option(`${selectedName} (current)`, selectedName));
+    }
+
+    departmentSelect.replaceChildren(...options);
+    departmentSelect.value = selectedName;
+  }
+
   // ------------------- Load Faculty -------------------
   function loadFaculty() {
     console.log("Loading faculty data...");
@@ -4620,7 +4953,7 @@ document.addEventListener("DOMContentLoaded", () => {
             '<tr><td colspan="6" class="admin-empty-state">No faculty found</td></tr>';
           if (archivedFacultyTbody) {
             archivedFacultyTbody.innerHTML =
-              '<tr><td colspan="4" class="admin-empty-state">No archived faculty found</td></tr>';
+              '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
           }
           updateFacultyMemberCount();
           return;
@@ -4634,7 +4967,7 @@ document.addEventListener("DOMContentLoaded", () => {
           row.id = "faculty-" + f.faculty_id;
           Object.assign(row.dataset, f);
           row.dataset.faculty_id = f.faculty_id;
-          row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()}`;
+          row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()} ${(f.department || "").toLowerCase()}`;
           row.dataset.status = normalizeStatusValue(f.status);
 
           // Display subject codes or show "No subjects yet"
@@ -4644,8 +4977,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const subjectsDisplay =
             f.subject_codes && f.subject_codes.length > 0
               ? `<div class="faculty-subject-grid">${f.subject_codes
-                  .map((code) => `<span class="subject-item">${code}</span>`)
-                  .join("")}</div>`
+                .map((code) => `<span class="subject-item">${code}</span>`)
+                .join("")}</div>`
               : '<span class="no-subjects">No subjects yet</span>';
 
           console.log("Subjects display:", subjectsDisplay);
@@ -4678,6 +5011,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
             </td>
+            <td>${escapeFacultyMarkup(f.department || "—")}</td>
             <td>${subjectCountLabel}</td>
             <td class="action-cell">
               <div class="archived-record-actions">
@@ -4697,7 +5031,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!result.success) {
                   showNotification(
                     "Failed to restore faculty: " +
-                      (result.message || "Unknown error"),
+                    (result.message || "Unknown error"),
                     "#f44336",
                   );
                   return;
@@ -4720,13 +5054,14 @@ document.addEventListener("DOMContentLoaded", () => {
             row.id = "faculty-" + f.faculty_id;
             Object.assign(row.dataset, f);
             row.dataset.faculty_id = f.faculty_id;
-            row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()}`;
+            row.dataset.searchKey = `${(f.faculty_id || "").toLowerCase()} ${(f.firstname || "").toLowerCase()} ${(f.lastname || "").toLowerCase()} ${(f.suffix || "").toLowerCase()} ${(f.department || "").toLowerCase()}`;
             row.dataset.status = "archived";
           }
 
           row.innerHTML = `
           <td><span class="person-id-badge">${f.faculty_id}</span></td>
           <td><div class="faculty-name-cell">${avatarHtml}<div><div class="faculty-name-text">${f.firstname} ${f.lastname} ${f.suffix || ""}</div><small>${f.email}</small></div></div></td>
+          <td>${escapeFacultyMarkup(f.department || "—")}</td>
           <td>
             ${subjectCountLabel}
           </td>
@@ -4742,7 +5077,18 @@ document.addEventListener("DOMContentLoaded", () => {
           facultyTbody.appendChild(row);
 
           // EDIT ----------------------
-          row.querySelector(".edit-btn").onclick = () => {
+          row.querySelector(".edit-btn").onclick = async () => {
+            try {
+              await loadFacultyDepartmentOptions(f.department || "");
+            } catch (error) {
+              console.error("Unable to load faculty department options:", error);
+              showNotification(
+                error.message || "Unable to load departments.",
+                "#f44336",
+              );
+              return;
+            }
+
             addFacultyModal.querySelectorAll("input").forEach((input) => {
               input.value = "";
               input.removeAttribute("aria-invalid");
@@ -4885,7 +5231,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   } else {
                     showNotification(
                       "Failed to update status: " +
-                        (result.message || "Unknown error"),
+                      (result.message || "Unknown error"),
                       "#f44336",
                     );
                   }
@@ -4918,7 +5264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (archivedFacultyTbody && archivedFacultyTbody.rows.length === 0) {
           archivedFacultyTbody.innerHTML =
-            '<tr><td colspan="4" class="admin-empty-state">No archived faculty found</td></tr>';
+            '<tr><td colspan="5" class="admin-empty-state">No archived faculty found</td></tr>';
         }
         filterFaculty();
       })
@@ -4927,8 +5273,323 @@ document.addEventListener("DOMContentLoaded", () => {
       .finally(() => hideSectionSkeleton("faculties-section"));
   }
 
+  function loadDepartmentHeads() {
+    if (!headDepartmentCards) return;
+    headDepartmentCards.innerHTML =
+      '<div class="admin-empty-state">Loading department heads...</div>';
+    fetch("../shared/getFaculty.php?t=" + Date.now(), { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load department heads.");
+        return response.json();
+      })
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          throw new Error(data.error || "Unable to load department heads.");
+        }
+        const heads = data.filter(
+          (faculty) => Number(faculty.is_department_head || 0) === 1,
+        );
+        headDepartmentCards.innerHTML = "";
+        if (heads.length === 0) {
+          headDepartmentCards.innerHTML =
+            '<div class="admin-empty-state">No department heads found.</div>';
+          return;
+        }
+        const renderedFacultyIds = new Set();
+        heads.forEach((head) => {
+          const facultyRecordId = String(head.id || "");
+          if (!facultyRecordId || renderedFacultyIds.has(facultyRecordId)) return;
+          renderedFacultyIds.add(facultyRecordId);
+
+          const facultyName =
+            `${head.firstname || ""} ${head.lastname || ""} ${head.suffix || ""}`.trim() ||
+            "Unnamed faculty";
+          const card = document.createElement("div");
+          card.className = "program-card head-department-card";
+          card.dataset.id = facultyRecordId;
+          card.innerHTML = `
+            <div class="program-card-body head-department-card-body">
+              <span class="program-card-category">Department Head</span>
+              <div class="program-name head-department-card-name">${escapeFacultyMarkup(facultyName)}</div>
+              <div class="head-department-card-detail">
+                <span>Faculty ID</span>
+                <strong>${escapeFacultyMarkup(head.faculty_id || "—")}</strong>
+              </div>
+              <div class="head-department-card-detail">
+                <span>Department</span>
+                <strong>${escapeFacultyMarkup(head.department || "—")}</strong>
+              </div>
+            </div>
+            <div class="program-card-actions">
+              <div class="program-card-action-row">
+                <div class="right-buttons">
+                  <button class="btn-edit" type="button" title="Edit department head" aria-label="Edit department head">
+                    <i class="ph ph-note-pencil" aria-hidden="true"></i>
+                  </button>
+                  <button class="btn-delete" type="button" title="Remove department head" aria-label="Remove department head">
+                    <i class="ph ph-trash" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </div>`;
+          card
+            .querySelector(".btn-edit")
+            .addEventListener("click", () => openHeadDepartmentModal(head));
+          card.querySelector(".btn-delete").addEventListener("click", () => {
+            openDeleteModal("department_head", facultyName, card);
+          });
+          headDepartmentCards.appendChild(card);
+        });
+      })
+      .catch((error) => {
+        console.error("Department heads load error:", error);
+        headDepartmentCards.innerHTML =
+          '<div class="admin-empty-state">Unable to load department heads.</div>';
+        showNotification("Unable to load department heads.", "#f44336");
+      });
+  }
+
+  const headDepartmentFacultySearch = document.getElementById(
+      "head-department-faculty-search",
+    ),
+    headDepartmentFacultyResults = document.getElementById(
+      "head-department-faculty-results",
+    ),
+    headDepartmentSelect = document.getElementById("head-department-name");
+  const headDepartmentSearchField = headDepartmentFacultySearch.closest(
+    ".head-department-search-field",
+  );
+  const headDepartmentModalTitle =
+    addHeadDepartmentModal.querySelector(".modal-header h3");
+  const headDepartmentSubmitButton =
+    addHeadDepartmentModal.querySelector(".submit-btn");
+  let headDepartmentFacultyOptions = [];
+  let headDepartmentDepartmentOptions = [];
+  let selectedHeadDepartmentFacultyId = "";
+  let editingHeadDepartment = false;
+
+  function renderHeadDepartmentFacultyOptions() {
+    const query = headDepartmentFacultySearch.value.trim().toLowerCase();
+    const selectedFaculty = headDepartmentFacultyOptions.find(
+      (faculty) =>
+        faculty.id === selectedHeadDepartmentFacultyId &&
+        faculty.label.toLowerCase() === query,
+    );
+    headDepartmentFacultyResults.replaceChildren();
+    if (headDepartmentFacultySearch.disabled || selectedFaculty) {
+      headDepartmentFacultyResults.hidden = true;
+      return;
+    }
+
+    const matches = headDepartmentFacultyOptions
+      .filter((faculty) => faculty.searchText.includes(query));
+    if (matches.length === 0) {
+      const emptyResult = document.createElement("div");
+      emptyResult.className = "head-department-search-empty";
+      emptyResult.textContent = "No matching faculty found";
+      headDepartmentFacultyResults.appendChild(emptyResult);
+    } else {
+      matches.forEach((faculty) => {
+        const result = document.createElement("button");
+        result.type = "button";
+        result.className = "head-department-search-result";
+        result.textContent = faculty.label;
+        result.addEventListener("click", () => {
+          selectedHeadDepartmentFacultyId = faculty.id;
+          headDepartmentFacultySearch.value = faculty.label;
+          headDepartmentFacultyResults.hidden = true;
+        });
+        headDepartmentFacultyResults.appendChild(result);
+      });
+    }
+    headDepartmentFacultyResults.hidden = false;
+  }
+
+  headDepartmentFacultySearch.addEventListener("input", () => {
+    selectedHeadDepartmentFacultyId = "";
+    renderHeadDepartmentFacultyOptions();
+  });
+  headDepartmentFacultySearch.addEventListener(
+    "focus",
+    renderHeadDepartmentFacultyOptions,
+  );
+  document.addEventListener("click", (event) => {
+    if (!headDepartmentSearchField.contains(event.target)) {
+      headDepartmentFacultyResults.hidden = true;
+    }
+  });
+
+  async function loadHeadDepartmentFormOptions() {
+    const [facultyResponse, departmentResponse] = await Promise.all([
+      fetch("../shared/getFaculty.php?t=" + Date.now(), { cache: "no-store" }),
+      fetch("getDepartment.php", { cache: "no-store" }),
+    ]);
+    if (!facultyResponse.ok || !departmentResponse.ok) {
+      throw new Error("Unable to load faculty or department choices.");
+    }
+
+    const [facultyData, departmentData] = await Promise.all([
+      facultyResponse.json(),
+      departmentResponse.json(),
+    ]);
+    if (
+      !Array.isArray(facultyData) ||
+      !Array.isArray(departmentData.departments)
+    ) {
+      throw new Error("The server returned invalid faculty or department data.");
+    }
+
+    const facultiesById = new Map();
+    facultyData.forEach((faculty) => {
+      const id = String(faculty.id || "");
+      const facultyId = String(faculty.faculty_id || "").trim();
+      const name =
+        `${faculty.firstname || ""} ${faculty.lastname || ""} ${faculty.suffix || ""}`.trim();
+      if (
+        !id ||
+        !facultyId ||
+        Number(faculty.is_department_head || 0) === 1 ||
+        String(faculty.status || "active").trim().toLowerCase() === "archived"
+      ) {
+        return;
+      }
+
+      const label = name ? `${facultyId} - ${name}` : facultyId;
+      facultiesById.set(id, {
+        id,
+        label,
+        searchText: `${name} ${facultyId}`.toLowerCase(),
+      });
+    });
+    headDepartmentFacultyOptions = Array.from(facultiesById.values()).sort(
+      (left, right) => left.label.localeCompare(right.label),
+    );
+
+    headDepartmentDepartmentOptions = departmentData.departments.map(
+      (department) => {
+        const id = String(department.id || "");
+        const code = String(department.department_code || "").trim();
+        const name = String(department.department_name || "").trim();
+        if (!id || !code || !name) {
+          throw new Error("The server returned an invalid department record.");
+        }
+        return { id, code, name };
+      },
+    );
+    headDepartmentSelect.replaceChildren(
+      new Option("Select department", ""),
+      ...headDepartmentDepartmentOptions.map(
+        (department) =>
+          new Option(`${department.code} - ${department.name}`, department.id),
+      ),
+    );
+  }
+
+  async function openHeadDepartmentModal(head = null) {
+    editingHeadDepartment = Boolean(head);
+    selectedHeadDepartmentFacultyId = head ? String(head.id || "") : "";
+    headDepartmentFacultySearch.value = "";
+    headDepartmentFacultySearch.disabled = editingHeadDepartment;
+    headDepartmentFacultyResults.hidden = true;
+    headDepartmentSelect.value = "";
+    headDepartmentModalTitle.textContent = editingHeadDepartment
+      ? "EDIT HEAD DEPARTMENT"
+      : "ADD HEAD DEPARTMENT";
+    headDepartmentSubmitButton.textContent = editingHeadDepartment
+      ? "SAVE CHANGES"
+      : "SAVE HEAD DEPARTMENT";
+
+    try {
+      await loadHeadDepartmentFormOptions();
+    } catch (error) {
+      console.error("Unable to load Head Department form options:", error);
+      showNotification(
+        error.message || "Unable to load faculty or department choices.",
+        "#f44336",
+      );
+      return;
+    }
+
+    if (head) {
+      const name =
+        `${head.firstname || ""} ${head.lastname || ""} ${head.suffix || ""}`.trim();
+      headDepartmentFacultySearch.value =
+        `${name || "Unnamed faculty"} (${head.faculty_id || ""})`;
+      const currentDepartment = headDepartmentDepartmentOptions.find(
+        (department) =>
+          department.name.toLowerCase() ===
+          String(head.department || "").trim().toLowerCase(),
+      );
+      if (currentDepartment) {
+        headDepartmentSelect.value = currentDepartment.id;
+      }
+    }
+
+    addHeadDepartmentModal.style.display = "flex";
+    addHeadDepartmentModal.style.zIndex = "10001";
+    addHeadDepartmentModal.style.position = "fixed";
+  }
+
+  document
+    .getElementById("add-head-department-btn")
+    ?.addEventListener("click", () => openHeadDepartmentModal());
+
+  headDepartmentSubmitButton.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const facultyRecordId = selectedHeadDepartmentFacultyId,
+      departmentId = headDepartmentSelect.value;
+
+    if (!facultyRecordId || !departmentId) {
+      showNotification("Select a faculty member and department.", "#d97706");
+      return;
+    }
+
+    setButtonLoading(button, true, "Saving...");
+    try {
+      const response = await fetch("faculty_crud.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: editingHeadDepartment
+            ? "update_department_head"
+            : "assign_department_head",
+          faculty_record_id: Number(facultyRecordId),
+          department_id: Number(departmentId),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to save department head.");
+      }
+      addHeadDepartmentModal.style.display = "none";
+      showNotification(
+        editingHeadDepartment
+          ? "Department head updated successfully."
+          : "Department head assigned successfully.",
+        "#10b981",
+      );
+      loadDepartmentHeads();
+      loadFaculty();
+    } catch (error) {
+      showNotification(error.message || "Unable to save department head.", "#f44336");
+    } finally {
+      setButtonLoading(button, false);
+    }
+  });
+
   // ADD BUTTON -------------------
-  document.querySelector(".add-faculty-btn").onclick = () => {
+  document.querySelector(".add-faculty-btn").onclick = async () => {
+    try {
+      await loadFacultyDepartmentOptions();
+    } catch (error) {
+      console.error("Unable to load faculty department options:", error);
+      showNotification(
+        error.message || "Unable to load departments.",
+        "#f44336",
+      );
+      return;
+    }
+
     document.getElementById("faculty-status-filter")?.blur();
     document.body.classList.add("faculty-modal-open");
     const facultyIdInput = document.getElementById("faculty-number");
@@ -4960,6 +5621,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addFacultyModal.querySelectorAll("input").forEach((i) => {
       if (i.id !== "faculty-number") i.value = "";
     });
+    document.getElementById("faculty-department").value = "";
     const facultySuffixSelect = document.getElementById("faculty-suffix");
     facultySuffixSelect.value = "";
     facultySuffixSelect
@@ -5019,14 +5681,15 @@ document.addEventListener("DOMContentLoaded", () => {
       f = document.getElementById("faculty-firstname").value.trim(),
       l = document.getElementById("faculty-lastname").value.trim(),
       s = document.getElementById("faculty-suffix").value.trim(),
+      department = document.getElementById("faculty-department").value.trim(),
       photo = document.getElementById("faculty-photo-preview").hidden
         ? ""
         : document.getElementById("faculty-photo-preview").src;
 
-    if (!n || !e || !f || !l) {
+    if (!n || !e || !f || !l || !department) {
       facultySaveInProgress = false;
       setButtonLoading(submitButton, false);
-      return showGlobalNotification("Please fill all fields", "warning");
+      return showGlobalNotification("Please fill all required fields", "warning");
     }
 
     if (!/^FC-[0-9]{6}$/.test(n)) {
@@ -5050,6 +5713,7 @@ document.addEventListener("DOMContentLoaded", () => {
       firstname: f,
       lastname: l,
       suffix: s,
+      department,
       photo: photo,
       subjects: selectedFacultySubjects.map((subject) => Number(subject.id)),
     };
@@ -5372,7 +6036,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.success) {
           if (!data.data || data.data.length === 0) {
             tbody.innerHTML =
-              '<tr class="report-empty-row"><td colspan="6" class="report-empty-state">No evaluation data available</td></tr>';
+              '<tr class="report-empty-row"><td colspan="6" class="admin-empty-state report-empty-state">No evaluation data available</td></tr>';
             return;
           }
 
@@ -5382,6 +6046,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const ratingText = privacySuppressed
               ? "Privacy protected"
               : evaluation.rating || "N/A";
+            const overallScore = Number(evaluation.average_score) || 0;
+            const overallPercentage = Number(evaluation.percentage_score) || 0;
 
             const row = document.createElement("tr");
             row.dataset.evaluationRow = "true";
@@ -5390,7 +6056,8 @@ document.addEventListener("DOMContentLoaded", () => {
               evaluation.period_label || "Unassigned Period",
               ratingText,
               evaluation.total_responses,
-              Number(evaluation.average_score).toFixed(2),
+              overallScore.toFixed(2),
+              overallPercentage.toFixed(1),
             ]
               .join(" ")
               .toLowerCase();
@@ -5410,7 +6077,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </td>
             <td>
               <div class="score-cell">
-                <span class="score-raw">${privacySuppressed ? "Withheld" : `${Number(evaluation.average_score).toFixed(2)} / 5.00`}</span>
+                <span class="score-raw">${privacySuppressed ? "Withheld" : `${overallScore.toFixed(2)} / 5.00 (${overallPercentage.toFixed(1)}%)`}</span>
               </div>
             </td>
             <td>${privacySuppressed ? "Withheld" : evaluation.total_responses}</td>
@@ -5493,7 +6160,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "reportRatingOverallPercentage",
     );
     if (overallPercentageElement) {
-      overallPercentageElement.textContent = `${overallPercentage}%`;
+      overallPercentageElement.textContent = `${overallPercentage.toFixed(1)}%`;
     }
 
     const donutCanvas = document.getElementById(
@@ -5909,12 +6576,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ? ["Hidden for privacy"]
       : Array.isArray(reportData.feedback_comments)
         ? reportData.feedback_comments
-            .map((item) => String(item || "").trim())
-            .filter(Boolean)
+          .map((item) => String(item || "").trim())
+          .filter(Boolean)
         : String(reportData.all_feedback || reportData.feedback || "")
-            .split(/\n\s*\n/)
-            .map((item) => item.trim())
-            .filter(Boolean);
+          .split(/\n\s*\n/)
+          .map((item) => item.trim())
+          .filter(Boolean);
 
     const hasComments =
       comments.length > 0 &&
@@ -5956,40 +6623,40 @@ document.addEventListener("DOMContentLoaded", () => {
     if (categoryListEl) {
       categoryListEl.innerHTML = details.length
         ? details
-            .map((detail) => {
-              const categoryName = formatReportCategoryName(
-                detail.category || detail.category_name,
+          .map((detail) => {
+            const categoryName = formatReportCategoryName(
+              detail.category || detail.category_name,
+            );
+            const rawScore = parseFloat(
+              detail.average_score ??
+              detail.overall_rating ??
+              detail.score ??
+              0,
+            );
+            const scoreValue = Number.isFinite(rawScore)
+              ? rawScore.toFixed(2)
+              : String(
+                detail.average_score ?? detail.overall_rating ?? "0.00",
               );
-              const rawScore = parseFloat(
-                detail.average_score ??
-                  detail.overall_rating ??
-                  detail.score ??
-                  0,
-              );
-              const scoreValue = Number.isFinite(rawScore)
-                ? rawScore.toFixed(2)
-                : String(
-                    detail.average_score ?? detail.overall_rating ?? "0.00",
-                  );
-              const scorePercent = Number.isFinite(rawScore)
-                ? Math.min(100, Math.max(0, rawScore * 20))
-                : 0;
-              const percentText = `${scorePercent.toFixed(0)}%`;
-              const ratingText = detail.rating || detail.status || "N/A";
-              const ratingClass = String(
-                detail.rating_class || ratingText || "poor",
-              )
-                .toLowerCase()
-                .replace(/\s+/g, "-");
-              return `
+            const scorePercent = Number.isFinite(rawScore)
+              ? Math.min(100, Math.max(0, rawScore * 20))
+              : 0;
+            const percentText = `${scorePercent.toFixed(0)}%`;
+            const ratingText = detail.rating || detail.status || "N/A";
+            const ratingClass = String(
+              detail.rating_class || ratingText || "poor",
+            )
+              .toLowerCase()
+              .replace(/\s+/g, "-");
+            return `
             <div class="category-pill ${escapeHtml(ratingClass)}">
               <div class="category-pill-name">${escapeHtml(categoryName)}</div>
               <div class="category-pill-percent">${percentText}</div>
               <div class="category-pill-rating">${escapeHtml(scoreValue)} / 5.00</div>
             </div>
           `;
-            })
-            .join("")
+          })
+          .join("")
         : '<span class="category-list-empty">No categories available</span>';
     }
 
@@ -6361,8 +7028,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const target =
       event.target instanceof Element
         ? event.target.closest(
-            "#reportRankingCard, #reportRankingClickTarget, #reportFacultyRankings",
-          )
+          "#reportRankingCard, #reportRankingClickTarget, #reportFacultyRankings",
+        )
         : null;
     if (target) openReportFacultyRankings(event);
   });
@@ -6377,7 +7044,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (programs.length === 0) {
       list.innerHTML =
-        '<div class="program-progress-empty">No programs available</div>';
+        '<div class="program-progress-empty">No Program Available yet</div>';
     } else {
       list.innerHTML = programs
         .map((program) => {
@@ -6495,7 +7162,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (totalStudentsEl)
             totalStudentsEl.textContent = data.data.totalStudents;
           if (totalEvaluationsEl)
-            totalEvaluationsEl.textContent = data.data.activeStudents;
+            totalEvaluationsEl.textContent =
+              data.data.completedStudents ??
+              data.data.totalEvaluationsSubmitted ??
+              data.data.activeStudents;
 
           // Count only students who have completed all assigned evaluations.
           const progressFillEl = document.getElementById(
@@ -6508,7 +7178,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const submittedEvaluations =
               Number(
                 data.data.completedStudents ??
-                  data.data.totalEvaluationsSubmitted,
+                data.data.totalEvaluationsSubmitted,
               ) || 0;
             const expectedEvaluations = Math.max(
               0,
@@ -6524,9 +7194,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const completionPercent =
               expectedEvaluations > 0
                 ? Math.min(
-                    100,
-                    (submittedEvaluations / expectedEvaluations) * 100,
-                  )
+                  100,
+                  (submittedEvaluations / expectedEvaluations) * 100,
+                )
                 : 0;
             const completionRateEl = document.getElementById(
               "evaluationCompletionRate",
@@ -7067,7 +7737,7 @@ document.addEventListener("DOMContentLoaded", () => {
           String(program.id) === value ||
           normalizeFilterText(program.name) === normalizeFilterText(value) ||
           normalizeFilterText(program.program_name) ===
-            normalizeFilterText(value),
+          normalizeFilterText(value),
       ) || null
     );
   }
@@ -7575,12 +8245,12 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Loading students...");
 
     // First load programs, then load students
-    loadStudentPrograms()
+    return loadStudentPrograms()
       .then(() => {
         // Populate program dropdown
         populateProgramDropdown();
 
-        return fetch("get_students.php")
+        return fetch("get_students.php", { cache: "no-store" })
           .then((r) => {
             console.log("Response status:", r.status);
             if (!r.ok) {
@@ -7670,7 +8340,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!result.success) {
                       showNotification(
                         "Failed to restore student: " +
-                          (result.message || "Unknown error"),
+                        (result.message || "Unknown error"),
                         "#f44336",
                       );
                       return;
@@ -7743,7 +8413,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                   const emailInput = document.getElementById("student-email");
                   emailInput.value = stu.email || "";
-                  emailInput.disabled = false;
+                  emailInput.disabled = true;
 
                   // Other fields
                   document.getElementById("student-firstname").value =
@@ -7934,11 +8604,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const subjectIds =
                       studentType === "irregular"
                         ? selectedSubjects.map((s) => ({
-                            id: s.id,
-                            class_id: s.class_id || 0,
-                            class_year_level: s.class_year_level || "",
-                            class_section: s.class_section || "",
-                          }))
+                          id: s.id,
+                          class_id: s.class_id || 0,
+                          class_year_level: s.class_year_level || "",
+                          class_section: s.class_section || "",
+                        }))
                         : [];
                     let yearlevelValue;
                     if (studentType === "irregular") {
@@ -7970,10 +8640,6 @@ document.addEventListener("DOMContentLoaded", () => {
                       body: JSON.stringify({
                         action: "edit",
                         id: studentData.id,
-                        student_number: studentData.student_number,
-                        email: document
-                          .getElementById("student-email")
-                          .value.trim(),
                         firstname: document
                           .getElementById("student-firstname")
                           .value.trim(),
@@ -8157,7 +8823,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   matchesProgram =
                     row.dataset.programId === selectedProgram ||
                     row.dataset.programName ===
-                      normalizeFilterText(selectedProgram) ||
+                    normalizeFilterText(selectedProgram) ||
                     programText === normalizeFilterText(selectedProgram);
                 }
 
@@ -8176,11 +8842,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Show row only if all conditions are met
                 row.style.display =
                   matchesSearch &&
-                  matchesProgram &&
-                  matchesStatus &&
-                  matchesYearlevel &&
-                  (selectedStatus === "inactive" ||
-                    normalizeStatusValue(row.dataset.status) !== "archived")
+                    matchesProgram &&
+                    matchesStatus &&
+                    matchesYearlevel &&
+                    (selectedStatus === "inactive" ||
+                      normalizeStatusValue(row.dataset.status) !== "archived")
                     ? ""
                     : "none";
               });
@@ -8297,15 +8963,15 @@ document.addEventListener("DOMContentLoaded", () => {
             String(opt.year_level || "")
               .trim()
               .toLowerCase() ===
-              String(selectedSubject.class_year_level || "")
-                .trim()
-                .toLowerCase() &&
+            String(selectedSubject.class_year_level || "")
+              .trim()
+              .toLowerCase() &&
             String(opt.section || "")
               .trim()
               .toLowerCase() ===
-              String(selectedSubject.class_section || "")
-                .trim()
-                .toLowerCase(),
+            String(selectedSubject.class_section || "")
+              .trim()
+              .toLowerCase(),
         );
         if (matched) {
           selectedClassId = String(matched.class_id);
@@ -8325,15 +8991,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const hasClassOptions = options.length > 0;
       const optionHtml = hasClassOptions
         ? options
-            .map((opt) => {
-              const label = `${opt.year_level} - ${opt.section}`;
-              const sel =
-                selectedClassId && selectedClassId === String(opt.class_id)
-                  ? "selected"
-                  : "";
-              return `<option value="${opt.class_id}" ${sel}>${label}</option>`;
-            })
-            .join("")
+          .map((opt) => {
+            const label = `${opt.year_level} - ${opt.section}`;
+            const sel =
+              selectedClassId && selectedClassId === String(opt.class_id)
+                ? "selected"
+                : "";
+            return `<option value="${opt.class_id}" ${sel}>${label}</option>`;
+          })
+          .join("")
         : "";
 
       row.innerHTML = `
@@ -8342,15 +9008,14 @@ document.addEventListener("DOMContentLoaded", () => {
       <td>${subject.subject_desc}</td>
       <td>${subject.semester || "N/A"}</td>
       <td>
-        ${
-          hasClassOptions
-            ? `
+        ${hasClassOptions
+          ? `
           <select class="subject-class-select" data-subject-id="${subject.id}">
             <option value="">Select Year & Section</option>
             ${optionHtml}
           </select>
         `
-            : `<div class="subject-class-empty">No class found</div>`
+          : `<div class="subject-class-empty">No class found</div>`
         }
       </td>
     `;
@@ -8946,7 +9611,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document
       .querySelectorAll(
         ".criteria-category .add-btn, .criteria-category .edit-btn, .criteria-category .delete-btn, " +
-          ".question-item .edit-btn, .question-item .delete-btn",
+        ".question-item .edit-btn, .question-item .delete-btn",
       )
       .forEach((b) => {
         b.disabled = locked;
@@ -8976,7 +9641,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (usedWeight >= 100) {
       showNotification(
         `Cannot add a new category — existing categories already use ${usedWeight}% (100%). ` +
-          `Edit existing category weights to free up percentage first.`,
+        `Edit existing category weights to free up percentage first.`,
         "#ef4444",
         6000,
       );
@@ -9024,7 +9689,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const available = Math.round((100 - usedWeight) * 100) / 100;
         showNotification(
           `Weight too high — other categories already use ${usedWeight}%. ` +
-            `Maximum you can assign here is ${available}%.`,
+          `Maximum you can assign here is ${available}%.`,
           "#ef4444",
           6000,
         );
@@ -9692,45 +10357,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const updated = Number(result.updated || 0);
-        if (result.imported > 0 || updated > 0) {
-          loadStudents();
-          loadDashboardStats();
-        }
+        await loadStudents();
+        loadDashboardStats();
         closeModal(addStudentModal);
-        const importedLabel = result.imported === 1 ? "student" : "students";
+        const imported = Number(result.imported || 0);
+        const unchanged = Number(result.unchanged || 0);
+        const failed = Number(result.failed || 0);
+        const skipped = Number(result.skipped || 0);
+        const deleted = Number(result.deleted || 0);
+        const archived = Number(result.archived || 0);
+        const immutableFieldsIgnored = Number(result.immutable_fields_ignored || 0);
         const emailFailed = Number(result.email_failed || 0);
-        const updatedLabel = updated === 1 ? "student record" : "student records";
-        const failedRecords = Array.isArray(result.failed_records)
-          ? result.failed_records
-          : [];
-        const skippedRecords = Array.isArray(result.skipped_records)
-          ? result.skipped_records
-          : [];
-        const invalidStudentId = failedRecords.some((record) =>
-          /student id must be gc- followed by exactly 6 digits/i.test(
-            String(record.reason || ""),
-          ),
-        );
-        const duplicateStudentId = skippedRecords.some((record) =>
-          /student id (?:is duplicated|already exists|and email already exist|or email already exists)/i.test(
-            String(record.reason || ""),
-          ),
-        );
-        const studentIdImportFailed = invalidStudentId || duplicateStudentId;
-        const successfulSummary = [
-          result.imported > 0 ? `${result.imported} ${importedLabel} imported` : "",
-          updated > 0 ? `${updated} existing ${updatedLabel} updated` : "",
-        ].filter(Boolean).join(", ");
-        const notificationMessage = studentIdImportFailed
-          ? "Import was unsuccessful. Please check that each student ID is in the format GC- followed by exactly 6 digits and that there are no duplicate IDs."
-          : result.failed > 0
-            ? `Import finished: ${result.imported} ${importedLabel} imported${updated > 0 ? `, ${updated} existing ${updatedLabel} updated` : ""}, ${result.failed} failed.`
-            : emailFailed > 0
-              ? `Students imported, but the temporary password email failed for ${emailFailed} student${emailFailed === 1 ? "" : "s"}.`
-              : `Student import successful: ${successfulSummary || `0 ${importedLabel} imported`}.${result.skipped > 0 ? ` ${result.skipped} duplicate${result.skipped === 1 ? "" : "s"}.` : ""}`;
+        const subjectRefreshFailed = Number(result.subject_refresh_failed || 0);
+        const notificationMessage =
+          `Import: ${updated} updated, ${imported} added, ${unchanged} unchanged, ${deleted} deleted, ${archived} archived, ${failed} failed, ${skipped} skipped.` +
+          (immutableFieldsIgnored ? " Student ID/email cannot be changed." : "") +
+          (result.sync_warning ? ` ${result.sync_warning}` : "") +
+          (emailFailed ? ` ${emailFailed} welcome email(s) failed.` : "") +
+          (subjectRefreshFailed ? ` ${subjectRefreshFailed} subject list(s) need refresh.` : "");
         showNotification(
           notificationMessage,
-          studentIdImportFailed || result.failed > 0 || emailFailed > 0
+          failed || skipped || immutableFieldsIgnored || result.sync_warning || emailFailed || subjectRefreshFailed
             ? "#d97706"
             : "#4caf50",
           6000,
@@ -9822,6 +10469,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (f === "number") {
               el.disabled = false;
               el.removeAttribute("aria-invalid");
+            }
+            if (f === "email") {
+              el.disabled = false;
             }
           }
         });
@@ -9969,11 +10619,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const subjectIds =
             studentType === "irregular"
               ? selectedSubjects.map((s) => ({
-                  id: s.id,
-                  class_id: s.class_id || 0,
-                  class_year_level: s.class_year_level || "",
-                  class_section: s.class_section || "",
-                }))
+                id: s.id,
+                class_id: s.class_id || 0,
+                class_year_level: s.class_year_level || "",
+                class_section: s.class_section || "",
+              }))
               : [];
 
           try {
@@ -10183,7 +10833,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ?.classList.toggle(
             "is-done",
             String(data.active_period_status || "").toLowerCase() === "done" ||
-              String(data.active_period_status || "").toLowerCase() === "expired",
+            String(data.active_period_status || "").toLowerCase() === "expired",
           );
         statusText
           .closest(".evaluation-status-item")
@@ -10265,7 +10915,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!noticeResponse.ok || !noticeResult?.success) {
                   throw new Error(
                     noticeResult?.message ||
-                      "Unable to send evaluation closing notices.",
+                    "Unable to send evaluation closing notices.",
                   );
                 }
               })
@@ -10354,11 +11004,11 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("period-sem")?.value.trim().toLowerCase() || "";
     const periods = selectedSemester
       ? cachedEvaluationPeriods.filter(
-          (period) =>
-            String(period.semester || "")
-              .trim()
-              .toLowerCase() === selectedSemester,
-        )
+        (period) =>
+          String(period.semester || "")
+            .trim()
+            .toLowerCase() === selectedSemester,
+      )
       : cachedEvaluationPeriods;
 
     if (periods.length === 0) {
@@ -10400,8 +11050,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ? p.is_archived
           ? "Restore this academic year before opening it"
           : !p.start_date || !p.end_date
-          ? "Set start and end dates before opening this period"
-          : "Expired periods cannot be opened"
+            ? "Set start and end dates before opening this period"
+            : "Expired periods cannot be opened"
         : `${actionLabel} evaluation period`;
       const periodState = p.is_archived
         ? states.archived
@@ -10427,15 +11077,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${statusHtml}</td>
         <td class="action-cell">
           <div class="action-buttons">
-            ${
-              !p.is_active
-                ? `
+            ${!p.is_active
+          ? `
               <button type="button" class="action-icon-btn send-reports-btn${noEvaluations ? " no-evaluations" : ""}" data-id="${p.id}" data-evaluation-count="${evaluationCount}" title="${noEvaluations ? "Evaluation Period not started: No evaluations have been submitted yet." : "Generate and send both faculty report PDFs"}" aria-label="Send reports for ${periodName}, ${ay}" aria-disabled="${noEvaluations ? "true" : "false"}">
                 <i class="ph ph-envelope-simple"></i>
               </button>
             `
-                : ""
-            }
+          : ""
+        }
             <button type="button" class="action-icon-btn edit-btn" data-action="edit" data-id="${p.id}" title="${p.is_archived ? "Restore this period before editing" : "Edit Period"}" aria-label="Edit ${periodName}, ${ay}" ${p.is_archived ? "disabled" : ""}>
               <i class="ph ph-note-pencil"></i>
               <span class="period-action-label">Edit</span>
@@ -10676,8 +11325,8 @@ document.addEventListener("DOMContentLoaded", () => {
             : "";
           showNotification(
             detail ||
-              result?.message ||
-              "Unable to generate or send evaluation reports.",
+            result?.message ||
+            "Unable to generate or send evaluation reports.",
             "#f59e0b",
             7000,
           );
@@ -10797,7 +11446,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   ) {
                     showNotification(
                       notifyResult?.message ||
-                        `Gmail notices: ${studentsSent} students and ${facultySent} faculty sent; ${studentsFailed} students and ${facultyFailed} faculty failed${details ? `: ${details}` : sent === 0 && failed === 0 ? ". No active student or faculty email addresses were found." : "."}`,
+                      `Gmail notices: ${studentsSent} students and ${facultySent} faculty sent; ${studentsFailed} students and ${facultyFailed} faculty failed${details ? `: ${details}` : sent === 0 && failed === 0 ? ". No active student or faculty email addresses were found." : "."}`,
                       "#f59e0b",
                       10000,
                     );
@@ -10872,7 +11521,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!res.ok || !result?.success) {
             showNotification(
               (result && result.message) ||
-                "Unable to close evaluation period.",
+              "Unable to close evaluation period.",
               "#f59e0b",
               4000,
             );
@@ -10892,7 +11541,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   if (!noticeResponse.ok || !noticeResult?.success) {
                     throw new Error(
                       noticeResult?.message ||
-                        "Unable to send evaluation closing notices.",
+                      "Unable to send evaluation closing notices.",
                     );
                   }
                 })
@@ -11380,6 +12029,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  window.closeArchivedAcademicYearView = closeArchivedAcademicYearView;
+
   closeArchivedAcademicYearBtn?.addEventListener(
     "click",
     closeArchivedAcademicYearView,
@@ -11501,17 +12152,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // When updating, preserve the original dates
     const payload = editingId
       ? {
-          id: editingId,
-          ay: academicYear,
-          semester,
-          start_date: addAcademicYearModal.dataset.originalStartDate || "",
-          end_date: addAcademicYearModal.dataset.originalEndDate || "",
-        }
+        id: editingId,
+        ay: academicYear,
+        semester,
+        start_date: addAcademicYearModal.dataset.originalStartDate || "",
+        end_date: addAcademicYearModal.dataset.originalEndDate || "",
+      }
       : {
-          ay: academicYear,
-          semester,
-          // No dates - will be NULL in database
-        };
+        ay: academicYear,
+        semester,
+        // No dates - will be NULL in database
+      };
 
     setButtonLoading(saveBtn, true, "Saving Academic Year...");
     try {
@@ -11561,9 +12212,8 @@ document.addEventListener("DOMContentLoaded", function () {
       <td>${escapeAcademicHtml(period.semester)}</td>
       ${isArchived ? "" : `<td><span class="status-badge ${isActive ? "active" : "inactive"}"><span class="status-dot" aria-hidden="true"></span>${isActive ? "Active" : "Inactive"}</span></td>`}
       <td class="action-cell">
-        ${
-          isArchived
-            ? `<div class="archived-record-actions">
+        ${isArchived
+        ? `<div class="archived-record-actions">
                 <button type="button" class="archived-record-action restore-btn period-archive-btn" title="Restore academic year" aria-label="Restore academic year">
                   <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i><span>Restore</span>
                 </button>
@@ -11571,7 +12221,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   <i class="ph ph-trash" aria-hidden="true"></i><span>Delete</span>
                 </button>
               </div>`
-            : `<div class="action-buttons">
+        : `<div class="action-buttons">
           <button class="manage-period-btn" title="Manage Period" aria-label="Manage Period">
             <i class="ph ph-calendar-dots"></i>
           </button>
@@ -11582,7 +12232,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <i class="ph ph-archive"></i>
           </button>
         </div>`
-        }
+      }
       </td>
     `;
 

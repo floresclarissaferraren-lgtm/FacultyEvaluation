@@ -1,6 +1,7 @@
-﻿student_number,email,firstname,lastname,program,student_type,yearlevel,section,suffix
-GC-123456,clarusbright08@gmail.com,Clarissa,Flores,BSIT,regular,4,C,
+student_number,email,firstname,lastname,program,student_type,yearlevel,section,suffix
+GC-230539,clarusbright08@gmail.com,Clarissa,Flores,BSIT,regular,2,C,
+GC-230979,jw471040@gmail.com,John Wayne, Rodriguez,BSIT,regular,3,C,
 GC-234567,danilsboknish@gmail.com,Daniel,Hines,BSIT,regular,3,A,
-GC-230382,mariellesugabo99@gmail.com,Marielle,Sugabo,BSIT,regular,3,C,
-GC-234323,florescristelferraren@gmail.com,Cristel,Flores,BSIT,regular,3,C,
+GC-230382,mariellesugabo99@gmail.com,Marielle,Sugabo,BSIT,regular,1,C,
+GC-098987,florescristelferraren@gmail.com,Cristel,Flores,BSIT,regular,2,C,
 

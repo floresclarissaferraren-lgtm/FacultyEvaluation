@@ -4,6 +4,9 @@ requireRole("admin");
 include __DIR__ . "/../shared/connect.php";
 
 header("Content-Type: application/json");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 // Keep PHP diagnostics in the server log; never expose internals in API responses.
 error_reporting(E_ALL);
@@ -26,9 +29,26 @@ if (
 function ensureSubjectSemesterColumn(mysqli $conn): void
 {
     $check = $conn->query("SHOW COLUMNS FROM add_subjects LIKE 'semester'");
-    if ($check && $check->num_rows === 0) {
-        $conn->query(
-            "ALTER TABLE add_subjects ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER subject_desc",
+    if (!$check) {
+        throw new RuntimeException("Unable to inspect the subject semester column.");
+    }
+
+    $definition = "ENUM('1st Semester','2nd Semester','Summer') NULL";
+    if ($check->num_rows === 0) {
+        $alterSql = "ALTER TABLE add_subjects ADD COLUMN semester {$definition} AFTER subject_desc";
+    } else {
+        $column = $check->fetch_assoc();
+        $type = strtolower((string) ($column["Type"] ?? ""));
+        $default = $column["Default"] ?? null;
+        if (strpos($type, "'summer'") !== false && $default === null) {
+            return;
+        }
+        $alterSql = "ALTER TABLE add_subjects MODIFY COLUMN semester {$definition}";
+    }
+
+    if (!$conn->query($alterSql)) {
+        throw new RuntimeException(
+            "Unable to update the subject semester column: " . $conn->error,
         );
     }
 }
@@ -108,7 +128,7 @@ if ($action === "get") {
         SELECT id, program_id, subject_code, subject_desc, semester, year_level
         FROM add_subjects
         WHERE program_id=?
-        ORDER BY semester ASC, subject_code ASC
+        ORDER BY id DESC
     ");
 
     $stmt->bind_param("i", $program_id);
@@ -160,17 +180,21 @@ if ($action === "delete") {
     $stmt = $conn->prepare("DELETE FROM add_subjects WHERE id=?");
     $stmt->bind_param("i", $id);
 
-    if ($stmt->execute()) {
+    if ($stmt->execute() && $stmt->affected_rows > 0) {
         error_log("Subject deleted successfully");
         echo json_encode([
             "status" => "success",
             "message" => "Subject deleted successfully",
         ]);
     } else {
-        error_log("Failed to delete subject: " . $stmt->error);
+        $message =
+            $stmt->affected_rows === 0
+                ? "Subject no longer exists."
+                : "Failed to delete subject: " . $stmt->error;
+        error_log($message);
         echo json_encode([
             "status" => "error",
-            "message" => "Failed to delete subject: " . $stmt->error,
+            "message" => $message,
         ]);
     }
 
@@ -247,7 +271,7 @@ if ($action === "get_all") {
         SELECT s.id, s.subject_code, s.subject_desc, s.semester, s.year_level, p.program_code, p.program_name
         FROM add_subjects s
         LEFT JOIN add_programs p ON s.program_id = p.id
-        ORDER BY p.program_code ASC, p.program_name ASC, s.year_level ASC, s.semester ASC, s.subject_code ASC
+        ORDER BY s.id DESC
     ");
 
     $stmt->execute();

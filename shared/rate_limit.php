@@ -79,6 +79,32 @@ function enforceRateLimit(string $bucket, int $limit, int $windowSeconds): void
 
     if ($entry["count"] >= $limit) {
         $retryAfter = max(1, $entry["started_at"] + $entry["window"] - $now);
+        $accountType = "";
+
+        if (!empty($_POST["account_type"])) {
+            $accountType = strtolower(trim((string) $_POST["account_type"]));
+        } else {
+            $body = @file_get_contents("php://input");
+            if (is_string($body) && $body !== "") {
+                $decoded = json_decode($body, true);
+                if (is_array($decoded)) {
+                    $accountType = strtolower(
+                        trim((string) ($decoded["account_type"] ?? "")),
+                    );
+                } else {
+                    parse_str($body, $parsedBody);
+                    $accountType = strtolower(
+                        trim((string) ($parsedBody["account_type"] ?? "")),
+                    );
+                }
+            }
+        }
+
+        $retryMessage =
+            $accountType === "admin"
+                ? "This email address is not registered as the administrator's email. Please enter the registered admin Gmail address."
+                : "Too many attempts. Please wait before trying again.";
+
         flock($handle, LOCK_UN);
         fclose($handle);
         header("Retry-After: " . $retryAfter);
@@ -86,7 +112,7 @@ function enforceRateLimit(string $bucket, int $limit, int $windowSeconds): void
         header("Content-Type: application/json; charset=utf-8");
         echo json_encode([
             "success" => false,
-            "message" => "Too many attempts. Please wait before trying again.",
+            "message" => $retryMessage,
         ]);
         exit();
     }

@@ -248,10 +248,22 @@ if (closeNewPass)
   });
 
 // ===================== Forgot Button =====================
+function getForgotPasswordAccountType() {
+  const hiddenType = document.getElementById("forgotAccountType")?.value?.trim();
+  if (hiddenType) return hiddenType.toLowerCase();
+
+  const usernameValue = document.getElementById("username")?.value.trim() || "";
+  if (/^ADM-/i.test(usernameValue)) return "admin";
+  if (window.location.pathname.toLowerCase().includes("/admin/")) return "admin";
+  return "";
+}
+
 const openForgot = document.getElementById("openForgot");
 if (openForgot)
   openForgot.addEventListener("click", (e) => {
     e.preventDefault();
+    const hiddenType = document.getElementById("forgotAccountType");
+    if (hiddenType) hiddenType.value = getForgotPasswordAccountType();
     switchModal(modals.login, modals.forgot);
   });
 
@@ -437,10 +449,14 @@ if (forgotForm) {
     sendCodeBtn.style.cursor = "not-allowed";
 
     try {
+      const accountType = getForgotPasswordAccountType();
       const res = await fetch("../shared/send_password_reset.php", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "email=" + encodeURIComponent(email),
+        body:
+          "email=" +
+          encodeURIComponent(email) +
+          (accountType ? "&account_type=" + encodeURIComponent(accountType) : ""),
       });
       const result = await res.json();
 
@@ -557,6 +573,7 @@ if (verifyOtpBtn) {
           email: _resetEmail,
           code: code,
           check_only: true,
+          account_type: getForgotPasswordAccountType(),
         }),
       });
       const result = await res.json();
@@ -598,10 +615,14 @@ if (resendCodeBtn) {
     resendCodeBtn.textContent = "Sending...";
 
     try {
+      const accountType = getForgotPasswordAccountType();
       const res = await fetch("../shared/send_password_reset.php", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "email=" + encodeURIComponent(_resetEmail),
+        body:
+          "email=" +
+          encodeURIComponent(_resetEmail) +
+          (accountType ? "&account_type=" + encodeURIComponent(accountType) : ""),
       });
       const result = await res.json();
       const otpError = document.getElementById("otpError");
@@ -697,6 +718,7 @@ if (resetPasswordBtn) {
           email: _resetEmail,
           code: _resetEmail_code,
           password: newPass,
+          account_type: getForgotPasswordAccountType(),
         }),
       });
       const result = await res.json();

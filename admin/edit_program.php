@@ -3,9 +3,11 @@ require_once __DIR__ . "/../shared/security.php";
 requireRole("admin");
 requireMethod("POST");
 include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/department_schema.php";
 
 // 🔥 IMPORTANT: set JSON header
 header("Content-Type: application/json");
+ensureDepartmentSchema($conn);
 
 function normalizeProgramCodeInput(string $code): string
 {
@@ -44,14 +46,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = intval($_POST["id"] ?? 0);
     $code = normalizeProgramCodeInput($_POST["program_code"] ?? "");
     $name = trim($_POST["program_name"] ?? "");
+    $departmentValue = trim((string) ($_POST["department_id"] ?? ""));
+    $departmentId =
+        $departmentValue === "" ? null : filter_var($departmentValue, FILTER_VALIDATE_INT);
 
     // basic validation
-    if (empty($code) || empty($name)) {
+    if (empty($code) || empty($name) || $id <= 0 || $departmentId === false) {
         echo json_encode([
             "status" => "error",
-            "message" => "Program code and name are required.",
+            "message" => "A valid department, program code, name, and program are required.",
         ]);
         exit();
+    }
+
+    if ($departmentId !== null) {
+        $department = $conn->prepare("SELECT id FROM add_departments WHERE id = ? LIMIT 1");
+        $department->bind_param("i", $departmentId);
+        $department->execute();
+        if ($department->get_result()->num_rows === 0) {
+            http_response_code(400);
+            echo json_encode([
+                "status" => "error",
+                "message" => "Select a valid department.",
+            ]);
+            exit();
+        }
+        $department->close();
     }
 
     if (programCodeExists($conn, $code, $id)) {
@@ -64,14 +84,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $stmt = $conn->prepare(
-        "UPDATE add_programs SET program_code=?, program_name=? WHERE id=?",
+        "UPDATE add_programs SET department_id=?, program_code=?, program_name=? WHERE id=?",
     );
-    $stmt->bind_param("ssi", $code, $name, $id);
+    $stmt->bind_param("issi", $departmentId, $code, $name, $id);
 
     if ($stmt->execute()) {
         echo json_encode([
             "status" => "success",
             "id" => $id,
+            "department_id" => $departmentId,
             "program_code" => $code,
             "program_name" => $name,
         ]);

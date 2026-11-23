@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../shared/security.php";
 requireRole("admin");
 header("Content-Type: application/json");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 require __DIR__ . "/../shared/connect.php";
 require_once __DIR__ . "/../shared/class_period_helper.php";
 

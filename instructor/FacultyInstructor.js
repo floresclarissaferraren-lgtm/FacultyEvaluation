@@ -94,6 +94,8 @@ function showPasswordForm(e) {
   document.getElementById("newPass").value = "";
   document.getElementById("confirmPass").value = "";
   if (typeof clearPassMsgs === "function") clearPassMsgs();
+  updatePasswordStrengthIndicator();
+  updateConfirmPasswordMatch();
 }
 
 function closePasswordForm() {
@@ -114,6 +116,8 @@ function closePasswordForm() {
   }, 300);
 
   if (typeof clearPassMsgs === "function") clearPassMsgs();
+  updatePasswordStrengthIndicator();
+  updateConfirmPasswordMatch();
   const box = document.getElementById("passGlobalMsg");
   if (box) box.style.display = "none";
 
@@ -578,14 +582,85 @@ function clearPassMsgs() {
 }
 
 function validatePasswordStrength(password) {
+  const rules = getPasswordStrengthRules(password);
   const errors = [];
-  if (password.length < 8) errors.push("at least 8 characters");
-  if (!/[A-Z]/.test(password)) errors.push("at least one uppercase letter");
-  if (!/[a-z]/.test(password)) errors.push("at least one lowercase letter");
-  if (!/[^A-Za-z0-9]/.test(password))
-    errors.push("at least one special character");
+  if (!rules.length) errors.push("at least 8 characters");
+  if (!rules.number) errors.push("at least 1 number");
+  if (!rules.uppercase) errors.push("at least 1 uppercase letter");
   return errors;
 }
+
+function getPasswordStrengthRules(password) {
+  return {
+    length: password.length >= 8,
+    number: /\d/.test(password),
+    uppercase: /[A-Z]/.test(password),
+  };
+}
+
+function updatePasswordStrengthIndicator() {
+  const input = document.getElementById("newPass");
+  const indicator = document.getElementById("passwordStrength");
+  if (!input || !indicator) return;
+
+  const password = input.value.trim();
+  const rules = getPasswordStrengthRules(password);
+  const passedRules = Object.values(rules).filter(Boolean).length;
+  const isStrong = passedRules === Object.keys(rules).length;
+
+  indicator.classList.toggle("is-empty", !password);
+  indicator.classList.toggle("is-weak", Boolean(password) && !isStrong);
+  indicator.classList.toggle("is-strong", isStrong);
+  indicator.classList.toggle("show-rules", Boolean(password) && !isStrong);
+  indicator
+    .querySelectorAll(".password-strength-segment")
+    .forEach((segment, index) => {
+      segment.classList.toggle("is-filled", index < passedRules);
+    });
+  indicator.querySelectorAll("[data-password-rule]").forEach((rule) => {
+    const isMet = Boolean(rules[rule.dataset.passwordRule]);
+    rule.classList.toggle("is-met", isMet);
+    const icon = rule.querySelector("i");
+    if (icon) {
+      icon.classList.toggle("ph-check-circle", isMet);
+      icon.classList.toggle("ph-x-circle", !isMet);
+    }
+  });
+
+  const status = document.getElementById("passwordStrengthStatus");
+  if (status) {
+    status.textContent = !password
+      ? "Password strength"
+      : isStrong
+        ? "Strong Password"
+        : "Weak Password";
+  }
+}
+
+function updateConfirmPasswordMatch() {
+  const newPassword = document.getElementById("newPass")?.value.trim() || "";
+  const confirmPassword =
+    document.getElementById("confirmPass")?.value.trim() || "";
+  if (!confirmPassword) {
+    showPassMsg("confirmPassError", "");
+    return;
+  }
+  showPassMsg(
+    "confirmPassError",
+    newPassword === confirmPassword ? "" : "Passwords do not match.",
+  );
+}
+
+document.getElementById("newPass")?.addEventListener("input", () => {
+  updatePasswordStrengthIndicator();
+  showPassMsg("newPassError", "");
+  updateConfirmPasswordMatch();
+});
+document
+  .getElementById("confirmPass")
+  ?.addEventListener("input", updateConfirmPasswordMatch);
+updatePasswordStrengthIndicator();
+updateConfirmPasswordMatch();
 
 function showPasswordMessageBox(message, type) {
   // type: 'success' | 'error'
@@ -672,9 +747,9 @@ function showGlobalNotification(message, type) {
 
 function updatePassword() {
   const facultyId = document.getElementById("facultyNumericId").value;
-  const oldPass = document.getElementById("oldPass").value;
-  const newPass = document.getElementById("newPass").value;
-  const confirmPass = document.getElementById("confirmPass").value;
+  const oldPass = document.getElementById("oldPass").value.trim();
+  const newPass = document.getElementById("newPass").value.trim();
+  const confirmPass = document.getElementById("confirmPass").value.trim();
 
   clearPassMsgs();
 

@@ -2,11 +2,14 @@
 require_once __DIR__ . "/../shared/security.php";
 requireRole("admin");
 include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/department_schema.php";
 
 header("Content-Type: application/json");
+ensureDepartmentSchema($conn);
 
 $query = "
-    SELECT p.id, p.program_code, p.program_name,
+    SELECT p.id, p.department_id, d.department_code, d.department_name,
+        p.program_code, p.program_name,
         (
             SELECT COUNT(*)
             FROM add_students st
@@ -15,6 +18,7 @@ $query = "
                OR UPPER(TRIM(st.program)) = UPPER(TRIM(p.program_name))
         ) AS enrolled_students
     FROM add_programs p
+    LEFT JOIN add_departments d ON d.id = p.department_id
     ORDER BY p.id DESC
 ";
 $result = mysqli_query($conn, $query);

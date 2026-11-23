@@ -3383,6 +3383,85 @@ body {
   transform: none;
 }
 
+#passwordForm .password-strength {
+  margin: 8px 0 2px;
+}
+
+#passwordForm .password-strength-meter {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+#passwordForm .password-strength:not(.show-rules) {
+  display: none;
+}
+
+#passwordForm .password-strength-segment {
+  height: 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+#passwordForm .password-strength-segment.is-filled {
+  background: #ef4444;
+}
+
+#passwordForm .password-strength.is-strong
+  .password-strength-segment.is-filled {
+  background: #16a34a;
+}
+
+#passwordForm .password-strength-status {
+  margin: 6px 0 9px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#passwordForm .password-strength.is-empty .password-strength-status {
+  color: #64748b;
+}
+
+#passwordForm .password-strength.is-strong .password-strength-status {
+  color: #15803d;
+}
+
+#passwordForm .password-strength-heading {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+#passwordForm .password-strength-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#passwordForm .password-strength-rules li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+#passwordForm .password-strength-rules li i {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+#passwordForm .password-strength-rules li.is-met,
+#passwordForm .password-strength-rules li.is-met i {
+  color: #16a34a;
+}
+
 #passwordForm .modern-login-btn {
   min-height: 0;
   max-height: none;

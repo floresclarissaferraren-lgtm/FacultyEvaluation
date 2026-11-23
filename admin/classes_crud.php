@@ -99,9 +99,26 @@ function matchesOpenEvaluationSemester(mysqli $conn, string $semester): bool
 function ensureSubjectSemesterColumn(mysqli $conn): void
 {
     $check = $conn->query("SHOW COLUMNS FROM add_subjects LIKE 'semester'");
-    if ($check && $check->num_rows === 0) {
-        $conn->query(
-            "ALTER TABLE add_subjects ADD COLUMN semester VARCHAR(20) NOT NULL DEFAULT '1st Semester' AFTER subject_desc",
+    if (!$check) {
+        throw new RuntimeException("Unable to inspect the subject semester column.");
+    }
+
+    $definition = "ENUM('1st Semester','2nd Semester','Summer') NULL";
+    if ($check->num_rows === 0) {
+        $alterSql = "ALTER TABLE add_subjects ADD COLUMN semester {$definition} AFTER subject_desc";
+    } else {
+        $column = $check->fetch_assoc();
+        $type = strtolower((string) ($column["Type"] ?? ""));
+        $default = $column["Default"] ?? null;
+        if (strpos($type, "'summer'") !== false && $default === null) {
+            return;
+        }
+        $alterSql = "ALTER TABLE add_subjects MODIFY COLUMN semester {$definition}";
+    }
+
+    if (!$conn->query($alterSql)) {
+        throw new RuntimeException(
+            "Unable to update the subject semester column: " . $conn->error,
         );
     }
 }

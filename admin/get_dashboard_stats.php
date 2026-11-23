@@ -113,7 +113,9 @@ try {
 
     // Get faculty ratings using weighted scores (real-time)
     $faculty_list_query = "
-        SELECT f.id, f.firstname, f.lastname, f.suffix, COUNT(e.id) as response_count
+        SELECT f.id, f.firstname, f.lastname, f.suffix,
+               COUNT(e.id) as response_count,
+               COUNT(DISTINCT CASE WHEN e.subject_id > 0 THEN e.subject_id END) as subject_count
         FROM add_faculties f
         LEFT JOIN evaluations e
           ON f.id = e.faculty_id
@@ -133,10 +135,13 @@ try {
 
     $ratings = [];
     $weighted_sum = 0.0;
+    $total_rating_subjects = 0;
     $evaluated_faculty = 0;
 
     while ($frow = $faculty_list_result->fetch_assoc()) {
         $fid = intval($frow["id"]);
+        $response_count = intval($frow["response_count"]);
+        $subject_count = intval($frow["subject_count"]);
         $weighted_avg = calcWeightedScore(
             $conn,
             $fid,
@@ -147,7 +152,8 @@ try {
         if ($weighted_avg <= 0) {
             continue;
         }
-        $weighted_sum += $weighted_avg;
+        $weighted_sum += $weighted_avg * $subject_count;
+        $total_rating_subjects += $subject_count;
         $evaluated_faculty++;
         $ratings[] = [
             "name" => trim(
@@ -159,7 +165,7 @@ try {
             ),
             "rating" => round($weighted_avg, 2),
             "percentage" => round(($weighted_avg / 5) * 100, 2),
-            "responses" => intval($frow["response_count"]),
+            "responses" => $response_count,
         ];
     }
     $faculty_list_stmt->close();
@@ -168,8 +174,8 @@ try {
     usort($ratings, fn($a, $b) => $b["rating"] <=> $a["rating"]);
 
     $overall_rating =
-        $evaluated_faculty > 0
-            ? round($weighted_sum / $evaluated_faculty, 2)
+        $total_rating_subjects > 0
+            ? round($weighted_sum / $total_rating_subjects, 2)
             : 0;
 
     // Get department/program data for graph (based on subject assignments)

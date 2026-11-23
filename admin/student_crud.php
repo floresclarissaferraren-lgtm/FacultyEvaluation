@@ -328,14 +328,14 @@ if ($action === "bulk_import") {
         LIMIT 1
     ");
     $studentIdCheck = $conn->prepare("
-        SELECT id, student_number, program, yearlevel, section, student_type
+        SELECT id, student_number, email, firstname, lastname, suffix, program, yearlevel, section, student_type, status
         FROM add_students
         WHERE student_number = ?
         LIMIT 1
     ");
     $studentUpdate = $conn->prepare("
         UPDATE add_students
-        SET student_type = ?, yearlevel = ?, section = ?
+        SET firstname = ?, lastname = ?, suffix = ?, program = ?, student_type = ?, yearlevel = ?, section = ?, status = ?
         WHERE id = ?
     ");
     if (!$insert || !$duplicateCheck || !$studentIdCheck || !$studentUpdate) {
@@ -388,18 +388,28 @@ if ($action === "bulk_import") {
         "success" => true,
         "imported" => 0,
         "updated" => 0,
+        "deleted" => 0,
+        "archived" => 0,
+        "immutable_fields_ignored" => 0,
+        "unchanged" => 0,
         "skipped" => 0,
         "failed" => 0,
         "email_queued" => 0,
         "email_failed" => 0,
+        "subject_refresh_failed" => 0,
         "evaluation_open" => $evaluationOpen,
         "skipped_records" => [],
         "failed_records" => [],
         "email_warnings" => [],
+        "subject_refresh_warnings" => [],
+        "sync_completed" => false,
     ];
     $rowNumber = 1;
     $defaultStatus = "active";
     $seenStudentNumbers = [];
+    $seenStudentEmails = [];
+    $seenStudentIds = [];
+    $processedRecords = 0;
     $pendingWelcomeEmails = [];
 
     while (($row = fgetcsv($handle, 0, ",", '"', "\\")) !== false) {
@@ -407,6 +417,7 @@ if ($action === "bulk_import") {
         if (count($row) === 1 && trim((string) $row[0]) === "") {
             continue;
         }
+        $processedRecords++;
 
         $record = [];
         foreach (
@@ -455,12 +466,16 @@ if ($action === "bulk_import") {
             ];
             continue;
         }
-        if (isset($seenStudentNumbers[$studentNumber])) {
+        $normalizedEmail = strtolower(trim($email));
+        if (
+            isset($seenStudentNumbers[$studentNumber]) ||
+            ($normalizedEmail !== "" && isset($seenStudentEmails[$normalizedEmail]))
+        ) {
             $summary["skipped"]++;
             $summary["skipped_records"][] = [
                 "row" => $rowNumber,
                 "student_number" => $studentNumber,
-                "reason" => "Student ID is duplicated in this CSV file.",
+                "reason" => "Student ID or email is duplicated in this CSV file.",
             ];
             continue;
         }
@@ -493,32 +508,65 @@ if ($action === "bulk_import") {
         if ($existingResult) {
             $existingResult->free();
         }
-
         if ($existingStudent) {
             // Consume the first row for this ID even if its update later fails,
             // so a repeated ID in the same CSV is never processed twice.
             $seenStudentNumbers[$studentNumber] = true;
+            if ($normalizedEmail !== "") {
+                $seenStudentEmails[$normalizedEmail] = true;
+            }
+            $seenStudentIds[(int) $existingStudent["id"]] = true;
             $existingType = strtolower(
                 (string) ($existingStudent["student_type"] ?: "regular"),
             );
+            $updatedFirstName = isset($headerIndexes["firstname"]) && $firstName !== ""
+                ? $firstName
+                : (string) ($existingStudent["firstname"] ?? "");
+            $updatedLastName = isset($headerIndexes["lastname"]) && $lastName !== ""
+                ? $lastName
+                : (string) ($existingStudent["lastname"] ?? "");
+            $updatedSuffix = isset($headerIndexes["suffix"])
+                ? $suffix
+                : (string) ($existingStudent["suffix"] ?? "");
+            $updatedProgramId = isset($headerIndexes["program"]) && $record["program"] !== ""
+                ? resolveProgramId($conn, $record["program"])
+                : (int) ($existingStudent["program"] ?? 0);
             $updatedType = isset($headerIndexes["student_type"]) && $record["student_type"] !== ""
                 ? strtolower($record["student_type"])
                 : $existingType;
             $updatedYearLevel = isset($headerIndexes["yearlevel"]) && $yearLevel !== ""
                 ? $yearLevel
-                : (string) $existingStudent["yearlevel"];
+                : (string) ($existingStudent["yearlevel"] ?? "");
             $updatedSection = isset($headerIndexes["section"]) && $section !== ""
                 ? $section
                 : (string) ($existingStudent["section"] ?? "");
+            $updatedEmail = (string) ($existingStudent["email"] ?? "");
+            if (
+                isset($headerIndexes["email"]) &&
+                $email !== "" &&
+                strcasecmp($email, $updatedEmail) !== 0
+            ) {
+                $summary["immutable_fields_ignored"]++;
+            }
+            $updatedStatus = strtolower(
+                (string) ($existingStudent["status"] ?? "active"),
+            ) === "archived"
+                ? "active"
+                : (string) ($existingStudent["status"] ?? "active");
 
-            if (!in_array($updatedType, ["regular", "irregular"], true)) {
+            $reason = "";
+            if ($updatedEmail === "" || $updatedFirstName === "" || $updatedLastName === "") {
+                $reason = "Student email, first name, and last name are required.";
+            } elseif (!filter_var($updatedEmail, FILTER_VALIDATE_EMAIL)) {
+                $reason = "Email address is invalid.";
+            } elseif (!in_array($updatedType, ["regular", "irregular"], true)) {
                 $reason = "Student type must be regular or irregular.";
+            } elseif ($updatedProgramId <= 0) {
+                $reason = "Program does not match an existing program.";
             } elseif ($updatedType === "regular" && !in_array($updatedYearLevel, ["1", "2", "3", "4"], true)) {
                 $reason = "Regular students must have a year level from 1 to 4.";
             } elseif ($updatedType === "regular" && trim($updatedSection) === "") {
                 $reason = "Regular students must have a section.";
-            } else {
-                $reason = "";
             }
 
             if ($reason !== "") {
@@ -538,31 +586,71 @@ if ($action === "bulk_import") {
                 ? ""
                 : trim($updatedSection);
             $existingId = (int) $existingStudent["id"];
-            $oldYearLevel = (string) $existingStudent["yearlevel"];
+            $oldProgram = (string) ($existingStudent["program"] ?? "");
+            $oldYearLevel = (string) ($existingStudent["yearlevel"] ?? "");
             $oldSection = (string) ($existingStudent["section"] ?? "");
             $needsSubjectRefresh =
+                (string) $updatedProgramId !== $oldProgram ||
                 $updatedType !== $existingType ||
                 ($updatedType === "regular" &&
                     ($updatedYearLevel !== $oldYearLevel ||
                         strcasecmp($updatedSection, $oldSection) !== 0));
+            $hasStudentChanges =
+                $updatedStatus !== (string) ($existingStudent["status"] ?? "active") ||
+                $updatedFirstName !== (string) ($existingStudent["firstname"] ?? "") ||
+                $updatedLastName !== (string) ($existingStudent["lastname"] ?? "") ||
+                $updatedSuffix !== (string) ($existingStudent["suffix"] ?? "") ||
+                (string) $updatedProgramId !== $oldProgram ||
+                $updatedType !== $existingType ||
+                $updatedYearLevel !== $oldYearLevel ||
+                $updatedSection !== $oldSection;
+
+            if (!$hasStudentChanges) {
+                $summary["unchanged"]++;
+                continue;
+            }
 
             try {
-                if ($needsSubjectRefresh) {
-                    ensureStudentSubjectClassesSchema($conn);
-                }
                 $conn->begin_transaction();
+                $updatedProgram = (string) $updatedProgramId;
                 $studentUpdate->bind_param(
-                    "sssi",
+                    "ssssssssi",
+                    $updatedFirstName,
+                    $updatedLastName,
+                    $updatedSuffix,
+                    $updatedProgram,
                     $updatedType,
                     $updatedYearLevel,
                     $updatedSection,
+                    $updatedStatus,
                     $existingId,
                 );
                 if (!$studentUpdate->execute()) {
                     throw new RuntimeException($studentUpdate->error);
                 }
+                $conn->commit();
+                $summary["updated"]++;
+            } catch (Throwable $e) {
+                $conn->rollback();
+                $summary["failed"]++;
+                $summary["failed_records"][] = [
+                    "row" => $rowNumber,
+                    "student_number" => $studentNumber,
+                    "reason" => "Unable to update this student account.",
+                ];
+                error_log(
+                    "Bulk student update failed on CSV row " .
+                        $rowNumber .
+                        ": " .
+                        $e->getMessage(),
+                );
+                continue;
+            }
 
-                if ($needsSubjectRefresh) {
+            if ($needsSubjectRefresh) {
+                try {
+                    ensureStudentSubjectClassesSchema($conn);
+                    $conn->begin_transaction();
                     $deleteSubjectClasses = $conn->prepare(
                         "DELETE FROM student_subject_classes WHERE student_id = ?",
                     );
@@ -583,30 +671,30 @@ if ($action === "bulk_import") {
                         assignStudentSubjects(
                             $conn,
                             $existingId,
-                            (string) $existingStudent["program"],
+                            (string) $updatedProgramId,
                             $updatedYearLevel,
                             $updatedSection,
                             [],
                             true,
                         );
                     }
+                    $conn->commit();
+                } catch (Throwable $e) {
+                    $conn->rollback();
+                    $summary["subject_refresh_failed"]++;
+                    $summary["subject_refresh_warnings"][] = [
+                        "row" => $rowNumber,
+                        "student_number" => $studentNumber,
+                        "reason" =>
+                            "Student information was saved, but subject assignments could not be refreshed.",
+                    ];
+                    error_log(
+                        "Bulk student subject refresh failed on CSV row " .
+                            $rowNumber .
+                            ": " .
+                            $e->getMessage(),
+                    );
                 }
-                $conn->commit();
-                $summary["updated"]++;
-            } catch (Throwable $e) {
-                $conn->rollback();
-                $summary["failed"]++;
-                $summary["failed_records"][] = [
-                    "row" => $rowNumber,
-                    "student_number" => $studentNumber,
-                    "reason" => "Unable to update this student account.",
-                ];
-                error_log(
-                    "Bulk student update failed on CSV row " .
-                        $rowNumber .
-                        ": " .
-                        $e->getMessage(),
-                );
             }
             continue;
         }
@@ -701,6 +789,9 @@ if ($action === "bulk_import") {
             continue;
         }
         $seenStudentNumbers[$studentNumber] = true;
+        if ($normalizedEmail !== "") {
+            $seenStudentEmails[$normalizedEmail] = true;
+        }
 
         $duplicateCheck->bind_param("ss", $studentNumber, $email);
         try {
@@ -744,12 +835,16 @@ if ($action === "bulk_import") {
                 ) === 0;
             $matchesEmail =
                 strcasecmp((string) $existing["email"], $email) === 0;
-            $duplicateReason =
-                $matchesStudentNumber && $matchesEmail
-                    ? "Student ID and email already exist."
-                    : ($matchesStudentNumber
-                        ? "Student ID already exists."
-                        : "Email address already exists.");
+            if (!$matchesStudentNumber && $matchesEmail) {
+                $duplicateReason = "Student ID cannot be changed; row skipped.";
+                $summary["immutable_fields_ignored"]++;
+            } elseif ($matchesStudentNumber && $matchesEmail) {
+                $duplicateReason = "Student ID and email already exist.";
+            } elseif ($matchesStudentNumber) {
+                $duplicateReason = "Student ID already exists.";
+            } else {
+                $duplicateReason = "Email address already exists.";
+            }
             $summary["skipped"]++;
             $summary["skipped_records"][] = [
                 "row" => $rowNumber,
@@ -784,10 +879,11 @@ if ($action === "bulk_import") {
             if (!$insert->execute()) {
                 throw new RuntimeException($insert->error);
             }
+            $insertedStudentId = (int) $insert->insert_id;
 
             assignStudentSubjects(
                 $conn,
-                (int) $insert->insert_id,
+                $insertedStudentId,
                 $program,
                 $yearLevelValue,
                 $sectionValue,
@@ -795,6 +891,7 @@ if ($action === "bulk_import") {
                 $studentType === "regular",
             );
             $conn->commit();
+            $seenStudentIds[$insertedStudentId] = true;
             $summary["imported"]++;
 
             try {
@@ -894,6 +991,95 @@ if ($action === "bulk_import") {
                     $e->getMessage(),
             );
         }
+    }
+
+    if ($processedRecords === 0) {
+        $summary["failed"]++;
+        $summary["failed_records"][] = [
+            "row" => 2,
+            "student_number" => "",
+            "reason" => "The CSV must contain at least one student record.",
+        ];
+    }
+
+    if (
+        $processedRecords > 0 &&
+        $summary["failed"] === 0 &&
+        $summary["skipped"] === 0
+    ) {
+        try {
+            $evaluationCheck = $conn->prepare(
+                "SELECT id FROM evaluations WHERE student_id = ? LIMIT 1",
+            );
+            $archiveStudent = $conn->prepare(
+                "UPDATE add_students SET status = 'archived' WHERE id = ?",
+            );
+            $deleteStudent = $conn->prepare(
+                "DELETE FROM add_students WHERE id = ?",
+            );
+            if (!$evaluationCheck || !$archiveStudent || !$deleteStudent) {
+                throw new RuntimeException("Unable to prepare full-roster synchronization.");
+            }
+
+            $conn->begin_transaction();
+            $studentsToSync = $conn->query(
+                "SELECT id FROM add_students WHERE status <> 'archived'",
+            );
+            if (!$studentsToSync) {
+                throw new RuntimeException("Unable to read the current student roster.");
+            }
+
+            while ($student = $studentsToSync->fetch_assoc()) {
+                $studentId = (int) $student["id"];
+                if (isset($seenStudentIds[$studentId])) {
+                    continue;
+                }
+
+                $evaluationCheck->bind_param("i", $studentId);
+                if (!$evaluationCheck->execute()) {
+                    throw new RuntimeException($evaluationCheck->error);
+                }
+                $evaluationResult = $evaluationCheck->get_result();
+                $hasEvaluations = $evaluationResult && $evaluationResult->num_rows > 0;
+                if ($evaluationResult) {
+                    $evaluationResult->free();
+                }
+
+                if ($hasEvaluations) {
+                    $archiveStudent->bind_param("i", $studentId);
+                    if (!$archiveStudent->execute()) {
+                        throw new RuntimeException($archiveStudent->error);
+                    }
+                    $summary["archived"] += $archiveStudent->affected_rows;
+                } else {
+                    $deleteStudent->bind_param("i", $studentId);
+                    if (!$deleteStudent->execute()) {
+                        throw new RuntimeException($deleteStudent->error);
+                    }
+                    $summary["deleted"] += $deleteStudent->affected_rows;
+                }
+            }
+
+            $studentsToSync->free();
+            $conn->commit();
+            $summary["sync_completed"] = true;
+            $evaluationCheck->close();
+            $archiveStudent->close();
+            $deleteStudent->close();
+        } catch (Throwable $e) {
+            $conn->rollback();
+            $summary["deleted"] = 0;
+            $summary["archived"] = 0;
+            $summary["sync_warning"] =
+                "Roster sync failed; missing students were not removed.";
+            error_log(
+                "Bulk student roster synchronization failed: " .
+                    $e->getMessage(),
+            );
+        }
+    } else {
+        $summary["sync_warning"] =
+            "Roster sync skipped; fix failed or duplicate CSV rows first.";
     }
 
     if ($pendingWelcomeEmails) {
@@ -1119,7 +1305,6 @@ if ($action === "bulk_import") {
     $yearlevel = $data["yearlevel"];
     $program = $data["program"];
     $section = $data["section"];
-    $email = $data["email"];
     $student_type = $data["student_type"] ?? "regular";
     $subjects = $data["subjects"] ?? [];
 
@@ -1128,19 +1313,18 @@ if ($action === "bulk_import") {
 
     $stmt = $conn->prepare("
         UPDATE add_students 
-        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, section=?, email=?, student_type=?
+        SET firstname=?, lastname=?, suffix=?, yearlevel=?, program=?, section=?, student_type=?
         WHERE id=?
     ");
 
     $stmt->bind_param(
-        "ssssssssi",
+        "sssssssi",
         $firstname,
         $lastname,
         $suffix,
         $yearlevelValue,
         $program,
         $section,
-        $email,
         $student_type,
         $id,
     );
