@@ -1526,6 +1526,23 @@ function openSelectedHistoryPerSubjectReport() {
   openHistoryPerSubjectReport(selectedHistoryReportPeriod);
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const url = new URL(window.location.href);
+  const requestedAction = url.searchParams.get("open");
+  if (!["profile", "password", "history"].includes(requestedAction)) return;
+
+  url.searchParams.delete("open");
+  window.history.replaceState(null, "", url.toString());
+
+  if (requestedAction === "profile") {
+    showProfile();
+  } else if (requestedAction === "password") {
+    showPasswordForm();
+  } else {
+    showEvaluationHistory();
+  }
+});
+
 document.addEventListener("DOMContentLoaded", function () {
   const backBtn = document.getElementById("closePasswordForm");
   if (backBtn) {

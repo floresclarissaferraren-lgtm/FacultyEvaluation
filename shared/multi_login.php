@@ -96,6 +96,21 @@ if (str_starts_with(strtoupper($username), "GC-")) {
 }
 
 // Faculty login
+require_once __DIR__ . "/ensure_schema_column.php";
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "department",
+    "VARCHAR(120) DEFAULT NULL",
+    "suffix",
+);
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "is_department_head",
+    "TINYINT(1) NOT NULL DEFAULT 0",
+    "department",
+);
 
 $stmt = $conn->prepare("
     SELECT
@@ -104,6 +119,8 @@ $stmt = $conn->prepare("
         COALESCE(fl.faculty_username, af.faculty_id) AS faculty_username,
         COALESCE(fl.faculty_password, af.password) AS faculty_password,
         (fl.faculty_id IS NULL) AS login_missing,
+        COALESCE(af.department, '') AS department,
+        COALESCE(af.is_department_head, 0) AS is_department_head,
         COALESCE(af.status, 'active') AS status
     FROM add_faculties af
     LEFT JOIN faculty_login fl ON fl.faculty_id = af.id
@@ -146,9 +163,14 @@ if ($result && $result->num_rows === 1) {
         $_SESSION["id"] = $user["faculty_id"];
         $_SESSION["username"] = $user["faculty_username"];
         $_SESSION["account_status"] = $user["status"] ?? "active";
+        $_SESSION["is_department_head"] =
+            (int) $user["is_department_head"] === 1;
+        $_SESSION["department"] = $user["department"];
         echo json_encode([
             "success" => true,
             "role" => "faculty",
+            "department_head" =>
+                (int) $user["is_department_head"] === 1,
             "inactive" =>
                 strtolower((string) ($user["status"] ?? "active")) !== "active",
             "message" =>

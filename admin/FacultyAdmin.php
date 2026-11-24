@@ -177,10 +177,10 @@ include __DIR__ . "/totalstudents_dashcount.php";
               <i class="ph ph-student"></i>
               <span>Student</span>
             </a>
-            <a href="#" data-section="head-departments-section" data-tooltip="Head Department" aria-label="Head Department"
+            <a href="#" data-section="head-departments-section" data-tooltip="Department Head" aria-label="Department Head"
                onclick="showSection('head-departments-section', event)">
               <i class="ph ph-buildings"></i>
-              <span>Head Department</span>
+              <span>Department Head</span>
             </a>
           </div>
         </div>
@@ -947,7 +947,7 @@ include __DIR__ . "/totalstudents_dashcount.php";
   <div class="head-department-list-box">
     <div class="head-department-list-header">
       <div>
-        <h1>Head Department</h1>
+        <h1>Department Head List</h1>
       </div>
       <button type="button" id="add-head-department-btn" class="button-gradient add-head-department-btn">
         <i class="ph ph-plus" aria-hidden="true"></i> Add Head Department
@@ -1951,18 +1951,6 @@ include __DIR__ . "/totalstudents_dashcount.php";
         </div>
       </div>
 
-      <div class="feedback-section">
-        <div class="report-section-title compact">
-          <div>
-            <h4>Student Feedback</h4>
-            <p>Comments submitted by students for this faculty.</p>
-          </div>
-          <span id="reportFeedbackCount" class="section-count">0 comments</span>
-        </div>
-        <div id="reportFeedbackText" class="feedback-list">
-          <div class="feedback-loading">Loading feedback...</div>
-        </div>
-      </div>
     </div>
   </div>
 </div>

@@ -68,13 +68,18 @@ $facultyName = cleanText($data["facultyName"]);
 $facultyId = cleanText($data["facultyId"]);
 $overallRating = cleanText($data["overallRating"] ?? "0.00");
 $totalResponses = cleanText($data["totalResponses"] ?? "0");
-$feedback = cleanText($data["feedback"] ?? "No feedback available");
+$isAdmin = (string) ($_SESSION["role"] ?? "") === "admin";
+$feedback = $isAdmin
+    ? ""
+    : cleanText($data["feedback"] ?? "No feedback available");
 $evaluationDetails = is_array($data["evaluationDetails"] ?? null)
     ? $data["evaluationDetails"]
     : [];
-$allFeedback = cleanText(
-    $data["allFeedback"] ?? ($data["feedback"] ?? "No feedback available"),
-);
+$allFeedback = $isAdmin
+    ? ""
+    : cleanText(
+        $data["allFeedback"] ?? ($data["feedback"] ?? "No feedback available"),
+    );
 $evaluationPeriod = cleanText($data["evaluationPeriod"] ?? "");
 $academicYear = cleanText($data["academicYear"] ?? "");
 $semester = cleanText($data["semester"] ?? "");
@@ -83,10 +88,7 @@ $subjectLabel = cleanText($data["subjectLabel"] ?? "");
 $subjectContext = $subjectLabel;
 
 $isFacultyReport = ($data["reportType"] ?? "") === "faculty";
-$privacySuppressed =
-    (string) ($_SESSION["role"] ?? "") === "admin"
-        ? false
-        : !empty($data["privacySuppressed"]);
+$privacySuppressed = $isAdmin ? false : !empty($data["privacySuppressed"]);
 
 if ((string) ($_SESSION["role"] ?? "") === "faculty") {
     if (!$isFacultyReport) {
@@ -351,54 +353,58 @@ if (empty($evaluationDetails)) {
     }
 }
 
-$feedbackText =
-    trim((string) ($data["feedback"] ?? "")) !== "" ? $feedback : $allFeedback;
-if ($feedbackText === "") {
-    $feedbackText = "No feedback available";
-}
-
-$comments = array_values(
-    array_filter(
-        array_map("trim", preg_split("/\R{2,}/", $feedbackText) ?: []),
-        static fn($comment) => $comment !== "",
-    ),
-);
-if (empty($comments)) {
-    $comments = [$feedbackText];
-}
-
-$pdf->Ln(4);
-$pdf->SetFillColor(220, 235, 255);
-$pdf->SetTextColor(255, 255, 255);
-$pdf->SetTextColor(20, 40, 100);
-$pdf->SetFont("Arial", "B", 9);
-$pdf->Cell(
-    190,
-    7,
-    "  Student Comments  (" . count($comments) . ")",
-    0,
-    1,
-    "L",
-    true,
-);
-
-$pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
-$pdf->SetFont("Arial", "", 8);
-foreach ($comments as $index => $comment) {
-    if ($pdf->GetY() > 265) {
-        $pdf->AddPage();
+if (!$isAdmin) {
+    $feedbackText =
+        trim((string) ($data["feedback"] ?? "")) !== ""
+            ? $feedback
+            : $allFeedback;
+    if ($feedbackText === "") {
+        $feedbackText = "No feedback available";
     }
-    $pdf->SetFillColor(250, 252, 255);
-    $pdf->SetDrawColor($border[0], $border[1], $border[2]);
-    $pdf->SetX(13);
-    $pdf->MultiCell(
-        184,
-        5,
-        cleanText($index + 1 . ". " . $comment),
+
+    $comments = array_values(
+        array_filter(
+            array_map("trim", preg_split("/\R{2,}/", $feedbackText) ?: []),
+            static fn($comment) => $comment !== "",
+        ),
+    );
+    if (empty($comments)) {
+        $comments = [$feedbackText];
+    }
+
+    $pdf->Ln(4);
+    $pdf->SetFillColor(220, 235, 255);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->SetTextColor(20, 40, 100);
+    $pdf->SetFont("Arial", "B", 9);
+    $pdf->Cell(
+        190,
+        7,
+        "  Student Comments  (" . count($comments) . ")",
+        0,
         1,
         "L",
         true,
     );
+
+    $pdf->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
+    $pdf->SetFont("Arial", "", 8);
+    foreach ($comments as $index => $comment) {
+        if ($pdf->GetY() > 265) {
+            $pdf->AddPage();
+        }
+        $pdf->SetFillColor(250, 252, 255);
+        $pdf->SetDrawColor($border[0], $border[1], $border[2]);
+        $pdf->SetX(13);
+        $pdf->MultiCell(
+            184,
+            5,
+            cleanText($index + 1 . ". " . $comment),
+            1,
+            "L",
+            true,
+        );
+    }
 }
 
 // =====================

@@ -196,7 +196,8 @@ h6,
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   display: none;
   flex-direction: column;
-  min-width: 300px;
+  width: min(390px, calc(100vw - 24px));
+  min-width: 0;
   padding: 0;
   animation: fadeIn 0.2s ease;
   border: 1px solid #e2e8f0;
@@ -269,6 +270,105 @@ h6,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.role-switch {
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.role-switch-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 8px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.role-switch-count {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.dropdown-menu a.role-switch-option {
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 5px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.dropdown-menu a.role-switch-option.is-active {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dropdown-menu a.role-switch-option:hover {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.role-option-icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.role-switch-option.is-active .role-option-icon {
+  background: #2878d8;
+  color: #fff;
+}
+
+.dropdown-menu .role-switch-option .role-option-icon i {
+  color: inherit;
+  font-size: 20px;
+}
+
+.role-option-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.role-option-copy strong {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.role-switch-option.is-active .role-option-copy strong {
+  color: #1d4ed8;
+}
+
+.role-option-copy small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.dropdown-menu .role-switch-option .role-option-selected {
+  color: #fff;
+  font-size: 20px;
 }
 
 .dropdown-menu a {
@@ -1225,6 +1325,19 @@ body.modal-open {
 
 .password-toggle:hover {
   color: #3b82f6;
+}
+
+.modern-input-group input[type="password"]::-ms-reveal,
+.modern-input-group input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+.modern-input-group
+  input[type="password"]::-webkit-credentials-auto-fill-button,
+.modern-input-group input[type="password"]::-webkit-password-toggle {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
 }
 
 .input-wrap input:focus ~ .password-toggle {

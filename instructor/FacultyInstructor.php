@@ -7,8 +7,23 @@ require_once __DIR__ . "/../shared/security.php";
 requireDashboardRole("faculty");
 
 include __DIR__ . "/../shared/connect.php";
+require_once __DIR__ . "/../shared/ensure_schema_column.php";
 require_once __DIR__ . "/../shared/evaluation_period_helper.php";
 require_once __DIR__ . "/../shared/class_period_helper.php";
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "department",
+    "VARCHAR(120) DEFAULT NULL",
+    "suffix",
+);
+ensureColumnExists(
+    $conn,
+    "add_faculties",
+    "is_department_head",
+    "TINYINT(1) NOT NULL DEFAULT 0",
+    "department",
+);
 ensureClassPeriodColumn($conn);
 
 // Fetch faculty data
@@ -19,7 +34,7 @@ $evaluation_ongoing = isEvaluationOngoing($conn);
 error_log("Faculty ID from session: " . $faculty_id);
 
 $stmt = $conn->prepare(
-    "SELECT faculty_id, firstname, lastname, suffix, email, status, photo FROM add_faculties WHERE id = ?",
+    "SELECT faculty_id, firstname, lastname, suffix, email, status, photo, department, is_department_head FROM add_faculties WHERE id = ?",
 );
 $stmt->bind_param("i", $faculty_id);
 $stmt->execute();
@@ -30,6 +45,8 @@ $faculty_email = ""; // Default fallback
 $faculty_faculty_id = ""; // Default fallback
 $faculty_status = "active";
 $faculty_photo = ""; // Default fallback
+$faculty_department = "";
+$is_department_head = false;
 
 if ($result->num_rows === 1) {
     $faculty = $result->fetch_assoc();
@@ -61,6 +78,8 @@ if ($result->num_rows === 1) {
     $faculty_faculty_id = $faculty["faculty_id"] ?? "";
     $faculty_status = strtolower($faculty["status"] ?? "active");
     $faculty_photo = $faculty["photo"] ?? "";
+    $faculty_department = trim((string) ($faculty["department"] ?? ""));
+    $is_department_head = (int) ($faculty["is_department_head"] ?? 0) === 1;
 } else {
     error_log(
         "No faculty found with ID: " .
@@ -175,7 +194,30 @@ if ($subjectStmt) {
           ); ?></div>
         </div>
       </div>
+      <?php if ($is_department_head && $faculty_department !== "" && $faculty_status === "active"): ?>
+      <div class="role-switch">
+        <div class="role-switch-heading">
+          <span>Switch role</span>
+          <span class="role-switch-count">2 roles</span>
+        </div>
+        <a href="FacultyInstructor.php" class="role-switch-option is-active" aria-current="page">
+          <span class="role-option-icon"><i class="ph ph-user"></i></span>
+          <span class="role-option-copy">
+            <strong>Faculty</strong>
+            <small>Teaching workspace</small>
+          </span>
+          <i class="ph ph-check-circle role-option-selected" aria-label="Current role"></i>
+        </a>
+        <a href="DepartmentHead.php" class="role-switch-option">
+          <span class="role-option-icon"><i class="ph ph-buildings"></i></span>
+          <span class="role-option-copy">
+            <strong>Department Head</strong>
+            <small>Management workspace</small>
+          </span>
+        </a>
+      </div>
       <hr class="dropdown-divider">
+      <?php endif; ?>
       <a href="#" onclick="showProfile(event)">
         <i class="ph ph-user"></i> Profile
       </a>

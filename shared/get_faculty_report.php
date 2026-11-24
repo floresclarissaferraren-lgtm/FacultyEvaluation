@@ -176,7 +176,7 @@ try {
 
     // Get all feedback comments for this faculty.
     $feedback_comments = [];
-    if (!$privacySuppressed) {
+    if (!$privacySuppressed && !$adminPrivacyPreview) {
         $feedback_query = "SELECT e.feedback
                     FROM evaluations e
                     WHERE e.faculty_id = ?
@@ -237,7 +237,7 @@ try {
         $avg = floatval($cat["avg_rating"]);
         $label = getRatingLabel($avg);
         $class = getRatingClass($avg);
-        $evaluation_details[] = [
+        $detail = [
             "category" => $cat["category_name"],
             "average_score" => $cat["avg_rating"],
             "rating" => $label,
@@ -245,8 +245,11 @@ try {
             "responses" => $cat["responses"],
             "weight" => $cat["weight"],
             "normalised_weight" => $cat["normalised_weight"],
-            "all_feedback" => $all_feedback,
         ];
+        if (!$adminPrivacyPreview) {
+            $detail["all_feedback"] = $all_feedback;
+        }
+        $evaluation_details[] = $detail;
         $category_totals[] = [
             "category_name" => $cat["category_name"],
             "avg_rating" => $cat["avg_rating"],
@@ -324,10 +327,12 @@ try {
         "evaluation_period" => $periodText,
         "evaluation_details" => $evaluation_details,
         "category_totals" => $category_totals,
-        "all_feedback" => $all_feedback,
-        "feedback_comments" => $feedback_comments,
         "privacy_suppressed" => $privacySuppressed,
     ];
+    if (!$adminPrivacyPreview) {
+        $response_data["all_feedback"] = $all_feedback;
+        $response_data["feedback_comments"] = $feedback_comments;
+    }
 
     echo json_encode([
         "success" => true,

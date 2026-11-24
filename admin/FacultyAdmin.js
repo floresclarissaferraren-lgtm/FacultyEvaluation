@@ -751,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "programs-section": "Department Management",
       "faculties-section": "Faculty Management",
       "students-section": "Student Management",
-      "head-departments-section": "Head Department Management",
+      "head-departments-section": "Department Head Management",
       "criteria-section": "Criteria Management",
       "academic-year-section": "Academic Year Management",
       "report-section": "Evaluation Report",
@@ -5304,18 +5304,26 @@ document.addEventListener("DOMContentLoaded", () => {
           const facultyName =
             `${head.firstname || ""} ${head.lastname || ""} ${head.suffix || ""}`.trim() ||
             "Unnamed faculty";
-          const card = document.createElement("div");
-          card.className = "program-card head-department-card";
+          const facultyNameParts = facultyName.split(/\s+/).filter(Boolean);
+          const initials = (
+            facultyNameParts.length > 1
+              ? `${facultyNameParts[0][0]}${facultyNameParts[facultyNameParts.length - 1][0]}`
+              : facultyNameParts[0].slice(0, 2)
+          ).toUpperCase();
+          const card = document.createElement("article");
+          card.className = "head-department-card";
           card.dataset.id = facultyRecordId;
           card.innerHTML = `
-            <div class="program-card-body head-department-card-body">
-              <span class="program-card-category">Department Head</span>
-              <div class="program-name head-department-card-name">${escapeFacultyMarkup(facultyName)}</div>
-              <div class="head-department-card-detail">
-                <span>Faculty ID</span>
-                <strong>${escapeFacultyMarkup(head.faculty_id || "—")}</strong>
+            <div class="head-department-card-heading">
+              <div class="head-department-card-avatar" aria-hidden="true">${escapeFacultyMarkup(initials)}</div>
+              <div class="head-department-card-title">
+                <span>Department Head</span>
+                <h3>${escapeFacultyMarkup(facultyName)}</h3>
+                <small>${escapeFacultyMarkup(head.faculty_id || "—")}</small>
               </div>
-              <div class="head-department-card-detail">
+            </div>
+            <div class="head-department-card-info">
+              <div class="head-department-card-info-item">
                 <span>Department</span>
                 <strong>${escapeFacultyMarkup(head.department || "—")}</strong>
               </div>
@@ -6552,57 +6560,12 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  function formatFeedbackForHtml(feedback) {
-    const text =
-      String(feedback || "No feedback available").trim() ||
-      "No feedback available";
-    return escapeHtml(text).replace(/\n/g, "<br>");
-  }
-
   function formatReportCategoryName(name) {
     const categoryName = String(name || "Uncategorized").trim();
     if (!categoryName || categoryName !== categoryName.toUpperCase())
       return categoryName;
     const sentenceCaseName = categoryName.toLowerCase();
     return sentenceCaseName.charAt(0).toUpperCase() + sentenceCaseName.slice(1);
-  }
-
-  function renderFeedbackComments(reportData) {
-    const feedbackEl = document.getElementById("reportFeedbackText");
-    const feedbackCountEl = document.getElementById("reportFeedbackCount");
-    if (!feedbackEl) return;
-
-    const comments = reportData.privacy_suppressed
-      ? ["Hidden for privacy"]
-      : Array.isArray(reportData.feedback_comments)
-        ? reportData.feedback_comments
-          .map((item) => String(item || "").trim())
-          .filter(Boolean)
-        : String(reportData.all_feedback || reportData.feedback || "")
-          .split(/\n\s*\n/)
-          .map((item) => item.trim())
-          .filter(Boolean);
-
-    const hasComments =
-      comments.length > 0 &&
-      !(comments.length === 1 && comments[0] === "No feedback available");
-    if (feedbackCountEl) {
-      feedbackCountEl.textContent = `${hasComments ? comments.length : 0} ${hasComments && comments.length === 1 ? "comment" : "comments"}`;
-    }
-
-    if (!hasComments) {
-      feedbackEl.innerHTML =
-        '<div class="feedback-loading">No feedback given by students yet.</div>';
-      return;
-    }
-
-    feedbackEl.innerHTML = comments
-      .map(
-        (comment) => `
-    <div class="feedback-comment">${formatFeedbackForHtml(comment)}</div>
-  `,
-      )
-      .join("");
   }
 
   function renderEvaluationDetailsTable(reportData) {
@@ -6738,29 +6701,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modal = document.getElementById("facultyReportModal");
     const detailsBody = document.getElementById("reportEvaluationDetailsBody");
-    const feedbackEl = document.getElementById("reportFeedbackText");
     const statusElement = document.getElementById("reportOverallStatus");
     const overallPercentElement = document.getElementById(
       "reportOverallPercentage",
     );
     const categoryCountEl = document.getElementById("reportCategoryCount");
-    const feedbackCountEl = document.getElementById("reportFeedbackCount");
     const categoryListEl = document.getElementById("reportCategoryList");
 
     if (detailsBody) {
       detailsBody.innerHTML =
         '<tr><td colspan="4" class="empty-report-cell">Loading categories...</td></tr>';
     }
-    if (feedbackEl) {
-      feedbackEl.innerHTML =
-        '<div class="feedback-loading">Loading feedback...</div>';
-    }
     if (statusElement) {
       statusElement.textContent = "-";
     }
     if (overallPercentElement) overallPercentElement.textContent = "0%";
     if (categoryCountEl) categoryCountEl.textContent = "0 categories";
-    if (feedbackCountEl) feedbackCountEl.textContent = "0 comments";
     if (categoryListEl)
       categoryListEl.innerHTML =
         '<span class="category-list-empty">Loading categories...</span>';
@@ -6843,8 +6799,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           renderEvaluationDetailsTable(data.data);
-          renderFeedbackComments(data.data);
-
           // Show modal
           console.log("Modal element found:", modal);
           if (modal) {
@@ -6937,8 +6891,6 @@ document.addEventListener("DOMContentLoaded", () => {
       totalResponses: currentFacultyData.total_responses,
       privacySuppressed: Boolean(currentFacultyData.privacy_suppressed),
       evaluationDetails: currentFacultyData.evaluation_details || [],
-      feedback: "",
-      allFeedback: currentFacultyData.all_feedback || "No feedback available",
     };
 
     // Send to server for PDF generation
